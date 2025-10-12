@@ -32,11 +32,11 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="px-4 py-6">
           <h2 className={`font-bold text-xl bg-gradient-primary bg-clip-text text-transparent ${collapsed ? "hidden" : "block"}`}>
-            TerraLodge
+            DKV INDIA
           </h2>
           {collapsed && (
             <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">
-              TL
+              DKV
             </div>
           )}
         </div>

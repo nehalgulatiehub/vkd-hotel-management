@@ -71,7 +71,7 @@ export default function Dashboard() {
           />
           <StatCard
             title="Revenue"
-            value={`$${stats.totalRevenue.toLocaleString()}`}
+            value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
             icon={DollarSign}
             trend={{ value: 15, isPositive: true }}
           />

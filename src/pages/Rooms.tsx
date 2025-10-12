@@ -91,7 +91,7 @@ export default function Rooms() {
                     </p>
                     <p className="text-muted-foreground">
                       Price: <span className="font-medium text-foreground">
-                        ${room.current_price?.toFixed(2) || '0.00'}
+                        ₹{room.current_price?.toFixed(2) || '0.00'}
                       </span>
                     </p>
                   </div>

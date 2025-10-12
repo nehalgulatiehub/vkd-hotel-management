@@ -24,6 +24,7 @@ export type Database = {
           guest_id: string | null
           id: string
           property_id: string | null
+          reference: string | null
           room_id: string | null
           special_requests: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
@@ -39,6 +40,7 @@ export type Database = {
           guest_id?: string | null
           id?: string
           property_id?: string | null
+          reference?: string | null
           room_id?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -54,6 +56,7 @@ export type Database = {
           guest_id?: string | null
           id?: string
           property_id?: string | null
+          reference?: string | null
           room_id?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
