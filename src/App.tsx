@@ -7,11 +7,15 @@ import { DashboardLayout } from "./components/layout/DashboardLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import Reservations from "./pages/Reservations";
-import Rooms from "./pages/Rooms";
-import Guests from "./pages/Guests";
-import Billing from "./pages/Billing";
-import Housekeeping from "./pages/Housekeeping";
+import Cities from "./pages/Cities";
+import Agents from "./pages/Agents";
+import Transporters from "./pages/Transporters";
+import Hotels from "./pages/Hotels";
+import Enquiries from "./pages/Enquiries";
+import Bookings from "./pages/Bookings";
+import Payments from "./pages/Payments";
+import Expenses from "./pages/Expenses";
+import Refunds from "./pages/Refunds";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -35,42 +39,74 @@ const App = () => (
             }
           />
           <Route
-            path="/reservations"
+            path="/cities/*"
             element={
               <DashboardLayout>
-                <Reservations />
+                <Cities />
               </DashboardLayout>
             }
           />
           <Route
-            path="/rooms"
+            path="/agents/*"
             element={
               <DashboardLayout>
-                <Rooms />
+                <Agents />
               </DashboardLayout>
             }
           />
           <Route
-            path="/guests"
+            path="/transporters/*"
             element={
               <DashboardLayout>
-                <Guests />
+                <Transporters />
               </DashboardLayout>
             }
           />
           <Route
-            path="/billing"
+            path="/hotels/*"
             element={
               <DashboardLayout>
-                <Billing />
+                <Hotels />
               </DashboardLayout>
             }
           />
           <Route
-            path="/housekeeping"
+            path="/enquiries/*"
             element={
               <DashboardLayout>
-                <Housekeeping />
+                <Enquiries />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/bookings/*"
+            element={
+              <DashboardLayout>
+                <Bookings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/*"
+            element={
+              <DashboardLayout>
+                <Payments />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <DashboardLayout>
+                <Expenses />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/refunds"
+            element={
+              <DashboardLayout>
+                <Refunds />
               </DashboardLayout>
             }
           />

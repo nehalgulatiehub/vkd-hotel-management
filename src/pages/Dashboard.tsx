@@ -1,111 +1,72 @@
-import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bed, Calendar, DollarSign, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { Calendar, Users, DollarSign, Hotel } from "lucide-react";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
-    totalRooms: 0,
-    occupiedRooms: 0,
     totalBookings: 0,
+    totalGuests: 0,
     totalRevenue: 0,
+    totalHotels: 0,
   });
 
   useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
-      const [roomsResult, bookingsResult] = await Promise.all([
-        supabase.from('rooms').select('status', { count: 'exact' }),
-        supabase.from('bookings').select('total_amount, status', { count: 'exact' })
+    const fetchStats = async () => {
+      const [bookingsRes, guestsRes, hotelsRes] = await Promise.all([
+        supabase.from("bookings").select("total_amount, paid_amount", { count: "exact" }),
+        supabase.from("guests").select("*", { count: "exact" }),
+        supabase.from("another_hotels").select("*", { count: "exact" }),
       ]);
 
-      if (roomsResult.error) throw roomsResult.error;
-      if (bookingsResult.error) throw bookingsResult.error;
-
-      const occupiedRooms = roomsResult.data?.filter(r => r.status === 'occupied').length || 0;
-      const totalRevenue = bookingsResult.data?.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0) || 0;
+      const totalRevenue = bookingsRes.data?.reduce((sum, booking) => 
+        sum + (Number(booking.paid_amount) || 0), 0
+      ) || 0;
 
       setStats({
-        totalRooms: roomsResult.count || 0,
-        occupiedRooms,
-        totalBookings: bookingsResult.count || 0,
+        totalBookings: bookingsRes.count || 0,
+        totalGuests: guestsRes.count || 0,
         totalRevenue,
+        totalHotels: hotelsRes.count || 0,
       });
-    } catch (error: any) {
-      toast.error("Failed to fetch dashboard stats");
-    }
-  };
+    };
 
-  const occupancyRate = stats.totalRooms > 0 
-    ? ((stats.occupiedRooms / stats.totalRooms) * 100).toFixed(1) 
-    : 0;
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen">
       <Header title="Dashboard" />
-      <main className="p-6 space-y-6">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Total Rooms"
-            value={stats.totalRooms}
-            icon={Bed}
-            trend={{ value: 5, isPositive: true }}
-          />
-          <StatCard
-            title="Occupancy Rate"
-            value={`${occupancyRate}%`}
-            icon={Users}
-            trend={{ value: 12, isPositive: true }}
-          />
+      <main className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Bookings"
             value={stats.totalBookings}
             icon={Calendar}
-            trend={{ value: 8, isPositive: true }}
           />
           <StatCard
-            title="Revenue"
-            value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
+            title="Total Guests"
+            value={stats.totalGuests}
+            icon={Users}
+          />
+          <StatCard
+            title="Total Revenue"
+            value={`₹${stats.totalRevenue.toLocaleString("en-IN")}`}
             icon={DollarSign}
-            trend={{ value: 15, isPositive: true }}
+          />
+          <StatCard
+            title="Partner Hotels"
+            value={stats.totalHotels}
+            icon={Hotel}
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Bookings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">No recent bookings to display</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Room Status Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Available</span>
-                  <span className="text-sm font-bold text-success">
-                    {stats.totalRooms - stats.occupiedRooms}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Occupied</span>
-                  <span className="text-sm font-bold text-primary">{stats.occupiedRooms}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="bg-card rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">Welcome to DKV INDIA</h2>
+          <p className="text-muted-foreground">
+            Comprehensive hotel management system for booking management, payments tracking, and operations.
+          </p>
         </div>
       </main>
     </div>

@@ -14,18 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      agents: {
+        Row: {
+          address: string | null
+          city_id: string | null
+          commission_rate: number | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city_id?: string | null
+          commission_rate?: number | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city_id?: string | null
+          commission_rate?: number | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agents_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      another_hotels: {
+        Row: {
+          address: string | null
+          city_id: string | null
+          contact_person: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city_id?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city_id?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "another_hotels_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           adults: number | null
+          agent_id: string | null
+          booking_number: string
           check_in_date: string
           check_out_date: string
           children: number | null
           created_at: string | null
+          created_by: string | null
+          due_amount: number | null
+          enquiry_id: string | null
           guest_id: string | null
+          hold_until: string | null
           id: string
-          property_id: string | null
+          is_hold: boolean | null
+          notes: string | null
+          paid_amount: number | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
           reference: string | null
-          room_id: string | null
           special_requests: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
           total_amount: number | null
@@ -33,15 +141,23 @@ export type Database = {
         }
         Insert: {
           adults?: number | null
+          agent_id?: string | null
+          booking_number: string
           check_in_date: string
           check_out_date: string
           children?: number | null
           created_at?: string | null
+          created_by?: string | null
+          due_amount?: number | null
+          enquiry_id?: string | null
           guest_id?: string | null
+          hold_until?: string | null
           id?: string
-          property_id?: string | null
+          is_hold?: boolean | null
+          notes?: string | null
+          paid_amount?: number | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           reference?: string | null
-          room_id?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           total_amount?: number | null
@@ -49,15 +165,23 @@ export type Database = {
         }
         Update: {
           adults?: number | null
+          agent_id?: string | null
+          booking_number?: string
           check_in_date?: string
           check_out_date?: string
           children?: number | null
           created_at?: string | null
+          created_by?: string | null
+          due_amount?: number | null
+          enquiry_id?: string | null
           guest_id?: string | null
+          hold_until?: string | null
           id?: string
-          property_id?: string | null
+          is_hold?: boolean | null
+          notes?: string | null
+          paid_amount?: number | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           reference?: string | null
-          room_id?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           total_amount?: number | null
@@ -65,24 +189,249 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_enquiry_id_fkey"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "enquiries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_guest_id_fkey"
             columns: ["guest_id"]
             isOneToOne: false
             referencedRelation: "guests"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      cancellations: {
+        Row: {
+          booking_id: string | null
+          cancellation_charges: number | null
+          cancellation_date: string | null
+          cancellation_reason: string | null
+          cancelled_by: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          refund_amount: number | null
+        }
+        Insert: {
+          booking_id?: string | null
+          cancellation_charges?: number | null
+          cancellation_date?: string | null
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          refund_amount?: number | null
+        }
+        Update: {
+          booking_id?: string | null
+          cancellation_charges?: number | null
+          cancellation_date?: string | null
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          refund_amount?: number | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "bookings_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "cancellations_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "properties"
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bookings_room_id_fkey"
-            columns: ["room_id"]
+            foreignKeyName: "cancellations_cancelled_by_fkey"
+            columns: ["cancelled_by"]
             isOneToOne: false
-            referencedRelation: "rooms"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cities: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          id: string
+          name: string
+          state: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          state?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          state?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      enquiries: {
+        Row: {
+          adults: number | null
+          agent_id: string | null
+          budget_amount: number | null
+          check_in_date: string | null
+          check_out_date: string | null
+          children: number | null
+          created_at: string | null
+          created_by: string | null
+          destination_city_id: string | null
+          enquiry_number: string
+          guest_id: string | null
+          id: string
+          notes: string | null
+          rooms_required: number | null
+          special_requests: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adults?: number | null
+          agent_id?: string | null
+          budget_amount?: number | null
+          check_in_date?: string | null
+          check_out_date?: string | null
+          children?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          destination_city_id?: string | null
+          enquiry_number: string
+          guest_id?: string | null
+          id?: string
+          notes?: string | null
+          rooms_required?: number | null
+          special_requests?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adults?: number | null
+          agent_id?: string | null
+          budget_amount?: number | null
+          check_in_date?: string | null
+          check_out_date?: string | null
+          children?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          destination_city_id?: string | null
+          enquiry_number?: string
+          guest_id?: string | null
+          id?: string
+          notes?: string | null
+          rooms_required?: number | null
+          special_requests?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enquiries_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enquiries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enquiries_destination_city_id_fkey"
+            columns: ["destination_city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enquiries_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_expenses: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          expense_date: string | null
+          id: string
+          notes: string | null
+          paid_by: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          expense_date?: string | null
+          id?: string
+          notes?: string | null
+          paid_by?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          expense_date?: string | null
+          id?: string
+          notes?: string | null
+          paid_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_expenses_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_expenses_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -90,186 +439,169 @@ export type Database = {
       guests: {
         Row: {
           address: string | null
+          city_id: string | null
           created_at: string | null
           email: string | null
           first_name: string
           id: string
-          id_number: string | null
+          id_proof_number: string | null
+          id_proof_type: string | null
           last_name: string
           notes: string | null
           phone: string | null
-          preferences: Json | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          city_id?: string | null
           created_at?: string | null
           email?: string | null
           first_name: string
           id?: string
-          id_number?: string | null
+          id_proof_number?: string | null
+          id_proof_type?: string | null
           last_name: string
           notes?: string | null
           phone?: string | null
-          preferences?: Json | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          city_id?: string | null
           created_at?: string | null
           email?: string | null
           first_name?: string
           id?: string
-          id_number?: string | null
+          id_proof_number?: string | null
+          id_proof_type?: string | null
           last_name?: string
           notes?: string | null
           phone?: string | null
-          preferences?: Json | null
           updated_at?: string | null
         }
-        Relationships: []
-      }
-      housekeeping_tasks: {
-        Row: {
-          assigned_to: string | null
-          completed_at: string | null
-          created_at: string | null
-          id: string
-          notes: string | null
-          priority: Database["public"]["Enums"]["task_priority"] | null
-          room_id: string | null
-          scheduled_date: string | null
-          status: Database["public"]["Enums"]["housekeeping_status"] | null
-          task_type: string
-        }
-        Insert: {
-          assigned_to?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          priority?: Database["public"]["Enums"]["task_priority"] | null
-          room_id?: string | null
-          scheduled_date?: string | null
-          status?: Database["public"]["Enums"]["housekeeping_status"] | null
-          task_type: string
-        }
-        Update: {
-          assigned_to?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          priority?: Database["public"]["Enums"]["task_priority"] | null
-          room_id?: string | null
-          scheduled_date?: string | null
-          status?: Database["public"]["Enums"]["housekeeping_status"] | null
-          task_type?: string
-        }
         Relationships: [
           {
-            foreignKeyName: "housekeeping_tasks_room_id_fkey"
-            columns: ["room_id"]
+            foreignKeyName: "guests_city_id_fkey"
+            columns: ["city_id"]
             isOneToOne: false
-            referencedRelation: "rooms"
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
         ]
       }
-      invoice_items: {
-        Row: {
-          created_at: string | null
-          description: string
-          id: string
-          invoice_id: string | null
-          quantity: number | null
-          total: number
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string | null
-          description: string
-          id?: string
-          invoice_id?: string | null
-          quantity?: number | null
-          total: number
-          unit_price: number
-        }
-        Update: {
-          created_at?: string | null
-          description?: string
-          id?: string
-          invoice_id?: string | null
-          quantity?: number | null
-          total?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoice_items_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      invoices: {
+      hotel_bookings: {
         Row: {
           booking_id: string | null
+          check_in_date: string
+          check_out_date: string
           created_at: string | null
-          due_date: string | null
-          guest_id: string | null
+          due_amount: number | null
+          hotel_id: string | null
           id: string
-          invoice_number: string
-          issue_date: string | null
           notes: string | null
-          paid: boolean | null
-          subtotal: number | null
-          tax: number | null
-          total: number | null
+          number_of_rooms: number | null
+          paid_amount: number | null
+          room_rate: number | null
+          room_type: string | null
+          total_amount: number | null
+          updated_at: string | null
         }
         Insert: {
           booking_id?: string | null
+          check_in_date: string
+          check_out_date: string
           created_at?: string | null
-          due_date?: string | null
-          guest_id?: string | null
+          due_amount?: number | null
+          hotel_id?: string | null
           id?: string
-          invoice_number: string
-          issue_date?: string | null
           notes?: string | null
-          paid?: boolean | null
-          subtotal?: number | null
-          tax?: number | null
-          total?: number | null
+          number_of_rooms?: number | null
+          paid_amount?: number | null
+          room_rate?: number | null
+          room_type?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
         }
         Update: {
           booking_id?: string | null
+          check_in_date?: string
+          check_out_date?: string
           created_at?: string | null
-          due_date?: string | null
-          guest_id?: string | null
+          due_amount?: number | null
+          hotel_id?: string | null
           id?: string
-          invoice_number?: string
-          issue_date?: string | null
           notes?: string | null
-          paid?: boolean | null
-          subtotal?: number | null
-          tax?: number | null
-          total?: number | null
+          number_of_rooms?: number | null
+          paid_amount?: number | null
+          room_rate?: number | null
+          room_type?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "invoices_booking_id_fkey"
+            foreignKeyName: "hotel_bookings_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invoices_guest_id_fkey"
-            columns: ["guest_id"]
+            foreignKeyName: "hotel_bookings_hotel_id_fkey"
+            columns: ["hotel_id"]
             isOneToOne: false
-            referencedRelation: "guests"
+            referencedRelation: "another_hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_mode: string | null
+          reference_number: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_mode?: string | null
+          reference_number?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_mode?: string | null
+          reference_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -304,124 +636,166 @@ export type Database = {
         }
         Relationships: []
       }
-      properties: {
+      refunds: {
         Row: {
-          address: string | null
+          booking_id: string | null
+          cancellation_id: string | null
           created_at: string | null
-          email: string | null
           id: string
-          name: string
-          phone: string | null
-          updated_at: string | null
+          notes: string | null
+          processed_by: string | null
+          reference_number: string | null
+          refund_amount: number
+          refund_date: string | null
+          refund_mode: string | null
         }
         Insert: {
-          address?: string | null
+          booking_id?: string | null
+          cancellation_id?: string | null
           created_at?: string | null
-          email?: string | null
           id?: string
-          name: string
-          phone?: string | null
-          updated_at?: string | null
+          notes?: string | null
+          processed_by?: string | null
+          reference_number?: string | null
+          refund_amount: number
+          refund_date?: string | null
+          refund_mode?: string | null
         }
         Update: {
-          address?: string | null
+          booking_id?: string | null
+          cancellation_id?: string | null
           created_at?: string | null
-          email?: string | null
           id?: string
-          name?: string
-          phone?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      room_types: {
-        Row: {
-          amenities: Json | null
-          base_price: number
-          created_at: string | null
-          description: string | null
-          id: string
-          max_occupancy: number
-          name: string
-          property_id: string | null
-        }
-        Insert: {
-          amenities?: Json | null
-          base_price: number
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          max_occupancy: number
-          name: string
-          property_id?: string | null
-        }
-        Update: {
-          amenities?: Json | null
-          base_price?: number
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          max_occupancy?: number
-          name?: string
-          property_id?: string | null
+          notes?: string | null
+          processed_by?: string | null
+          reference_number?: string | null
+          refund_amount?: number
+          refund_date?: string | null
+          refund_mode?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "room_types_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "refunds_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "properties"
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_cancellation_id_fkey"
+            columns: ["cancellation_id"]
+            isOneToOne: false
+            referencedRelation: "cancellations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      rooms: {
+      safari_bookings: {
         Row: {
+          booking_id: string | null
           created_at: string | null
-          current_price: number | null
-          floor: number | null
+          due_amount: number | null
           id: string
-          property_id: string | null
-          room_number: string
-          room_type_id: string | null
-          status: Database["public"]["Enums"]["room_status"] | null
+          notes: string | null
+          number_of_persons: number | null
+          paid_amount: number | null
+          rate_per_person: number | null
+          safari_date: string
+          safari_name: string
+          total_amount: number | null
           updated_at: string | null
         }
         Insert: {
+          booking_id?: string | null
           created_at?: string | null
-          current_price?: number | null
-          floor?: number | null
+          due_amount?: number | null
           id?: string
-          property_id?: string | null
-          room_number: string
-          room_type_id?: string | null
-          status?: Database["public"]["Enums"]["room_status"] | null
+          notes?: string | null
+          number_of_persons?: number | null
+          paid_amount?: number | null
+          rate_per_person?: number | null
+          safari_date: string
+          safari_name: string
+          total_amount?: number | null
           updated_at?: string | null
         }
         Update: {
+          booking_id?: string | null
           created_at?: string | null
-          current_price?: number | null
-          floor?: number | null
+          due_amount?: number | null
           id?: string
-          property_id?: string | null
-          room_number?: string
-          room_type_id?: string | null
-          status?: Database["public"]["Enums"]["room_status"] | null
+          notes?: string | null
+          number_of_persons?: number | null
+          paid_amount?: number | null
+          rate_per_person?: number | null
+          safari_date?: string
+          safari_name?: string
+          total_amount?: number | null
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "rooms_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "safari_bookings_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "properties"
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      transporters: {
+        Row: {
+          address: string | null
+          city_id: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+          vehicle_types: string[] | null
+        }
+        Insert: {
+          address?: string | null
+          city_id?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          vehicle_types?: string[] | null
+        }
+        Update: {
+          address?: string | null
+          city_id?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          vehicle_types?: string[] | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "rooms_room_type_id_fkey"
-            columns: ["room_type_id"]
+            foreignKeyName: "transporters_city_id_fkey"
+            columns: ["city_id"]
             isOneToOne: false
-            referencedRelation: "room_types"
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
         ]
@@ -448,12 +822,129 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
+        Relationships: []
+      }
+      vehicle_bookings: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          dropoff_date: string | null
+          due_amount: number | null
+          from_location: string | null
+          id: string
+          notes: string | null
+          paid_amount: number | null
+          pickup_date: string | null
+          rate: number | null
+          to_location: string | null
+          total_amount: number | null
+          transporter_id: string | null
+          updated_at: string | null
+          vehicle_number: string | null
+          vehicle_type: Database["public"]["Enums"]["vehicle_type"] | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          dropoff_date?: string | null
+          due_amount?: number | null
+          from_location?: string | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          pickup_date?: string | null
+          rate?: number | null
+          to_location?: string | null
+          total_amount?: number | null
+          transporter_id?: string | null
+          updated_at?: string | null
+          vehicle_number?: string | null
+          vehicle_type?: Database["public"]["Enums"]["vehicle_type"] | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          dropoff_date?: string | null
+          due_amount?: number | null
+          from_location?: string | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          pickup_date?: string | null
+          rate?: number | null
+          to_location?: string | null
+          total_amount?: number | null
+          transporter_id?: string | null
+          updated_at?: string | null
+          vehicle_number?: string | null
+          vehicle_type?: Database["public"]["Enums"]["vehicle_type"] | null
+        }
         Relationships: [
           {
-            foreignKeyName: "user_roles_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "vehicle_bookings_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "properties"
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_bookings_transporter_id_fkey"
+            columns: ["transporter_id"]
+            isOneToOne: false
+            referencedRelation: "transporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volvo_bookings: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          due_amount: number | null
+          id: string
+          notes: string | null
+          number_of_seats: number | null
+          paid_amount: number | null
+          rate_per_seat: number | null
+          route: string
+          total_amount: number | null
+          travel_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          due_amount?: number | null
+          id?: string
+          notes?: string | null
+          number_of_seats?: number | null
+          paid_amount?: number | null
+          rate_per_seat?: number | null
+          route: string
+          total_amount?: number | null
+          travel_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          due_amount?: number | null
+          id?: string
+          notes?: string | null
+          number_of_seats?: number | null
+          paid_amount?: number | null
+          rate_per_seat?: number | null
+          route?: string
+          total_amount?: number | null
+          travel_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volvo_bookings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -474,19 +965,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "front_desk" | "housekeeping" | "manager"
       booking_status:
-        | "pending"
+        | "enquiry"
+        | "hold"
         | "confirmed"
-        | "checked_in"
-        | "checked_out"
         | "cancelled"
-      housekeeping_status: "pending" | "in_progress" | "completed"
-      room_status:
-        | "available"
-        | "occupied"
-        | "maintenance"
-        | "reserved"
-        | "cleaning"
-      task_priority: "low" | "medium" | "high" | "urgent"
+        | "completed"
+      payment_status: "pending" | "partial" | "paid" | "refunded"
+      vehicle_type: "bus" | "car" | "tempo_traveller" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -616,21 +1101,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "front_desk", "housekeeping", "manager"],
       booking_status: [
-        "pending",
+        "enquiry",
+        "hold",
         "confirmed",
-        "checked_in",
-        "checked_out",
         "cancelled",
+        "completed",
       ],
-      housekeeping_status: ["pending", "in_progress", "completed"],
-      room_status: [
-        "available",
-        "occupied",
-        "maintenance",
-        "reserved",
-        "cleaning",
-      ],
-      task_priority: ["low", "medium", "high", "urgent"],
+      payment_status: ["pending", "partial", "paid", "refunded"],
+      vehicle_type: ["bus", "car", "tempo_traveller", "other"],
     },
   },
 } as const
