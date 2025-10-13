@@ -63,7 +63,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-card rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Welcome to DKV INDIA</h2>
+          <h2 className="text-xl font-semibold mb-4">Welcome to Hotel Management Software</h2>
           <p className="text-muted-foreground">
             Comprehensive hotel management system for booking management, payments tracking, and operations.
           </p>

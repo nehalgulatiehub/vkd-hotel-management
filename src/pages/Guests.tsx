@@ -1,101 +1,78 @@
-import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Mail, Phone, Search } from "lucide-react";
+import { Plus, Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-
-interface Guest {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  id_number: string | null;
-  notes: string | null;
-  created_at: string;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Guests() {
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [guests, setGuests] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const [newGuest, setNewGuest] = useState({
-    firstName: "",
-    lastName: "",
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     address: "",
-    idNumber: "",
+    city_id: "",
+    id_proof_type: "",
+    id_proof_number: "",
     notes: "",
   });
 
   useEffect(() => {
     fetchGuests();
+    fetchCities();
   }, []);
 
   const fetchGuests = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('guests')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from("guests")
+      .select("*, cities(name)")
+      .order("first_name");
 
-      if (error) throw error;
+    if (!error) {
       setGuests(data || []);
-    } catch (error: any) {
-      toast.error("Failed to fetch guests");
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleCreateGuest = async () => {
-    if (!newGuest.firstName || !newGuest.lastName) {
-      toast.error("First name and last name are required");
-      return;
-    }
+  const fetchCities = async () => {
+    const { data } = await supabase.from("cities").select("*").order("name");
+    setCities(data || []);
+  };
 
-    try {
-      const { error } = await supabase.from('guests').insert({
-        first_name: newGuest.firstName,
-        last_name: newGuest.lastName,
-        email: newGuest.email || null,
-        phone: newGuest.phone || null,
-        address: newGuest.address || null,
-        id_number: newGuest.idNumber || null,
-        notes: newGuest.notes || null,
-      });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.from("guests").insert([formData]);
 
-      if (error) throw error;
-
+    if (error) {
+      toast.error("Error adding guest");
+    } else {
       toast.success("Guest added successfully");
-      setIsDialogOpen(false);
-      fetchGuests();
-      
-      setNewGuest({
-        firstName: "",
-        lastName: "",
+      setIsAddDialogOpen(false);
+      setFormData({
+        first_name: "",
+        last_name: "",
         email: "",
         phone: "",
         address: "",
-        idNumber: "",
+        city_id: "",
+        id_proof_type: "",
+        id_proof_number: "",
         notes: "",
       });
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add guest");
+      fetchGuests();
     }
   };
 
-  const filteredGuests = guests.filter((guest) =>
+  const filteredGuests = guests.filter(guest =>
     guest.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,193 +81,146 @@ export default function Guests() {
 
   return (
     <div className="min-h-screen">
-      <Header title="Guests" />
+      <Header title="Guest Management" />
       <main className="p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h2 className="text-2xl font-semibold">Guest Management</h2>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Guest
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Guest</DialogTitle>
-                <DialogDescription>Enter guest details to create a new profile</DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name *</Label>
+        <div className="flex justify-between items-center mb-6">
+          <Input
+            placeholder="Search guests..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Guest
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Guest</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="first_name">First Name *</Label>
+                      <Input
+                        id="first_name"
+                        value={formData.first_name}
+                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="last_name">Last Name *</Label>
+                      <Input
+                        id="last_name"
+                        value={formData.last_name}
+                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Select value={formData.city_id} onValueChange={(value) => setFormData({ ...formData, city_id: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select city" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cities.map((city) => (
+                            <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="id_proof_type">ID Proof Type</Label>
+                      <Input
+                        id="id_proof_type"
+                        value={formData.id_proof_type}
+                        onChange={(e) => setFormData({ ...formData, id_proof_type: e.target.value })}
+                        placeholder="e.g., Passport, Aadhar"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="id_proof_number">ID Proof Number</Label>
+                      <Input
+                        id="id_proof_number"
+                        value={formData.id_proof_number}
+                        onChange={(e) => setFormData({ ...formData, id_proof_number: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="address">Address</Label>
                     <Input
-                      id="firstName"
-                      value={newGuest.firstName}
-                      onChange={(e) => setNewGuest({ ...newGuest, firstName: e.target.value })}
-                      placeholder="Enter first name"
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name *</Label>
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
                     <Input
-                      id="lastName"
-                      value={newGuest.lastName}
-                      onChange={(e) => setNewGuest({ ...newGuest, lastName: e.target.value })}
-                      placeholder="Enter last name"
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newGuest.email}
-                      onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })}
-                      placeholder="guest@example.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={newGuest.phone}
-                      onChange={(e) => setNewGuest({ ...newGuest, phone: e.target.value })}
-                      placeholder="+91 98765 43210"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="idNumber">ID Number</Label>
-                  <Input
-                    id="idNumber"
-                    value={newGuest.idNumber}
-                    onChange={(e) => setNewGuest({ ...newGuest, idNumber: e.target.value })}
-                    placeholder="Aadhar, Passport, or other ID"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    value={newGuest.address}
-                    onChange={(e) => setNewGuest({ ...newGuest, address: e.target.value })}
-                    placeholder="Full address"
-                    rows={2}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={newGuest.notes}
-                    onChange={(e) => setNewGuest({ ...newGuest, notes: e.target.value })}
-                    placeholder="Special preferences or notes about the guest"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateGuest} className="bg-gradient-primary">
-                    Add Guest
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, email, or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+                  <Button type="submit" className="w-full">Add Guest</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">Loading guests...</div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredGuests.map((guest) => (
-              <Card key={guest.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {guest.first_name} {guest.last_name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {guest.email && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground truncate">{guest.email}</span>
-                    </div>
-                  )}
-                  
-                  {guest.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{guest.phone}</span>
-                    </div>
-                  )}
-
-                  {guest.id_number && (
-                    <div className="text-sm">
-                      <p className="text-muted-foreground">ID: {guest.id_number}</p>
-                    </div>
-                  )}
-
-                  {guest.address && (
-                    <div className="text-sm pt-2 border-t">
-                      <p className="text-muted-foreground line-clamp-2">{guest.address}</p>
-                    </div>
-                  )}
-
-                  {guest.notes && (
-                    <div className="text-sm pt-2 border-t">
-                      <p className="font-medium mb-1">Notes:</p>
-                      <p className="text-muted-foreground line-clamp-2">{guest.notes}</p>
-                    </div>
-                  )}
-
-                  <div className="text-xs text-muted-foreground pt-2">
-                    Added: {new Date(guest.created_at).toLocaleDateString('en-IN')}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {!loading && filteredGuests.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">
-                {searchTerm 
-                  ? "No guests found matching your search" 
-                  : "No guests yet. Add your first guest to get started."}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <div className="bg-card rounded-lg shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>City</TableHead>
+                <TableHead>ID Proof</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredGuests.map((guest) => (
+                <TableRow key={guest.id}>
+                  <TableCell className="font-medium">{`${guest.first_name} ${guest.last_name}`}</TableCell>
+                  <TableCell>{guest.email || "-"}</TableCell>
+                  <TableCell>{guest.phone || "-"}</TableCell>
+                  <TableCell>{guest.cities?.name || "-"}</TableCell>
+                  <TableCell>{guest.id_proof_type && guest.id_proof_number ? `${guest.id_proof_type}: ${guest.id_proof_number}` : "-"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </main>
     </div>
   );
