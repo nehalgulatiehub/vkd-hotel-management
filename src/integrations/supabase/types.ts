@@ -116,72 +116,117 @@ export type Database = {
       }
       bookings: {
         Row: {
+          address: string | null
           adults: number | null
+          agent_commission: number | null
           agent_id: string | null
           booking_number: string
+          booking_type: string | null
           check_in_date: string
           check_out_date: string
+          cheque_no: string | null
           children: number | null
+          contact_no: string | null
           created_at: string | null
           created_by: string | null
+          customer_name: string | null
           due_amount: number | null
+          email: string | null
           enquiry_id: string | null
           guest_id: string | null
           hold_until: string | null
           id: string
+          include_additional_vehicle: boolean | null
+          include_another_hotel: boolean | null
+          include_booking: boolean | null
+          include_delhi_manali: boolean | null
+          include_group_expenses: boolean | null
+          include_manali_delhi: boolean | null
+          include_safari: boolean | null
           is_hold: boolean | null
           notes: string | null
           paid_amount: number | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           reference: string | null
+          reference_email: string | null
           special_requests: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
           total_amount: number | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           adults?: number | null
+          agent_commission?: number | null
           agent_id?: string | null
           booking_number: string
+          booking_type?: string | null
           check_in_date: string
           check_out_date: string
+          cheque_no?: string | null
           children?: number | null
+          contact_no?: string | null
           created_at?: string | null
           created_by?: string | null
+          customer_name?: string | null
           due_amount?: number | null
+          email?: string | null
           enquiry_id?: string | null
           guest_id?: string | null
           hold_until?: string | null
           id?: string
+          include_additional_vehicle?: boolean | null
+          include_another_hotel?: boolean | null
+          include_booking?: boolean | null
+          include_delhi_manali?: boolean | null
+          include_group_expenses?: boolean | null
+          include_manali_delhi?: boolean | null
+          include_safari?: boolean | null
           is_hold?: boolean | null
           notes?: string | null
           paid_amount?: number | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           reference?: string | null
+          reference_email?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           total_amount?: number | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           adults?: number | null
+          agent_commission?: number | null
           agent_id?: string | null
           booking_number?: string
+          booking_type?: string | null
           check_in_date?: string
           check_out_date?: string
+          cheque_no?: string | null
           children?: number | null
+          contact_no?: string | null
           created_at?: string | null
           created_by?: string | null
+          customer_name?: string | null
           due_amount?: number | null
+          email?: string | null
           enquiry_id?: string | null
           guest_id?: string | null
           hold_until?: string | null
           id?: string
+          include_additional_vehicle?: boolean | null
+          include_another_hotel?: boolean | null
+          include_booking?: boolean | null
+          include_delhi_manali?: boolean | null
+          include_group_expenses?: boolean | null
+          include_manali_delhi?: boolean | null
+          include_safari?: boolean | null
           is_hold?: boolean | null
           notes?: string | null
           paid_amount?: number | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           reference?: string | null
+          reference_email?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           total_amount?: number | null
