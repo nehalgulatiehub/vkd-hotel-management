@@ -21,7 +21,8 @@ const menuItems = [
     icon: MapPin,
     submenu: [
       { title: "Add City", url: "/cities/add" },
-      { title: "View Cities", url: "/cities" },
+      { title: "View City", url: "/cities" },
+      { title: "Export City", url: "/cities/export" },
     ]
   },
   {
@@ -29,7 +30,8 @@ const menuItems = [
     icon: Users,
     submenu: [
       { title: "Add Agent", url: "/agents/add" },
-      { title: "View Agents", url: "/agents" },
+      { title: "Export Agent", url: "/agents/export" },
+      { title: "View Agent", url: "/agents" },
     ]
   },
   {
@@ -37,15 +39,17 @@ const menuItems = [
     icon: Plane,
     submenu: [
       { title: "Add Transporter", url: "/transporters/add" },
-      { title: "View Transporters", url: "/transporters" },
+      { title: "View Transporter", url: "/transporters" },
+      { title: "Export Transporter", url: "/transporters/export" },
     ]
   },
   {
     title: "Hotel Management",
     icon: Hotel,
     submenu: [
-      { title: "Add Hotel", url: "/hotels/add" },
-      { title: "View Hotels", url: "/hotels" },
+      { title: "Add Another Hotel", url: "/hotels/add" },
+      { title: "View Another Hotel", url: "/hotels" },
+      { title: "Export Another Hotel", url: "/hotels/export" },
     ]
   },
   {
@@ -53,37 +57,48 @@ const menuItems = [
     icon: Calendar,
     submenu: [
       { title: "Generate Enquiry", url: "/enquiries/add" },
-      { title: "View Enquiries", url: "/enquiries" },
+      { title: "View Enquiry", url: "/enquiries" },
+      { title: "Export Enquiry", url: "/enquiries/export" },
+      { title: "Booking Availability", url: "/bookings/availability" },
       { title: "Create Hold Booking", url: "/bookings/hold" },
-      { title: "View Hold Bookings", url: "/bookings/hold-list" },
+      { title: "View Hold Booking", url: "/bookings/hold-list" },
       { title: "Create Booking", url: "/bookings/add" },
-      { title: "View Bookings", url: "/bookings" },
+      { title: "View Booking", url: "/bookings" },
     ]
   },
   {
     title: "Payment & Financials",
     icon: DollarSign,
     submenu: [
+      { title: "View Payment", url: "/payments" },
       { title: "Booking Due Amount", url: "/payments/booking-due" },
-      { title: "View Payments", url: "/payments" },
-      { title: "View Booking Payments", url: "/payments/booking" },
+      { title: "View Booking Payment", url: "/payments/booking" },
+      { title: "Export Booking", url: "/payments/booking-export" },
+      { title: "View Room Booking", url: "/payments/room-booking" },
+      { title: "View Safari Detail", url: "/payments/safari" },
       { title: "Safari Due Amount", url: "/payments/safari-due" },
-      { title: "View Safari Details", url: "/payments/safari" },
-      { title: "Volvo Due Amount", url: "/payments/volvo-due" },
-      { title: "View Volvo Payments", url: "/payments/volvo" },
-      { title: "Hotel Due Amount", url: "/payments/hotel-due" },
-      { title: "View Hotel Payments", url: "/payments/hotel" },
+      { title: "View Safari Payment", url: "/payments/safari-payment" },
+      { title: "Volvo Delhi - Manali Detail", url: "/payments/volvo-delhi-manali" },
+      { title: "Delhi - Manali Due Amount", url: "/payments/delhi-manali-due" },
+      { title: "Volvo Manali - Delhi Detail", url: "/payments/volvo-manali-delhi" },
+      { title: "Manali - Delhi Due Amount", url: "/payments/manali-delhi-due" },
+      { title: "View Volvo Payment", url: "/payments/volvo" },
+      { title: "View Another Hotel Detail", url: "/payments/hotel" },
+      { title: "Another Hotel Due Amount", url: "/payments/hotel-due" },
+      { title: "Another Hotel Payment", url: "/payments/hotel-payment" },
+      { title: "View Vehicle Detail", url: "/payments/vehicle" },
       { title: "Vehicle Due Amount", url: "/payments/vehicle-due" },
-      { title: "View Vehicle Payments", url: "/payments/vehicle" },
+      { title: "Another Vehicle Payment", url: "/payments/vehicle-payment" },
     ]
   },
   {
     title: "Other Functions",
     icon: FileText,
     submenu: [
-      { title: "View Group Expenses", url: "/expenses" },
-      { title: "View Cancelled Bookings", url: "/bookings/cancelled" },
-      { title: "View Refunds", url: "/refunds" },
+      { title: "View Group Expence", url: "/expenses" },
+      { title: "View Cancel Booking", url: "/bookings/cancelled" },
+      { title: "View Refund Payment", url: "/refunds" },
+      { title: "View Cancelling Payment", url: "/refunds/cancelling" },
     ]
   },
 ];
