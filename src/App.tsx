@@ -34,6 +34,18 @@ import SafariPayments from "./pages/SafariPayments";
 import HotelPayments from "./pages/HotelPayments";
 import VehiclePayments from "./pages/VehiclePayments";
 import CancellingPayments from "./pages/CancellingPayments";
+import BookingDue from "./pages/BookingDue";
+import BookingPayments from "./pages/BookingPayments";
+import SafariDetails from "./pages/SafariDetails";
+import SafariDue from "./pages/SafariDue";
+import VolvoPayments from "./pages/VolvoPayments";
+import HotelDetails from "./pages/HotelDetails";
+import HotelDue from "./pages/HotelDue";
+import VehicleDetails from "./pages/VehicleDetails";
+import VehicleDue from "./pages/VehicleDue";
+import CancelledBookings from "./pages/CancelledBookings";
+import HoldBookings from "./pages/HoldBookings";
+import CreateHoldBooking from "./pages/CreateHoldBooking";
 
 const queryClient = new QueryClient();
 
@@ -143,7 +155,23 @@ const App = () => (
             }
           />
           <Route
-            path="/bookings/*"
+            path="/bookings/hold"
+            element={
+              <DashboardLayout>
+                <CreateHoldBooking />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/bookings/hold-list"
+            element={
+              <DashboardLayout>
+                <HoldBookings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/bookings/add"
             element={
               <DashboardLayout>
                 <Bookings />
@@ -151,10 +179,42 @@ const App = () => (
             }
           />
           <Route
-            path="/payments/*"
+            path="/bookings"
+            element={
+              <DashboardLayout>
+                <Bookings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/bookings/cancelled"
+            element={
+              <DashboardLayout>
+                <CancelledBookings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments"
             element={
               <DashboardLayout>
                 <Payments />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/booking-due"
+            element={
+              <DashboardLayout>
+                <BookingDue />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/booking"
+            element={
+              <DashboardLayout>
+                <BookingPayments />
               </DashboardLayout>
             }
           />
@@ -171,6 +231,22 @@ const App = () => (
             element={
               <DashboardLayout>
                 <RoomBookings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/safari"
+            element={
+              <DashboardLayout>
+                <SafariDetails />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/safari-due"
+            element={
+              <DashboardLayout>
+                <SafariDue />
               </DashboardLayout>
             }
           />
@@ -207,6 +283,14 @@ const App = () => (
             }
           />
           <Route
+            path="/payments/volvo"
+            element={
+              <DashboardLayout>
+                <VolvoPayments />
+              </DashboardLayout>
+            }
+          />
+          <Route
             path="/payments/safari-payment"
             element={
               <DashboardLayout>
@@ -215,10 +299,42 @@ const App = () => (
             }
           />
           <Route
+            path="/payments/hotel"
+            element={
+              <DashboardLayout>
+                <HotelDetails />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/hotel-due"
+            element={
+              <DashboardLayout>
+                <HotelDue />
+              </DashboardLayout>
+            }
+          />
+          <Route
             path="/payments/hotel-payment"
             element={
               <DashboardLayout>
                 <HotelPayments />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/vehicle"
+            element={
+              <DashboardLayout>
+                <VehicleDetails />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/payments/vehicle-due"
+            element={
+              <DashboardLayout>
+                <VehicleDue />
               </DashboardLayout>
             }
           />
