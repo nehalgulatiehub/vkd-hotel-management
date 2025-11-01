@@ -289,6 +289,15 @@ export default function Bookings() {
 
         if (bookingError) throw bookingError;
         bookingId = editingBookingId;
+
+        // Delete existing related records before inserting new ones
+        await Promise.all([
+          supabase.from("hotel_bookings").delete().eq("booking_id", bookingId),
+          supabase.from("volvo_bookings").delete().eq("booking_id", bookingId),
+          supabase.from("safari_bookings").delete().eq("booking_id", bookingId),
+          supabase.from("vehicle_bookings").delete().eq("booking_id", bookingId),
+          supabase.from("group_expenses").delete().eq("booking_id", bookingId)
+        ]);
       } else {
         // Insert new booking
         const { data: bookingResult, error: bookingError } = await supabase
@@ -589,83 +598,116 @@ export default function Bookings() {
   const handleEditBooking = async (booking: any) => {
     setEditingBookingId(booking.id);
     
-    // Pre-fill form with booking data
-    setFormData({
-      booking_type: booking.booking_type || "agent",
-      agent_id: booking.agent_id || "",
-      reference: booking.reference || "",
-      reference_email: booking.reference_email || "",
-      customer_name: booking.customer_name || "",
-      address: booking.address || "",
-      contact_no: booking.contact_no || "",
-      email: booking.email || "",
-      adults: booking.adults || 1,
-      children: booking.children || 0,
-      notes: booking.notes || "",
-      check_in_date: booking.check_in_date || "",
-      check_out_date: booking.check_out_date || "",
-      include_booking: booking.include_booking || false,
-      include_delhi_manali: booking.include_delhi_manali || false,
-      include_manali_delhi: booking.include_manali_delhi || false,
-      include_safari: booking.include_safari || false,
-      include_another_hotel: booking.include_another_hotel || false,
-      include_additional_vehicle: booking.include_additional_vehicle || false,
-      include_group_expenses: booking.include_group_expenses || false,
-      agent_commission: booking.agent_commission?.toString() || "",
-      cheque_no: booking.cheque_no || "",
-      booking_hotel_id: "",
-      booking_room: "",
-      booking_num_rooms: "",
-      booking_package_type: "select",
-      booking_custom_package: "",
-      booking_price: "",
-      booking_from: "",
-      booking_to: "",
-      dm_num_tickets: "",
-      dm_ticket_no: "",
-      dm_seat_no: "",
-      dm_transporter_id: "",
-      dm_booking_date: "",
-      dm_journey_date: "",
-      dm_booking_price: "",
-      dm_selling_price: "",
-      md_num_tickets: "",
-      md_ticket_no: "",
-      md_seat_no: "",
-      md_transporter_id: "",
-      md_booking_date: "",
-      md_journey_date: "",
-      md_booking_price: "",
-      md_selling_price: "",
-      safari_transporter_id: "",
-      safari_num: "",
-      safari_booking_date: "",
-      safari_journey_date: "",
-      safari_booking_price: "",
-      safari_selling_price: "",
-      safari_note: "",
-      another_hotel_id: "",
-      another_hotel_num_rooms: "",
-      another_hotel_room_type: "",
-      another_hotel_booking_date: "",
-      another_hotel_check_in: "",
-      another_hotel_check_out: "",
-      another_hotel_booking_price: "",
-      another_hotel_selling_price: "",
-      another_hotel_note: "",
-      vehicle_details: "",
-      vehicle_booking_price: "",
-      vehicle_selling_price: "",
-      vehicle_transporter_id: "",
-      vehicle_booking_date: "",
-      vehicle_journey_date: "",
-      vehicle_note: "",
-      group_expense_amount: "",
-      group_expense_details: ""
-    });
-    
-    setShowForm(true);
-    toast.success("Edit mode activated");
+    try {
+      // Fetch all related booking data
+      const [hotelData, volvoData, safariData, vehicleData, expenseData] = await Promise.all([
+        supabase.from("hotel_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("vehicle_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("group_expenses").select("*").eq("booking_id", booking.id)
+      ]);
+
+      const hotelBooking = hotelData.data?.[0];
+      const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "Delhi-Manali");
+      const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "Manali-Delhi");
+      const safariBooking = safariData.data?.[0];
+      const vehicleBooking = vehicleData.data?.[0];
+      const groupExpense = expenseData.data?.[0];
+
+      // Pre-fill form with ALL booking data
+      setFormData({
+        booking_type: booking.booking_type || "agent",
+        agent_id: booking.agent_id || "",
+        reference: booking.reference || "",
+        reference_email: booking.reference_email || "",
+        customer_name: booking.customer_name || "",
+        address: booking.address || "",
+        contact_no: booking.contact_no || "",
+        email: booking.email || "",
+        adults: booking.adults || 1,
+        children: booking.children || 0,
+        notes: booking.notes || "",
+        check_in_date: booking.check_in_date || "",
+        check_out_date: booking.check_out_date || "",
+        include_booking: booking.include_booking || false,
+        include_delhi_manali: booking.include_delhi_manali || false,
+        include_manali_delhi: booking.include_manali_delhi || false,
+        include_safari: booking.include_safari || false,
+        include_another_hotel: booking.include_another_hotel || false,
+        include_additional_vehicle: booking.include_additional_vehicle || false,
+        include_group_expenses: booking.include_group_expenses || false,
+        agent_commission: booking.agent_commission?.toString() || "",
+        cheque_no: booking.cheque_no || "",
+        // Hotel booking data
+        booking_hotel_id: hotelBooking?.hotel_id || "",
+        booking_room: hotelBooking?.room_type || "",
+        booking_num_rooms: hotelBooking?.number_of_rooms?.toString() || "",
+        booking_package_type: "select",
+        booking_custom_package: hotelBooking?.notes || "",
+        booking_price: hotelBooking?.room_rate?.toString() || "",
+        booking_from: hotelBooking?.check_in_date || "",
+        booking_to: hotelBooking?.check_out_date || "",
+        // Delhi-Manali volvo data
+        dm_num_tickets: delhiManaliVolvo?.number_of_seats?.toString() || "",
+        dm_ticket_no: delhiManaliVolvo?.notes?.split("Ticket No: ")[1]?.split(",")[0] || "",
+        dm_seat_no: delhiManaliVolvo?.notes?.split("Seat No: ")[1] || "",
+        dm_transporter_id: "",
+        dm_booking_date: "",
+        dm_journey_date: delhiManaliVolvo?.travel_date || "",
+        dm_booking_price: delhiManaliVolvo?.rate_per_seat?.toString() || "",
+        dm_selling_price: delhiManaliVolvo?.total_amount?.toString() || "",
+        // Manali-Delhi volvo data
+        md_num_tickets: manaliDelhiVolvo?.number_of_seats?.toString() || "",
+        md_ticket_no: manaliDelhiVolvo?.notes?.split("Ticket No: ")[1]?.split(",")[0] || "",
+        md_seat_no: manaliDelhiVolvo?.notes?.split("Seat No: ")[1] || "",
+        md_transporter_id: "",
+        md_booking_date: "",
+        md_journey_date: manaliDelhiVolvo?.travel_date || "",
+        md_booking_price: manaliDelhiVolvo?.rate_per_seat?.toString() || "",
+        md_selling_price: manaliDelhiVolvo?.total_amount?.toString() || "",
+        // Safari data
+        safari_transporter_id: "",
+        safari_num: safariBooking?.number_of_persons?.toString() || "",
+        safari_booking_date: "",
+        safari_journey_date: safariBooking?.safari_date || "",
+        safari_booking_price: safariBooking?.rate_per_person?.toString() || "",
+        safari_selling_price: safariBooking?.total_amount?.toString() || "",
+        safari_note: safariBooking?.notes || "",
+        // Another hotel data
+        another_hotel_id: "",
+        another_hotel_num_rooms: "",
+        another_hotel_room_type: "",
+        another_hotel_booking_date: "",
+        another_hotel_check_in: "",
+        another_hotel_check_out: "",
+        another_hotel_booking_price: "",
+        another_hotel_selling_price: "",
+        another_hotel_note: "",
+        // Vehicle data
+        vehicle_details: vehicleBooking?.notes?.split("\n")[0] || "",
+        vehicle_booking_price: vehicleBooking?.rate?.toString() || "",
+        vehicle_selling_price: vehicleBooking?.total_amount?.toString() || "",
+        vehicle_transporter_id: vehicleBooking?.transporter_id || "",
+        vehicle_booking_date: vehicleBooking?.pickup_date || "",
+        vehicle_journey_date: vehicleBooking?.dropoff_date || "",
+        vehicle_note: vehicleBooking?.notes?.split("\n")[1] || "",
+        // Group expense data
+        group_expense_amount: groupExpense?.amount?.toString() || "",
+        group_expense_details: groupExpense?.description || ""
+      });
+
+      // Load rooms if hotel is selected
+      if (hotelBooking?.hotel_id) {
+        fetchRoomsForHotel(hotelBooking.hotel_id);
+      }
+
+      setShowForm(true);
+      toast.success("Booking loaded for editing");
+    } catch (error) {
+      console.error("Error loading booking for edit:", error);
+      toast.error("Failed to load booking details");
+    }
   };
 
   const handleAddPayment = (booking: any) => {
