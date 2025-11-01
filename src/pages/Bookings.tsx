@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 export default function Bookings() {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
@@ -243,12 +244,11 @@ export default function Bookings() {
     e.preventDefault();
     
     try {
-      // Generate booking number
-      const bookingNumber = `BK${Date.now().toString().slice(-8)}`;
+      const isEditing = !!editingBookingId;
       
       // Prepare main booking data
       const bookingData = {
-        booking_number: bookingNumber,
+        ...(!isEditing && { booking_number: `BK${Date.now().toString().slice(-8)}` }),
         booking_type: formData.booking_type,
         agent_id: formData.booking_type === "agent" && formData.agent_id ? formData.agent_id : null,
         reference: formData.reference,
@@ -278,16 +278,28 @@ export default function Bookings() {
         due_amount: 0
       };
 
-      // Insert main booking
-      const { data: bookingResult, error: bookingError } = await supabase
-        .from("bookings")
-        .insert([bookingData])
-        .select()
-        .single();
-
-      if (bookingError) throw bookingError;
+      let bookingId: string;
       
-      const bookingId = bookingResult.id;
+      if (isEditing) {
+        // Update existing booking
+        const { error: bookingError } = await supabase
+          .from("bookings")
+          .update(bookingData)
+          .eq("id", editingBookingId);
+
+        if (bookingError) throw bookingError;
+        bookingId = editingBookingId;
+      } else {
+        // Insert new booking
+        const { data: bookingResult, error: bookingError } = await supabase
+          .from("bookings")
+          .insert([bookingData])
+          .select()
+          .single();
+
+        if (bookingError) throw bookingError;
+        bookingId = bookingResult.id;
+      }
 
       // Insert Hotel Booking if included
       if (formData.include_booking && formData.booking_hotel_id) {
@@ -425,8 +437,9 @@ export default function Bookings() {
         if (expenseError) console.error("Group expense error:", expenseError);
       }
 
-      toast.success("Booking created successfully with all details");
+      toast.success(isEditing ? "Booking updated successfully" : "Booking created successfully with all details");
       setShowForm(false);
+      setEditingBookingId(null);
       fetchBookings();
       // Reset form
       setFormData({
@@ -573,8 +586,86 @@ export default function Bookings() {
     navigate(`/refunds?id=${booking.id}`);
   };
 
-  const handleEditBooking = (booking: any) => {
-    toast.info("Edit functionality coming soon");
+  const handleEditBooking = async (booking: any) => {
+    setEditingBookingId(booking.id);
+    
+    // Pre-fill form with booking data
+    setFormData({
+      booking_type: booking.booking_type || "agent",
+      agent_id: booking.agent_id || "",
+      reference: booking.reference || "",
+      reference_email: booking.reference_email || "",
+      customer_name: booking.customer_name || "",
+      address: booking.address || "",
+      contact_no: booking.contact_no || "",
+      email: booking.email || "",
+      adults: booking.adults || 1,
+      children: booking.children || 0,
+      notes: booking.notes || "",
+      check_in_date: booking.check_in_date || "",
+      check_out_date: booking.check_out_date || "",
+      include_booking: booking.include_booking || false,
+      include_delhi_manali: booking.include_delhi_manali || false,
+      include_manali_delhi: booking.include_manali_delhi || false,
+      include_safari: booking.include_safari || false,
+      include_another_hotel: booking.include_another_hotel || false,
+      include_additional_vehicle: booking.include_additional_vehicle || false,
+      include_group_expenses: booking.include_group_expenses || false,
+      agent_commission: booking.agent_commission?.toString() || "",
+      cheque_no: booking.cheque_no || "",
+      booking_hotel_id: "",
+      booking_room: "",
+      booking_num_rooms: "",
+      booking_package_type: "select",
+      booking_custom_package: "",
+      booking_price: "",
+      booking_from: "",
+      booking_to: "",
+      dm_num_tickets: "",
+      dm_ticket_no: "",
+      dm_seat_no: "",
+      dm_transporter_id: "",
+      dm_booking_date: "",
+      dm_journey_date: "",
+      dm_booking_price: "",
+      dm_selling_price: "",
+      md_num_tickets: "",
+      md_ticket_no: "",
+      md_seat_no: "",
+      md_transporter_id: "",
+      md_booking_date: "",
+      md_journey_date: "",
+      md_booking_price: "",
+      md_selling_price: "",
+      safari_transporter_id: "",
+      safari_num: "",
+      safari_booking_date: "",
+      safari_journey_date: "",
+      safari_booking_price: "",
+      safari_selling_price: "",
+      safari_note: "",
+      another_hotel_id: "",
+      another_hotel_num_rooms: "",
+      another_hotel_room_type: "",
+      another_hotel_booking_date: "",
+      another_hotel_check_in: "",
+      another_hotel_check_out: "",
+      another_hotel_booking_price: "",
+      another_hotel_selling_price: "",
+      another_hotel_note: "",
+      vehicle_details: "",
+      vehicle_booking_price: "",
+      vehicle_selling_price: "",
+      vehicle_transporter_id: "",
+      vehicle_booking_date: "",
+      vehicle_journey_date: "",
+      vehicle_note: "",
+      group_expense_amount: "",
+      group_expense_details: ""
+    });
+    
+    setShowForm(true);
+    toast.success("Edit mode activated");
   };
 
   const handleAddPayment = (booking: any) => {
@@ -681,7 +772,7 @@ export default function Bookings() {
       <main className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">
-            {showForm ? "Create Booking" : "View Booking"}
+            {showForm ? (editingBookingId ? "Edit Booking" : "Create Booking") : "View Booking"}
           </h2>
           <div className="flex gap-2">
             {!showForm && (
@@ -693,7 +784,12 @@ export default function Bookings() {
               </Button>
             )}
             <Button 
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => {
+                setShowForm(!showForm);
+                if (!showForm) {
+                  setEditingBookingId(null);
+                }
+              }}
               className="bg-gradient-primary"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -705,7 +801,7 @@ export default function Bookings() {
         {showForm ? (
           <Card>
             <CardHeader>
-              <CardTitle>Create New Booking</CardTitle>
+              <CardTitle>{editingBookingId ? "Edit Booking" : "Create New Booking"}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -1646,12 +1742,13 @@ export default function Bookings() {
 
                 <div className="flex gap-4">
                   <Button type="submit" className="bg-gradient-primary">
-                    Create
+                    {editingBookingId ? "Update Booking" : "Create Booking"}
                   </Button>
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={() => {
+                      setEditingBookingId(null);
                       setFormData({
                         booking_type: "agent",
                         agent_id: "",
