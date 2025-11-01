@@ -127,7 +127,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"}>
+    <Sidebar className={`${collapsed ? "w-14" : "w-60"} print:hidden`}>
       <SidebarContent>
         <div className="px-4 py-6">
           <h2 className={`font-bold text-xl bg-gradient-primary bg-clip-text text-transparent ${collapsed ? "hidden" : "block"}`}>

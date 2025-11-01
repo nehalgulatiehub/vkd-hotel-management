@@ -17,7 +17,7 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-40">
+    <header className="border-b border-border bg-card sticky top-0 z-40 print:hidden">
       <div className="flex h-16 items-center gap-4 px-6">
         <SidebarTrigger className="lg:hidden" />
         <h1 className="text-2xl font-semibold text-foreground">{title}</h1>

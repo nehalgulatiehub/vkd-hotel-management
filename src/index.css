@@ -127,9 +127,16 @@ All colors MUST be HSL.
 
 /* Print styles */
 @media print {
-  body {
+  html, body {
     background: white !important;
     color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Hide everything except the receipt */
+  body > *:not(.bg-background) {
+    display: none !important;
   }
   
   .print\:hidden {
@@ -140,8 +147,17 @@ All colors MUST be HSL.
     display: block !important;
   }
   
+  /* Ensure only the receipt shows */
+  [data-sidebar] {
+    display: none !important;
+  }
+  
+  header, nav, aside {
+    display: none !important;
+  }
+  
   @page {
-    margin: 1cm;
+    margin: 0.5cm;
     size: A4;
   }
   
