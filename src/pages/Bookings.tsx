@@ -20,6 +20,26 @@ export default function Bookings() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
+  // Filter states
+  const [filters, setFilters] = useState({
+    fromMonth: "",
+    fromDay: "",
+    fromYear: "",
+    toMonth: "",
+    toDay: "",
+    toYear: "",
+    type: "",
+    agentName: "",
+    hotel: "",
+    room: "",
+    package: "",
+    customer: "",
+    reference: "",
+    user: "",
+    chequeNo: "",
+    searchWithDate: false
+  });
+  
   // Form state
   const [formData, setFormData] = useState({
     booking_type: "agent",
@@ -444,25 +464,78 @@ export default function Bookings() {
     }
   };
 
-  const filteredBookings = bookings.filter(booking => 
-    booking.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.reference?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBookings = bookings.filter(booking => {
+    // Basic search
+    const matchesSearch = !searchTerm || 
+      booking.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.reference?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Type filter
+    const matchesType = !filters.type || booking.booking_type === filters.type;
+    
+    // Agent filter
+    const matchesAgent = !filters.agentName || booking.agent_id === filters.agentName;
+    
+    // Customer filter
+    const matchesCustomer = !filters.customer || 
+      booking.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
+    
+    // Reference filter
+    const matchesReference = !filters.reference || 
+      booking.reference?.toLowerCase().includes(filters.reference.toLowerCase());
+    
+    // Cheque No filter
+    const matchesCheque = !filters.chequeNo || 
+      booking.cheque_no?.toLowerCase().includes(filters.chequeNo.toLowerCase());
+    
+    // Date filter
+    let matchesDate = true;
+    if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
+      const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth.padStart(2, '0')}-${filters.fromDay.padStart(2, '0')}`);
+      const bookingDate = new Date(booking.check_in_date);
+      matchesDate = bookingDate >= fromDate;
+      
+      if (filters.toYear && filters.toMonth && filters.toDay) {
+        const toDate = new Date(`${filters.toYear}-${filters.toMonth.padStart(2, '0')}-${filters.toDay.padStart(2, '0')}`);
+        matchesDate = matchesDate && bookingDate <= toDate;
+      }
+    }
+    
+    return matchesSearch && matchesType && matchesAgent && matchesCustomer && 
+           matchesReference && matchesCheque && matchesDate;
+  });
+
+  const months = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 10 }, (_, i) => (currentYear - i).toString());
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header title="Booking Management" />
       <main className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Bookings</h2>
-          <Button 
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-primary"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {showForm ? "View Bookings" : "Create Booking"}
-          </Button>
+          <h2 className="text-2xl font-semibold">
+            {showForm ? "Create Booking" : "View Booking"}
+          </h2>
+          <div className="flex gap-2">
+            {!showForm && (
+              <Button 
+                onClick={() => {/* View all logic */}}
+                variant="outline"
+              >
+                View All Records
+              </Button>
+            )}
+            <Button 
+              onClick={() => setShowForm(!showForm)}
+              className="bg-gradient-primary"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {showForm ? "View Bookings" : "Create Booking"}
+            </Button>
+          </div>
         </div>
 
         {showForm ? (
@@ -1492,57 +1565,298 @@ export default function Bookings() {
           </Card>
         ) : (
           <>
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search bookings..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+            {/* Filter Section */}
+            <Card className="mb-6 bg-pink-50">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* From Date */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">From</Label>
+                    <div className="flex gap-2">
+                      <Select value={filters.fromMonth} onValueChange={(value) => setFilters({...filters, fromMonth: value})}>
+                        <SelectTrigger className="w-20 bg-white">
+                          <SelectValue placeholder="Nov" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={filters.fromDay} onValueChange={(value) => setFilters({...filters, fromDay: value})}>
+                        <SelectTrigger className="w-16 bg-white">
+                          <SelectValue placeholder="1" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input 
+                        type="number" 
+                        placeholder="2025" 
+                        value={filters.fromYear}
+                        onChange={(e) => setFilters({...filters, fromYear: e.target.value})}
+                        className="w-20 bg-white"
+                      />
+                    </div>
+                  </div>
 
+                  {/* To Date */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">To</Label>
+                    <div className="flex gap-2">
+                      <Select value={filters.toMonth} onValueChange={(value) => setFilters({...filters, toMonth: value})}>
+                        <SelectTrigger className="w-20 bg-white">
+                          <SelectValue placeholder="Nov" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={filters.toDay} onValueChange={(value) => setFilters({...filters, toDay: value})}>
+                        <SelectTrigger className="w-16 bg-white">
+                          <SelectValue placeholder="1" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input 
+                        type="number" 
+                        placeholder="2025" 
+                        value={filters.toYear}
+                        onChange={(e) => setFilters({...filters, toYear: e.target.value})}
+                        className="w-20 bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Search with Date */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Search with Date</Label>
+                    <RadioGroup
+                      value={filters.searchWithDate ? "yes" : "no"}
+                      onValueChange={(value) => setFilters({...filters, searchWithDate: value === "yes"})}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="date-yes" />
+                        <Label htmlFor="date-yes">YES</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="date-no" />
+                        <Label htmlFor="date-no">NO</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                  {/* Type */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Type</Label>
+                    <Select value={filters.type} onValueChange={(value) => setFilters({...filters, type: value})}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="--Select--" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="direct">Direct</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Agent Name */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Agent Name</Label>
+                    <Select value={filters.agentName} onValueChange={(value) => setFilters({...filters, agentName: value})}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="--Select--" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {agents.map(agent => (
+                          <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Reference */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Reference</Label>
+                    <Input 
+                      value={filters.reference}
+                      onChange={(e) => setFilters({...filters, reference: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                  {/* Hotel */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Hotel</Label>
+                    <Select value={filters.hotel} onValueChange={(value) => setFilters({...filters, hotel: value})}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="--Select--" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {hotels.map(hotel => (
+                          <SelectItem key={hotel.id} value={hotel.id}>{hotel.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Room */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Room</Label>
+                    <Select value={filters.room} onValueChange={(value) => setFilters({...filters, room: value})}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="--Select--" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="deluxe">Deluxe</SelectItem>
+                        <SelectItem value="suite">Suite</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* User */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">User</Label>
+                    <Select value={filters.user} onValueChange={(value) => setFilters({...filters, user: value})}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="--Select--" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        <SelectItem value="all">All Users</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                  {/* Package */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Package</Label>
+                    <Select value={filters.package} onValueChange={(value) => setFilters({...filters, package: value})}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="--Select--" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        <SelectItem value="all">All Packages</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Customer */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Customer</Label>
+                    <Input 
+                      value={filters.customer}
+                      onChange={(e) => setFilters({...filters, customer: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+
+                  {/* Cheque No */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Cheque No.</Label>
+                    <Input 
+                      value={filters.chequeNo}
+                      onChange={(e) => setFilters({...filters, chequeNo: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+
+                  {/* Search Button */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">&nbsp;</Label>
+                    <Button className="w-full bg-gray-800 hover:bg-gray-700">
+                      Search
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Detailed Table */}
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-muted">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-pink-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Booking No.</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Customer Name</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Reference</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Contact</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Adults/Children</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">S.No.</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Type</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">User</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Customer Details</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Package Details</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Booking Price</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Date</th>
+                        <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody>
                       {filteredBookings.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                          <td colSpan={8} className="border border-gray-300 px-4 py-8 text-center text-muted-foreground">
                             No bookings found
                           </td>
                         </tr>
                       ) : (
-                        filteredBookings.map((booking) => (
+                        filteredBookings.map((booking, index) => (
                           <tr key={booking.id} className="hover:bg-muted/50">
-                            <td className="px-4 py-3 text-sm">{booking.booking_number}</td>
-                            <td className="px-4 py-3 text-sm capitalize">{booking.booking_type}</td>
-                            <td className="px-4 py-3 text-sm">{booking.customer_name || "-"}</td>
-                            <td className="px-4 py-3 text-sm">{booking.reference || "-"}</td>
-                            <td className="px-4 py-3 text-sm">{booking.contact_no || "-"}</td>
-                            <td className="px-4 py-3 text-sm">{booking.adults}/{booking.children}</td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {booking.status}
-                              </span>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">{index + 1}</td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">
+                              <div className="capitalize">{booking.booking_type}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {booking.agents?.name || "Direct"}
+                              </div>
+                            </td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">
+                              {booking.created_by || "-"}
+                            </td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">
+                              <div className="font-medium">{booking.customer_name || "-"}</div>
+                              <div className="text-xs text-muted-foreground">Contact No.: {booking.contact_no || "-"}</div>
+                            </td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">
+                              <div className="space-y-1 text-xs">
+                                {booking.include_booking && <div>✓ Hotel Booking</div>}
+                                {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
+                                {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
+                                {booking.include_safari && <div>✓ Safari</div>}
+                                {booking.include_another_hotel && <div>✓ Another Hotel</div>}
+                                {booking.include_additional_vehicle && <div>✓ Additional Vehicle</div>}
+                                {booking.include_group_expenses && <div>✓ Group Expenses</div>}
+                              </div>
+                            </td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">
+                              <div className="space-y-1 text-xs">
+                                <div><strong>Booking Price:</strong> Rs. {booking.total_amount || 0}/-</div>
+                                <div><strong>Total Received:</strong> Rs. {booking.paid_amount || 0}/-</div>
+                                <div><strong>Payment:</strong> Rs. {booking.paid_amount || 0}/-</div>
+                                <div className="text-red-600"><strong>Due Payment:</strong> Rs. {booking.due_amount || 0}/-</div>
+                              </div>
+                            </td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">
+                              <div className="space-y-1 text-xs">
+                                <div><strong>Date:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</div>
+                                <div><strong>Booking From:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</div>
+                                <div><strong>Booking to:</strong> {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}</div>
+                              </div>
+                            </td>
+                            <td className="border border-gray-300 px-3 py-2">
+                              <div className="flex flex-col gap-1">
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">View Details</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Print Booking</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">View Payment</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Refund Payment</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Edit Booking</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Add Payment</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-red-600">Cancel</Button>
+                              </div>
                             </td>
                           </tr>
                         ))
