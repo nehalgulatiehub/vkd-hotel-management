@@ -350,7 +350,6 @@ export default function Enquiries() {
                         <SelectValue placeholder="Select agent" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
                         {agents.map((agent) => (
                           <SelectItem key={agent.id} value={agent.id}>
                             {agent.name}
@@ -370,7 +369,6 @@ export default function Enquiries() {
                         <SelectValue placeholder="Select guest" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
                         {guests.map((guest) => (
                           <SelectItem key={guest.id} value={guest.id}>
                             {guest.first_name} {guest.last_name}
