@@ -2371,10 +2371,10 @@ export default function Bookings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        {/* Print Receipt - Hidden on screen, visible when printing */}
-        {printBookingId && <BookingReceipt bookingId={printBookingId} />}
       </main>
+
+      {/* Print Receipt - Hidden on screen, visible when printing */}
+      {printBookingId && <BookingReceipt bookingId={printBookingId} />}
     </div>
   );
 }
