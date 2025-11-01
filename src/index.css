@@ -134,26 +134,12 @@ All colors MUST be HSL.
     padding: 0 !important;
   }
   
-  /* Hide everything except the receipt */
-  body > *:not(.bg-background) {
-    display: none !important;
-  }
-  
   .print\:hidden {
     display: none !important;
   }
   
   .print\:block {
     display: block !important;
-  }
-  
-  /* Ensure only the receipt shows */
-  [data-sidebar] {
-    display: none !important;
-  }
-  
-  header, nav, aside {
-    display: none !important;
   }
   
   @page {
