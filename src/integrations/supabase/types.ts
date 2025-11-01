@@ -545,6 +545,7 @@ export type Database = {
           id: string
           notes: string | null
           number_of_rooms: number | null
+          own_hotel_id: string | null
           paid_amount: number | null
           room_rate: number | null
           room_type: string | null
@@ -561,6 +562,7 @@ export type Database = {
           id?: string
           notes?: string | null
           number_of_rooms?: number | null
+          own_hotel_id?: string | null
           paid_amount?: number | null
           room_rate?: number | null
           room_type?: string | null
@@ -577,6 +579,7 @@ export type Database = {
           id?: string
           notes?: string | null
           number_of_rooms?: number | null
+          own_hotel_id?: string | null
           paid_amount?: number | null
           room_rate?: number | null
           room_type?: string | null
@@ -596,6 +599,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "another_hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_bookings_own_hotel_id_fkey"
+            columns: ["own_hotel_id"]
+            isOneToOne: false
+            referencedRelation: "own_hotels"
             referencedColumns: ["id"]
           },
         ]

@@ -310,17 +310,26 @@ export default function Bookings() {
         bookingId = bookingResult.id;
       }
 
+      // Calculate total amounts from all services
+      let totalAmount = 0;
+
       // Insert Hotel Booking if included
       if (formData.include_booking && formData.booking_hotel_id) {
+        const hotelAmount = formData.booking_price ? parseFloat(formData.booking_price) : 0;
+        totalAmount += hotelAmount;
+        
         const hotelBookingData = {
           booking_id: bookingId,
-          hotel_id: formData.booking_hotel_id,
+          own_hotel_id: formData.booking_hotel_id, // Use own_hotel_id instead of hotel_id
+          hotel_id: null,
           check_in_date: formData.booking_from || formData.check_in_date,
           check_out_date: formData.booking_to || formData.check_out_date,
           room_type: formData.booking_room,
           number_of_rooms: formData.booking_num_rooms ? parseInt(formData.booking_num_rooms) : 1,
-          room_rate: formData.booking_price ? parseFloat(formData.booking_price) : 0,
-          total_amount: formData.booking_price ? parseFloat(formData.booking_price) : 0,
+          room_rate: hotelAmount,
+          total_amount: hotelAmount,
+          paid_amount: 0,
+          due_amount: hotelAmount,
           notes: formData.booking_custom_package
         };
         
@@ -333,13 +342,18 @@ export default function Bookings() {
 
       // Insert Delhi-Manali Volvo Booking if included
       if (formData.include_delhi_manali) {
+        const volvoAmount = formData.dm_selling_price ? parseFloat(formData.dm_selling_price) : 0;
+        totalAmount += volvoAmount;
+        
         const volvoData = {
           booking_id: bookingId,
           route: "Delhi-Manali",
           travel_date: formData.dm_journey_date,
           number_of_seats: formData.dm_num_tickets ? parseInt(formData.dm_num_tickets) : 1,
           rate_per_seat: formData.dm_booking_price ? parseFloat(formData.dm_booking_price) : 0,
-          total_amount: formData.dm_selling_price ? parseFloat(formData.dm_selling_price) : 0,
+          total_amount: volvoAmount,
+          paid_amount: 0,
+          due_amount: volvoAmount,
           notes: `Ticket No: ${formData.dm_ticket_no}, Seat No: ${formData.dm_seat_no}`
         };
         
@@ -352,13 +366,18 @@ export default function Bookings() {
 
       // Insert Manali-Delhi Volvo Booking if included
       if (formData.include_manali_delhi) {
+        const volvoAmount = formData.md_selling_price ? parseFloat(formData.md_selling_price) : 0;
+        totalAmount += volvoAmount;
+        
         const volvoData = {
           booking_id: bookingId,
           route: "Manali-Delhi",
           travel_date: formData.md_journey_date,
           number_of_seats: formData.md_num_tickets ? parseInt(formData.md_num_tickets) : 1,
           rate_per_seat: formData.md_booking_price ? parseFloat(formData.md_booking_price) : 0,
-          total_amount: formData.md_selling_price ? parseFloat(formData.md_selling_price) : 0,
+          total_amount: volvoAmount,
+          paid_amount: 0,
+          due_amount: volvoAmount,
           notes: `Ticket No: ${formData.md_ticket_no}, Seat No: ${formData.md_seat_no}`
         };
         
@@ -371,13 +390,18 @@ export default function Bookings() {
 
       // Insert Safari Booking if included
       if (formData.include_safari) {
+        const safariAmount = formData.safari_selling_price ? parseFloat(formData.safari_selling_price) : 0;
+        totalAmount += safariAmount;
+        
         const safariData = {
           booking_id: bookingId,
           safari_name: "Safari",
           safari_date: formData.safari_journey_date,
           number_of_persons: formData.safari_num ? parseInt(formData.safari_num) : 1,
           rate_per_person: formData.safari_booking_price ? parseFloat(formData.safari_booking_price) : 0,
-          total_amount: formData.safari_selling_price ? parseFloat(formData.safari_selling_price) : 0,
+          total_amount: safariAmount,
+          paid_amount: 0,
+          due_amount: safariAmount,
           notes: formData.safari_note
         };
         
@@ -390,15 +414,21 @@ export default function Bookings() {
 
       // Insert Another Hotel Booking if included
       if (formData.include_another_hotel && formData.another_hotel_id) {
+        const anotherHotelAmount = formData.another_hotel_selling_price ? parseFloat(formData.another_hotel_selling_price) : 0;
+        totalAmount += anotherHotelAmount;
+        
         const anotherHotelData = {
           booking_id: bookingId,
           hotel_id: formData.another_hotel_id,
+          own_hotel_id: null,
           check_in_date: formData.another_hotel_check_in,
           check_out_date: formData.another_hotel_check_out,
           room_type: formData.another_hotel_room_type,
           number_of_rooms: formData.another_hotel_num_rooms ? parseInt(formData.another_hotel_num_rooms) : 1,
           room_rate: formData.another_hotel_booking_price ? parseFloat(formData.another_hotel_booking_price) : 0,
-          total_amount: formData.another_hotel_selling_price ? parseFloat(formData.another_hotel_selling_price) : 0,
+          total_amount: anotherHotelAmount,
+          paid_amount: 0,
+          due_amount: anotherHotelAmount,
           notes: formData.another_hotel_note
         };
         
@@ -411,6 +441,9 @@ export default function Bookings() {
 
       // Insert Additional Vehicle Booking if included
       if (formData.include_additional_vehicle) {
+        const vehicleAmount = formData.vehicle_selling_price ? parseFloat(formData.vehicle_selling_price) : 0;
+        totalAmount += vehicleAmount;
+        
         const vehicleData = {
           booking_id: bookingId,
           transporter_id: formData.vehicle_transporter_id || null,
@@ -418,7 +451,9 @@ export default function Bookings() {
           pickup_date: formData.vehicle_booking_date,
           dropoff_date: formData.vehicle_journey_date,
           rate: formData.vehicle_booking_price ? parseFloat(formData.vehicle_booking_price) : 0,
-          total_amount: formData.vehicle_selling_price ? parseFloat(formData.vehicle_selling_price) : 0,
+          total_amount: vehicleAmount,
+          paid_amount: 0,
+          due_amount: vehicleAmount,
           notes: `${formData.vehicle_details}\n${formData.vehicle_note}`
         };
         
@@ -431,9 +466,12 @@ export default function Bookings() {
 
       // Insert Group Expenses if included
       if (formData.include_group_expenses && formData.group_expense_amount) {
+        const expenseAmount = parseFloat(formData.group_expense_amount);
+        totalAmount += expenseAmount;
+        
         const expenseData = {
           booking_id: bookingId,
-          amount: parseFloat(formData.group_expense_amount),
+          amount: expenseAmount,
           description: formData.group_expense_details,
           expense_date: new Date().toISOString().split('T')[0],
           category: "Group Expense"
@@ -445,6 +483,18 @@ export default function Bookings() {
         
         if (expenseError) console.error("Group expense error:", expenseError);
       }
+
+      // Update booking with calculated totals
+      const { error: updateTotalsError } = await supabase
+        .from("bookings")
+        .update({
+          total_amount: totalAmount,
+          due_amount: totalAmount - (bookingData.paid_amount || 0),
+          payment_status: totalAmount > 0 ? (bookingData.paid_amount || 0) >= totalAmount ? "paid" : (bookingData.paid_amount || 0) > 0 ? "partial" : "pending" : "paid"
+        })
+        .eq("id", bookingId);
+
+      if (updateTotalsError) console.error("Error updating totals:", updateTotalsError);
 
       toast.success(isEditing ? "Booking updated successfully" : "Booking created successfully with all details");
       setShowForm(false);
@@ -639,13 +689,13 @@ export default function Bookings() {
         include_group_expenses: booking.include_group_expenses || false,
         agent_commission: booking.agent_commission?.toString() || "",
         cheque_no: booking.cheque_no || "",
-        // Hotel booking data
-        booking_hotel_id: hotelBooking?.hotel_id || "",
+        // Hotel booking data - use own_hotel_id if available
+        booking_hotel_id: hotelBooking?.own_hotel_id || hotelBooking?.hotel_id || "",
         booking_room: hotelBooking?.room_type || "",
         booking_num_rooms: hotelBooking?.number_of_rooms?.toString() || "",
         booking_package_type: "select",
         booking_custom_package: hotelBooking?.notes || "",
-        booking_price: hotelBooking?.room_rate?.toString() || "",
+        booking_price: hotelBooking?.total_amount?.toString() || "",
         booking_from: hotelBooking?.check_in_date || "",
         booking_to: hotelBooking?.check_out_date || "",
         // Delhi-Manali volvo data
