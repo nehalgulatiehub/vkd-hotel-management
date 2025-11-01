@@ -638,8 +638,8 @@ export default function Bookings() {
     setPrintBookingId(booking.id);
     setTimeout(() => {
       window.print();
-      setPrintBookingId(null);
-    }, 100);
+      setTimeout(() => setPrintBookingId(null), 500);
+    }, 500);
   };
 
   const handleViewPayment = (booking: any) => {
