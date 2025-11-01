@@ -15,6 +15,8 @@ export default function Bookings() {
   const [showForm, setShowForm] = useState(false);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
+  const [ownHotels, setOwnHotels] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -124,11 +126,40 @@ export default function Bookings() {
 
   useEffect(() => {
     fetchAgents();
+    fetchOwnHotels();
     fetchHotels();
     fetchAnotherHotels();
     fetchTransporters();
     fetchBookings();
   }, []);
+
+  const fetchOwnHotels = async () => {
+    const { data, error } = await supabase
+      .from("own_hotels")
+      .select("*")
+      .order("name");
+    
+    if (error) {
+      console.error("Failed to load own hotels", error);
+    } else {
+      setOwnHotels(data || []);
+    }
+  };
+
+  const fetchRoomsForHotel = async (hotelId: string) => {
+    const { data, error } = await supabase
+      .from("rooms")
+      .select("*")
+      .eq("hotel_id", hotelId)
+      .eq("is_available", true)
+      .order("room_number");
+    
+    if (error) {
+      console.error("Failed to load rooms", error);
+    } else {
+      setRooms(data || []);
+    }
+  };
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
@@ -844,16 +875,19 @@ export default function Bookings() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Hotel</Label>
+                        <Label>Hotel (Own)</Label>
                         <Select
                           value={formData.booking_hotel_id}
-                          onValueChange={(value) => setFormData({ ...formData, booking_hotel_id: value })}
+                          onValueChange={(value) => {
+                            setFormData({ ...formData, booking_hotel_id: value, booking_room: "" });
+                            fetchRoomsForHotel(value);
+                          }}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="-----Select------" />
+                            <SelectValue placeholder="-----Select Hotel------" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {hotels.map((hotel) => (
+                          <SelectContent className="bg-white z-50">
+                            {ownHotels.map((hotel) => (
                               <SelectItem key={hotel.id} value={hotel.id}>
                                 {hotel.name}
                               </SelectItem>
@@ -867,14 +901,17 @@ export default function Bookings() {
                         <Select
                           value={formData.booking_room}
                           onValueChange={(value) => setFormData({ ...formData, booking_room: value })}
+                          disabled={!formData.booking_hotel_id}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="------Select------" />
+                            <SelectValue placeholder="------Select Room------" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="standard">Standard</SelectItem>
-                            <SelectItem value="deluxe">Deluxe</SelectItem>
-                            <SelectItem value="suite">Suite</SelectItem>
+                          <SelectContent className="bg-white z-50">
+                            {rooms.map((room) => (
+                              <SelectItem key={room.id} value={room.id}>
+                                Room {room.room_number} - {room.room_type} (₹{room.base_price}/night)
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1693,13 +1730,13 @@ export default function Bookings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                   {/* Hotel */}
                   <div className="space-y-2">
-                    <Label className="text-sm">Hotel</Label>
+                    <Label className="text-sm">Hotel (Own)</Label>
                     <Select value={filters.hotel} onValueChange={(value) => setFilters({...filters, hotel: value})}>
                       <SelectTrigger className="bg-white">
                         <SelectValue placeholder="--Select--" />
                       </SelectTrigger>
                       <SelectContent className="bg-white z-50">
-                        {hotels.map(hotel => (
+                        {ownHotels.map(hotel => (
                           <SelectItem key={hotel.id} value={hotel.id}>{hotel.name}</SelectItem>
                         ))}
                       </SelectContent>

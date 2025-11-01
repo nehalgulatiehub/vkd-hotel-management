@@ -600,6 +600,62 @@ export type Database = {
           },
         ]
       }
+      own_hotels: {
+        Row: {
+          address: string | null
+          amenities: string[] | null
+          city_id: string | null
+          contact_person: string | null
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[] | null
+          city_id?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[] | null
+          city_id?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "own_hotels_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -738,6 +794,68 @@ export type Database = {
             columns: ["processed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          adult_capacity: number | null
+          amenities: string[] | null
+          base_price: number
+          capacity: number | null
+          child_capacity: number | null
+          created_at: string | null
+          description: string | null
+          floor_number: number | null
+          hotel_id: string
+          id: string
+          is_available: boolean | null
+          notes: string | null
+          room_number: string
+          room_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          adult_capacity?: number | null
+          amenities?: string[] | null
+          base_price?: number
+          capacity?: number | null
+          child_capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor_number?: number | null
+          hotel_id: string
+          id?: string
+          is_available?: boolean | null
+          notes?: string | null
+          room_number: string
+          room_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          adult_capacity?: number | null
+          amenities?: string[] | null
+          base_price?: number
+          capacity?: number | null
+          child_capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor_number?: number | null
+          hotel_id?: string
+          id?: string
+          is_available?: boolean | null
+          notes?: string | null
+          room_number?: string
+          room_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "own_hotels"
             referencedColumns: ["id"]
           },
         ]

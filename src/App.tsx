@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import Cities from "./pages/Cities";
 import Agents from "./pages/Agents";
 import Transporters from "./pages/Transporters";
+import OwnHotels from "./pages/OwnHotels";
+import Rooms from "./pages/Rooms";
 import Hotels from "./pages/Hotels";
 import Enquiries from "./pages/Enquiries";
 import Bookings from "./pages/Bookings";
@@ -127,6 +129,22 @@ const App = () => (
             element={
               <DashboardLayout>
                 <ExportHotels />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/own-hotels"
+            element={
+              <DashboardLayout>
+                <OwnHotels />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/hotels/:hotelId/rooms"
+            element={
+              <DashboardLayout>
+                <Rooms />
               </DashboardLayout>
             }
           />
