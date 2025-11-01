@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { BookingReceipt } from "@/components/booking/BookingReceipt";
 
 export default function Bookings() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export default function Bookings() {
   const [paymentMode, setPaymentMode] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [cancellationReason, setCancellationReason] = useState("");
+  const [printBookingId, setPrintBookingId] = useState<string | null>(null);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -633,8 +635,11 @@ export default function Bookings() {
   };
 
   const handlePrintBooking = (booking: any) => {
-    window.print();
-    toast.success("Print dialog opened");
+    setPrintBookingId(booking.id);
+    setTimeout(() => {
+      window.print();
+      setPrintBookingId(null);
+    }, 100);
   };
 
   const handleViewPayment = (booking: any) => {
@@ -2366,6 +2371,9 @@ export default function Bookings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Print Receipt - Hidden on screen, visible when printing */}
+        {printBookingId && <BookingReceipt bookingId={printBookingId} />}
       </main>
     </div>
   );
