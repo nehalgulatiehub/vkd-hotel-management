@@ -566,11 +566,11 @@ export default function Bookings() {
   };
 
   const handleViewPayment = (booking: any) => {
-    navigate(`/booking-payments?booking=${booking.id}`);
+    navigate(`/payments/booking?id=${booking.id}`);
   };
 
   const handleRefundPayment = (booking: any) => {
-    navigate(`/refunds?booking=${booking.id}`);
+    navigate(`/refunds?id=${booking.id}`);
   };
 
   const handleEditBooking = (booking: any) => {

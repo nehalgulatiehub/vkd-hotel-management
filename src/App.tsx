@@ -28,6 +28,7 @@ import ExportEnquiries from "./pages/ExportEnquiries";
 import BookingAvailability from "./pages/BookingAvailability";
 import ExportBookings from "./pages/ExportBookings";
 import RoomBookings from "./pages/RoomBookings";
+import BookingDetails from "./pages/BookingDetails";
 import VolvoDelhiManali from "./pages/VolvoDelhiManali";
 import DelhiManaliDue from "./pages/DelhiManaliDue";
 import VolvoManaliDelhi from "./pages/VolvoManaliDelhi";
@@ -201,6 +202,14 @@ const App = () => (
             element={
               <DashboardLayout>
                 <Bookings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/bookings/:id"
+            element={
+              <DashboardLayout>
+                <BookingDetails />
               </DashboardLayout>
             }
           />
