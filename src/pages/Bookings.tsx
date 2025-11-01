@@ -6,12 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export default function Bookings() {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
@@ -21,6 +25,15 @@ export default function Bookings() {
   const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Dialog states
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMode, setPaymentMode] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [cancellationReason, setCancellationReason] = useState("");
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -541,6 +554,126 @@ export default function Bookings() {
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => (currentYear - i).toString());
+
+  // Action handlers
+  const handleViewDetails = (booking: any) => {
+    navigate(`/bookings/${booking.id}`);
+  };
+
+  const handlePrintBooking = (booking: any) => {
+    window.print();
+    toast.success("Print dialog opened");
+  };
+
+  const handleViewPayment = (booking: any) => {
+    navigate(`/booking-payments?booking=${booking.id}`);
+  };
+
+  const handleRefundPayment = (booking: any) => {
+    navigate(`/refunds?booking=${booking.id}`);
+  };
+
+  const handleEditBooking = (booking: any) => {
+    toast.info("Edit functionality coming soon");
+  };
+
+  const handleAddPayment = (booking: any) => {
+    setSelectedBooking(booking);
+    setPaymentAmount("");
+    setPaymentMode("");
+    setPaymentReference("");
+    setShowPaymentDialog(true);
+  };
+
+  const handleCancelBooking = (booking: any) => {
+    setSelectedBooking(booking);
+    setCancellationReason("");
+    setShowCancelDialog(true);
+  };
+
+  const submitPayment = async () => {
+    if (!paymentAmount || !paymentMode) {
+      toast.error("Please fill in required fields");
+      return;
+    }
+
+    try {
+      const amount = parseFloat(paymentAmount);
+      
+      // Insert payment record
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          booking_id: selectedBooking.id,
+          amount: amount,
+          payment_mode: paymentMode,
+          reference_number: paymentReference,
+          payment_date: new Date().toISOString().split('T')[0]
+        });
+
+      if (paymentError) throw paymentError;
+
+      // Update booking paid and due amounts
+      const newPaidAmount = (selectedBooking.paid_amount || 0) + amount;
+      const newDueAmount = (selectedBooking.total_amount || 0) - newPaidAmount;
+
+      const { error: updateError } = await supabase
+        .from("bookings")
+        .update({
+          paid_amount: newPaidAmount,
+          due_amount: newDueAmount,
+          payment_status: newDueAmount <= 0 ? "paid" : "partial"
+        })
+        .eq("id", selectedBooking.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Payment added successfully");
+      setShowPaymentDialog(false);
+      fetchBookings();
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Failed to add payment");
+    }
+  };
+
+  const submitCancellation = async () => {
+    if (!cancellationReason) {
+      toast.error("Please provide a cancellation reason");
+      return;
+    }
+
+    try {
+      // Create cancellation record
+      const { error: cancellationError } = await supabase
+        .from("cancellations")
+        .insert({
+          booking_id: selectedBooking.id,
+          cancellation_reason: cancellationReason,
+          refund_amount: selectedBooking.paid_amount || 0,
+          cancellation_charges: 0
+        });
+
+      if (cancellationError) throw cancellationError;
+
+      // Update booking status
+      const { error: updateError } = await supabase
+        .from("bookings")
+        .update({
+          status: "cancelled"
+        })
+        .eq("id", selectedBooking.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Booking cancelled successfully");
+      setShowCancelDialog(false);
+      fetchBookings();
+    } catch (error) {
+      console.error("Cancellation error:", error);
+      toast.error("Failed to cancel booking");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -1886,13 +2019,62 @@ export default function Bookings() {
                             </td>
                             <td className="border border-gray-300 px-3 py-2">
                               <div className="flex flex-col gap-1">
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">View Details</Button>
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Print Booking</Button>
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">View Payment</Button>
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Refund Payment</Button>
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Edit Booking</Button>
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-blue-600">Add Payment</Button>
-                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-red-600">Cancel</Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-blue-600"
+                                  onClick={() => handleViewDetails(booking)}
+                                >
+                                  View Details
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-blue-600"
+                                  onClick={() => handlePrintBooking(booking)}
+                                >
+                                  Print Booking
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-blue-600"
+                                  onClick={() => handleViewPayment(booking)}
+                                >
+                                  View Payment
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-blue-600"
+                                  onClick={() => handleRefundPayment(booking)}
+                                >
+                                  Refund Payment
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-blue-600"
+                                  onClick={() => handleEditBooking(booking)}
+                                >
+                                  Edit Booking
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-blue-600"
+                                  onClick={() => handleAddPayment(booking)}
+                                >
+                                  Add Payment
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-red-600"
+                                  onClick={() => handleCancelBooking(booking)}
+                                >
+                                  Cancel
+                                </Button>
                               </div>
                             </td>
                           </tr>
@@ -1905,6 +2087,96 @@ export default function Bookings() {
             </Card>
           </>
         )}
+
+        {/* Add Payment Dialog */}
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Payment</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Booking Number</Label>
+                <Input value={selectedBooking?.booking_number || ""} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label>Customer Name</Label>
+                <Input value={selectedBooking?.customer_name || ""} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label>Total Amount</Label>
+                <Input value={`Rs. ${selectedBooking?.total_amount || 0}/-`} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label>Due Amount</Label>
+                <Input value={`Rs. ${selectedBooking?.due_amount || 0}/-`} disabled className="text-red-600 font-semibold" />
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Amount <span className="text-destructive">*</span></Label>
+                <Input 
+                  type="number"
+                  placeholder="Enter amount"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Mode <span className="text-destructive">*</span></Label>
+                <Select value={paymentMode} onValueChange={setPaymentMode}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Reference Number</Label>
+                <Input 
+                  placeholder="Transaction/Cheque number"
+                  value={paymentReference}
+                  onChange={(e) => setPaymentReference(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
+                <Button onClick={submitPayment}>Add Payment</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Cancel Booking Dialog */}
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to cancel booking {selectedBooking?.booking_number}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2 my-4">
+              <Label>Cancellation Reason <span className="text-destructive">*</span></Label>
+              <Textarea 
+                placeholder="Please provide reason for cancellation"
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={submitCancellation} className="bg-destructive hover:bg-destructive/90">
+                Confirm Cancellation
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
