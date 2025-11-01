@@ -14,6 +14,9 @@ import { toast } from "sonner";
 export default function Bookings() {
   const [showForm, setShowForm] = useState(false);
   const [agents, setAgents] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<any[]>([]);
+  const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
+  const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -32,7 +35,7 @@ export default function Bookings() {
     notes: "",
     check_in_date: "",
     check_out_date: "",
-    include_booking: true,
+    include_booking: false,
     include_delhi_manali: false,
     include_manali_delhi: false,
     include_safari: false,
@@ -40,11 +43,70 @@ export default function Bookings() {
     include_additional_vehicle: false,
     include_group_expenses: false,
     agent_commission: "",
-    cheque_no: ""
+    cheque_no: "",
+    // Booking section fields
+    booking_hotel_id: "",
+    booking_room: "",
+    booking_num_rooms: "",
+    booking_package_type: "select",
+    booking_custom_package: "",
+    booking_price: "",
+    booking_from: "",
+    booking_to: "",
+    // Delhi-Manali section fields
+    dm_num_tickets: "",
+    dm_ticket_no: "",
+    dm_seat_no: "",
+    dm_transporter_id: "",
+    dm_booking_date: "",
+    dm_journey_date: "",
+    dm_booking_price: "",
+    dm_selling_price: "",
+    // Manali-Delhi section fields
+    md_num_tickets: "",
+    md_ticket_no: "",
+    md_seat_no: "",
+    md_transporter_id: "",
+    md_booking_date: "",
+    md_journey_date: "",
+    md_booking_price: "",
+    md_selling_price: "",
+    // Safari section fields
+    safari_transporter_id: "",
+    safari_num: "",
+    safari_booking_date: "",
+    safari_journey_date: "",
+    safari_booking_price: "",
+    safari_selling_price: "",
+    safari_note: "",
+    // Another Hotel section fields
+    another_hotel_id: "",
+    another_hotel_num_rooms: "",
+    another_hotel_room_type: "",
+    another_hotel_booking_date: "",
+    another_hotel_check_in: "",
+    another_hotel_check_out: "",
+    another_hotel_booking_price: "",
+    another_hotel_selling_price: "",
+    another_hotel_note: "",
+    // Additional Vehicle section fields
+    vehicle_details: "",
+    vehicle_booking_price: "",
+    vehicle_selling_price: "",
+    vehicle_transporter_id: "",
+    vehicle_booking_date: "",
+    vehicle_journey_date: "",
+    vehicle_note: "",
+    // Group Expenses section fields
+    group_expense_amount: "",
+    group_expense_details: ""
   });
 
   useEffect(() => {
     fetchAgents();
+    fetchHotels();
+    fetchAnotherHotels();
+    fetchTransporters();
     fetchBookings();
   }, []);
 
@@ -58,6 +120,45 @@ export default function Bookings() {
       toast.error("Failed to load agents");
     } else {
       setAgents(data || []);
+    }
+  };
+
+  const fetchHotels = async () => {
+    const { data, error } = await supabase
+      .from("another_hotels")
+      .select("*")
+      .order("name");
+    
+    if (error) {
+      console.error("Failed to load hotels", error);
+    } else {
+      setHotels(data || []);
+    }
+  };
+
+  const fetchAnotherHotels = async () => {
+    const { data, error } = await supabase
+      .from("another_hotels")
+      .select("*")
+      .order("name");
+    
+    if (error) {
+      console.error("Failed to load another hotels", error);
+    } else {
+      setAnotherHotels(data || []);
+    }
+  };
+
+  const fetchTransporters = async () => {
+    const { data, error } = await supabase
+      .from("transporters")
+      .select("*")
+      .order("name");
+    
+    if (error) {
+      console.error("Failed to load transporters", error);
+    } else {
+      setTransporters(data || []);
     }
   };
 
@@ -115,7 +216,7 @@ export default function Bookings() {
         notes: "",
         check_in_date: "",
         check_out_date: "",
-        include_booking: true,
+        include_booking: false,
         include_delhi_manali: false,
         include_manali_delhi: false,
         include_safari: false,
@@ -123,7 +224,56 @@ export default function Bookings() {
         include_additional_vehicle: false,
         include_group_expenses: false,
         agent_commission: "",
-        cheque_no: ""
+        cheque_no: "",
+        booking_hotel_id: "",
+        booking_room: "",
+        booking_num_rooms: "",
+        booking_package_type: "select",
+        booking_custom_package: "",
+        booking_price: "",
+        booking_from: "",
+        booking_to: "",
+        dm_num_tickets: "",
+        dm_ticket_no: "",
+        dm_seat_no: "",
+        dm_transporter_id: "",
+        dm_booking_date: "",
+        dm_journey_date: "",
+        dm_booking_price: "",
+        dm_selling_price: "",
+        md_num_tickets: "",
+        md_ticket_no: "",
+        md_seat_no: "",
+        md_transporter_id: "",
+        md_booking_date: "",
+        md_journey_date: "",
+        md_booking_price: "",
+        md_selling_price: "",
+        safari_transporter_id: "",
+        safari_num: "",
+        safari_booking_date: "",
+        safari_journey_date: "",
+        safari_booking_price: "",
+        safari_selling_price: "",
+        safari_note: "",
+        another_hotel_id: "",
+        another_hotel_num_rooms: "",
+        another_hotel_room_type: "",
+        another_hotel_booking_date: "",
+        another_hotel_check_in: "",
+        another_hotel_check_out: "",
+        another_hotel_booking_price: "",
+        another_hotel_selling_price: "",
+        another_hotel_note: "",
+        vehicle_details: "",
+        vehicle_booking_price: "",
+        vehicle_selling_price: "",
+        vehicle_transporter_id: "",
+        vehicle_booking_date: "",
+        vehicle_journey_date: "",
+        vehicle_note: "",
+        group_expense_amount: "",
+        group_expense_details: ""
       });
     }
   };
@@ -447,6 +597,622 @@ export default function Bookings() {
                   </div>
                 </div>
 
+                {/* Booking Details Section */}
+                {formData.include_booking && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Booking Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Hotel</Label>
+                        <Select
+                          value={formData.booking_hotel_id}
+                          onValueChange={(value) => setFormData({ ...formData, booking_hotel_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="-----Select------" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hotels.map((hotel) => (
+                              <SelectItem key={hotel.id} value={hotel.id}>
+                                {hotel.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Room</Label>
+                        <Select
+                          value={formData.booking_room}
+                          onValueChange={(value) => setFormData({ ...formData, booking_room: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="------Select------" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="deluxe">Deluxe</SelectItem>
+                            <SelectItem value="suite">Suite</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>No of Rooms</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={formData.booking_num_rooms}
+                          onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Package Type</Label>
+                        <RadioGroup
+                          value={formData.booking_package_type}
+                          onValueChange={(value) => setFormData({ ...formData, booking_package_type: value })}
+                          className="flex gap-4"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="select" id="pkg-select" />
+                            <Label htmlFor="pkg-select">Select Package</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="custom" id="pkg-custom" />
+                            <Label htmlFor="pkg-custom">Custom Package</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      {formData.booking_package_type === "custom" && (
+                        <div className="space-y-2">
+                          <Label>Custom Package</Label>
+                          <Textarea
+                            value={formData.booking_custom_package}
+                            onChange={(e) => setFormData({ ...formData, booking_custom_package: e.target.value })}
+                            rows={4}
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label>Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.booking_price}
+                          onChange={(e) => setFormData({ ...formData, booking_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Booking From</Label>
+                          <Input
+                            type="date"
+                            value={formData.booking_from}
+                            onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Booking To</Label>
+                          <Input
+                            type="date"
+                            value={formData.booking_to}
+                            onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* DELHI - MANALI Details Section */}
+                {formData.include_delhi_manali && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">DELHI - MANALI Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>No of Tickets</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={formData.dm_num_tickets}
+                          onChange={(e) => setFormData({ ...formData, dm_num_tickets: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Ticket No.</Label>
+                        <Input
+                          value={formData.dm_ticket_no}
+                          onChange={(e) => setFormData({ ...formData, dm_ticket_no: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Seat No.</Label>
+                        <Input
+                          value={formData.dm_seat_no}
+                          onChange={(e) => setFormData({ ...formData, dm_seat_no: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Transporter</Label>
+                        <Select
+                          value={formData.dm_transporter_id}
+                          onValueChange={(value) => setFormData({ ...formData, dm_transporter_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {transporters.map((transporter) => (
+                              <SelectItem key={transporter.id} value={transporter.id}>
+                                {transporter.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Volvo Booking Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.dm_booking_date}
+                            onChange={(e) => setFormData({ ...formData, dm_booking_date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Volvo Journey Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.dm_journey_date}
+                            onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Volvo Booking Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.dm_booking_price}
+                          onChange={(e) => setFormData({ ...formData, dm_booking_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Volvo Selling Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.dm_selling_price}
+                          onChange={(e) => setFormData({ ...formData, dm_selling_price: e.target.value })}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* MANALI - DELHI Details Section */}
+                {formData.include_manali_delhi && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">MANALI - DELHI Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>No of Tickets</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={formData.md_num_tickets}
+                          onChange={(e) => setFormData({ ...formData, md_num_tickets: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Ticket No.</Label>
+                        <Input
+                          value={formData.md_ticket_no}
+                          onChange={(e) => setFormData({ ...formData, md_ticket_no: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Seat No.</Label>
+                        <Input
+                          value={formData.md_seat_no}
+                          onChange={(e) => setFormData({ ...formData, md_seat_no: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Transporter</Label>
+                        <Select
+                          value={formData.md_transporter_id}
+                          onValueChange={(value) => setFormData({ ...formData, md_transporter_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {transporters.map((transporter) => (
+                              <SelectItem key={transporter.id} value={transporter.id}>
+                                {transporter.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Volvo Booking Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.md_booking_date}
+                            onChange={(e) => setFormData({ ...formData, md_booking_date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Volvo Journey Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.md_journey_date}
+                            onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Volvo Booking Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.md_booking_price}
+                          onChange={(e) => setFormData({ ...formData, md_booking_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Volvo Selling Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.md_selling_price}
+                          onChange={(e) => setFormData({ ...formData, md_selling_price: e.target.value })}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Safari Details Section */}
+                {formData.include_safari && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Safari Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Transporter</Label>
+                        <Select
+                          value={formData.safari_transporter_id}
+                          onValueChange={(value) => setFormData({ ...formData, safari_transporter_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {transporters.map((transporter) => (
+                              <SelectItem key={transporter.id} value={transporter.id}>
+                                {transporter.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>No. of Safari</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={formData.safari_num}
+                          onChange={(e) => setFormData({ ...formData, safari_num: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Safari Booking Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.safari_booking_date}
+                            onChange={(e) => setFormData({ ...formData, safari_booking_date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Safari Journey Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.safari_journey_date}
+                            onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Safari Booking Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.safari_booking_price}
+                          onChange={(e) => setFormData({ ...formData, safari_booking_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Safari Selling Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.safari_selling_price}
+                          onChange={(e) => setFormData({ ...formData, safari_selling_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Safari Note</Label>
+                        <Textarea
+                          value={formData.safari_note}
+                          onChange={(e) => setFormData({ ...formData, safari_note: e.target.value })}
+                          rows={4}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Another Hotel Details Section */}
+                {formData.include_another_hotel && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Another Hotel Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Another Hotel Name</Label>
+                        <Select
+                          value={formData.another_hotel_id}
+                          onValueChange={(value) => setFormData({ ...formData, another_hotel_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="-------Select Another Hotel-------" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {anotherHotels.map((hotel) => (
+                              <SelectItem key={hotel.id} value={hotel.id}>
+                                {hotel.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Number of Rooms</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={formData.another_hotel_num_rooms}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_num_rooms: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Room Type</Label>
+                        <Select
+                          value={formData.another_hotel_room_type}
+                          onValueChange={(value) => setFormData({ ...formData, another_hotel_room_type: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="----Select Another Room Type----" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="deluxe">Deluxe</SelectItem>
+                            <SelectItem value="suite">Suite</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Hotel Booking Date</Label>
+                        <Input
+                          type="date"
+                          value={formData.another_hotel_booking_date}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_booking_date: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Hotel Check In</Label>
+                          <Input
+                            type="date"
+                            value={formData.another_hotel_check_in}
+                            onChange={(e) => setFormData({ ...formData, another_hotel_check_in: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Hotel Check Out</Label>
+                          <Input
+                            type="date"
+                            value={formData.another_hotel_check_out}
+                            onChange={(e) => setFormData({ ...formData, another_hotel_check_out: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Room Booking Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.another_hotel_booking_price}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_booking_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Room Selling Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.another_hotel_selling_price}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_selling_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Another Hotel Note</Label>
+                        <Textarea
+                          value={formData.another_hotel_note}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_note: e.target.value })}
+                          rows={4}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Additional Vehicle Details Section */}
+                {formData.include_additional_vehicle && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Additional Vehicle Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Vehicle Details</Label>
+                        <Input
+                          value={formData.vehicle_details}
+                          onChange={(e) => setFormData({ ...formData, vehicle_details: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Vehicle Booking Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.vehicle_booking_price}
+                          onChange={(e) => setFormData({ ...formData, vehicle_booking_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Vehicle Selling Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.vehicle_selling_price}
+                          onChange={(e) => setFormData({ ...formData, vehicle_selling_price: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Transporter</Label>
+                        <Select
+                          value={formData.vehicle_transporter_id}
+                          onValueChange={(value) => setFormData({ ...formData, vehicle_transporter_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {transporters.map((transporter) => (
+                              <SelectItem key={transporter.id} value={transporter.id}>
+                                {transporter.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Vehicle Booking Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.vehicle_booking_date}
+                            onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Vehicle Journey Date</Label>
+                          <Input
+                            type="date"
+                            value={formData.vehicle_journey_date}
+                            onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Aditional Vehicle Note</Label>
+                        <Textarea
+                          value={formData.vehicle_note}
+                          onChange={(e) => setFormData({ ...formData, vehicle_note: e.target.value })}
+                          rows={4}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Group Expenses Details Section */}
+                {formData.include_group_expenses && (
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Group Expenses Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Amount</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.group_expense_amount}
+                          onChange={(e) => setFormData({ ...formData, group_expense_amount: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Group Expence Details</Label>
+                        <Textarea
+                          value={formData.group_expense_details}
+                          onChange={(e) => setFormData({ ...formData, group_expense_details: e.target.value })}
+                          rows={4}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Agent Commission */}
                 {formData.booking_type === "agent" && (
                   <div className="space-y-2">
@@ -471,10 +1237,88 @@ export default function Bookings() {
 
                 <div className="flex gap-4">
                   <Button type="submit" className="bg-gradient-primary">
-                    Create Booking
+                    Create
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                    Cancel
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setFormData({
+                        booking_type: "agent",
+                        agent_id: "",
+                        reference: "",
+                        reference_email: "",
+                        customer_name: "",
+                        address: "",
+                        contact_no: "",
+                        email: "",
+                        adults: 1,
+                        children: 0,
+                        notes: "",
+                        check_in_date: "",
+                        check_out_date: "",
+                        include_booking: false,
+                        include_delhi_manali: false,
+                        include_manali_delhi: false,
+                        include_safari: false,
+                        include_another_hotel: false,
+                        include_additional_vehicle: false,
+                        include_group_expenses: false,
+                        agent_commission: "",
+                        cheque_no: "",
+                        booking_hotel_id: "",
+                        booking_room: "",
+                        booking_num_rooms: "",
+                        booking_package_type: "select",
+                        booking_custom_package: "",
+                        booking_price: "",
+                        booking_from: "",
+                        booking_to: "",
+                        dm_num_tickets: "",
+                        dm_ticket_no: "",
+                        dm_seat_no: "",
+                        dm_transporter_id: "",
+                        dm_booking_date: "",
+                        dm_journey_date: "",
+                        dm_booking_price: "",
+                        dm_selling_price: "",
+                        md_num_tickets: "",
+                        md_ticket_no: "",
+                        md_seat_no: "",
+                        md_transporter_id: "",
+                        md_booking_date: "",
+                        md_journey_date: "",
+                        md_booking_price: "",
+                        md_selling_price: "",
+                        safari_transporter_id: "",
+                        safari_num: "",
+                        safari_booking_date: "",
+                        safari_journey_date: "",
+                        safari_booking_price: "",
+                        safari_selling_price: "",
+                        safari_note: "",
+                        another_hotel_id: "",
+                        another_hotel_num_rooms: "",
+                        another_hotel_room_type: "",
+                        another_hotel_booking_date: "",
+                        another_hotel_check_in: "",
+                        another_hotel_check_out: "",
+                        another_hotel_booking_price: "",
+                        another_hotel_selling_price: "",
+                        another_hotel_note: "",
+                        vehicle_details: "",
+                        vehicle_booking_price: "",
+                        vehicle_selling_price: "",
+                        vehicle_transporter_id: "",
+                        vehicle_booking_date: "",
+                        vehicle_journey_date: "",
+                        vehicle_note: "",
+                        group_expense_amount: "",
+                        group_expense_details: ""
+                      });
+                    }}
+                  >
+                    Reset
                   </Button>
                 </div>
               </form>
