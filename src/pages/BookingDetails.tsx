@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Printer } from "lucide-react";
+import { BookingReceipt } from "@/components/booking/BookingReceipt";
 
 export default function BookingDetails() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export default function BookingDetails() {
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
   const [vehicleBookings, setVehicleBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPrint, setShowPrint] = useState(false);
 
   useEffect(() => {
     fetchBookingDetails();
@@ -72,7 +74,11 @@ export default function BookingDetails() {
   };
 
   const handlePrint = () => {
-    window.print();
+    setShowPrint(true);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setShowPrint(false), 100);
+    }, 100);
   };
 
   if (loading) {
@@ -100,7 +106,7 @@ export default function BookingDetails() {
   return (
     <div className="min-h-screen bg-background">
       <Header title="Booking Details" />
-      <main className="p-6">
+      <main className="p-6 print:hidden">
         <div className="flex justify-between items-center mb-6">
           <Button variant="outline" onClick={() => navigate("/bookings")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -352,6 +358,9 @@ export default function BookingDetails() {
           </Card>
         )}
       </main>
+      
+      {/* Print Receipt */}
+      {showPrint && id && <BookingReceipt bookingId={id} />}
     </div>
   );
 }
