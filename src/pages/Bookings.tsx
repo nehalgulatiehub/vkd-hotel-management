@@ -178,27 +178,190 @@ export default function Bookings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Generate booking number
-    const bookingNumber = `BK${Date.now().toString().slice(-8)}`;
-    
-    const bookingData = {
-      ...formData,
-      booking_number: bookingNumber,
-      agent_commission: formData.agent_commission ? parseFloat(formData.agent_commission) : null,
-      agent_id: formData.booking_type === "agent" && formData.agent_id ? formData.agent_id : null,
-      status: "confirmed" as const,
-      payment_status: "pending" as const
-    };
+    try {
+      // Generate booking number
+      const bookingNumber = `BK${Date.now().toString().slice(-8)}`;
+      
+      // Prepare main booking data
+      const bookingData = {
+        booking_number: bookingNumber,
+        booking_type: formData.booking_type,
+        agent_id: formData.booking_type === "agent" && formData.agent_id ? formData.agent_id : null,
+        reference: formData.reference,
+        reference_email: formData.reference_email,
+        customer_name: formData.customer_name,
+        address: formData.address,
+        contact_no: formData.contact_no,
+        email: formData.email,
+        check_in_date: formData.check_in_date,
+        check_out_date: formData.check_out_date,
+        adults: formData.adults,
+        children: formData.children,
+        notes: formData.notes,
+        include_booking: formData.include_booking,
+        include_delhi_manali: formData.include_delhi_manali,
+        include_manali_delhi: formData.include_manali_delhi,
+        include_safari: formData.include_safari,
+        include_another_hotel: formData.include_another_hotel,
+        include_additional_vehicle: formData.include_additional_vehicle,
+        include_group_expenses: formData.include_group_expenses,
+        agent_commission: formData.agent_commission ? parseFloat(formData.agent_commission) : null,
+        cheque_no: formData.cheque_no,
+        status: "confirmed" as const,
+        payment_status: "pending" as const,
+        total_amount: 0,
+        paid_amount: 0,
+        due_amount: 0
+      };
 
-    const { error } = await supabase
-      .from("bookings")
-      .insert([bookingData]);
+      // Insert main booking
+      const { data: bookingResult, error: bookingError } = await supabase
+        .from("bookings")
+        .insert([bookingData])
+        .select()
+        .single();
 
-    if (error) {
-      toast.error("Failed to create booking");
-      console.error(error);
-    } else {
-      toast.success("Booking created successfully");
+      if (bookingError) throw bookingError;
+      
+      const bookingId = bookingResult.id;
+
+      // Insert Hotel Booking if included
+      if (formData.include_booking && formData.booking_hotel_id) {
+        const hotelBookingData = {
+          booking_id: bookingId,
+          hotel_id: formData.booking_hotel_id,
+          check_in_date: formData.booking_from || formData.check_in_date,
+          check_out_date: formData.booking_to || formData.check_out_date,
+          room_type: formData.booking_room,
+          number_of_rooms: formData.booking_num_rooms ? parseInt(formData.booking_num_rooms) : 1,
+          room_rate: formData.booking_price ? parseFloat(formData.booking_price) : 0,
+          total_amount: formData.booking_price ? parseFloat(formData.booking_price) : 0,
+          notes: formData.booking_custom_package
+        };
+        
+        const { error: hotelError } = await supabase
+          .from("hotel_bookings")
+          .insert([hotelBookingData]);
+        
+        if (hotelError) console.error("Hotel booking error:", hotelError);
+      }
+
+      // Insert Delhi-Manali Volvo Booking if included
+      if (formData.include_delhi_manali) {
+        const volvoData = {
+          booking_id: bookingId,
+          route: "Delhi-Manali",
+          travel_date: formData.dm_journey_date,
+          number_of_seats: formData.dm_num_tickets ? parseInt(formData.dm_num_tickets) : 1,
+          rate_per_seat: formData.dm_booking_price ? parseFloat(formData.dm_booking_price) : 0,
+          total_amount: formData.dm_selling_price ? parseFloat(formData.dm_selling_price) : 0,
+          notes: `Ticket No: ${formData.dm_ticket_no}, Seat No: ${formData.dm_seat_no}`
+        };
+        
+        const { error: volvoError } = await supabase
+          .from("volvo_bookings")
+          .insert([volvoData]);
+        
+        if (volvoError) console.error("Delhi-Manali volvo error:", volvoError);
+      }
+
+      // Insert Manali-Delhi Volvo Booking if included
+      if (formData.include_manali_delhi) {
+        const volvoData = {
+          booking_id: bookingId,
+          route: "Manali-Delhi",
+          travel_date: formData.md_journey_date,
+          number_of_seats: formData.md_num_tickets ? parseInt(formData.md_num_tickets) : 1,
+          rate_per_seat: formData.md_booking_price ? parseFloat(formData.md_booking_price) : 0,
+          total_amount: formData.md_selling_price ? parseFloat(formData.md_selling_price) : 0,
+          notes: `Ticket No: ${formData.md_ticket_no}, Seat No: ${formData.md_seat_no}`
+        };
+        
+        const { error: volvoError } = await supabase
+          .from("volvo_bookings")
+          .insert([volvoData]);
+        
+        if (volvoError) console.error("Manali-Delhi volvo error:", volvoError);
+      }
+
+      // Insert Safari Booking if included
+      if (formData.include_safari) {
+        const safariData = {
+          booking_id: bookingId,
+          safari_name: "Safari",
+          safari_date: formData.safari_journey_date,
+          number_of_persons: formData.safari_num ? parseInt(formData.safari_num) : 1,
+          rate_per_person: formData.safari_booking_price ? parseFloat(formData.safari_booking_price) : 0,
+          total_amount: formData.safari_selling_price ? parseFloat(formData.safari_selling_price) : 0,
+          notes: formData.safari_note
+        };
+        
+        const { error: safariError } = await supabase
+          .from("safari_bookings")
+          .insert([safariData]);
+        
+        if (safariError) console.error("Safari booking error:", safariError);
+      }
+
+      // Insert Another Hotel Booking if included
+      if (formData.include_another_hotel && formData.another_hotel_id) {
+        const anotherHotelData = {
+          booking_id: bookingId,
+          hotel_id: formData.another_hotel_id,
+          check_in_date: formData.another_hotel_check_in,
+          check_out_date: formData.another_hotel_check_out,
+          room_type: formData.another_hotel_room_type,
+          number_of_rooms: formData.another_hotel_num_rooms ? parseInt(formData.another_hotel_num_rooms) : 1,
+          room_rate: formData.another_hotel_booking_price ? parseFloat(formData.another_hotel_booking_price) : 0,
+          total_amount: formData.another_hotel_selling_price ? parseFloat(formData.another_hotel_selling_price) : 0,
+          notes: formData.another_hotel_note
+        };
+        
+        const { error: anotherHotelError } = await supabase
+          .from("hotel_bookings")
+          .insert([anotherHotelData]);
+        
+        if (anotherHotelError) console.error("Another hotel booking error:", anotherHotelError);
+      }
+
+      // Insert Additional Vehicle Booking if included
+      if (formData.include_additional_vehicle) {
+        const vehicleData = {
+          booking_id: bookingId,
+          transporter_id: formData.vehicle_transporter_id || null,
+          vehicle_type: "other" as const,
+          pickup_date: formData.vehicle_booking_date,
+          dropoff_date: formData.vehicle_journey_date,
+          rate: formData.vehicle_booking_price ? parseFloat(formData.vehicle_booking_price) : 0,
+          total_amount: formData.vehicle_selling_price ? parseFloat(formData.vehicle_selling_price) : 0,
+          notes: `${formData.vehicle_details}\n${formData.vehicle_note}`
+        };
+        
+        const { error: vehicleError } = await supabase
+          .from("vehicle_bookings")
+          .insert([vehicleData]);
+        
+        if (vehicleError) console.error("Vehicle booking error:", vehicleError);
+      }
+
+      // Insert Group Expenses if included
+      if (formData.include_group_expenses && formData.group_expense_amount) {
+        const expenseData = {
+          booking_id: bookingId,
+          amount: parseFloat(formData.group_expense_amount),
+          description: formData.group_expense_details,
+          expense_date: new Date().toISOString().split('T')[0],
+          category: "Group Expense"
+        };
+        
+        const { error: expenseError } = await supabase
+          .from("group_expenses")
+          .insert([expenseData]);
+        
+        if (expenseError) console.error("Group expense error:", expenseError);
+      }
+
+      toast.success("Booking created successfully with all details");
       setShowForm(false);
       fetchBookings();
       // Reset form
@@ -275,6 +438,9 @@ export default function Bookings() {
         group_expense_amount: "",
         group_expense_details: ""
       });
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      toast.error("Failed to create booking. Please try again.");
     }
   };
 
