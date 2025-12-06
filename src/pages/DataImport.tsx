@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,84 @@ interface ImportStats {
   transporters: { total: number; imported: number; errors: number };
 }
 
+// Parse functions moved outside component to prevent recreation on render
+const parseValue = (val: string): any => {
+  if (val === "NULL" || val === "null" || val === "") return null;
+  if (val === "0") return 0;
+  if (/^-?\d+$/.test(val)) return parseInt(val, 10);
+  if (/^-?\d+\.?\d*$/.test(val)) return parseFloat(val);
+  return val.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\'/g, "'");
+};
+
+const parseRowValues = (rowStr: string): any[] => {
+  const values: any[] = [];
+  let current = "";
+  let inString = false;
+  let stringChar = "";
+  let i = 0;
+
+  while (i < rowStr.length) {
+    const char = rowStr[i];
+    
+    if (!inString && (char === "'" || char === '"')) {
+      inString = true;
+      stringChar = char;
+      i++;
+      continue;
+    }
+    
+    if (inString && char === stringChar) {
+      if (rowStr[i + 1] === stringChar) {
+        current += char;
+        i += 2;
+        continue;
+      }
+      inString = false;
+      i++;
+      continue;
+    }
+    
+    if (!inString && char === ",") {
+      values.push(parseValue(current.trim()));
+      current = "";
+      i++;
+      continue;
+    }
+    
+    current += char;
+    i++;
+  }
+  
+  if (current.trim()) {
+    values.push(parseValue(current.trim()));
+  }
+  
+  return values;
+};
+
+const parseInserts = (sql: string, tableName: string): any[] => {
+  const regex = new RegExp(
+    `INSERT INTO \`${tableName}\`[^;]*VALUES\\s*([\\s\\S]*?)(?:;|$)`,
+    "gi"
+  );
+  const results: any[] = [];
+  let match;
+
+  while ((match = regex.exec(sql)) !== null) {
+    const valuesStr = match[1];
+    const rowMatches = valuesStr.match(/\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g);
+    
+    if (rowMatches) {
+      rowMatches.forEach((row) => {
+        const inner = row.slice(1, -1);
+        const values = parseRowValues(inner);
+        results.push(values);
+      });
+    }
+  }
+  return results;
+};
+
 const DataImport = () => {
   // Store File reference instead of content to prevent memory issues
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -27,83 +105,7 @@ const DataImport = () => {
   const [stats, setStats] = useState<ImportStats | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Parse MySQL INSERT statements
-  const parseInserts = (sql: string, tableName: string): any[] => {
-    const regex = new RegExp(
-      `INSERT INTO \`${tableName}\`[^;]*VALUES\\s*([\\s\\S]*?)(?:;|$)`,
-      "gi"
-    );
-    const results: any[] = [];
-    let match;
-
-    while ((match = regex.exec(sql)) !== null) {
-      const valuesStr = match[1];
-      const rowMatches = valuesStr.match(/\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g);
-      
-      if (rowMatches) {
-        rowMatches.forEach((row) => {
-          const inner = row.slice(1, -1);
-          const values = parseRowValues(inner);
-          results.push(values);
-        });
-      }
-    }
-    return results;
-  };
-
-  const parseRowValues = (rowStr: string): any[] => {
-    const values: any[] = [];
-    let current = "";
-    let inString = false;
-    let stringChar = "";
-    let i = 0;
-
-    while (i < rowStr.length) {
-      const char = rowStr[i];
-      
-      if (!inString && (char === "'" || char === '"')) {
-        inString = true;
-        stringChar = char;
-        i++;
-        continue;
-      }
-      
-      if (inString && char === stringChar) {
-        if (rowStr[i + 1] === stringChar) {
-          current += char;
-          i += 2;
-          continue;
-        }
-        inString = false;
-        i++;
-        continue;
-      }
-      
-      if (!inString && char === ",") {
-        values.push(parseValue(current.trim()));
-        current = "";
-        i++;
-        continue;
-      }
-      
-      current += char;
-      i++;
-    }
-    
-    if (current.trim()) {
-      values.push(parseValue(current.trim()));
-    }
-    
-    return values;
-  };
-
-  const parseValue = (val: string): any => {
-    if (val === "NULL" || val === "null" || val === "") return null;
-    if (val === "0") return 0;
-    if (/^-?\d+$/.test(val)) return parseInt(val, 10);
-    if (/^-?\d+\.?\d*$/.test(val)) return parseFloat(val);
-    return val.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\'/g, "'");
-  };
+  // Move parsing functions outside component to prevent recreation on every render
 
   const importAgents = async (sql: string): Promise<{ imported: number; errors: number; idMap: Map<number, string> }> => {
     const rows = parseInserts(sql, "tbl_agent");
