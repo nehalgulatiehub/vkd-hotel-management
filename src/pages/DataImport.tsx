@@ -19,6 +19,8 @@ interface ImportStats {
 
 const DataImport = () => {
   const [sqlData, setSqlData] = useState("");
+  const [fileLoaded, setFileLoaded] = useState(false);
+  const [fileSize, setFileSize] = useState(0);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
@@ -389,9 +391,12 @@ const DataImport = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setFileSize(file.size);
+      toast.info("Loading file...");
       const reader = new FileReader();
       reader.onload = (e) => {
         setSqlData(e.target?.result as string);
+        setFileLoaded(true);
         toast.success("SQL file loaded successfully!");
       };
       reader.readAsText(file);
@@ -434,17 +439,37 @@ const DataImport = () => {
               </span>
             </div>
 
-            <Textarea
-              placeholder="Paste your MySQL INSERT statements here..."
-              value={sqlData}
-              onChange={(e) => setSqlData(e.target.value)}
-              className="min-h-[200px] font-mono text-xs"
-            />
-
-            {sqlData && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                {(sqlData.length / 1024).toFixed(1)} KB of data loaded
+            {!fileLoaded ? (
+              <Textarea
+                placeholder="Paste your MySQL INSERT statements here (for small files only)..."
+                onChange={(e) => {
+                  setSqlData(e.target.value);
+                  setFileSize(e.target.value.length);
+                }}
+                className="min-h-[150px] font-mono text-xs"
+                disabled={importing}
+              />
+            ) : (
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="font-medium">File loaded successfully!</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {(fileSize / (1024 * 1024)).toFixed(2)} MB ready for import
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    setSqlData("");
+                    setFileLoaded(false);
+                    setFileSize(0);
+                  }}
+                >
+                  Clear and upload different file
+                </Button>
               </div>
             )}
 
