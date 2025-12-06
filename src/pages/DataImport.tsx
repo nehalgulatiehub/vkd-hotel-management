@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, CheckCircle, AlertCircle, Loader2, FileText } from "lucide-react";
 
 interface ImportStats {
   agents: { total: number; imported: number; errors: number };
@@ -18,13 +18,14 @@ interface ImportStats {
 }
 
 const DataImport = () => {
-  const [sqlData, setSqlData] = useState("");
-  const [fileLoaded, setFileLoaded] = useState(false);
-  const [fileSize, setFileSize] = useState(0);
+  // Store File reference instead of content to prevent memory issues
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [manualInput, setManualInput] = useState("");
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
   const [stats, setStats] = useState<ImportStats | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Parse MySQL INSERT statements
   const parseInserts = (sql: string, tableName: string): any[] => {
@@ -37,14 +38,11 @@ const DataImport = () => {
 
     while ((match = regex.exec(sql)) !== null) {
       const valuesStr = match[1];
-      // Split by ),( pattern to get individual rows
       const rowMatches = valuesStr.match(/\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g);
       
       if (rowMatches) {
         rowMatches.forEach((row) => {
-          // Remove outer parentheses
           const inner = row.slice(1, -1);
-          // Parse values (handle quoted strings, nulls, numbers)
           const values = parseRowValues(inner);
           results.push(values);
         });
@@ -115,7 +113,6 @@ const DataImport = () => {
 
     for (const row of rows) {
       try {
-        // tbl_agent columns: id, agentname, address, city, contact_no, email, commission, user, contact_person, status
         const agentData = {
           name: row[1] || "Unknown Agent",
           address: row[2] || null,
@@ -151,7 +148,6 @@ const DataImport = () => {
 
     for (const row of rows) {
       try {
-        // tbl_another_hotel: id, hotel, room, contact_person, email, phone, web_url, city, address, package, status
         const hotelData = {
           name: row[1] || "Unknown Hotel",
           contact_person: row[3] || null,
@@ -187,7 +183,6 @@ const DataImport = () => {
 
     for (const row of rows) {
       try {
-        // tbl_transporter: id, name, address, contact_no, vehicle_types, etc
         const transporterData = {
           name: row[1] || "Unknown Transporter",
           address: row[2] || null,
@@ -215,9 +210,7 @@ const DataImport = () => {
 
   const importBookings = async (
     sql: string,
-    agentIdMap: Map<number, string>,
-    hotelIdMap: Map<number, string>,
-    transporterIdMap: Map<number, string>
+    agentIdMap: Map<number, string>
   ): Promise<{ imported: number; errors: number; idMap: Map<number, string> }> => {
     const rows = parseInserts(sql, "tbl_booking");
     const idMap = new Map<number, string>();
@@ -226,10 +219,6 @@ const DataImport = () => {
 
     for (const row of rows) {
       try {
-        // tbl_booking has many columns, key ones:
-        // 0: id, 10: customer_name, 12: contact_no, 13: email, 20: fromm (check_in), 21: too (check_out)
-        // 8: agent_id, 19: price, etc.
-        
         const bookingNumber = `WNS-${row[0].toString().padStart(6, "0")}`;
         const agentId = row[8] ? agentIdMap.get(row[8]) : null;
         
@@ -243,7 +232,7 @@ const DataImport = () => {
           adults: row[17] || 1,
           children: row[18] || 0,
           total_amount: row[19] || 0,
-          paid_amount: 0, // Will be updated from payments
+          paid_amount: 0,
           due_amount: row[19] || 0,
           agent_id: agentId,
           notes: row[20] || null,
@@ -284,7 +273,6 @@ const DataImport = () => {
 
     for (const row of rows) {
       try {
-        // tbl_payment: id, booking_id, payment, place, date, approve_date, status, payment_mode, chequeno, txn_code, others, p_detail
         const bookingId = bookingIdMap.get(row[1]);
         if (!bookingId) continue;
 
@@ -301,7 +289,6 @@ const DataImport = () => {
 
         if (error) throw error;
         
-        // Update booking paid_amount manually
         const { data: booking } = await supabase
           .from("bookings")
           .select("paid_amount, total_amount")
@@ -329,9 +316,29 @@ const DataImport = () => {
     return { imported, errors };
   };
 
+  // Read file content only when import starts
+  const readFileContent = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (manualInput.trim()) {
+        resolve(manualInput);
+        return;
+      }
+      
+      if (!selectedFile) {
+        reject(new Error("No file selected"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsText(selectedFile);
+    });
+  };
+
   const handleImport = async () => {
-    if (!sqlData.trim()) {
-      toast.error("Please paste your SQL data first");
+    if (!selectedFile && !manualInput.trim()) {
+      toast.error("Please upload a file or paste SQL data first");
       return;
     }
 
@@ -340,6 +347,11 @@ const DataImport = () => {
     setStats(null);
 
     try {
+      // Read file content at import time (not stored in state)
+      setCurrentStep("Reading file...");
+      const sqlData = await readFileContent();
+      setProgress(5);
+
       // Step 1: Import Agents (20%)
       setCurrentStep("Importing agents...");
       const agentResult = await importAgents(sqlData);
@@ -357,12 +369,7 @@ const DataImport = () => {
 
       // Step 4: Import Bookings (80%)
       setCurrentStep("Importing bookings...");
-      const bookingResult = await importBookings(
-        sqlData,
-        agentResult.idMap,
-        hotelResult.idMap,
-        transporterResult.idMap
-      );
+      const bookingResult = await importBookings(sqlData, agentResult.idMap);
       setProgress(80);
 
       // Step 5: Import Payments (100%)
@@ -388,18 +395,20 @@ const DataImport = () => {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setFileSize(file.size);
-      toast.info("Loading file...");
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSqlData(e.target?.result as string);
-        setFileLoaded(true);
-        toast.success("SQL file loaded successfully!");
-      };
-      reader.readAsText(file);
+      setSelectedFile(file);
+      setManualInput(""); // Clear manual input when file is selected
+      toast.success(`File "${file.name}" selected (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedFile(null);
+    setManualInput("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -418,64 +427,62 @@ const DataImport = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <input
+                ref={fileInputRef}
                 type="file"
                 accept=".sql,.txt"
-                onChange={handleFileUpload}
+                onChange={handleFileSelect}
                 className="hidden"
                 id="sql-file"
               />
               <label htmlFor="sql-file">
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild disabled={importing}>
                   <span className="cursor-pointer">
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload SQL File
+                    {selectedFile ? "Change File" : "Upload SQL File"}
                   </span>
                 </Button>
               </label>
-              <span className="text-sm text-muted-foreground">
-                Or paste your SQL data below
-              </span>
+              {!selectedFile && (
+                <span className="text-sm text-muted-foreground">
+                  Or paste small SQL data below
+                </span>
+              )}
             </div>
 
-            {!fileLoaded ? (
-              <Textarea
-                placeholder="Paste your MySQL INSERT statements here (for small files only)..."
-                onChange={(e) => {
-                  setSqlData(e.target.value);
-                  setFileSize(e.target.value.length);
-                }}
-                className="min-h-[150px] font-mono text-xs"
-                disabled={importing}
-              />
-            ) : (
+            {selectedFile ? (
               <div className="p-4 border rounded-lg bg-muted/50">
                 <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="font-medium">File loaded successfully!</span>
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span className="font-medium">{selectedFile.name}</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {(fileSize / (1024 * 1024)).toFixed(2)} MB ready for import
+                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB ready for import
                 </p>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="mt-2"
-                  onClick={() => {
-                    setSqlData("");
-                    setFileLoaded(false);
-                    setFileSize(0);
-                  }}
+                  onClick={clearSelection}
+                  disabled={importing}
                 >
-                  Clear and upload different file
+                  Clear selection
                 </Button>
               </div>
+            ) : (
+              <Textarea
+                placeholder="Paste your MySQL INSERT statements here (for small files only, max ~5MB)..."
+                value={manualInput}
+                onChange={(e) => setManualInput(e.target.value)}
+                className="min-h-[150px] font-mono text-xs"
+                disabled={importing}
+              />
             )}
 
             <Button
               onClick={handleImport}
-              disabled={importing || !sqlData.trim()}
+              disabled={importing || (!selectedFile && !manualInput.trim())}
               className="w-full"
             >
               {importing ? (
@@ -539,23 +546,6 @@ const DataImport = () => {
             </CardContent>
           </Card>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Import Notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2 text-muted-foreground">
-            <p>• Agents from tbl_agent will be imported to agents table</p>
-            <p>• Hotels from tbl_another_hotel will be imported to another_hotels table</p>
-            <p>• Bookings from tbl_booking will be imported to bookings table with new booking numbers (WNS-XXXXXX)</p>
-            <p>• Payments from tbl_payment will be linked to the new booking IDs</p>
-            <p>• Foreign key relationships will be automatically mapped</p>
-            <p>• Duplicate entries will be skipped</p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
