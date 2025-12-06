@@ -49,6 +49,7 @@ import VehicleDue from "./pages/VehicleDue";
 import CancelledBookings from "./pages/CancelledBookings";
 import HoldBookings from "./pages/HoldBookings";
 import CreateHoldBooking from "./pages/CreateHoldBooking";
+import DataImport from "./pages/DataImport";
 
 const queryClient = new QueryClient();
 
@@ -402,6 +403,14 @@ const App = () => (
             element={
               <DashboardLayout>
                 <Settings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/data-import"
+            element={
+              <DashboardLayout>
+                <DataImport />
               </DashboardLayout>
             }
           />

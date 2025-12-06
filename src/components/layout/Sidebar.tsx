@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown
+  ChevronDown, Upload
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
@@ -101,6 +101,7 @@ const menuItems = [
       { title: "View Cancel Booking", url: "/bookings/cancelled" },
       { title: "View Refund Payment", url: "/refunds" },
       { title: "View Cancelling Payment", url: "/refunds/cancelling" },
+      { title: "Import Legacy Data", url: "/data-import" },
     ]
   },
 ];
