@@ -1,6 +1,8 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -78,6 +80,12 @@ export default function Guests() {
     guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.phone?.includes(searchTerm)
   );
+
+  const pagination = usePagination(filteredGuests);
+  
+  useEffect(() => {
+    pagination.resetPage();
+  }, [searchTerm]);
 
   return (
     <div className="min-h-screen">
@@ -209,7 +217,7 @@ export default function Guests() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredGuests.map((guest) => (
+              {pagination.paginatedItems.map((guest) => (
                 <TableRow key={guest.id}>
                   <TableCell className="font-medium">{`${guest.first_name} ${guest.last_name}`}</TableCell>
                   <TableCell>{guest.email || "-"}</TableCell>
@@ -220,6 +228,14 @@ export default function Guests() {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+            totalItems={pagination.totalItems}
+            startIndex={pagination.startIndex}
+            endIndex={pagination.endIndex}
+          />
         </div>
       </main>
     </div>

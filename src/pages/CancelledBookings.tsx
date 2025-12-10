@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
@@ -36,6 +38,12 @@ export default function CancelledBookings() {
     booking.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     booking.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const pagination = usePagination(filteredBookings);
+  
+  useEffect(() => {
+    pagination.resetPage();
+  }, [searchTerm]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,9 +87,9 @@ export default function CancelledBookings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((booking, index) => (
+                  {pagination.paginatedItems.map((booking, index) => (
                     <tr key={booking.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4">{index + 1}</td>
+                      <td className="p-4">{pagination.startIndex + index}</td>
                       <td className="p-4 font-medium">{booking.booking_number}</td>
                       <td className="p-4">{booking.customer_name || "-"}</td>
                       <td className="p-4">{booking.contact_no || "-"}</td>
@@ -117,6 +125,14 @@ export default function CancelledBookings() {
                 </div>
               )}
             </div>
+            <TablePagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.goToPage}
+              totalItems={pagination.totalItems}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+            />
           </CardContent>
         </Card>
       </main>

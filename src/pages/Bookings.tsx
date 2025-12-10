@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Search } from "lucide-react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -623,6 +625,12 @@ export default function Bookings() {
     return matchesSearch && matchesType && matchesAgent && matchesCustomer && 
            matchesReference && matchesCheque && matchesDate;
   });
+
+  const pagination = usePagination(filteredBookings);
+  
+  useEffect(() => {
+    pagination.resetPage();
+  }, [searchTerm, filters]);
 
   const months = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
@@ -2169,9 +2177,9 @@ export default function Bookings() {
                           </td>
                         </tr>
                       ) : (
-                        filteredBookings.map((booking, index) => (
+                        pagination.paginatedItems.map((booking, index) => (
                           <tr key={booking.id} className="hover:bg-muted/50">
-                            <td className="border border-gray-300 px-3 py-2 text-sm">{index + 1}</td>
+                            <td className="border border-gray-300 px-3 py-2 text-sm">{pagination.startIndex + index}</td>
                             <td className="border border-gray-300 px-3 py-2 text-sm">
                               <div className="capitalize">{booking.booking_type}</div>
                               <div className="text-xs text-muted-foreground">
@@ -2277,6 +2285,14 @@ export default function Bookings() {
                     </tbody>
                   </table>
                 </div>
+                <TablePagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={pagination.goToPage}
+                  totalItems={pagination.totalItems}
+                  startIndex={pagination.startIndex}
+                  endIndex={pagination.endIndex}
+                />
               </CardContent>
             </Card>
           </>

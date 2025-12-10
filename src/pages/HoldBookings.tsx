@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, XCircle, Clock, Search, Eye } from "lucide-react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -122,6 +124,12 @@ export default function HoldBookings() {
     booking.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const pagination = usePagination(filteredBookings);
+  
+  useEffect(() => {
+    pagination.resetPage();
+  }, [searchTerm]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="Hold Bookings" />
@@ -169,7 +177,7 @@ export default function HoldBookings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((booking) => {
+                  {pagination.paginatedItems.map((booking) => {
                     const expired = isExpired(booking.hold_until);
                     const isCancelled = booking.status === "cancelled";
                     
@@ -259,6 +267,14 @@ export default function HoldBookings() {
                 </div>
               )}
             </div>
+            <TablePagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.goToPage}
+              totalItems={pagination.totalItems}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+            />
           </CardContent>
         </Card>
       </main>

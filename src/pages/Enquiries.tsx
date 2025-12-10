@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, CheckCircle, Eye } from "lucide-react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -545,6 +547,12 @@ export default function Enquiries() {
     enquiry.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const pagination = usePagination(filteredEnquiries);
+  
+  useEffect(() => {
+    pagination.resetPage();
+  }, [searchTerm]);
+
   const getStatusBadge = (status: string) => {
     const statusColors: { [key: string]: string } = {
       on_hold: "bg-yellow-500",
@@ -611,7 +619,7 @@ export default function Enquiries() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredEnquiries.map((enquiry) => (
+                    {pagination.paginatedItems.map((enquiry) => (
                       <tr key={enquiry.id} className="border-b hover:bg-muted/50">
                         <td className="p-4">{enquiry.enquiry_number}</td>
                         <td className="p-4">
@@ -729,6 +737,14 @@ export default function Enquiries() {
                   </div>
                 )}
               </div>
+              <TablePagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.goToPage}
+                totalItems={pagination.totalItems}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+              />
             </CardContent>
           </Card>
         ) : (
