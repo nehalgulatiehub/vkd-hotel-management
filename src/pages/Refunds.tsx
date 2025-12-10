@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function Refunds() {
   const [searchParams] = useSearchParams();
@@ -128,6 +130,16 @@ export default function Refunds() {
       toast.error("Failed to process refund");
     }
   };
+
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(refunds, { itemsPerPage: 10 });
 
   return (
     <div className="min-h-screen bg-background">
@@ -280,16 +292,16 @@ export default function Refunds() {
                     </tr>
                   </thead>
                   <tbody>
-                    {refunds.length === 0 ? (
+                    {paginatedItems.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="p-6 text-center text-muted-foreground">
                           No refunds found
                         </td>
                       </tr>
                     ) : (
-                      refunds.map((refund, index) => (
+                      paginatedItems.map((refund, index) => (
                         <tr key={refund.id} className="border-t hover:bg-muted/50">
-                          <td className="p-3">{index + 1}</td>
+                          <td className="p-3">{startIndex + index}</td>
                           <td className="p-3">{new Date(refund.refund_date).toLocaleDateString()}</td>
                           <td className="p-3">{refund.bookings?.booking_number}</td>
                           <td className="p-3">{refund.bookings?.customer_name}</td>
@@ -307,6 +319,14 @@ export default function Refunds() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                startIndex={startIndex}
+                endIndex={endIndex}
+              />
             </CardContent>
           </Card>
         )}

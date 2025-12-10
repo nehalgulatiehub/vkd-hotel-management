@@ -6,6 +6,8 @@ import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -35,6 +37,16 @@ export default function Payments() {
   );
 
   const totalPayments = filteredPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(filteredPayments, { itemsPerPage: 10 });
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,9 +89,9 @@ export default function Payments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPayments.map((payment, index) => (
+                  {paginatedItems.map((payment, index) => (
                     <tr key={payment.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4">{index + 1}</td>
+                      <td className="p-4">{startIndex + index}</td>
                       <td className="p-4">
                         {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : "-"}
                       </td>
@@ -104,6 +116,14 @@ export default function Payments() {
                 </div>
               )}
             </div>
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={totalItems}
+              startIndex={startIndex}
+              endIndex={endIndex}
+            />
           </CardContent>
         </Card>
       </main>

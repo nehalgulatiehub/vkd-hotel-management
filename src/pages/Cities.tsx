@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function Cities() {
   const [cities, setCities] = useState<any[]>([]);
@@ -54,6 +56,16 @@ export default function Cities() {
     city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     city.state?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(filteredCities, { itemsPerPage: 10 });
 
   return (
     <div className="min-h-screen">
@@ -126,7 +138,7 @@ export default function Cities() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCities.map((city) => (
+              {paginatedItems.map((city) => (
                 <TableRow key={city.id}>
                   <TableCell className="font-medium">{city.name}</TableCell>
                   <TableCell>{city.state || "-"}</TableCell>
@@ -136,6 +148,14 @@ export default function Cities() {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
         </div>
       </main>
     </div>

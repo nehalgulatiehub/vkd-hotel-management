@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function Transporters() {
   const [transporters, setTransporters] = useState<any[]>([]);
@@ -74,6 +76,16 @@ export default function Transporters() {
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(filteredTransporters, { itemsPerPage: 10 });
 
   return (
     <div className="min-h-screen">
@@ -187,7 +199,7 @@ export default function Transporters() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransporters.map((transporter) => (
+              {paginatedItems.map((transporter) => (
                 <TableRow key={transporter.id}>
                   <TableCell className="font-medium">{transporter.name}</TableCell>
                   <TableCell>{transporter.company_name || "-"}</TableCell>
@@ -198,6 +210,14 @@ export default function Transporters() {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
         </div>
       </main>
     </div>
