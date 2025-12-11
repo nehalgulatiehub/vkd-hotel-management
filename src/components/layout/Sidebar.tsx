@@ -1,143 +1,107 @@
 import { 
-  LayoutDashboard, MapPin, Users, Truck, Building2, CalendarCheck, 
-  Wallet, FileStack, Settings, LogOut, ChevronRight, Upload,
-  Building, Bus, Tent, Car, Receipt, Ban, RefreshCcw
+  Home, MapPin, Users, Plane, Hotel, FileText, 
+  CreditCard, Calendar, DollarSign, Settings, LogOut,
+  ChevronDown, Upload
 } from "lucide-react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { 
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, 
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, 
-  useSidebar
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, 
+  SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, useSidebar
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
 
-interface MenuItem {
-  title: string;
-  url?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  submenu?: { title: string; url: string }[];
-}
-
-const menuItems: MenuItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+const menuItems = [
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   {
-    title: "Cities",
+    title: "City Management",
     icon: MapPin,
     submenu: [
-      { title: "View Cities", url: "/cities" },
-      { title: "Add New City", url: "/cities/add" },
-      { title: "Export Cities", url: "/cities/export" },
+      { title: "Add City", url: "/cities/add" },
+      { title: "View City", url: "/cities" },
+      { title: "Export City", url: "/cities/export" },
     ]
   },
   {
-    title: "Agents",
+    title: "Agent Management",
     icon: Users,
     submenu: [
-      { title: "View Agents", url: "/agents" },
-      { title: "Add New Agent", url: "/agents/add" },
-      { title: "Export Agents", url: "/agents/export" },
+      { title: "Add Agent", url: "/agents/add" },
+      { title: "Export Agent", url: "/agents/export" },
+      { title: "View Agent", url: "/agents" },
     ]
   },
   {
-    title: "Transporters",
-    icon: Truck,
+    title: "Transporter Management",
+    icon: Plane,
     submenu: [
-      { title: "View Transporters", url: "/transporters" },
       { title: "Add Transporter", url: "/transporters/add" },
-      { title: "Export Transporters", url: "/transporters/export" },
+      { title: "View Transporter", url: "/transporters" },
+      { title: "Export Transporter", url: "/transporters/export" },
     ]
   },
   {
-    title: "Hotels",
-    icon: Building2,
+    title: "Hotel Management",
+    icon: Hotel,
     submenu: [
-      { title: "Own Hotels", url: "/own-hotels" },
-      { title: "Partner Hotels", url: "/hotels" },
-      { title: "Add Partner Hotel", url: "/hotels/add" },
-      { title: "Export Hotels", url: "/hotels/export" },
+      { title: "Add Own Hotel", url: "/own-hotels" },
+      { title: "View Own Hotels", url: "/own-hotels" },
+      { title: "Add Another Hotel", url: "/hotels/add" },
+      { title: "View Another Hotel", url: "/hotels" },
+      { title: "Export Another Hotel", url: "/hotels/export" },
     ]
   },
   {
-    title: "Bookings",
-    icon: CalendarCheck,
+    title: "Booking & Enquiry",
+    icon: Calendar,
     submenu: [
-      { title: "All Bookings", url: "/bookings" },
-      { title: "Create Booking", url: "/bookings/add" },
-      { title: "Hold Bookings", url: "/bookings/hold-list" },
+      { title: "Generate Enquiry", url: "/enquiries/add" },
+      { title: "View Enquiry", url: "/enquiries" },
+      { title: "Export Enquiry", url: "/enquiries/export" },
+      { title: "Booking Availability", url: "/bookings/availability" },
       { title: "Create Hold Booking", url: "/bookings/hold" },
-      { title: "Check Availability", url: "/bookings/availability" },
+      { title: "View Hold Booking", url: "/bookings/hold-list" },
+      { title: "Create Booking", url: "/bookings/add" },
+      { title: "View Booking", url: "/bookings" },
     ]
   },
   {
-    title: "Enquiries",
-    icon: FileStack,
+    title: "Payment & Financials",
+    icon: DollarSign,
     submenu: [
-      { title: "View Enquiries", url: "/enquiries" },
-      { title: "New Enquiry", url: "/enquiries/add" },
-      { title: "Export Enquiries", url: "/enquiries/export" },
+      { title: "View Payment", url: "/payments" },
+      { title: "Booking Due Amount", url: "/payments/booking-due" },
+      { title: "View Booking Payment", url: "/payments/booking" },
+      { title: "Export Booking", url: "/payments/booking-export" },
+      { title: "View Room Booking", url: "/payments/room-booking" },
+      { title: "View Safari Detail", url: "/payments/safari" },
+      { title: "Safari Due Amount", url: "/payments/safari-due" },
+      { title: "View Safari Payment", url: "/payments/safari-payment" },
+      { title: "Volvo Delhi - Manali Detail", url: "/payments/volvo-delhi-manali" },
+      { title: "Delhi - Manali Due Amount", url: "/payments/delhi-manali-due" },
+      { title: "Volvo Manali - Delhi Detail", url: "/payments/volvo-manali-delhi" },
+      { title: "Manali - Delhi Due Amount", url: "/payments/manali-delhi-due" },
+      { title: "View Volvo Payment", url: "/payments/volvo" },
+      { title: "View Another Hotel Detail", url: "/payments/hotel" },
+      { title: "Another Hotel Due Amount", url: "/payments/hotel-due" },
+      { title: "Another Hotel Payment", url: "/payments/hotel-payment" },
+      { title: "View Vehicle Detail", url: "/payments/vehicle" },
+      { title: "Vehicle Due Amount", url: "/payments/vehicle-due" },
+      { title: "Another Vehicle Payment", url: "/payments/vehicle-payment" },
     ]
   },
   {
-    title: "Payments",
-    icon: Wallet,
+    title: "Other Functions",
+    icon: FileText,
     submenu: [
-      { title: "All Payments", url: "/payments" },
-      { title: "Booking Due", url: "/payments/booking-due" },
-      { title: "Booking Payments", url: "/payments/booking" },
-    ]
-  },
-  {
-    title: "Safari",
-    icon: Tent,
-    submenu: [
-      { title: "Safari Details", url: "/payments/safari" },
-      { title: "Safari Due", url: "/payments/safari-due" },
-      { title: "Safari Payments", url: "/payments/safari-payment" },
-    ]
-  },
-  {
-    title: "Volvo Transport",
-    icon: Bus,
-    submenu: [
-      { title: "Delhi → Manali", url: "/payments/volvo-delhi-manali" },
-      { title: "Manali → Delhi", url: "/payments/volvo-manali-delhi" },
-      { title: "Delhi-Manali Due", url: "/payments/delhi-manali-due" },
-      { title: "Manali-Delhi Due", url: "/payments/manali-delhi-due" },
-      { title: "Volvo Payments", url: "/payments/volvo" },
-    ]
-  },
-  {
-    title: "Partner Hotels",
-    icon: Building,
-    submenu: [
-      { title: "Hotel Details", url: "/payments/hotel" },
-      { title: "Hotel Due", url: "/payments/hotel-due" },
-      { title: "Hotel Payments", url: "/payments/hotel-payment" },
-    ]
-  },
-  {
-    title: "Vehicles",
-    icon: Car,
-    submenu: [
-      { title: "Vehicle Details", url: "/payments/vehicle" },
-      { title: "Vehicle Due", url: "/payments/vehicle-due" },
-      { title: "Vehicle Payments", url: "/payments/vehicle-payment" },
-    ]
-  },
-  {
-    title: "Other",
-    icon: Receipt,
-    submenu: [
-      { title: "Group Expenses", url: "/expenses" },
-      { title: "Cancelled Bookings", url: "/bookings/cancelled" },
-      { title: "Refunds", url: "/refunds" },
-      { title: "Cancelling Payments", url: "/refunds/cancelling" },
-      { title: "Import Data", url: "/data-import" },
+      { title: "View Group Expence", url: "/expenses" },
+      { title: "View Cancel Booking", url: "/bookings/cancelled" },
+      { title: "View Refund Payment", url: "/refunds" },
+      { title: "View Cancelling Payment", url: "/refunds/cancelling" },
+      { title: "Import Legacy Data", url: "/data-import" },
     ]
   },
 ];
@@ -146,20 +110,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
-  const location = useLocation();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
-
-  // Auto-expand group containing active route
-  useEffect(() => {
-    const currentPath = location.pathname;
-    menuItems.forEach(item => {
-      if (item.submenu?.some(sub => currentPath.startsWith(sub.url))) {
-        setOpenGroups(prev => 
-          prev.includes(item.title) ? prev : [...prev, item.title]
-        );
-      }
-    });
-  }, [location.pathname]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -176,152 +127,109 @@ export function AppSidebar() {
     );
   };
 
-  const isActiveRoute = (url: string) => {
-    return location.pathname === url || location.pathname.startsWith(url + '/');
-  };
-
   return (
-    <Sidebar className={cn(
-      "border-r border-sidebar-border bg-sidebar print:hidden transition-all duration-300",
-      collapsed ? "w-16" : "w-64"
-    )}>
-      <SidebarContent className="flex flex-col h-full">
-        {/* Header */}
-        <div className={cn(
-          "flex items-center gap-3 px-4 py-5 border-b border-sidebar-border",
-          collapsed && "justify-center px-2"
-        )}>
-          <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                Hotel Management
-              </span>
-              <span className="text-xs text-sidebar-muted truncate">
-                Admin Panel
-              </span>
+    <Sidebar className={`${collapsed ? "w-14" : "w-60"} print:hidden`}>
+      <SidebarContent>
+        <div className="px-4 py-6">
+          <h2 className={`font-bold text-xl bg-gradient-primary bg-clip-text text-transparent ${collapsed ? "hidden" : "block"}`}>
+            Hotel Management Software
+          </h2>
+          {collapsed && (
+            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
+              HMS
             </div>
           )}
         </div>
-
-        {/* Navigation */}
-        <ScrollArea className="flex-1 px-2 py-3">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-0.5">
-                {menuItems.map((item) => {
-                  if (item.submenu) {
-                    const isGroupActive = item.submenu.some(sub => isActiveRoute(sub.url));
-                    const isOpen = openGroups.includes(item.title);
-                    
-                    return (
-                      <Collapsible
-                        key={item.title}
-                        open={isOpen}
-                        onOpenChange={() => toggleGroup(item.title)}
-                      >
-                        <SidebarMenuItem>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuButton 
-                              className={cn(
-                                "w-full justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                                "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-                                isGroupActive && "bg-sidebar-accent text-sidebar-foreground"
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <item.icon className="h-4 w-4 flex-shrink-0" />
-                                {!collapsed && <span>{item.title}</span>}
-                              </div>
-                              {!collapsed && (
-                                <ChevronRight className={cn(
-                                  "h-4 w-4 transition-transform duration-200",
-                                  isOpen && "rotate-90"
-                                )} />
-                              )}
-                            </SidebarMenuButton>
-                          </CollapsibleTrigger>
-                          {!collapsed && (
-                            <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
-                              <div className="ml-4 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
-                                {item.submenu.map((subItem) => (
-                                  <NavLink
-                                    key={subItem.url}
-                                    to={subItem.url}
-                                    className={({ isActive }) => cn(
-                                      "block rounded-md px-3 py-1.5 text-sm transition-colors",
-                                      isActive 
-                                        ? "bg-primary text-primary-foreground font-medium" 
-                                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                                    )}
-                                  >
-                                    {subItem.title}
-                                  </NavLink>
-                                ))}
-                              </div>
-                            </CollapsibleContent>
-                          )}
-                        </SidebarMenuItem>
-                      </Collapsible>
-                    );
-                  }
-                  
+        
+        <SidebarGroup>
+          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Main Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => {
+                if (item.submenu) {
                   return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <NavLink 
-                          to={item.url!}
-                          className={({ isActive }) => cn(
-                            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                            isActive 
-                              ? "bg-primary text-primary-foreground" 
-                              : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                          )}
-                        >
-                          <item.icon className="h-4 w-4 flex-shrink-0" />
-                          {!collapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <Collapsible
+                      key={item.title}
+                      open={openGroups.includes(item.title)}
+                      onOpenChange={() => toggleGroup(item.title)}
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton className="w-full">
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && (
+                              <>
+                                <span>{item.title}</span>
+                                <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${openGroups.includes(item.title) ? 'rotate-180' : ''}`} />
+                              </>
+                            )}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        {!collapsed && (
+                          <CollapsibleContent>
+                            <SidebarMenuSub>
+                              {item.submenu.map((subItem) => (
+                                <SidebarMenuSubItem key={subItem.title}>
+                                  <SidebarMenuSubButton asChild>
+                                    <NavLink
+                                      to={subItem.url}
+                                      className={({ isActive }) =>
+                                        isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                                      }
+                                    >
+                                      {subItem.title}
+                                    </NavLink>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))}
+                            </SidebarMenuSub>
+                          </CollapsibleContent>
+                        )}
+                      </SidebarMenuItem>
+                    </Collapsible>
                   );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </ScrollArea>
+                }
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url}
+                        className={({ isActive }) =>
+                          isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        {/* Footer */}
-        <div className="mt-auto border-t border-sidebar-border p-2">
-          <SidebarMenu className="space-y-0.5">
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <NavLink 
-                  to="/settings" 
-                  className={({ isActive }) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                    isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                  )}
-                >
-                  <Settings className="h-4 w-4 flex-shrink-0" />
-                  {!collapsed && <span>Settings</span>}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                onClick={handleLogout} 
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
-              >
-                <LogOut className="h-4 w-4 flex-shrink-0" />
-                {!collapsed && <span>Logout</span>}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </div>
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/settings" className="hover:bg-sidebar-accent/50">
+                    <Settings className="h-4 w-4" />
+                    {!collapsed && <span>Settings</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
+                  <LogOut className="h-4 w-4" />
+                  {!collapsed && <span>Logout</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
