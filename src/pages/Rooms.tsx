@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,18 +15,16 @@ export default function Rooms() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<any>(null);
   const [hotel, setHotel] = useState<any>(null);
   const [rooms, setRooms] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    room_number: "",
-    room_type: "standard",
-    floor_number: "",
-    capacity: "2",
+    room_name: "",
+    total_quantity: "1",
+    base_price: "",
     adult_capacity: "2",
     child_capacity: "1",
-    base_price: "",
     description: "",
-    is_available: true,
     notes: ""
   });
 
@@ -66,42 +63,94 @@ export default function Rooms() {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      room_name: "",
+      total_quantity: "1",
+      base_price: "",
+      adult_capacity: "2",
+      child_capacity: "1",
+      description: "",
+      notes: ""
+    });
+    setEditingRoom(null);
+  };
+
+  const handleEdit = (room: any) => {
+    setFormData({
+      room_name: room.room_number || "",
+      total_quantity: String(room.total_quantity || 1),
+      base_price: String(room.base_price || ""),
+      adult_capacity: String(room.adult_capacity || 2),
+      child_capacity: String(room.child_capacity || 1),
+      description: room.description || "",
+      notes: room.notes || ""
+    });
+    setEditingRoom(room);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (roomId: string) => {
+    if (!confirm("Are you sure you want to delete this room?")) return;
+
+    const { error } = await supabase
+      .from("rooms")
+      .delete()
+      .eq("id", roomId);
+
+    if (error) {
+      toast.error("Failed to delete room");
+    } else {
+      toast.success("Room deleted successfully");
+      fetchRooms();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const roomData = {
       hotel_id: hotelId,
-      ...formData,
-      floor_number: formData.floor_number ? parseInt(formData.floor_number) : null,
-      capacity: parseInt(formData.capacity),
+      room_number: formData.room_name, // Using room_number field to store room name
+      room_type: formData.room_name, // Also store in room_type for compatibility
+      total_quantity: parseInt(formData.total_quantity),
+      capacity: parseInt(formData.adult_capacity) + parseInt(formData.child_capacity),
       adult_capacity: parseInt(formData.adult_capacity),
       child_capacity: parseInt(formData.child_capacity),
-      base_price: parseFloat(formData.base_price)
+      base_price: parseFloat(formData.base_price),
+      description: formData.description,
+      notes: formData.notes
     };
 
-    const { error } = await supabase
-      .from("rooms")
-      .insert([roomData]);
+    if (editingRoom) {
+      const { error } = await supabase
+        .from("rooms")
+        .update(roomData)
+        .eq("id", editingRoom.id);
 
-    if (error) {
-      toast.error("Failed to create room");
-      console.error(error);
+      if (error) {
+        toast.error("Failed to update room");
+        console.error(error);
+      } else {
+        toast.success("Room updated successfully");
+        setShowForm(false);
+        resetForm();
+        fetchRooms();
+      }
     } else {
-      toast.success("Room created successfully");
-      setShowForm(false);
-      fetchRooms();
-      setFormData({
-        room_number: "",
-        room_type: "standard",
-        floor_number: "",
-        capacity: "2",
-        adult_capacity: "2",
-        child_capacity: "1",
-        base_price: "",
-        description: "",
-        is_available: true,
-        notes: ""
-      });
+      const { error } = await supabase
+        .from("rooms")
+        .insert([roomData]);
+
+      if (error) {
+        toast.error("Failed to create room");
+        console.error(error);
+      } else {
+        toast.success("Room created successfully");
+        setShowForm(false);
+        resetForm();
+        fetchRooms();
+      }
     }
   };
 
@@ -132,7 +181,14 @@ export default function Rooms() {
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold">Rooms</h3>
           <Button 
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (showForm) {
+                setShowForm(false);
+                resetForm();
+              } else {
+                setShowForm(true);
+              }
+            }}
             className="bg-gradient-primary"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -143,54 +199,42 @@ export default function Rooms() {
         {showForm ? (
           <Card>
             <CardHeader>
-              <CardTitle>Add New Room</CardTitle>
+              <CardTitle>{editingRoom ? "Edit Room" : "Add New Room"}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Room Number <span className="text-destructive">*</span></Label>
+                    <Label>Room Name <span className="text-destructive">*</span></Label>
                     <Input
                       required
-                      value={formData.room_number}
-                      onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
+                      placeholder="e.g., Presidential Suite, Deluxe Room"
+                      value={formData.room_name}
+                      onChange={(e) => setFormData({ ...formData, room_name: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Room Type <span className="text-destructive">*</span></Label>
-                    <Select
-                      value={formData.room_type}
-                      onValueChange={(value) => setFormData({ ...formData, room_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="deluxe">Deluxe</SelectItem>
-                        <SelectItem value="suite">Suite</SelectItem>
-                        <SelectItem value="premium">Premium</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Floor Number</Label>
-                    <Input
-                      type="number"
-                      value={formData.floor_number}
-                      onChange={(e) => setFormData({ ...formData, floor_number: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Total Capacity</Label>
+                    <Label>Total Available Quantity <span className="text-destructive">*</span></Label>
                     <Input
                       type="number"
                       min="1"
-                      value={formData.capacity}
-                      onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                      required
+                      placeholder="e.g., 10"
+                      value={formData.total_quantity}
+                      onChange={(e) => setFormData({ ...formData, total_quantity: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Base Price (₹) <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="e.g., 5000"
+                      value={formData.base_price}
+                      onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
                     />
                   </div>
 
@@ -211,17 +255,6 @@ export default function Rooms() {
                       min="0"
                       value={formData.child_capacity}
                       onChange={(e) => setFormData({ ...formData, child_capacity: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Base Price <span className="text-destructive">*</span></Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={formData.base_price}
-                      onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
                     />
                   </div>
                 </div>
@@ -246,9 +279,12 @@ export default function Rooms() {
 
                 <div className="flex gap-4">
                   <Button type="submit" className="bg-gradient-primary">
-                    Create Room
+                    {editingRoom ? "Update Room" : "Create Room"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setShowForm(false);
+                    resetForm();
+                  }}>
                     Cancel
                   </Button>
                 </div>
@@ -256,7 +292,7 @@ export default function Rooms() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {rooms.length === 0 ? (
               <Card className="col-span-full">
                 <CardContent className="p-8 text-center text-muted-foreground">
@@ -268,33 +304,39 @@ export default function Rooms() {
                 <Card key={room.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">Room {room.room_number}</CardTitle>
-                        <Badge variant="secondary" className="mt-1 capitalize">
-                          {room.room_type}
-                        </Badge>
-                      </div>
-                      <Badge variant={room.is_available ? "default" : "destructive"}>
-                        {room.is_available ? "Available" : "Occupied"}
+                      <CardTitle className="text-lg">{room.room_number}</CardTitle>
+                      <Badge variant="secondary" className="bg-primary/10 text-primary">
+                        {room.total_quantity || 1} Rooms
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {room.floor_number && (
-                      <p className="text-sm">🏢 Floor {room.floor_number}</p>
-                    )}
-                    <p className="text-sm">👥 Capacity: {room.capacity} ({room.adult_capacity}A + {room.child_capacity}C)</p>
+                    <p className="text-sm">👥 Capacity: {room.adult_capacity || 2} Adults + {room.child_capacity || 1} Children</p>
                     <p className="text-sm font-semibold text-primary">
-                      ₹{room.base_price}/night
+                      ₹{(room.base_price || 0).toLocaleString("en-IN")}/night
                     </p>
                     {room.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {room.description}
                       </p>
                     )}
-                    <div className="pt-2">
-                      <Button size="sm" variant="outline" className="w-full">
+                    <div className="pt-2 flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleEdit(room)}
+                      >
+                        <Pencil className="h-3 w-3 mr-1" />
                         Edit
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => handleDelete(room.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </CardContent>
