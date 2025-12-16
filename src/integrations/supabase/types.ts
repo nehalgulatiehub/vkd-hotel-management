@@ -824,6 +824,7 @@ export type Database = {
           notes: string | null
           room_number: string
           room_type: string
+          total_quantity: number
           updated_at: string | null
         }
         Insert: {
@@ -841,6 +842,7 @@ export type Database = {
           notes?: string | null
           room_number: string
           room_type: string
+          total_quantity?: number
           updated_at?: string | null
         }
         Update: {
@@ -858,6 +860,7 @@ export type Database = {
           notes?: string | null
           room_number?: string
           room_type?: string
+          total_quantity?: number
           updated_at?: string | null
         }
         Relationships: [

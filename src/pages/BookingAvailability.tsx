@@ -1,218 +1,264 @@
 import { Header } from "@/components/layout/Header";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Search } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, isSameDay } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+
+interface Room {
+  id: string;
+  room_number: string;
+  total_quantity: number;
+  base_price: number;
+  hotel_id: string;
+}
+
+interface Hotel {
+  id: string;
+  name: string;
+  rooms?: Room[];
+}
+
+interface HotelBooking {
+  id: string;
+  own_hotel_id: string;
+  room_type: string;
+  check_in_date: string;
+  check_out_date: string;
+  number_of_rooms: number;
+}
 
 export default function BookingAvailability() {
-  const [checkInDate, setCheckInDate] = useState<Date>();
-  const [checkOutDate, setCheckOutDate] = useState<Date>();
-  const [ownHotels, setOwnHotels] = useState<any[]>([]);
-  const [selectedHotel, setSelectedHotel] = useState("");
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [availabilityResults, setAvailabilityResults] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotelBookings, setHotelBookings] = useState<HotelBooking[]>([]);
+  const [baseDate, setBaseDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchOwnHotels();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    if (selectedHotel) {
-      fetchRooms();
-    }
-  }, [selectedHotel]);
-
-  const fetchOwnHotels = async () => {
-    const { data } = await supabase
+  const fetchData = async () => {
+    setLoading(true);
+    
+    // Fetch hotels with their rooms
+    const { data: hotelsData } = await supabase
       .from("own_hotels")
-      .select("*")
+      .select("id, name")
       .order("name");
-    setOwnHotels(data || []);
-  };
 
-  const fetchRooms = async () => {
-    const { data } = await supabase
+    // Fetch all rooms
+    const { data: roomsData } = await supabase
       .from("rooms")
-      .select("*")
-      .eq("hotel_id", selectedHotel)
+      .select("id, room_number, total_quantity, base_price, hotel_id")
       .order("room_number");
-    setRooms(data || []);
-  };
 
-  const checkAvailability = async () => {
-    if (!checkInDate || !checkOutDate || !selectedHotel) {
-      toast.error("Please select hotel and dates");
-      return;
-    }
-
-    // Get all bookings that overlap with the selected dates
-    const { data: hotelBookings, error } = await supabase
+    // Fetch all hotel bookings (from bookings that have hotel bookings)
+    const { data: bookingsData } = await supabase
       .from("hotel_bookings")
-      .select("*, rooms(room_number, room_type)")
-      .eq("own_hotel_id", selectedHotel)
-      .or(`and(check_in_date.lte.${format(checkOutDate, "yyyy-MM-dd")},check_out_date.gte.${format(checkInDate, "yyyy-MM-dd")})`);
+      .select("id, own_hotel_id, room_type, check_in_date, check_out_date, number_of_rooms")
+      .not("own_hotel_id", "is", null);
 
-    if (error) {
-      toast.error("Failed to check availability");
-      return;
-    }
+    // Map rooms to hotels
+    const hotelsWithRooms = (hotelsData || []).map(hotel => ({
+      ...hotel,
+      rooms: (roomsData || []).filter(room => room.hotel_id === hotel.id)
+    }));
 
-    // Calculate room availability
-    const roomAvailability = rooms.map(room => {
-      const bookedForRoom = hotelBookings?.filter(b => b.room_type === room.id) || [];
-      const isAvailable = bookedForRoom.length === 0;
-      
-      return {
-        ...room,
-        isAvailable,
-        bookings: bookedForRoom
-      };
-    });
-
-    setAvailabilityResults(roomAvailability);
-    toast.success("Availability checked");
+    setHotels(hotelsWithRooms);
+    setHotelBookings(bookingsData || []);
+    setLoading(false);
   };
+
+  // Generate 12 months starting from baseDate
+  const months = Array.from({ length: 12 }, (_, i) => addMonths(baseDate, i));
+
+  const getDaysInMonth = (date: Date) => {
+    const start = startOfMonth(date);
+    const end = endOfMonth(date);
+    return eachDayOfInterval({ start, end });
+  };
+
+  const getBookingsForDate = (hotelId: string, roomName: string, date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return hotelBookings.filter(booking => {
+      if (booking.own_hotel_id !== hotelId) return false;
+      if (booking.room_type !== roomName) return false;
+      return dateStr >= booking.check_in_date && dateStr < booking.check_out_date;
+    });
+  };
+
+  const getAvailableRooms = (room: Room, date: Date) => {
+    const bookings = getBookingsForDate(room.hotel_id, room.room_number, date);
+    const bookedRooms = bookings.reduce((sum, b) => sum + (b.number_of_rooms || 1), 0);
+    return Math.max(0, (room.total_quantity || 1) - bookedRooms);
+  };
+
+  const isDateBooked = (room: Room, date: Date) => {
+    return getAvailableRooms(room, date) === 0;
+  };
+
+  const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header title="Booking Availability" />
+        <main className="p-6">
+          <div className="text-center py-12">Loading availability...</div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header title="Booking Availability" />
       <main className="p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold">Check Room Availability</h2>
-          <p className="text-muted-foreground">See which rooms are available for your selected dates</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold">Booking Availability</h2>
+            <p className="text-muted-foreground">View room availability across all hotels</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setBaseDate(addMonths(baseDate, -12))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium px-2">
+              {format(baseDate, "yyyy")} - {format(addMonths(baseDate, 11), "yyyy")}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setBaseDate(addMonths(baseDate, 12))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div>
-                <Label>Select Hotel</Label>
-                <Select value={selectedHotel} onValueChange={setSelectedHotel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose hotel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ownHotels.map((hotel) => (
-                      <SelectItem key={hotel.id} value={hotel.id}>
-                        {hotel.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Check-in Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {checkInDate ? format(checkInDate, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={checkInDate}
-                      onSelect={setCheckInDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <Label>Check-out Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {checkOutDate ? format(checkOutDate, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={checkOutDate}
-                      onSelect={setCheckOutDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex items-end">
-                <Button 
-                  onClick={checkAvailability} 
-                  className="w-full bg-gradient-primary"
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Check Availability
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {availabilityResults.length > 0 && (
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Availability Results</h3>
-              <div className="space-y-4">
-                {availabilityResults.map((room) => (
-                  <div 
-                    key={room.id} 
-                    className={`p-4 border rounded-lg ${
-                      room.isAvailable ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-semibold">Room {room.room_number}</h4>
-                        <p className="text-sm text-muted-foreground">{room.room_type}</p>
-                        <p className="text-sm">
-                          Capacity: {room.adult_capacity} adults, {room.child_capacity} children
-                        </p>
-                        <p className="text-sm font-semibold">₹{room.base_price.toLocaleString()}/night</p>
-                      </div>
-                      <div>
-                        {room.isAvailable ? (
-                          <Badge className="bg-green-600">Available</Badge>
-                        ) : (
-                          <Badge className="bg-red-600">Booked</Badge>
-                        )}
-                      </div>
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+          {months.map((month, idx) => (
+            <Card key={idx} className="overflow-hidden">
+              <CardHeader className="py-2 px-3 bg-primary/10">
+                <CardTitle className="text-sm font-semibold text-center">
+                  {format(month, "MMMM yyyy")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2">
+                <div className="grid grid-cols-7 gap-0.5 text-center mb-1">
+                  {weekDays.map((day, i) => (
+                    <div key={i} className="text-xs font-medium text-muted-foreground p-1">
+                      {day}
                     </div>
-                    {!room.isAvailable && room.bookings.length > 0 && (
-                      <div className="mt-2 pt-2 border-t">
-                        <p className="text-xs text-muted-foreground">
-                          Booked for {room.bookings.length} booking(s) during this period
-                        </p>
-                      </div>
-                    )}
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-0.5">
+                  {/* Empty cells for days before the first of the month */}
+                  {Array.from({ length: getDay(startOfMonth(month)) }).map((_, i) => (
+                    <div key={`empty-${i}`} className="aspect-square" />
+                  ))}
+                  {/* Days of the month */}
+                  {getDaysInMonth(month).map((day) => {
+                    const isToday = isSameDay(day, new Date());
+                    const hasBookings = hotels.some(hotel => 
+                      hotel.rooms?.some(room => getBookingsForDate(hotel.id, room.room_number, day).length > 0)
+                    );
+                    
+                    return (
+                      <HoverCard key={day.toISOString()} openDelay={200}>
+                        <HoverCardTrigger asChild>
+                          <div
+                            className={cn(
+                              "aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-colors",
+                              isToday && "ring-2 ring-primary",
+                              hasBookings ? "bg-rose-100 text-rose-700 hover:bg-rose-200" : "hover:bg-muted"
+                            )}
+                          >
+                            {format(day, "d")}
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80 p-3" side="right">
+                          <div className="space-y-2">
+                            <p className="font-semibold text-sm">
+                              {format(day, "EEEE, MMMM d, yyyy")}
+                            </p>
+                            {hotels.filter(h => h.rooms && h.rooms.length > 0).map(hotel => (
+                              <div key={hotel.id} className="text-xs">
+                                <p className="font-medium text-primary">{hotel.name}</p>
+                                <div className="ml-2 space-y-0.5">
+                                  {hotel.rooms?.map(room => {
+                                    const available = getAvailableRooms(room, day);
+                                    const total = room.total_quantity || 1;
+                                    return (
+                                      <p key={room.id} className={cn(
+                                        available === 0 ? "text-destructive" : "text-muted-foreground"
+                                      )}>
+                                        {room.room_number}: {available}/{total} available
+                                      </p>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                            {hotels.filter(h => h.rooms && h.rooms.length > 0).length === 0 && (
+                              <p className="text-xs text-muted-foreground">No rooms configured</p>
+                            )}
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Hotel Room Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Room Inventory Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {hotels.filter(h => h.rooms && h.rooms.length > 0).length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No hotels with rooms configured. Add rooms to your hotels first.
+              </p>
+            ) : (
+              <div className="space-y-6">
+                {hotels.filter(h => h.rooms && h.rooms.length > 0).map(hotel => (
+                  <div key={hotel.id}>
+                    <h3 className="font-semibold text-primary mb-2">{hotel.name}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {hotel.rooms?.map(room => (
+                        <div 
+                          key={room.id} 
+                          className="flex justify-between items-center p-2 bg-muted/50 rounded text-sm"
+                        >
+                          <span>{room.room_number}</span>
+                          <span className="font-medium">{room.total_quantity || 1} Rooms</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {availabilityResults.length === 0 && (
-          <Card>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              Select a hotel and dates to check room availability
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
