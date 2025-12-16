@@ -21,7 +21,6 @@ export default function Rooms() {
   const [formData, setFormData] = useState({
     room_name: "",
     total_quantity: "1",
-    base_price: "",
     adult_capacity: "2",
     child_capacity: "1",
     description: "",
@@ -67,7 +66,6 @@ export default function Rooms() {
     setFormData({
       room_name: "",
       total_quantity: "1",
-      base_price: "",
       adult_capacity: "2",
       child_capacity: "1",
       description: "",
@@ -80,7 +78,6 @@ export default function Rooms() {
     setFormData({
       room_name: room.room_number || "",
       total_quantity: String(room.total_quantity || 1),
-      base_price: String(room.base_price || ""),
       adult_capacity: String(room.adult_capacity || 2),
       child_capacity: String(room.child_capacity || 1),
       description: room.description || "",
@@ -111,13 +108,12 @@ export default function Rooms() {
     
     const roomData = {
       hotel_id: hotelId,
-      room_number: formData.room_name, // Using room_number field to store room name
-      room_type: formData.room_name, // Also store in room_type for compatibility
+      room_number: formData.room_name,
+      room_type: formData.room_name,
       total_quantity: parseInt(formData.total_quantity),
       capacity: parseInt(formData.adult_capacity) + parseInt(formData.child_capacity),
       adult_capacity: parseInt(formData.adult_capacity),
       child_capacity: parseInt(formData.child_capacity),
-      base_price: parseFloat(formData.base_price),
       description: formData.description,
       notes: formData.notes
     };
@@ -226,17 +222,6 @@ export default function Rooms() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Base Price (₹) <span className="text-destructive">*</span></Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      required
-                      placeholder="e.g., 5000"
-                      value={formData.base_price}
-                      onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
-                    />
-                  </div>
 
                   <div className="space-y-2">
                     <Label>Adult Capacity</Label>
@@ -312,9 +297,6 @@ export default function Rooms() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <p className="text-sm">👥 Capacity: {room.adult_capacity || 2} Adults + {room.child_capacity || 1} Children</p>
-                    <p className="text-sm font-semibold text-primary">
-                      ₹{(room.base_price || 0).toLocaleString("en-IN")}/night
-                    </p>
                     {room.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {room.description}
