@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Leaf, AlertCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Leaf, AlertCircle, Database } from "lucide-react";
 
 interface FoodCategory {
   id: string;
@@ -174,6 +174,96 @@ const FoodMenu = () => {
     setIsCategoryDialogOpen(false);
   };
 
+  const loadSampleDataMutation = useMutation({
+    mutationFn: async () => {
+      // Sample categories
+      const categoriesData = [
+        { name: "Starters", display_order: 1, description: "Appetizers and snacks" },
+        { name: "Main Course", display_order: 2, description: "Main dishes" },
+        { name: "Breads", display_order: 3, description: "Indian breads" },
+        { name: "Rice & Biryani", display_order: 4, description: "Rice dishes" },
+        { name: "Desserts", display_order: 5, description: "Sweet treats" },
+        { name: "Beverages", display_order: 6, description: "Drinks" },
+      ];
+
+      const { data: insertedCategories, error: catError } = await supabase
+        .from("food_categories")
+        .insert(categoriesData)
+        .select();
+      
+      if (catError) throw catError;
+
+      const categoryMap: Record<string, string> = {};
+      insertedCategories?.forEach(cat => {
+        categoryMap[cat.name] = cat.id;
+      });
+
+      // Sample food items
+      const foodItemsData = [
+        // Starters
+        { name: "Paneer Tikka", category_id: categoryMap["Starters"], price: 280, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Chicken Tikka", category_id: categoryMap["Starters"], price: 320, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        { name: "Veg Spring Roll", category_id: categoryMap["Starters"], price: 180, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Tandoori Prawns", category_id: categoryMap["Starters"], price: 450, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        { name: "Hara Bhara Kebab", category_id: categoryMap["Starters"], price: 220, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        // Main Course
+        { name: "Butter Chicken", category_id: categoryMap["Main Course"], price: 380, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        { name: "Paneer Butter Masala", category_id: categoryMap["Main Course"], price: 320, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Dal Makhani", category_id: categoryMap["Main Course"], price: 260, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Mutton Rogan Josh", category_id: categoryMap["Main Course"], price: 420, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        { name: "Kadai Paneer", category_id: categoryMap["Main Course"], price: 300, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Fish Curry", category_id: categoryMap["Main Course"], price: 350, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        // Breads
+        { name: "Butter Naan", category_id: categoryMap["Breads"], price: 60, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Garlic Naan", category_id: categoryMap["Breads"], price: 70, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Tandoori Roti", category_id: categoryMap["Breads"], price: 40, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Laccha Paratha", category_id: categoryMap["Breads"], price: 65, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        // Rice & Biryani
+        { name: "Steamed Rice", category_id: categoryMap["Rice & Biryani"], price: 120, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Jeera Rice", category_id: categoryMap["Rice & Biryani"], price: 150, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Veg Biryani", category_id: categoryMap["Rice & Biryani"], price: 280, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Chicken Biryani", category_id: categoryMap["Rice & Biryani"], price: 350, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        { name: "Mutton Biryani", category_id: categoryMap["Rice & Biryani"], price: 420, gst_percentage: 5, is_vegetarian: false, hsn_code: "996331" },
+        // Desserts
+        { name: "Gulab Jamun", category_id: categoryMap["Desserts"], price: 80, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Rasmalai", category_id: categoryMap["Desserts"], price: 100, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Ice Cream", category_id: categoryMap["Desserts"], price: 120, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        { name: "Brownie with Ice Cream", category_id: categoryMap["Desserts"], price: 180, gst_percentage: 5, is_vegetarian: true, hsn_code: "996331" },
+        // Beverages
+        { name: "Fresh Lime Soda", category_id: categoryMap["Beverages"], price: 60, gst_percentage: 18, is_vegetarian: true, hsn_code: "996332" },
+        { name: "Mango Lassi", category_id: categoryMap["Beverages"], price: 90, gst_percentage: 18, is_vegetarian: true, hsn_code: "996332" },
+        { name: "Masala Chai", category_id: categoryMap["Beverages"], price: 40, gst_percentage: 5, is_vegetarian: true, hsn_code: "996332" },
+        { name: "Cold Coffee", category_id: categoryMap["Beverages"], price: 120, gst_percentage: 18, is_vegetarian: true, hsn_code: "996332" },
+        { name: "Fresh Juice", category_id: categoryMap["Beverages"], price: 100, gst_percentage: 18, is_vegetarian: true, hsn_code: "996332" },
+      ];
+
+      const { error: itemsError } = await supabase.from("food_items").insert(foodItemsData);
+      if (itemsError) throw itemsError;
+
+      // Sample tables
+      const tablesData = [
+        { table_number: "T1", table_name: "Window Table", capacity: 4, status: "available" },
+        { table_number: "T2", table_name: "Corner Booth", capacity: 6, status: "available" },
+        { table_number: "T3", table_name: "Garden View", capacity: 4, status: "available" },
+        { table_number: "T4", table_name: "Family Table", capacity: 8, status: "available" },
+        { table_number: "T5", table_name: "Couple Table", capacity: 2, status: "available" },
+        { table_number: "T6", table_name: "Bar Counter", capacity: 4, status: "available" },
+        { table_number: "T7", table_name: "Private Dining", capacity: 10, status: "available" },
+        { table_number: "T8", table_name: "Patio", capacity: 6, status: "available" },
+      ];
+
+      const { error: tablesError } = await supabase.from("restaurant_tables").insert(tablesData);
+      if (tablesError) throw tablesError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["food-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["food-items"] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant-tables"] });
+      toast.success("Sample data loaded successfully!");
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
+
   const handleEditItem = (item: FoodItem) => {
     setEditingItem(item);
     setItemFormData({
@@ -208,6 +298,16 @@ const FoodMenu = () => {
           <h1 className="text-3xl font-bold">Food Menu</h1>
           <p className="text-muted-foreground">Manage food items and categories</p>
         </div>
+        {(!items || items.length === 0) && (!categories || categories.length === 0) && (
+          <Button 
+            variant="outline" 
+            onClick={() => loadSampleDataMutation.mutate()}
+            disabled={loadSampleDataMutation.isPending}
+          >
+            <Database className="h-4 w-4 mr-2" />
+            {loadSampleDataMutation.isPending ? "Loading..." : "Load Sample Data"}
+          </Button>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
