@@ -40,7 +40,9 @@ interface RestaurantTable {
 const RestaurantPOS = () => {
   const queryClient = useQueryClient();
   const [orderType, setOrderType] = useState<"dine_in" | "takeaway" | "delivery">("dine_in");
+  const [orderDestination, setOrderDestination] = useState<"table" | "room">("table");
   const [selectedTableId, setSelectedTableId] = useState<string>("");
+  const [roomNumber, setRoomNumber] = useState<string>("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -180,7 +182,8 @@ const RestaurantPOS = () => {
   const placeOrderMutation = useMutation({
     mutationFn: async () => {
       if (cart.length === 0) throw new Error("Cart is empty");
-      if (orderType === "dine_in" && !selectedTableId) throw new Error("Please select a table");
+      if (orderType === "dine_in" && orderDestination === "table" && !selectedTableId) throw new Error("Please select a table");
+      if (orderType === "dine_in" && orderDestination === "room" && !roomNumber.trim()) throw new Error("Please enter room number");
 
       const orderNumber = generateOrderNumber();
 
@@ -189,7 +192,8 @@ const RestaurantPOS = () => {
         .from("restaurant_orders")
         .insert({
           order_number: orderNumber,
-          table_id: orderType === "dine_in" ? selectedTableId : null,
+          table_id: orderType === "dine_in" && orderDestination === "table" ? selectedTableId : null,
+          room_number: orderType === "dine_in" && orderDestination === "room" ? roomNumber.trim() : null,
           order_type: orderType,
           customer_name: customerName || null,
           customer_phone: customerPhone || null,
@@ -231,8 +235,8 @@ const RestaurantPOS = () => {
 
       if (itemsError) throw itemsError;
 
-      // Update table status if dine-in
-      if (orderType === "dine_in" && selectedTableId) {
+      // Update table status if dine-in with table
+      if (orderType === "dine_in" && orderDestination === "table" && selectedTableId) {
         await supabase
           .from("restaurant_tables")
           .update({ status: "occupied" })
@@ -252,6 +256,7 @@ const RestaurantPOS = () => {
       setCustomerAddress("");
       setSpecialInstructions("");
       setSelectedTableId("");
+      setRoomNumber("");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -343,18 +348,47 @@ const RestaurantPOS = () => {
             </div>
 
             {orderType === "dine_in" && (
-              <Select value={selectedTableId} onValueChange={setSelectedTableId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Table" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tables?.filter(t => t.status === "available" || t.id === selectedTableId).map((table) => (
-                    <SelectItem key={table.id} value={table.id}>
-                      {table.table_number} {table.table_name ? `- ${table.table_name}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={orderDestination === "table" ? "default" : "outline"}
+                    onClick={() => setOrderDestination("table")}
+                    className="flex-1"
+                  >
+                    Table
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={orderDestination === "room" ? "default" : "outline"}
+                    onClick={() => setOrderDestination("room")}
+                    className="flex-1"
+                  >
+                    Room
+                  </Button>
+                </div>
+                
+                {orderDestination === "table" ? (
+                  <Select value={selectedTableId} onValueChange={setSelectedTableId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Table" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tables?.filter(t => t.status === "available" || t.id === selectedTableId).map((table) => (
+                        <SelectItem key={table.id} value={table.id}>
+                          {table.table_number} {table.table_name ? `- ${table.table_name}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    placeholder="Enter Room Number"
+                    value={roomNumber}
+                    onChange={(e) => setRoomNumber(e.target.value)}
+                  />
+                )}
+              </>
             )}
 
             <Input
@@ -487,15 +521,17 @@ const RestaurantPOS = () => {
             onChange={(e) => setSpecialInstructions(e.target.value)}
           />
 
-          <Button
-            size="lg"
-            className="w-full"
-            disabled={cart.length === 0 || placeOrderMutation.isPending}
-            onClick={() => placeOrderMutation.mutate()}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            {placeOrderMutation.isPending ? "Placing Order..." : "Place Order"}
-          </Button>
+          <div className="pb-2">
+            <Button
+              size="lg"
+              className="w-full"
+              disabled={cart.length === 0 || placeOrderMutation.isPending}
+              onClick={() => placeOrderMutation.mutate()}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {placeOrderMutation.isPending ? "Placing Order..." : "Place Order"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
