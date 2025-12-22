@@ -31,6 +31,10 @@ interface RestaurantOrder {
   subtotal: number;
   total_amount: number;
   created_at: string;
+  gst_percentage: number | null;
+  gst_type: string | null;
+  cgst_amount: number | null;
+  sgst_amount: number | null;
   restaurant_tables?: { table_number: string; table_name: string | null };
   restaurant_order_items?: OrderItem[];
 }
@@ -64,7 +68,6 @@ const RestaurantInvoice = () => {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [paymentMode, setPaymentMode] = useState<string>("cash");
-  const [gstPercentage, setGstPercentage] = useState<number>(5);
   const [splitPayments, setSplitPayments] = useState([
     { mode: "cash", amount: "" },
     { mode: "upi", amount: "" }
@@ -105,11 +108,24 @@ const RestaurantInvoice = () => {
     enabled: !!orderId
   });
 
-  // Calculate GST on total
+  // Use GST values from order
+  const gstPercentage = order?.gst_percentage || 0;
+  const gstType = order?.gst_type || "cgst_sgst";
   const subtotal = order?.restaurant_order_items?.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0) || 0;
   const gstAmount = (subtotal * gstPercentage) / 100;
-  const cgstAmount = gstAmount / 2;
-  const sgstAmount = gstAmount / 2;
+  
+  let cgstAmount = 0;
+  let sgstAmount = 0;
+  let igstAmount = 0;
+  
+  if (gstType === "cgst_sgst") {
+    cgstAmount = gstAmount / 2;
+    sgstAmount = gstAmount / 2;
+  } else if (gstType === "igst") {
+    igstAmount = gstAmount;
+  }
+  // For "gst" type, we just show total GST without breakdown
+  
   const grandTotal = subtotal + gstAmount;
 
   const saveSettings = () => {
@@ -225,20 +241,8 @@ const RestaurantInvoice = () => {
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Orders
         </Button>
         <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-2">
-            <Label className="text-sm">GST %:</Label>
-            <Select value={String(gstPercentage)} onValueChange={(v) => setGstPercentage(Number(v))}>
-              <SelectTrigger className="w-20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">0%</SelectItem>
-                <SelectItem value="5">5%</SelectItem>
-                <SelectItem value="12">12%</SelectItem>
-                <SelectItem value="18">18%</SelectItem>
-                <SelectItem value="28">28%</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>GST: {gstPercentage}% ({gstType === "cgst_sgst" ? "CGST+SGST" : gstType === "igst" ? "IGST" : "GST Only"})</span>
           </div>
           <Button variant="outline" size="icon" onClick={() => { setEditSettings(settings); setIsSettingsDialogOpen(true); }}>
             <Settings className="h-4 w-4" />
@@ -333,7 +337,7 @@ const RestaurantInvoice = () => {
               <span>Subtotal:</span>
               <span>₹{subtotal.toFixed(2)}</span>
             </div>
-            {gstPercentage > 0 && (
+            {gstPercentage > 0 && gstType === "cgst_sgst" && (
               <>
                 <div className="flex justify-between">
                   <span>CGST @{gstPercentage / 2}%:</span>
@@ -344,6 +348,18 @@ const RestaurantInvoice = () => {
                   <span>₹{sgstAmount.toFixed(2)}</span>
                 </div>
               </>
+            )}
+            {gstPercentage > 0 && gstType === "igst" && (
+              <div className="flex justify-between">
+                <span>IGST @{gstPercentage}%:</span>
+                <span>₹{igstAmount.toFixed(2)}</span>
+              </div>
+            )}
+            {gstPercentage > 0 && gstType === "gst" && (
+              <div className="flex justify-between">
+                <span>GST @{gstPercentage}%:</span>
+                <span>₹{gstAmount.toFixed(2)}</span>
+              </div>
             )}
             <div className="border-t border-dashed border-black my-1"></div>
             <div className="flex justify-between font-bold text-sm">

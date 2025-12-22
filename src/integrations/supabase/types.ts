@@ -1034,6 +1034,8 @@ export type Database = {
           customer_address: string | null
           customer_name: string | null
           customer_phone: string | null
+          gst_percentage: number | null
+          gst_type: string | null
           id: string
           order_number: string
           order_type: string | null
@@ -1052,6 +1054,8 @@ export type Database = {
           customer_address?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          gst_percentage?: number | null
+          gst_type?: string | null
           id?: string
           order_number: string
           order_type?: string | null
@@ -1070,6 +1074,8 @@ export type Database = {
           customer_address?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          gst_percentage?: number | null
+          gst_type?: string | null
           id?: string
           order_number?: string
           order_type?: string | null

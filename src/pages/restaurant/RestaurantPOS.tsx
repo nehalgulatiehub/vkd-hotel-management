@@ -199,7 +199,9 @@ const RestaurantPOS = () => {
           sgst_amount: cartTotals.sgst,
           total_amount: cartTotals.total,
           special_instructions: specialInstructions || null,
-          status: "pending"
+          status: "pending",
+          gst_percentage: gstPercentage,
+          gst_type: gstType
         })
         .select()
         .single();
