@@ -35,6 +35,7 @@ interface RestaurantOrder {
   gst_type: string | null;
   cgst_amount: number | null;
   sgst_amount: number | null;
+  room_number: string | null;
   restaurant_tables?: { table_number: string; table_name: string | null };
   restaurant_order_items?: OrderItem[];
 }
@@ -297,6 +298,12 @@ const RestaurantInvoice = () => {
               <div className="flex justify-between">
                 <span>Table:</span>
                 <span>{order.restaurant_tables.table_number}</span>
+              </div>
+            )}
+            {order.room_number && (
+              <div className="flex justify-between">
+                <span>Room:</span>
+                <span>{order.room_number}</span>
               </div>
             )}
             {order.customer_name && (

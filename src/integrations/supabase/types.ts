@@ -1039,6 +1039,7 @@ export type Database = {
           id: string
           order_number: string
           order_type: string | null
+          room_number: string | null
           sgst_amount: number | null
           special_instructions: string | null
           status: string | null
@@ -1059,6 +1060,7 @@ export type Database = {
           id?: string
           order_number: string
           order_type?: string | null
+          room_number?: string | null
           sgst_amount?: number | null
           special_instructions?: string | null
           status?: string | null
@@ -1079,6 +1081,7 @@ export type Database = {
           id?: string
           order_number?: string
           order_type?: string | null
+          room_number?: string | null
           sgst_amount?: number | null
           special_instructions?: string | null
           status?: string | null
