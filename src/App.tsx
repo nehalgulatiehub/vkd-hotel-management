@@ -50,6 +50,12 @@ import CancelledBookings from "./pages/CancelledBookings";
 import HoldBookings from "./pages/HoldBookings";
 import CreateHoldBooking from "./pages/CreateHoldBooking";
 import DataImport from "./pages/DataImport";
+import RestaurantTables from "./pages/restaurant/RestaurantTables";
+import FoodMenu from "./pages/restaurant/FoodMenu";
+import RestaurantPOS from "./pages/restaurant/RestaurantPOS";
+import RestaurantOrders from "./pages/restaurant/RestaurantOrders";
+import RestaurantInvoice from "./pages/restaurant/RestaurantInvoice";
+import RestaurantReports from "./pages/restaurant/RestaurantReports";
 
 const queryClient = new QueryClient();
 
@@ -414,6 +420,12 @@ const App = () => (
               </DashboardLayout>
             }
           />
+          <Route path="/restaurant/tables" element={<DashboardLayout><RestaurantTables /></DashboardLayout>} />
+          <Route path="/restaurant/menu" element={<DashboardLayout><FoodMenu /></DashboardLayout>} />
+          <Route path="/restaurant/pos" element={<DashboardLayout><RestaurantPOS /></DashboardLayout>} />
+          <Route path="/restaurant/orders" element={<DashboardLayout><RestaurantOrders /></DashboardLayout>} />
+          <Route path="/restaurant/invoice/:orderId" element={<DashboardLayout><RestaurantInvoice /></DashboardLayout>} />
+          <Route path="/restaurant/reports" element={<DashboardLayout><RestaurantReports /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

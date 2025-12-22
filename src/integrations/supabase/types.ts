@@ -430,6 +430,89 @@ export type Database = {
           },
         ]
       }
+      food_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      food_items: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          gst_percentage: number | null
+          hsn_code: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          is_vegetarian: boolean | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          gst_percentage?: number | null
+          hsn_code?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          is_vegetarian?: boolean | null
+          name: string
+          price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          gst_percentage?: number | null
+          hsn_code?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          is_vegetarian?: boolean | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "food_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_expenses: {
         Row: {
           amount: number
@@ -807,6 +890,297 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurant_invoices: {
+        Row: {
+          cgst_amount: number | null
+          created_at: string | null
+          created_by: string | null
+          customer_address: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          discount_amount: number | null
+          id: string
+          invoice_date: string | null
+          invoice_number: string
+          notes: string | null
+          order_id: string | null
+          payment_mode: string | null
+          payment_status: string | null
+          sgst_amount: number | null
+          subtotal: number | null
+          total_amount: number | null
+        }
+        Insert: {
+          cgst_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_amount?: number | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number: string
+          notes?: string | null
+          order_id?: string | null
+          payment_mode?: string | null
+          payment_status?: string | null
+          sgst_amount?: number | null
+          subtotal?: number | null
+          total_amount?: number | null
+        }
+        Update: {
+          cgst_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_amount?: number | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string
+          notes?: string | null
+          order_id?: string | null
+          payment_mode?: string | null
+          payment_status?: string | null
+          sgst_amount?: number | null
+          subtotal?: number | null
+          total_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_order_items: {
+        Row: {
+          cgst_amount: number | null
+          created_at: string | null
+          food_item_id: string | null
+          food_item_name: string
+          gst_percentage: number | null
+          id: string
+          order_id: string
+          quantity: number
+          sgst_amount: number | null
+          special_instructions: string | null
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          cgst_amount?: number | null
+          created_at?: string | null
+          food_item_id?: string | null
+          food_item_name: string
+          gst_percentage?: number | null
+          id?: string
+          order_id: string
+          quantity?: number
+          sgst_amount?: number | null
+          special_instructions?: string | null
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          cgst_amount?: number | null
+          created_at?: string | null
+          food_item_id?: string | null
+          food_item_name?: string
+          gst_percentage?: number | null
+          id?: string
+          order_id?: string
+          quantity?: number
+          sgst_amount?: number | null
+          special_instructions?: string | null
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_order_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_orders: {
+        Row: {
+          cgst_amount: number | null
+          created_at: string | null
+          created_by: string | null
+          customer_address: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          order_number: string
+          order_type: string | null
+          sgst_amount: number | null
+          special_instructions: string | null
+          status: string | null
+          subtotal: number | null
+          table_id: string | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cgst_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_number: string
+          order_type?: string | null
+          sgst_amount?: number | null
+          special_instructions?: string | null
+          status?: string | null
+          subtotal?: number | null
+          table_id?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cgst_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_number?: string
+          order_type?: string | null
+          sgst_amount?: number | null
+          special_instructions?: string | null
+          status?: string | null
+          subtotal?: number | null
+          table_id?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          payment_date: string | null
+          payment_mode: string
+          reference_number: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_mode: string
+          reference_number?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_mode?: string
+          reference_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_tables: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          status: string | null
+          table_name: string | null
+          table_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+          table_name?: string | null
+          table_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+          table_name?: string | null
+          table_number?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       rooms: {
         Row: {
