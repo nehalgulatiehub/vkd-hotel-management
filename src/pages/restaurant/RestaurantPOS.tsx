@@ -49,6 +49,7 @@ const RestaurantPOS = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [gstPercentage, setGstPercentage] = useState<number>(5);
+  const [gstType, setGstType] = useState<"cgst_sgst" | "igst" | "gst">("cgst_sgst");
 
   const { data: tables } = useQuery({
     queryKey: ["restaurant-tables"],
@@ -105,16 +106,28 @@ const RestaurantPOS = () => {
     });
 
     const gstAmount = (subtotal * gstPercentage) / 100;
-    const cgst = gstAmount / 2;
-    const sgst = gstAmount / 2;
+    
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+
+    if (gstType === "cgst_sgst") {
+      cgst = gstAmount / 2;
+      sgst = gstAmount / 2;
+    } else if (gstType === "igst") {
+      igst = gstAmount;
+    }
+    // For "gst" type, we just show total GST without breakdown
 
     return {
       subtotal,
       cgst,
       sgst,
+      igst,
+      gstAmount,
       total: subtotal + gstAmount
     };
-  }, [cart, gstPercentage]);
+  }, [cart, gstPercentage, gstType]);
 
   const addToCart = (item: FoodItem) => {
     setCart((prev) => {
@@ -433,13 +446,28 @@ const RestaurantPOS = () => {
                     <SelectItem value="28">28%</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={gstType} onValueChange={(v) => setGstType(v as "cgst_sgst" | "igst" | "gst")}>
+                  <SelectTrigger className="h-7 w-28 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cgst_sgst">CGST+SGST</SelectItem>
+                    <SelectItem value="igst">IGST</SelectItem>
+                    <SelectItem value="gst">GST Only</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <span>₹{(cartTotals.cgst + cartTotals.sgst).toFixed(2)}</span>
+              <span>₹{cartTotals.gstAmount.toFixed(2)}</span>
             </div>
-            {gstPercentage > 0 && (
+            {gstPercentage > 0 && gstType === "cgst_sgst" && (
               <div className="flex justify-between text-xs text-muted-foreground pl-2">
                 <span>CGST @{gstPercentage / 2}%: ₹{cartTotals.cgst.toFixed(2)}</span>
                 <span>SGST @{gstPercentage / 2}%: ₹{cartTotals.sgst.toFixed(2)}</span>
+              </div>
+            )}
+            {gstPercentage > 0 && gstType === "igst" && (
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>IGST @{gstPercentage}%: ₹{cartTotals.igst.toFixed(2)}</span>
               </div>
             )}
             <Separator />
