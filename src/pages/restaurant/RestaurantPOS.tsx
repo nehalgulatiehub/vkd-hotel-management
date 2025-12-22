@@ -324,15 +324,16 @@ const RestaurantPOS = () => {
 
       {/* Right Panel - Cart & Order Details */}
       <Card className="w-96 flex flex-col h-full">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex-shrink-0">
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
             Current Order
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 min-h-0 flex flex-col gap-4 overflow-hidden">
-          {/* Order Type & Table Selection */}
-          <div className="space-y-3">
+        <ScrollArea className="flex-1">
+          <CardContent className="flex flex-col gap-4">
+            {/* Order Type & Table Selection */}
+            <div className="space-y-3">
             <div className="flex gap-2">
               {(["dine_in", "takeaway", "delivery"] as const).map((type) => (
                 <Button
@@ -412,8 +413,7 @@ const RestaurantPOS = () => {
 
           <Separator />
 
-          {/* Cart Items */}
-          <ScrollArea className="flex-1 min-h-0">
+            {/* Cart Items */}
             {cart.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -421,7 +421,7 @@ const RestaurantPOS = () => {
                 <p className="text-sm">Click on items to add</p>
               </div>
             ) : (
-              <div className="space-y-3 pr-2">
+              <div className="space-y-3">
                 {cart.map((item) => (
                   <div key={item.food_item.id} className="border rounded-lg p-3 space-y-2">
                     <div className="flex items-start justify-between">
@@ -457,7 +457,6 @@ const RestaurantPOS = () => {
                 ))}
               </div>
             )}
-          </ScrollArea>
 
           <Separator />
 
@@ -533,6 +532,7 @@ const RestaurantPOS = () => {
             </Button>
           </div>
         </CardContent>
+        </ScrollArea>
       </Card>
     </div>
   );
