@@ -413,7 +413,7 @@ const RestaurantPOS = () => {
           <Separator />
 
           {/* Cart Items */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-[250px]">
             {cart.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -421,7 +421,7 @@ const RestaurantPOS = () => {
                 <p className="text-sm">Click on items to add</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 pr-2">
                 {cart.map((item) => (
                   <div key={item.food_item.id} className="border rounded-lg p-3 space-y-2">
                     <div className="flex items-start justify-between">
