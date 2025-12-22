@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown, Upload
+  ChevronDown, Upload, UtensilsCrossed
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
@@ -102,6 +102,17 @@ const menuItems = [
       { title: "View Refund Payment", url: "/refunds" },
       { title: "View Cancelling Payment", url: "/refunds/cancelling" },
       { title: "Import Legacy Data", url: "/data-import" },
+    ]
+  },
+  {
+    title: "Restaurant",
+    icon: UtensilsCrossed,
+    submenu: [
+      { title: "Tables", url: "/restaurant/tables" },
+      { title: "Food Menu", url: "/restaurant/menu" },
+      { title: "New Order (POS)", url: "/restaurant/pos" },
+      { title: "View Orders", url: "/restaurant/orders" },
+      { title: "Reports", url: "/restaurant/reports" },
     ]
   },
 ];
