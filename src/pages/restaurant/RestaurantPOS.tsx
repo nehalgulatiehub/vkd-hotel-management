@@ -48,6 +48,7 @@ const RestaurantPOS = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [gstPercentage, setGstPercentage] = useState<number>(5);
 
   const { data: tables } = useQuery({
     queryKey: ["restaurant-tables"],
@@ -97,24 +98,23 @@ const RestaurantPOS = () => {
 
   const cartTotals = useMemo(() => {
     let subtotal = 0;
-    let cgst = 0;
-    let sgst = 0;
 
     cart.forEach((item) => {
       const itemTotal = item.food_item.price * item.quantity;
       subtotal += itemTotal;
-      const gstAmount = (itemTotal * item.food_item.gst_percentage) / 100;
-      cgst += gstAmount / 2;
-      sgst += gstAmount / 2;
     });
+
+    const gstAmount = (subtotal * gstPercentage) / 100;
+    const cgst = gstAmount / 2;
+    const sgst = gstAmount / 2;
 
     return {
       subtotal,
       cgst,
       sgst,
-      total: subtotal + cgst + sgst
+      total: subtotal + gstAmount
     };
-  }, [cart]);
+  }, [cart, gstPercentage]);
 
   const addToCart = (item: FoodItem) => {
     setCart((prev) => {
@@ -196,17 +196,16 @@ const RestaurantPOS = () => {
       // Create order items
       const orderItems = cart.map((item) => {
         const itemTotal = item.food_item.price * item.quantity;
-        const gstAmount = (itemTotal * item.food_item.gst_percentage) / 100;
         return {
           order_id: order.id,
           food_item_id: item.food_item.id,
           food_item_name: item.food_item.name,
           quantity: item.quantity,
           unit_price: item.food_item.price,
-          gst_percentage: item.food_item.gst_percentage,
-          cgst_amount: gstAmount / 2,
-          sgst_amount: gstAmount / 2,
-          total_price: itemTotal + gstAmount,
+          gst_percentage: gstPercentage,
+          cgst_amount: 0,
+          sgst_amount: 0,
+          total_price: itemTotal,
           special_instructions: item.special_instructions || null
         };
       });
@@ -419,14 +418,30 @@ const RestaurantPOS = () => {
               <span className="text-muted-foreground">Subtotal</span>
               <span>₹{cartTotals.subtotal.toLocaleString("en-IN")}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">CGST</span>
-              <span>₹{cartTotals.cgst.toFixed(2)}</span>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">GST</span>
+                <Select value={String(gstPercentage)} onValueChange={(v) => setGstPercentage(Number(v))}>
+                  <SelectTrigger className="h-7 w-16 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
+                    <SelectItem value="5">5%</SelectItem>
+                    <SelectItem value="12">12%</SelectItem>
+                    <SelectItem value="18">18%</SelectItem>
+                    <SelectItem value="28">28%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <span>₹{(cartTotals.cgst + cartTotals.sgst).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">SGST</span>
-              <span>₹{cartTotals.sgst.toFixed(2)}</span>
-            </div>
+            {gstPercentage > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>CGST @{gstPercentage / 2}%: ₹{cartTotals.cgst.toFixed(2)}</span>
+                <span>SGST @{gstPercentage / 2}%: ₹{cartTotals.sgst.toFixed(2)}</span>
+              </div>
+            )}
             <Separator />
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
