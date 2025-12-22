@@ -48,8 +48,6 @@ const FoodMenu = () => {
     category_id: "",
     description: "",
     price: "",
-    gst_percentage: "5",
-    hsn_code: "",
     is_available: true,
     is_vegetarian: true
   });
@@ -91,8 +89,6 @@ const FoodMenu = () => {
         category_id: data.category_id || null,
         description: data.description || null,
         price: parseFloat(data.price),
-        gst_percentage: parseFloat(data.gst_percentage),
-        hsn_code: data.hsn_code || null,
         is_available: data.is_available,
         is_vegetarian: data.is_vegetarian
       };
@@ -162,7 +158,7 @@ const FoodMenu = () => {
   const resetItemForm = () => {
     setItemFormData({
       name: "", category_id: "", description: "", price: "",
-      gst_percentage: "5", hsn_code: "", is_available: true, is_vegetarian: true
+      is_available: true, is_vegetarian: true
     });
     setEditingItem(null);
     setIsItemDialogOpen(false);
@@ -271,8 +267,6 @@ const FoodMenu = () => {
       category_id: item.category_id || "",
       description: item.description || "",
       price: String(item.price),
-      gst_percentage: String(item.gst_percentage),
-      hsn_code: item.hsn_code || "",
       is_available: item.is_available,
       is_vegetarian: item.is_vegetarian
     });
@@ -364,31 +358,6 @@ const FoodMenu = () => {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>GST %</Label>
-                      <Select value={itemFormData.gst_percentage} onValueChange={(v) => setItemFormData({ ...itemFormData, gst_percentage: v })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">0%</SelectItem>
-                          <SelectItem value="5">5%</SelectItem>
-                          <SelectItem value="12">12%</SelectItem>
-                          <SelectItem value="18">18%</SelectItem>
-                          <SelectItem value="28">28%</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>HSN Code</Label>
-                      <Input
-                        placeholder="e.g., 996331"
-                        value={itemFormData.hsn_code}
-                        onChange={(e) => setItemFormData({ ...itemFormData, hsn_code: e.target.value })}
-                      />
-                    </div>
-                  </div>
                   <div className="space-y-2">
                     <Label>Description</Label>
                     <Textarea
@@ -450,7 +419,6 @@ const FoodMenu = () => {
                     <Badge variant="secondary">{item.food_categories.name}</Badge>
                   )}
                   <p className="text-xl font-bold text-primary">₹{item.price.toLocaleString("en-IN")}</p>
-                  <p className="text-sm text-muted-foreground">GST: {item.gst_percentage}%</p>
                   {!item.is_available && <Badge variant="destructive">Out of Stock</Badge>}
                 </CardContent>
               </Card>
