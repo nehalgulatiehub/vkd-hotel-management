@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Plus, Minus, Trash2, Search, Leaf, AlertCircle, ShoppingCart, Send } from "lucide-react";
 
@@ -323,14 +323,14 @@ const RestaurantPOS = () => {
       </div>
 
       {/* Right Panel - Cart & Order Details */}
-      <Card className="w-96 flex flex-col max-h-[calc(100vh-5rem)] overflow-hidden">
-        <CardHeader className="pb-2 flex-shrink-0">
+      <Card className="w-96 flex flex-col">
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
             Current Order
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col gap-3 overflow-hidden">
+        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
           {/* Order Type & Table Selection */}
           <div className="space-y-3">
             <div className="flex gap-2">
@@ -410,10 +410,10 @@ const RestaurantPOS = () => {
             )}
           </div>
 
-          <div className="border-t" />
+          <Separator />
 
           {/* Cart Items */}
-          <ScrollArea className="flex-1 min-h-[120px]">
+          <ScrollArea className="flex-1 max-h-[45vh]">
             {cart.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -459,66 +459,69 @@ const RestaurantPOS = () => {
             )}
           </ScrollArea>
 
-          {/* Totals & Actions - Fixed at bottom */}
-          <div className="flex-shrink-0 space-y-3 pt-2 border-t">
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>₹{cartTotals.subtotal.toLocaleString("en-IN")}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">GST</span>
-                  <Select value={String(gstPercentage)} onValueChange={(v) => setGstPercentage(Number(v))}>
-                    <SelectTrigger className="h-6 w-14 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">0%</SelectItem>
-                      <SelectItem value="5">5%</SelectItem>
-                      <SelectItem value="12">12%</SelectItem>
-                      <SelectItem value="18">18%</SelectItem>
-                      <SelectItem value="28">28%</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={gstType} onValueChange={(v) => setGstType(v as "cgst_sgst" | "igst" | "gst")}>
-                    <SelectTrigger className="h-6 w-24 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cgst_sgst">CGST+SGST</SelectItem>
-                      <SelectItem value="igst">IGST</SelectItem>
-                      <SelectItem value="gst">GST Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <span>₹{cartTotals.gstAmount.toFixed(2)}</span>
-              </div>
-              {gstPercentage > 0 && gstType === "cgst_sgst" && (
-                <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                  <span>CGST @{gstPercentage / 2}%: ₹{cartTotals.cgst.toFixed(2)}</span>
-                  <span>SGST @{gstPercentage / 2}%: ₹{cartTotals.sgst.toFixed(2)}</span>
-                </div>
-              )}
-              {gstPercentage > 0 && gstType === "igst" && (
-                <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                  <span>IGST @{gstPercentage}%: ₹{cartTotals.igst.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-base font-bold pt-1 border-t">
-                <span>Total</span>
-                <span className="text-primary">₹{cartTotals.total.toFixed(2)}</span>
-              </div>
+          <Separator />
+
+          {/* Totals */}
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>₹{cartTotals.subtotal.toLocaleString("en-IN")}</span>
             </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">GST</span>
+                <Select value={String(gstPercentage)} onValueChange={(v) => setGstPercentage(Number(v))}>
+                  <SelectTrigger className="h-7 w-16 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
+                    <SelectItem value="5">5%</SelectItem>
+                    <SelectItem value="12">12%</SelectItem>
+                    <SelectItem value="18">18%</SelectItem>
+                    <SelectItem value="28">28%</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={gstType} onValueChange={(v) => setGstType(v as "cgst_sgst" | "igst" | "gst")}>
+                  <SelectTrigger className="h-7 w-28 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cgst_sgst">CGST+SGST</SelectItem>
+                    <SelectItem value="igst">IGST</SelectItem>
+                    <SelectItem value="gst">GST Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <span>₹{cartTotals.gstAmount.toFixed(2)}</span>
+            </div>
+            {gstPercentage > 0 && gstType === "cgst_sgst" && (
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>CGST @{gstPercentage / 2}%: ₹{cartTotals.cgst.toFixed(2)}</span>
+                <span>SGST @{gstPercentage / 2}%: ₹{cartTotals.sgst.toFixed(2)}</span>
+              </div>
+            )}
+            {gstPercentage > 0 && gstType === "igst" && (
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>IGST @{gstPercentage}%: ₹{cartTotals.igst.toFixed(2)}</span>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between text-lg font-bold">
+              <span>Total</span>
+              <span className="text-primary">₹{cartTotals.total.toFixed(2)}</span>
+            </div>
+          </div>
 
-            <Textarea
-              placeholder="Order special instructions..."
-              className="text-sm"
-              rows={1}
-              value={specialInstructions}
-              onChange={(e) => setSpecialInstructions(e.target.value)}
-            />
+          <Textarea
+            placeholder="Order special instructions..."
+            className="text-sm"
+            rows={2}
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+          />
 
+          <div className="pb-2">
             <Button
               size="lg"
               className="w-full"
