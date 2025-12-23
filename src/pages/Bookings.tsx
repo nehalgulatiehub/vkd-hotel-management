@@ -37,8 +37,11 @@ export default function Bookings() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
+  const [paymentCityId, setPaymentCityId] = useState("");
+  const [paymentType, setPaymentType] = useState("");
   const [cancellationReason, setCancellationReason] = useState("");
   const [printBookingId, setPrintBookingId] = useState<string | null>(null);
+  const [cities, setCities] = useState<any[]>([]);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -149,7 +152,21 @@ export default function Bookings() {
     fetchAnotherHotels();
     fetchTransporters();
     fetchBookings();
+    fetchCities();
   }, []);
+
+  const fetchCities = async () => {
+    const { data, error } = await supabase
+      .from("cities")
+      .select("*")
+      .order("name");
+    
+    if (error) {
+      console.error("Failed to load cities", error);
+    } else {
+      setCities(data || []);
+    }
+  };
 
   const fetchOwnHotels = async () => {
     const { data, error } = await supabase
@@ -644,10 +661,10 @@ export default function Bookings() {
 
   const handlePrintBooking = (booking: any) => {
     setPrintBookingId(booking.id);
+    // Wait for the receipt component to fully render before printing
     setTimeout(() => {
       window.print();
-      setTimeout(() => setPrintBookingId(null), 500);
-    }, 500);
+    }, 800);
   };
 
   const handleViewPayment = (booking: any) => {
@@ -778,6 +795,8 @@ export default function Bookings() {
     setPaymentAmount("");
     setPaymentMode("");
     setPaymentReference("");
+    setPaymentCityId("");
+    setPaymentType("");
     setShowPaymentDialog(true);
   };
 
@@ -804,7 +823,9 @@ export default function Bookings() {
           amount: amount,
           payment_mode: paymentMode,
           reference_number: paymentReference,
-          payment_date: new Date().toISOString().split('T')[0]
+          payment_date: new Date().toISOString().split('T')[0],
+          city_id: paymentCityId || null,
+          payment_type: paymentType || null
         });
 
       if (paymentError) throw paymentError;
@@ -2352,6 +2373,36 @@ export default function Bookings() {
                   value={paymentReference}
                   onChange={(e) => setPaymentReference(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Place (City)</Label>
+                <Select value={paymentCityId} onValueChange={setPaymentCityId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select city where payment was collected" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    {cities.map((city) => (
+                      <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Type</Label>
+                <Select value={paymentType} onValueChange={setPaymentType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="booking_advance">Booking Advance Payment</SelectItem>
+                    <SelectItem value="safari_payment">Safari Payment</SelectItem>
+                    <SelectItem value="volvo_payment">Volvo Payment</SelectItem>
+                    <SelectItem value="hotel_payment">Hotel Payment</SelectItem>
+                    <SelectItem value="vehicle_payment">Vehicle Payment</SelectItem>
+                    <SelectItem value="final_payment">Final Payment</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
