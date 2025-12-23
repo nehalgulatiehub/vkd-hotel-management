@@ -114,6 +114,143 @@ export type Database = {
           },
         ]
       }
+      billing_invoice_items: {
+        Row: {
+          amount: number | null
+          cgst_amount: number | null
+          cgst_percent: number | null
+          created_at: string
+          hsn_code: string | null
+          id: string
+          invoice_id: string
+          is_custom: boolean | null
+          particulars: string
+          quantity: number | null
+          rate: number | null
+          sgst_amount: number | null
+          sgst_percent: number | null
+          sr_no: number
+          total: number | null
+        }
+        Insert: {
+          amount?: number | null
+          cgst_amount?: number | null
+          cgst_percent?: number | null
+          created_at?: string
+          hsn_code?: string | null
+          id?: string
+          invoice_id: string
+          is_custom?: boolean | null
+          particulars: string
+          quantity?: number | null
+          rate?: number | null
+          sgst_amount?: number | null
+          sgst_percent?: number | null
+          sr_no: number
+          total?: number | null
+        }
+        Update: {
+          amount?: number | null
+          cgst_amount?: number | null
+          cgst_percent?: number | null
+          created_at?: string
+          hsn_code?: string | null
+          id?: string
+          invoice_id?: string
+          is_custom?: boolean | null
+          particulars?: string
+          quantity?: number | null
+          rate?: number | null
+          sgst_amount?: number | null
+          sgst_percent?: number | null
+          sr_no?: number
+          total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_invoices: {
+        Row: {
+          amount_in_words: string | null
+          booking_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_address: string | null
+          customer_gstin: string | null
+          customer_name: string | null
+          customer_pan: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          subtotal: number | null
+          total_amount: number | null
+          total_cgst: number | null
+          total_sgst: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_in_words?: string | null
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_gstin?: string | null
+          customer_name?: string | null
+          customer_pan?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          subtotal?: number | null
+          total_amount?: number | null
+          total_cgst?: number | null
+          total_sgst?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_in_words?: string | null
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_gstin?: string | null
+          customer_name?: string | null
+          customer_pan?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          subtotal?: number | null
+          total_amount?: number | null
+          total_cgst?: number | null
+          total_sgst?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoices_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string | null

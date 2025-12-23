@@ -7,9 +7,24 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileSpreadsheet, Printer, Search, Settings } from "lucide-react";
+import { FileSpreadsheet, Printer, Search, Settings, Plus, Trash2, Save, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface BookingListItem {
   id: string;
   booking_number: string;
@@ -20,6 +35,7 @@ interface BookingListItem {
     name: string;
   } | null;
 }
+
 interface BookingDetails {
   id: string;
   booking_number: string;
@@ -39,6 +55,7 @@ interface BookingDetails {
   } | null;
   reference?: string | null;
 }
+
 interface HotelBooking {
   id: string;
   check_in_date: string;
@@ -47,11 +64,8 @@ interface HotelBooking {
   number_of_rooms: number;
   room_rate: number;
   total_amount: number;
-  rooms?: {
-    room_type: string;
-    base_price: number;
-  } | null;
 }
+
 interface VolvoBooking {
   id: string;
   route: string;
@@ -60,6 +74,7 @@ interface VolvoBooking {
   rate_per_seat: number;
   total_amount: number;
 }
+
 interface SafariBooking {
   id: string;
   safari_name: string;
@@ -68,6 +83,7 @@ interface SafariBooking {
   rate_per_person: number;
   total_amount: number;
 }
+
 interface VehicleBooking {
   id: string;
   vehicle_type: string;
@@ -76,6 +92,7 @@ interface VehicleBooking {
   rate: number;
   total_amount: number;
 }
+
 interface RestaurantOrder {
   id: string;
   order_number: string;
@@ -85,7 +102,9 @@ interface RestaurantOrder {
   sgst_amount: number;
   created_at: string;
 }
+
 interface BillingItem {
+  id?: string;
   date: string;
   particulars: string;
   rate: number;
@@ -96,7 +115,9 @@ interface BillingItem {
   cgstAmount: number;
   sgstRate: string;
   sgstAmount: number;
+  isCustom?: boolean;
 }
+
 interface CompanySettings {
   id: string;
   company_name: string;
@@ -113,6 +134,16 @@ interface CompanySettings {
   branch_name: string | null;
   terms_conditions: string | null;
 }
+
+interface SavedInvoice {
+  id: string;
+  invoice_number: string;
+  invoice_date: string;
+  customer_name: string | null;
+  total_amount: number | null;
+  created_at: string;
+}
+
 export default function Billing() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -130,46 +161,79 @@ export default function Billing() {
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [customerGstNo, setCustomerGstNo] = useState("");
   const [customerPanNo, setCustomerPanNo] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedInvoices, setSavedInvoices] = useState<SavedInvoice[]>([]);
+  const [showSavedInvoices, setShowSavedInvoices] = useState(false);
+  
+  // Custom row state
+  const [showAddRow, setShowAddRow] = useState(false);
+  const [newRowDate, setNewRowDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newRowParticulars, setNewRowParticulars] = useState("");
+  const [newRowRate, setNewRowRate] = useState<number>(0);
+  const [newRowQty, setNewRowQty] = useState<number>(1);
+  const [newRowGstType, setNewRowGstType] = useState<string>("5"); // 5% or 12%
+  
   const printRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetchBookings();
     fetchCompanySettings();
+    fetchSavedInvoices();
   }, []);
+
   useEffect(() => {
     if (selectedBookingId) {
       fetchBookingDetails();
     }
   }, [selectedBookingId]);
+
   const fetchCompanySettings = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("company_settings").select("*").limit(1).maybeSingle();
+    const { data, error } = await supabase
+      .from("company_settings")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
     if (error) {
       console.error("Failed to load company settings", error);
     } else if (data) {
       setCompanySettings(data);
     }
   };
+
+  const fetchSavedInvoices = async () => {
+    const { data, error } = await supabase
+      .from("billing_invoices")
+      .select("id, invoice_number, invoice_date, customer_name, total_amount, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    
+    if (error) {
+      console.error("Failed to load saved invoices", error);
+    } else {
+      setSavedInvoices(data || []);
+    }
+  };
+
   const fetchBookings = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("bookings").select("id, booking_number, customer_name, check_in_date, check_out_date, agents(name)").in("status", ["confirmed", "completed"]).order("created_at", {
-      ascending: false
-    });
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("id, booking_number, customer_name, check_in_date, check_out_date, agents(name)")
+      .in("status", ["confirmed", "completed"])
+      .order("created_at", { ascending: false });
     if (error) {
       toast.error("Failed to load bookings");
     } else {
       setBookings(data || []);
     }
   };
+
   const fetchBookingDetails = async () => {
     if (!selectedBookingId) return;
-    const {
-      data: bookingData,
-      error: bookingError
-    } = await supabase.from("bookings").select("*, agents(name)").eq("id", selectedBookingId).single();
+    const { data: bookingData, error: bookingError } = await supabase
+      .from("bookings")
+      .select("*, agents(name)")
+      .eq("id", selectedBookingId)
+      .single();
     if (bookingError) {
       toast.error("Failed to load booking details");
       return;
@@ -178,19 +242,43 @@ export default function Billing() {
     const year = new Date().getFullYear();
     const nextYear = (year + 1).toString().slice(-2);
     setInvoiceNumber(`INV/${year}-${nextYear}/${bookingData.booking_number}`);
-    const [hotelRes, volvoRes, safariRes, vehicleRes, restaurantRes] = await Promise.all([supabase.from("hotel_bookings").select("*").eq("booking_id", selectedBookingId), supabase.from("volvo_bookings").select("*").eq("booking_id", selectedBookingId), supabase.from("safari_bookings").select("*").eq("booking_id", selectedBookingId), supabase.from("vehicle_bookings").select("*").eq("booking_id", selectedBookingId), supabase.from("restaurant_orders").select("*").eq("booking_id", selectedBookingId)]);
+    
+    const [hotelRes, volvoRes, safariRes, vehicleRes, restaurantRes] = await Promise.all([
+      supabase.from("hotel_bookings").select("*").eq("booking_id", selectedBookingId),
+      supabase.from("volvo_bookings").select("*").eq("booking_id", selectedBookingId),
+      supabase.from("safari_bookings").select("*").eq("booking_id", selectedBookingId),
+      supabase.from("vehicle_bookings").select("*").eq("booking_id", selectedBookingId),
+      supabase.from("restaurant_orders").select("*").eq("booking_id", selectedBookingId)
+    ]);
+    
     setHotelBookings(hotelRes.data || []);
     setVolvoBookings(volvoRes.data || []);
     setSafariBookings(safariRes.data || []);
     setVehicleBookings(vehicleRes.data || []);
     setRestaurantOrders(restaurantRes.data || []);
-    generateBillingItems(bookingData, hotelRes.data || [], volvoRes.data || [], safariRes.data || [], vehicleRes.data || [], restaurantRes.data || []);
+    generateBillingItems(
+      bookingData,
+      hotelRes.data || [],
+      volvoRes.data || [],
+      safariRes.data || [],
+      vehicleRes.data || [],
+      restaurantRes.data || []
+    );
   };
-  const generateBillingItems = (booking: BookingDetails, hotels: HotelBooking[], volvos: VolvoBooking[], safaris: SafariBooking[], vehicles: VehicleBooking[], restaurants: RestaurantOrder[]) => {
+
+  const generateBillingItems = (
+    booking: BookingDetails,
+    hotels: HotelBooking[],
+    volvos: VolvoBooking[],
+    safaris: SafariBooking[],
+    vehicles: VehicleBooking[],
+    restaurants: RestaurantOrder[]
+  ) => {
     const items: BillingItem[] = [];
     const accommodationGstRate = 12;
     const foodGstRate = 5;
     const transportGstRate = 5;
+
     hotels.forEach(hotel => {
       const checkIn = new Date(hotel.check_in_date);
       const checkOut = new Date(hotel.check_out_date);
@@ -204,11 +292,7 @@ export default function Billing() {
         const cgst = taxableAmount * 0.06;
         const sgst = taxableAmount * 0.06;
         items.push({
-          date: date.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-            year: '2-digit'
-          }),
+          date: date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
           particulars: `Accommodation`,
           rate: ratePerRoom,
           qty: hotel.number_of_rooms || 1,
@@ -217,21 +301,19 @@ export default function Billing() {
           cgstRate: "6%",
           cgstAmount: cgst,
           sgstRate: "6%",
-          sgstAmount: sgst
+          sgstAmount: sgst,
+          isCustom: false
         });
       }
     });
+
     volvos.forEach(volvo => {
       const totalAmount = volvo.total_amount || 0;
       const taxableAmount = totalAmount / (1 + transportGstRate / 100);
       const cgst = taxableAmount * 0.025;
       const sgst = taxableAmount * 0.025;
       items.push({
-        date: new Date(volvo.travel_date).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: '2-digit'
-        }),
+        date: new Date(volvo.travel_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
         particulars: `Volvo - ${volvo.route}`,
         rate: volvo.rate_per_seat || 0,
         qty: volvo.number_of_seats || 1,
@@ -240,20 +322,18 @@ export default function Billing() {
         cgstRate: "2.5%",
         cgstAmount: cgst,
         sgstRate: "2.5%",
-        sgstAmount: sgst
+        sgstAmount: sgst,
+        isCustom: false
       });
     });
+
     safaris.forEach(safari => {
       const totalAmount = safari.total_amount || 0;
       const taxableAmount = totalAmount / (1 + transportGstRate / 100);
       const cgst = taxableAmount * 0.025;
       const sgst = taxableAmount * 0.025;
       items.push({
-        date: new Date(safari.safari_date).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: '2-digit'
-        }),
+        date: new Date(safari.safari_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
         particulars: `Safari - ${safari.safari_name}`,
         rate: safari.rate_per_person || 0,
         qty: safari.number_of_persons || 1,
@@ -262,20 +342,20 @@ export default function Billing() {
         cgstRate: "2.5%",
         cgstAmount: cgst,
         sgstRate: "2.5%",
-        sgstAmount: sgst
+        sgstAmount: sgst,
+        isCustom: false
       });
     });
+
     vehicles.forEach(vehicle => {
       const totalAmount = vehicle.total_amount || 0;
       const taxableAmount = totalAmount / (1 + transportGstRate / 100);
       const cgst = taxableAmount * 0.025;
       const sgst = taxableAmount * 0.025;
       items.push({
-        date: vehicle.pickup_date ? new Date(vehicle.pickup_date).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: '2-digit'
-        }) : '-',
+        date: vehicle.pickup_date
+          ? new Date(vehicle.pickup_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
+          : '-',
         particulars: `Vehicle - ${vehicle.vehicle_type || 'Transport'}`,
         rate: vehicle.rate || 0,
         qty: 1,
@@ -284,18 +364,16 @@ export default function Billing() {
         cgstRate: "2.5%",
         cgstAmount: cgst,
         sgstRate: "2.5%",
-        sgstAmount: sgst
+        sgstAmount: sgst,
+        isCustom: false
       });
     });
+
     restaurants.forEach(order => {
       const totalAmount = order.total_amount || 0;
       const taxableAmount = order.subtotal || totalAmount / (1 + foodGstRate / 100);
       items.push({
-        date: new Date(order.created_at).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: '2-digit'
-        }),
+        date: new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
         particulars: `Extra Food`,
         rate: totalAmount,
         qty: 1,
@@ -304,11 +382,185 @@ export default function Billing() {
         cgstRate: "2.5%",
         cgstAmount: order.cgst_amount || 0,
         sgstRate: "2.5%",
-        sgstAmount: order.sgst_amount || 0
+        sgstAmount: order.sgst_amount || 0,
+        isCustom: false
       });
     });
+
     setBillingItems(items);
   };
+
+  const addCustomRow = () => {
+    if (!newRowParticulars.trim()) {
+      toast.error("Please enter particulars");
+      return;
+    }
+    
+    const gstPercent = parseFloat(newRowGstType);
+    const totalAmount = newRowRate * newRowQty;
+    const taxableAmount = totalAmount / (1 + gstPercent / 100);
+    const cgstPercent = gstPercent / 2;
+    const sgstPercent = gstPercent / 2;
+    const cgst = taxableAmount * (cgstPercent / 100);
+    const sgst = taxableAmount * (sgstPercent / 100);
+    
+    const newItem: BillingItem = {
+      id: `custom_${Date.now()}`,
+      date: new Date(newRowDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
+      particulars: newRowParticulars,
+      rate: newRowRate,
+      qty: newRowQty,
+      totalAmount: totalAmount,
+      taxableAmount: taxableAmount,
+      cgstRate: `${cgstPercent}%`,
+      cgstAmount: cgst,
+      sgstRate: `${sgstPercent}%`,
+      sgstAmount: sgst,
+      isCustom: true
+    };
+    
+    setBillingItems([...billingItems, newItem]);
+    
+    // Reset form
+    setNewRowDate(new Date().toISOString().split('T')[0]);
+    setNewRowParticulars("");
+    setNewRowRate(0);
+    setNewRowQty(1);
+    setNewRowGstType("5");
+    setShowAddRow(false);
+    
+    toast.success("Custom row added");
+  };
+
+  const removeCustomRow = (index: number) => {
+    const updatedItems = billingItems.filter((_, i) => i !== index);
+    setBillingItems(updatedItems);
+    toast.success("Row removed");
+  };
+
+  const saveInvoice = async () => {
+    if (!selectedBooking || billingItems.length === 0) {
+      toast.error("Please select a booking first");
+      return;
+    }
+    
+    setIsSaving(true);
+    const totals = calculateTotals();
+    
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Insert invoice
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from("billing_invoices")
+        .insert({
+          invoice_number: invoiceNumber,
+          invoice_date: invoiceDate,
+          booking_id: selectedBookingId,
+          customer_name: selectedBooking.customer_name || selectedBooking.reference,
+          customer_address: selectedBooking.address,
+          customer_gstin: customerGstNo,
+          customer_pan: customerPanNo,
+          subtotal: totals.totalTaxable,
+          total_cgst: totals.totalCgst,
+          total_sgst: totals.totalSgst,
+          total_amount: totals.totalAmount,
+          amount_in_words: numberToWords(totals.totalAmount),
+          created_by: user?.id
+        })
+        .select()
+        .single();
+      
+      if (invoiceError) throw invoiceError;
+      
+      // Insert invoice items
+      const invoiceItems = billingItems.map((item, index) => ({
+        invoice_id: invoiceData.id,
+        sr_no: index + 1,
+        particulars: item.particulars,
+        hsn_code: companySettings?.hsn_code || '996311',
+        quantity: item.qty,
+        rate: item.rate,
+        amount: item.totalAmount,
+        cgst_percent: parseFloat(item.cgstRate.replace('%', '')),
+        cgst_amount: item.cgstAmount,
+        sgst_percent: parseFloat(item.sgstRate.replace('%', '')),
+        sgst_amount: item.sgstAmount,
+        total: item.totalAmount,
+        is_custom: item.isCustom || false
+      }));
+      
+      const { error: itemsError } = await supabase
+        .from("billing_invoice_items")
+        .insert(invoiceItems);
+      
+      if (itemsError) throw itemsError;
+      
+      toast.success("Invoice saved successfully");
+      fetchSavedInvoices();
+    } catch (error: any) {
+      console.error("Failed to save invoice:", error);
+      toast.error("Failed to save invoice: " + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadSavedInvoice = async (invoiceId: string) => {
+    try {
+      // Load invoice
+      const { data: invoice, error: invoiceError } = await supabase
+        .from("billing_invoices")
+        .select("*")
+        .eq("id", invoiceId)
+        .single();
+      
+      if (invoiceError) throw invoiceError;
+      
+      // Load invoice items
+      const { data: items, error: itemsError } = await supabase
+        .from("billing_invoice_items")
+        .select("*")
+        .eq("invoice_id", invoiceId)
+        .order("sr_no");
+      
+      if (itemsError) throw itemsError;
+      
+      // Set form values
+      setInvoiceNumber(invoice.invoice_number);
+      setInvoiceDate(invoice.invoice_date);
+      setCustomerGstNo(invoice.customer_gstin || "");
+      setCustomerPanNo(invoice.customer_pan || "");
+      
+      if (invoice.booking_id) {
+        setSelectedBookingId(invoice.booking_id);
+      }
+      
+      // Convert items to billing items
+      const loadedItems: BillingItem[] = (items || []).map(item => ({
+        id: item.id,
+        date: "-",
+        particulars: item.particulars,
+        rate: item.rate || 0,
+        qty: item.quantity || 1,
+        totalAmount: item.amount || 0,
+        taxableAmount: item.amount ? item.amount / (1 + (item.cgst_percent || 0) * 2 / 100) : 0,
+        cgstRate: `${item.cgst_percent || 0}%`,
+        cgstAmount: item.cgst_amount || 0,
+        sgstRate: `${item.sgst_percent || 0}%`,
+        sgstAmount: item.sgst_amount || 0,
+        isCustom: item.is_custom || false
+      }));
+      
+      setBillingItems(loadedItems);
+      setShowSavedInvoices(false);
+      toast.success("Invoice loaded");
+    } catch (error: any) {
+      toast.error("Failed to load invoice: " + error.message);
+    }
+  };
+
   const calculateTotals = () => {
     const totalAmount = billingItems.reduce((sum, item) => sum + item.totalAmount, 0);
     const totalTaxable = billingItems.reduce((sum, item) => sum + item.taxableAmount, 0);
@@ -321,6 +573,7 @@ export default function Billing() {
       totalSgst
     };
   };
+
   const numberToWords = (num: number): string => {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -335,6 +588,7 @@ export default function Billing() {
     };
     return convert(Math.floor(num)) + ' Only';
   };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -342,6 +596,7 @@ export default function Billing() {
       year: 'numeric'
     });
   };
+
   const exportToExcel = () => {
     if (!selectedBooking || billingItems.length === 0) {
       toast.error("Please select a booking first");
@@ -403,104 +658,99 @@ export default function Billing() {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     // Set column widths
-    ws['!cols'] = [{
-      wch: 12
-    },
-    // Date
-    {
-      wch: 30
-    },
-    // Particulars
-    {
-      wch: 5
-    },
-    // empty
-    {
-      wch: 10
-    },
-    // Rate
-    {
-      wch: 15
-    },
-    // Qty
-    {
-      wch: 14
-    },
-    // Total
-    {
-      wch: 14
-    },
-    // Taxable
-    {
-      wch: 10
-    },
-    // CGST Rate
-    {
-      wch: 10
-    },
-    // CGST
-    {
-      wch: 10
-    },
-    // SGST Rate
-    {
-      wch: 10
-    } // SGST
+    ws['!cols'] = [
+      { wch: 12 }, // Date
+      { wch: 30 }, // Particulars
+      { wch: 5 },  // empty
+      { wch: 10 }, // Rate
+      { wch: 15 }, // Qty
+      { wch: 14 }, // Total
+      { wch: 14 }, // Taxable
+      { wch: 10 }, // CGST Rate
+      { wch: 10 }, // CGST
+      { wch: 10 }, // SGST Rate
+      { wch: 10 }  // SGST
     ];
 
     // Merge cells for header
-    ws['!merges'] = [{
-      s: {
-        r: 0,
-        c: 0
-      },
-      e: {
-        r: 0,
-        c: 5
-      }
-    },
-    // Company name
-    {
-      s: {
-        r: 1,
-        c: 0
-      },
-      e: {
-        r: 1,
-        c: 5
-      }
-    },
-    // Sub title
-    {
-      s: {
-        r: 2,
-        c: 0
-      },
-      e: {
-        r: 2,
-        c: 5
-      }
-    } // Address
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Company name
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // Sub title
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }  // Address
     ];
+    
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Invoice");
     XLSX.writeFile(wb, `Invoice_${selectedBooking.booking_number}_${invoiceDate}.xlsx`);
     toast.success("Invoice exported to Excel");
   };
+
   const handlePrint = () => {
     window.print();
   };
-  const filteredBookings = bookings.filter(b => b.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) || b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || b.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const filteredBookings = bookings.filter(
+    b =>
+      b.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
   const totals = calculateTotals();
-  return <div className="min-h-screen bg-background">
+
+  return (
+    <div className="min-h-screen bg-background">
       <Header title="Billing" />
       <div className="container mx-auto p-6 print:p-0">
         <div className="flex items-center justify-between mb-6 print:hidden">
           <h1 className="text-3xl font-bold">Billing / Invoice</h1>
           <div className="flex gap-2">
+            <Dialog open={showSavedInvoices} onOpenChange={setShowSavedInvoices}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <List className="h-4 w-4 mr-2" />
+                  Saved Invoices
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Saved Invoices</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[400px] overflow-y-auto">
+                  {savedInvoices.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No saved invoices</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {savedInvoices.map(inv => (
+                        <div 
+                          key={inv.id}
+                          onClick={() => loadSavedInvoice(inv.id)}
+                          className="p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="font-medium">{inv.invoice_number}</div>
+                              <div className="text-sm text-muted-foreground">{inv.customer_name || 'Guest'}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">₹{inv.total_amount?.toLocaleString()}</div>
+                              <div className="text-xs text-muted-foreground">{formatDate(inv.invoice_date)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" onClick={() => navigate('/settings')}>
               <Settings className="h-4 w-4 mr-2" />
               Company Settings
+            </Button>
+            <Button variant="outline" onClick={saveInvoice} disabled={!selectedBooking || isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? 'Saving...' : 'Save Invoice'}
             </Button>
             <Button variant="outline" onClick={exportToExcel} disabled={!selectedBooking}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
@@ -522,38 +772,151 @@ export default function Billing() {
             <CardContent className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search bookings..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+                <Input
+                  placeholder="Search bookings..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
               </div>
               <div className="max-h-[300px] overflow-y-auto space-y-2">
-                {filteredBookings.map(booking => <div key={booking.id} onClick={() => setSelectedBookingId(booking.id)} className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedBookingId === booking.id ? 'bg-primary text-primary-foreground border-primary' : 'hover:bg-muted'}`}>
+                {filteredBookings.map(booking => (
+                  <div
+                    key={booking.id}
+                    onClick={() => setSelectedBookingId(booking.id)}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedBookingId === booking.id
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
                     <div className="font-medium text-sm">{booking.booking_number}</div>
-                    <div className="text-xs opacity-80">{booking.customer_name || booking.agents?.name || 'Guest'}</div>
-                    <div className="text-xs opacity-60">
-                      {new Date(booking.check_in_date).toLocaleDateString()} - {new Date(booking.check_out_date).toLocaleDateString()}
+                    <div className="text-xs opacity-80">
+                      {booking.customer_name || booking.agents?.name || 'Guest'}
                     </div>
-                  </div>)}
+                    <div className="text-xs opacity-60">
+                      {new Date(booking.check_in_date).toLocaleDateString()} -{' '}
+                      {new Date(booking.check_out_date).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-3">
                 <h4 className="font-medium text-sm">Customer Details</h4>
                 <div>
                   <Label className="text-xs">Customer GST No.</Label>
-                  <Input value={customerGstNo} onChange={e => setCustomerGstNo(e.target.value)} placeholder="Enter GST No." className="h-8 text-sm" />
+                  <Input
+                    value={customerGstNo}
+                    onChange={e => setCustomerGstNo(e.target.value)}
+                    placeholder="Enter GST No."
+                    className="h-8 text-sm"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Customer PAN No.</Label>
-                  <Input value={customerPanNo} onChange={e => setCustomerPanNo(e.target.value)} placeholder="Enter PAN No." className="h-8 text-sm" />
+                  <Input
+                    value={customerPanNo}
+                    onChange={e => setCustomerPanNo(e.target.value)}
+                    placeholder="Enter PAN No."
+                    className="h-8 text-sm"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Invoice Number</Label>
-                  <Input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="h-8 text-sm" />
+                  <Input
+                    value={invoiceNumber}
+                    onChange={e => setInvoiceNumber(e.target.value)}
+                    className="h-8 text-sm"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Invoice Date</Label>
-                  <Input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="h-8 text-sm" />
+                  <Input
+                    type="date"
+                    value={invoiceDate}
+                    onChange={e => setInvoiceDate(e.target.value)}
+                    className="h-8 text-sm"
+                  />
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Add Custom Row Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">Add Custom Row</h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowAddRow(!showAddRow)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {showAddRow && (
+                  <div className="space-y-2 p-3 border rounded-lg bg-muted/50">
+                    <div>
+                      <Label className="text-xs">Date</Label>
+                      <Input
+                        type="date"
+                        value={newRowDate}
+                        onChange={e => setNewRowDate(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Particulars</Label>
+                      <Input
+                        value={newRowParticulars}
+                        onChange={e => setNewRowParticulars(e.target.value)}
+                        placeholder="e.g., Extra Services"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Rate</Label>
+                        <Input
+                          type="number"
+                          value={newRowRate}
+                          onChange={e => setNewRowRate(parseFloat(e.target.value) || 0)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Qty</Label>
+                        <Input
+                          type="number"
+                          value={newRowQty}
+                          onChange={e => setNewRowQty(parseInt(e.target.value) || 1)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">GST Rate</Label>
+                      <Select value={newRowGstType} onValueChange={setNewRowGstType}>
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5% (2.5% + 2.5%)</SelectItem>
+                          <SelectItem value="12">12% (6% + 6%)</SelectItem>
+                          <SelectItem value="18">18% (9% + 9%)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={addCustomRow} size="sm" className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Row
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -562,7 +925,8 @@ export default function Billing() {
           <Card className="lg:col-span-3 print:shadow-none print:border-none">
             <CardContent className="p-0">
               <div ref={printRef} className="bg-white text-black p-8 print:p-0" id="invoice-preview">
-                {selectedBooking ? <div className="space-y-0">
+                {selectedBooking ? (
+                  <div className="space-y-0">
                     {/* Professional Header */}
                     <div className="border-b-2 border-black pb-4 mb-4">
                       <div className="flex justify-between items-start">
@@ -570,15 +934,29 @@ export default function Billing() {
                           <h1 className="text-3xl font-bold tracking-tight mb-1">
                             {companySettings?.company_name || 'COMPANY NAME'}
                           </h1>
-                          {companySettings?.sub_title && <p className="text-sm text-gray-600 mb-1">{companySettings.sub_title}</p>}
+                          {companySettings?.sub_title && (
+                            <p className="text-sm text-gray-600 mb-1">{companySettings.sub_title}</p>
+                          )}
                           <p className="text-sm">{companySettings?.address || ''}</p>
-                          {companySettings?.contact_no && <p className="text-sm">Contact No.: {companySettings.contact_no}</p>}
-                          {companySettings?.gstin && <p className="text-sm font-medium">GSTIN: {companySettings.gstin}</p>}
-                          {companySettings?.pan_no && <p className="text-sm">Pan No.: {companySettings.pan_no}</p>}
+                          {companySettings?.contact_no && (
+                            <p className="text-sm">Contact No.: {companySettings.contact_no}</p>
+                          )}
+                          {companySettings?.gstin && (
+                            <p className="text-sm font-medium">GSTIN: {companySettings.gstin}</p>
+                          )}
+                          {companySettings?.pan_no && (
+                            <p className="text-sm">Pan No.: {companySettings.pan_no}</p>
+                          )}
                           <p className="text-sm">HSN/SAC Code: {companySettings?.hsn_code || '996311'}</p>
                         </div>
                         <div className="text-right">
-                          {companySettings?.logo_url && <img src={companySettings.logo_url} alt="Company Logo" className="h-20 w-auto object-contain ml-auto mb-2" />}
+                          {companySettings?.logo_url && (
+                            <img
+                              src={companySettings.logo_url}
+                              alt="Company Logo"
+                              className="h-20 w-auto object-contain ml-auto mb-2"
+                            />
+                          )}
                           <div className="text-2xl font-bold px-4 py-1 inline-block text-secondary-foreground border-primary-foreground border-0">
                             INVOICE
                           </div>
@@ -592,7 +970,9 @@ export default function Billing() {
                         <tbody>
                           <tr className="border-b border-black">
                             <td className="p-2 w-24 font-medium border-r border-black">Bill To :</td>
-                            <td className="p-2 font-medium">{selectedBooking.customer_name || selectedBooking.reference || 'Guest'}</td>
+                            <td className="p-2 font-medium">
+                              {selectedBooking.customer_name || selectedBooking.reference || 'Guest'}
+                            </td>
                             <td className="p-2 text-right font-medium">DATE:{formatDate(invoiceDate)}</td>
                           </tr>
                           <tr className="border-b border-black">
@@ -601,11 +981,15 @@ export default function Billing() {
                             <td className="p-2 text-right font-medium">INVOICE No: {invoiceNumber}</td>
                           </tr>
                           <tr className="border-b border-black">
-                            <td className="p-2 border-r border-black" colSpan={2}>GST NO : {customerGstNo || 'N/A'}</td>
+                            <td className="p-2 border-r border-black" colSpan={2}>
+                              GST NO : {customerGstNo || 'N/A'}
+                            </td>
                             <td className="p-2"></td>
                           </tr>
                           <tr>
-                            <td className="p-2 border-r border-black" colSpan={2}>Pan No.: {customerPanNo || 'N/A'}</td>
+                            <td className="p-2 border-r border-black" colSpan={2}>
+                              Pan No.: {customerPanNo || 'N/A'}
+                            </td>
                             <td className="p-2"></td>
                           </tr>
                         </tbody>
@@ -614,7 +998,8 @@ export default function Billing() {
 
                     {/* Check In/Out */}
                     <div className="text-center font-medium py-2 border border-black mb-0">
-                      Check In - {formatDate(selectedBooking.check_in_date)} - {formatDate(selectedBooking.check_out_date)}
+                      Check In - {formatDate(selectedBooking.check_in_date)} -{' '}
+                      {formatDate(selectedBooking.check_out_date)}
                     </div>
                     <div className="text-center font-medium py-1 bg-gray-100 border-x border-black">
                       Accommodation
@@ -627,28 +1012,71 @@ export default function Billing() {
                           <th className="border border-black p-2 text-left">Date</th>
                           <th className="border border-black p-2 text-left">BILLING PARTICULARS</th>
                           <th className="border border-black p-2 text-right">Rate</th>
-                          <th className="border border-black p-2 text-right">QTY/No.<br />Of Rooms</th>
-                          <th className="border border-black p-2 text-right">Total<br />Amount</th>
-                          <th className="border border-black p-2 text-right">Taxable<br />Amount</th>
-                          <th className="border border-black p-2 text-right">Rate<br />CGST</th>
+                          <th className="border border-black p-2 text-right">
+                            QTY/No.
+                            <br />
+                            Of Rooms
+                          </th>
+                          <th className="border border-black p-2 text-right">
+                            Total
+                            <br />
+                            Amount
+                          </th>
+                          <th className="border border-black p-2 text-right">
+                            Taxable
+                            <br />
+                            Amount
+                          </th>
+                          <th className="border border-black p-2 text-right">
+                            Rate
+                            <br />
+                            CGST
+                          </th>
                           <th className="border border-black p-2 text-right">CGST</th>
-                          <th className="border border-black p-2 text-right">Rate<br />SGST</th>
+                          <th className="border border-black p-2 text-right">
+                            Rate
+                            <br />
+                            SGST
+                          </th>
                           <th className="border border-black p-2 text-right">SGST</th>
+                          <th className="border border-black p-2 text-center print:hidden">Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {billingItems.map((item, index) => <tr key={index}>
+                        {billingItems.map((item, index) => (
+                          <tr key={index}>
                             <td className="border border-black p-2">{item.date}</td>
                             <td className="border border-black p-2 font-medium">{item.particulars}</td>
                             <td className="border border-black p-2 text-right">{item.rate.toFixed(0)}</td>
                             <td className="border border-black p-2 text-right">{item.qty}</td>
-                            <td className="border border-black p-2 text-right">{item.totalAmount.toFixed(0)}</td>
-                            <td className="border border-black p-2 text-right">{item.taxableAmount.toFixed(0)}</td>
+                            <td className="border border-black p-2 text-right">
+                              {item.totalAmount.toFixed(0)}
+                            </td>
+                            <td className="border border-black p-2 text-right">
+                              {item.taxableAmount.toFixed(0)}
+                            </td>
                             <td className="border border-black p-2 text-right">{item.cgstRate}</td>
-                            <td className="border border-black p-2 text-right">{item.cgstAmount.toFixed(0)}</td>
+                            <td className="border border-black p-2 text-right">
+                              {item.cgstAmount.toFixed(0)}
+                            </td>
                             <td className="border border-black p-2 text-right">{item.sgstRate}</td>
-                            <td className="border border-black p-2 text-right">{item.sgstAmount.toFixed(0)}</td>
-                          </tr>)}
+                            <td className="border border-black p-2 text-right">
+                              {item.sgstAmount.toFixed(0)}
+                            </td>
+                            <td className="border border-black p-2 text-center print:hidden">
+                              {item.isCustom && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeCustomRow(index)}
+                                  className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
                         <tr>
                           <td className="border border-black p-2"></td>
                           <td className="border border-black p-2 text-center">Round Off</td>
@@ -660,15 +1088,25 @@ export default function Billing() {
                           <td className="border border-black p-2"></td>
                           <td className="border border-black p-2"></td>
                           <td className="border border-black p-2"></td>
+                          <td className="border border-black p-2 print:hidden"></td>
                         </tr>
                         <tr className="font-bold bg-gray-50">
                           <td className="border border-black p-2" colSpan={4}></td>
-                          <td className="border border-black p-2 text-right">{totals.totalAmount.toFixed(0)}</td>
-                          <td className="border border-black p-2 text-right">{totals.totalTaxable.toFixed(2)}</td>
+                          <td className="border border-black p-2 text-right">
+                            {totals.totalAmount.toFixed(0)}
+                          </td>
+                          <td className="border border-black p-2 text-right">
+                            {totals.totalTaxable.toFixed(2)}
+                          </td>
                           <td className="border border-black p-2"></td>
-                          <td className="border border-black p-2 text-right">{totals.totalCgst.toFixed(2)}</td>
+                          <td className="border border-black p-2 text-right">
+                            {totals.totalCgst.toFixed(2)}
+                          </td>
                           <td className="border border-black p-2"></td>
-                          <td className="border border-black p-2 text-right">{totals.totalSgst.toFixed(2)}</td>
+                          <td className="border border-black p-2 text-right">
+                            {totals.totalSgst.toFixed(2)}
+                          </td>
+                          <td className="border border-black p-2 print:hidden"></td>
                         </tr>
                       </tbody>
                     </table>
@@ -690,7 +1128,9 @@ export default function Billing() {
                         </tr>
                         <tr>
                           <td className="p-2">
-                            <span className="font-medium">Note:</span> {companySettings?.terms_conditions || 'This is computer generated invoice no signature and stamp required.'}
+                            <span className="font-medium">Note:</span>{' '}
+                            {companySettings?.terms_conditions ||
+                              'This is computer generated invoice no signature and stamp required.'}
                           </td>
                           <td className="p-2 text-right">Authorised Signatory</td>
                         </tr>
@@ -698,7 +1138,8 @@ export default function Billing() {
                     </table>
 
                     {/* Bank Details */}
-                    {companySettings?.bank_name && <table className="w-full text-xs border-x border-b border-black">
+                    {companySettings?.bank_name && (
+                      <table className="w-full text-xs border-x border-b border-black">
                         <tbody>
                           <tr>
                             <td className="p-2" colSpan={3}>
@@ -712,13 +1153,19 @@ export default function Billing() {
                           </tr>
                           <tr>
                             <td className="p-2">IFSC Code</td>
-                            <td className="p-2" colSpan={2}>{companySettings.ifsc_code}</td>
+                            <td className="p-2" colSpan={2}>
+                              {companySettings.ifsc_code}
+                            </td>
                           </tr>
                         </tbody>
-                      </table>}
-                  </div> : <div className="text-center py-12 text-muted-foreground print:hidden">
+                      </table>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground print:hidden">
                     Select a booking to generate invoice
-                  </div>}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -747,5 +1194,6 @@ export default function Billing() {
           }
         }
       `}</style>
-    </div>;
+    </div>
+  );
 }
