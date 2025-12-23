@@ -341,6 +341,63 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          account_no: string | null
+          address: string | null
+          bank_name: string | null
+          branch_name: string | null
+          company_name: string
+          contact_no: string | null
+          created_at: string
+          gstin: string | null
+          hsn_code: string | null
+          id: string
+          ifsc_code: string | null
+          logo_url: string | null
+          pan_no: string | null
+          sub_title: string | null
+          terms_conditions: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_no?: string | null
+          address?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          company_name?: string
+          contact_no?: string | null
+          created_at?: string
+          gstin?: string | null
+          hsn_code?: string | null
+          id?: string
+          ifsc_code?: string | null
+          logo_url?: string | null
+          pan_no?: string | null
+          sub_title?: string | null
+          terms_conditions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_no?: string | null
+          address?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          company_name?: string
+          contact_no?: string | null
+          created_at?: string
+          gstin?: string | null
+          hsn_code?: string | null
+          id?: string
+          ifsc_code?: string | null
+          logo_url?: string | null
+          pan_no?: string | null
+          sub_title?: string | null
+          terms_conditions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       enquiries: {
         Row: {
           adults: number | null
