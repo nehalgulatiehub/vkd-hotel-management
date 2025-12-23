@@ -544,7 +544,8 @@ export default function Billing() {
         sgst_percent: parseFloat(item.sgstRate.replace('%', '')),
         sgst_amount: item.sgstAmount,
         total: item.totalAmount,
-        is_custom: item.isCustom || false
+        is_custom: item.isCustom || false,
+        item_date: item.date
       }));
       
       const { error: itemsError } = await supabase
@@ -598,7 +599,7 @@ export default function Billing() {
         const gstPercent = (item.cgst_percent || 0) * 2;
         return {
           id: item.id,
-          date: "-",
+          date: item.item_date || '-',
           particulars: item.particulars,
           rate: item.rate || 0,
           qty: item.quantity || 1,

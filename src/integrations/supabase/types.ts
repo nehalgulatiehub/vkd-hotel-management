@@ -124,6 +124,7 @@ export type Database = {
           id: string
           invoice_id: string
           is_custom: boolean | null
+          item_date: string | null
           particulars: string
           quantity: number | null
           rate: number | null
@@ -141,6 +142,7 @@ export type Database = {
           id?: string
           invoice_id: string
           is_custom?: boolean | null
+          item_date?: string | null
           particulars: string
           quantity?: number | null
           rate?: number | null
@@ -158,6 +160,7 @@ export type Database = {
           id?: string
           invoice_id?: string
           is_custom?: boolean | null
+          item_date?: string | null
           particulars?: string
           quantity?: number | null
           rate?: number | null
