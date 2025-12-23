@@ -104,7 +104,7 @@ const RestaurantPOS = () => {
     }
   });
 
-  // Fetch active bookings for room service
+  // Fetch active bookings for room service - include current and upcoming bookings
   const { data: activeBookings } = useQuery({
     queryKey: ["active-bookings", bookingSearchQuery],
     queryFn: async () => {
@@ -112,10 +112,9 @@ const RestaurantPOS = () => {
       let query = supabase
         .from("bookings")
         .select("id, booking_number, customer_name, contact_no, check_in_date, check_out_date")
-        .in("status", ["confirmed", "completed"])
-        .lte("check_in_date", today)
+        .in("status", ["confirmed", "completed", "hold"])
         .gte("check_out_date", today)
-        .order("booking_number", { ascending: false });
+        .order("check_in_date", { ascending: true });
       
       if (bookingSearchQuery) {
         query = query.or(`booking_number.ilike.%${bookingSearchQuery}%,customer_name.ilike.%${bookingSearchQuery}%`);
