@@ -39,6 +39,7 @@ export default function Bookings() {
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentCityId, setPaymentCityId] = useState("");
   const [paymentType, setPaymentType] = useState("");
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [printBookingId, setPrintBookingId] = useState<string | null>(null);
   const [cities, setCities] = useState<any[]>([]);
@@ -812,6 +813,9 @@ export default function Bookings() {
       return;
     }
 
+    if (isSubmittingPayment) return;
+    setIsSubmittingPayment(true);
+
     try {
       const amount = parseFloat(paymentAmount);
       
@@ -851,6 +855,8 @@ export default function Bookings() {
     } catch (error) {
       console.error("Payment error:", error);
       toast.error("Failed to add payment");
+    } finally {
+      setIsSubmittingPayment(false);
     }
   };
 
@@ -2405,8 +2411,10 @@ export default function Bookings() {
                 </Select>
               </div>
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
-                <Button onClick={submitPayment}>Add Payment</Button>
+                <Button variant="outline" onClick={() => setShowPaymentDialog(false)} disabled={isSubmittingPayment}>Cancel</Button>
+                <Button onClick={submitPayment} disabled={isSubmittingPayment}>
+                  {isSubmittingPayment ? "Adding..." : "Add Payment"}
+                </Button>
               </div>
             </div>
           </DialogContent>
