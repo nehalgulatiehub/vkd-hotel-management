@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Minus, Trash2, Search, Leaf, AlertCircle, ShoppingCart, Send } from "lucide-react";
+import { Plus, Minus, Trash2, Search, Leaf, AlertCircle, ShoppingCart, Send, User } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface FoodItem {
   id: string;
@@ -37,12 +39,24 @@ interface RestaurantTable {
   status: string;
 }
 
+interface Booking {
+  id: string;
+  booking_number: string;
+  customer_name: string | null;
+  contact_no: string | null;
+  check_in_date: string;
+  check_out_date: string;
+}
+
 const RestaurantPOS = () => {
   const queryClient = useQueryClient();
   const [orderType, setOrderType] = useState<"dine_in" | "takeaway" | "delivery">("dine_in");
-  const [orderDestination, setOrderDestination] = useState<"table" | "room">("table");
+  const [orderDestination, setOrderDestination] = useState<"table" | "room" | "booking">("table");
   const [selectedTableId, setSelectedTableId] = useState<string>("");
   const [roomNumber, setRoomNumber] = useState<string>("");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [bookingSearchOpen, setBookingSearchOpen] = useState(false);
+  const [bookingSearchQuery, setBookingSearchQuery] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -87,6 +101,29 @@ const RestaurantPOS = () => {
         .order("name");
       if (error) throw error;
       return data as FoodItem[];
+    }
+  });
+
+  // Fetch active bookings for room service
+  const { data: activeBookings } = useQuery({
+    queryKey: ["active-bookings", bookingSearchQuery],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      let query = supabase
+        .from("bookings")
+        .select("id, booking_number, customer_name, contact_no, check_in_date, check_out_date")
+        .in("status", ["confirmed", "completed"])
+        .lte("check_in_date", today)
+        .gte("check_out_date", today)
+        .order("booking_number", { ascending: false });
+      
+      if (bookingSearchQuery) {
+        query = query.or(`booking_number.ilike.%${bookingSearchQuery}%,customer_name.ilike.%${bookingSearchQuery}%`);
+      }
+      
+      const { data, error } = await query.limit(20);
+      if (error) throw error;
+      return data as Booking[];
     }
   });
 
@@ -184,8 +221,16 @@ const RestaurantPOS = () => {
       if (cart.length === 0) throw new Error("Cart is empty");
       if (orderType === "dine_in" && orderDestination === "table" && !selectedTableId) throw new Error("Please select a table");
       if (orderType === "dine_in" && orderDestination === "room" && !roomNumber.trim()) throw new Error("Please enter room number");
+      if (orderType === "dine_in" && orderDestination === "booking" && !selectedBooking) throw new Error("Please select a booking");
 
       const orderNumber = generateOrderNumber();
+
+      // Get customer info from booking if selected
+      const finalCustomerName = selectedBooking?.customer_name || customerName || null;
+      const finalCustomerPhone = selectedBooking?.contact_no || customerPhone || null;
+      const finalRoomNumber = orderDestination === "booking" && selectedBooking 
+        ? `Booking: ${selectedBooking.booking_number}` 
+        : (orderDestination === "room" ? roomNumber.trim() : null);
 
       // Create order
       const { data: order, error: orderError } = await supabase
@@ -193,10 +238,11 @@ const RestaurantPOS = () => {
         .insert({
           order_number: orderNumber,
           table_id: orderType === "dine_in" && orderDestination === "table" ? selectedTableId : null,
-          room_number: orderType === "dine_in" && orderDestination === "room" ? roomNumber.trim() : null,
+          room_number: finalRoomNumber,
+          booking_id: orderDestination === "booking" && selectedBooking ? selectedBooking.id : null,
           order_type: orderType,
-          customer_name: customerName || null,
-          customer_phone: customerPhone || null,
+          customer_name: finalCustomerName,
+          customer_phone: finalCustomerPhone,
           customer_address: orderType === "delivery" ? customerAddress : null,
           subtotal: cartTotals.subtotal,
           cgst_amount: cartTotals.cgst,
@@ -257,6 +303,8 @@ const RestaurantPOS = () => {
       setSpecialInstructions("");
       setSelectedTableId("");
       setRoomNumber("");
+      setSelectedBooking(null);
+      setBookingSearchQuery("");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -350,12 +398,12 @@ const RestaurantPOS = () => {
 
             {orderType === "dine_in" && (
               <>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <Button
                     size="sm"
                     variant={orderDestination === "table" ? "default" : "outline"}
                     onClick={() => setOrderDestination("table")}
-                    className="flex-1"
+                    className="flex-1 text-xs px-2"
                   >
                     Table
                   </Button>
@@ -363,13 +411,21 @@ const RestaurantPOS = () => {
                     size="sm"
                     variant={orderDestination === "room" ? "default" : "outline"}
                     onClick={() => setOrderDestination("room")}
-                    className="flex-1"
+                    className="flex-1 text-xs px-2"
                   >
                     Room
                   </Button>
+                  <Button
+                    size="sm"
+                    variant={orderDestination === "booking" ? "default" : "outline"}
+                    onClick={() => setOrderDestination("booking")}
+                    className="flex-1 text-xs px-2"
+                  >
+                    Booking
+                  </Button>
                 </div>
                 
-                {orderDestination === "table" ? (
+                {orderDestination === "table" && (
                   <Select value={selectedTableId} onValueChange={setSelectedTableId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Table" />
@@ -382,12 +438,61 @@ const RestaurantPOS = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                ) : (
+                )}
+
+                {orderDestination === "room" && (
                   <Input
                     placeholder="Enter Room Number"
                     value={roomNumber}
                     onChange={(e) => setRoomNumber(e.target.value)}
                   />
+                )}
+
+                {orderDestination === "booking" && (
+                  <Popover open={bookingSearchOpen} onOpenChange={setBookingSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <User className="mr-2 h-4 w-4" />
+                        {selectedBooking 
+                          ? `${selectedBooking.booking_number} - ${selectedBooking.customer_name || "Guest"}`
+                          : "Search Booking..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0" align="start">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search by booking # or name..." 
+                          value={bookingSearchQuery}
+                          onValueChange={setBookingSearchQuery}
+                        />
+                        <CommandList>
+                          <CommandEmpty>No bookings found</CommandEmpty>
+                          <CommandGroup heading="Active Bookings">
+                            {activeBookings?.map((booking) => (
+                              <CommandItem
+                                key={booking.id}
+                                value={booking.booking_number}
+                                onSelect={() => {
+                                  setSelectedBooking(booking);
+                                  setCustomerName(booking.customer_name || "");
+                                  setCustomerPhone(booking.contact_no || "");
+                                  setBookingSearchOpen(false);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{booking.booking_number}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {booking.customer_name || "Guest"} • {booking.check_in_date} to {booking.check_out_date}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 )}
               </>
             )}

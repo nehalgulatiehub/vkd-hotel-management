@@ -1028,6 +1028,7 @@ export type Database = {
       }
       restaurant_orders: {
         Row: {
+          booking_id: string | null
           cgst_amount: number | null
           created_at: string | null
           created_by: string | null
@@ -1049,6 +1050,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          booking_id?: string | null
           cgst_amount?: number | null
           created_at?: string | null
           created_by?: string | null
@@ -1070,6 +1072,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          booking_id?: string | null
           cgst_amount?: number | null
           created_at?: string | null
           created_by?: string | null
@@ -1091,6 +1094,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_orders_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "restaurant_orders_created_by_fkey"
             columns: ["created_by"]
