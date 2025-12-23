@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown, Upload, UtensilsCrossed
+  ChevronDown, Upload, UtensilsCrossed, Receipt
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
@@ -115,6 +115,7 @@ const menuItems = [
       { title: "Reports", url: "/restaurant/reports" },
     ]
   },
+  { title: "Billing / Invoice", url: "/billing", icon: Receipt },
 ];
 
 export function AppSidebar() {
