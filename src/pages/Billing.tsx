@@ -116,7 +116,16 @@ interface BillingItem {
   sgstRate: string;
   sgstAmount: number;
   isCustom?: boolean;
+  gstPercent: number; // Store GST percentage for editing
 }
+
+const GST_OPTIONS = [
+  { value: "0", label: "0% (No GST)" },
+  { value: "5", label: "5% (2.5% + 2.5%)" },
+  { value: "12", label: "12% (6% + 6%)" },
+  { value: "18", label: "18% (9% + 9%)" },
+  { value: "28", label: "28% (14% + 14%)" },
+];
 
 interface CompanySettings {
   id: string;
@@ -292,6 +301,7 @@ export default function Billing() {
         const cgst = taxableAmount * 0.06;
         const sgst = taxableAmount * 0.06;
         items.push({
+          id: `hotel_${hotel.id}_${i}`,
           date: date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
           particulars: `Accommodation`,
           rate: ratePerRoom,
@@ -302,7 +312,8 @@ export default function Billing() {
           cgstAmount: cgst,
           sgstRate: "6%",
           sgstAmount: sgst,
-          isCustom: false
+          isCustom: false,
+          gstPercent: accommodationGstRate
         });
       }
     });
@@ -313,6 +324,7 @@ export default function Billing() {
       const cgst = taxableAmount * 0.025;
       const sgst = taxableAmount * 0.025;
       items.push({
+        id: `volvo_${volvo.id}`,
         date: new Date(volvo.travel_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
         particulars: `Volvo - ${volvo.route}`,
         rate: volvo.rate_per_seat || 0,
@@ -323,7 +335,8 @@ export default function Billing() {
         cgstAmount: cgst,
         sgstRate: "2.5%",
         sgstAmount: sgst,
-        isCustom: false
+        isCustom: false,
+        gstPercent: transportGstRate
       });
     });
 
@@ -333,6 +346,7 @@ export default function Billing() {
       const cgst = taxableAmount * 0.025;
       const sgst = taxableAmount * 0.025;
       items.push({
+        id: `safari_${safari.id}`,
         date: new Date(safari.safari_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
         particulars: `Safari - ${safari.safari_name}`,
         rate: safari.rate_per_person || 0,
@@ -343,7 +357,8 @@ export default function Billing() {
         cgstAmount: cgst,
         sgstRate: "2.5%",
         sgstAmount: sgst,
-        isCustom: false
+        isCustom: false,
+        gstPercent: transportGstRate
       });
     });
 
@@ -353,6 +368,7 @@ export default function Billing() {
       const cgst = taxableAmount * 0.025;
       const sgst = taxableAmount * 0.025;
       items.push({
+        id: `vehicle_${vehicle.id}`,
         date: vehicle.pickup_date
           ? new Date(vehicle.pickup_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
           : '-',
@@ -365,7 +381,8 @@ export default function Billing() {
         cgstAmount: cgst,
         sgstRate: "2.5%",
         sgstAmount: sgst,
-        isCustom: false
+        isCustom: false,
+        gstPercent: transportGstRate
       });
     });
 
@@ -373,6 +390,7 @@ export default function Billing() {
       const totalAmount = order.total_amount || 0;
       const taxableAmount = order.subtotal || totalAmount / (1 + foodGstRate / 100);
       items.push({
+        id: `food_${order.id}`,
         date: new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
         particulars: `Extra Food`,
         rate: totalAmount,
@@ -383,7 +401,8 @@ export default function Billing() {
         cgstAmount: order.cgst_amount || 0,
         sgstRate: "2.5%",
         sgstAmount: order.sgst_amount || 0,
-        isCustom: false
+        isCustom: false,
+        gstPercent: foodGstRate
       });
     });
 
@@ -416,7 +435,8 @@ export default function Billing() {
       cgstAmount: cgst,
       sgstRate: `${sgstPercent}%`,
       sgstAmount: sgst,
-      isCustom: true
+      isCustom: true,
+      gstPercent: gstPercent
     };
     
     setBillingItems([...billingItems, newItem]);
@@ -436,6 +456,42 @@ export default function Billing() {
     const updatedItems = billingItems.filter((_, i) => i !== index);
     setBillingItems(updatedItems);
     toast.success("Row removed");
+  };
+
+  // Update billing item inline
+  const updateBillingItem = (index: number, field: keyof BillingItem, value: any) => {
+    const updatedItems = [...billingItems];
+    const item = { ...updatedItems[index] };
+    
+    // Update the field
+    if (field === 'particulars') {
+      item.particulars = value;
+    } else if (field === 'rate') {
+      item.rate = parseFloat(value) || 0;
+    } else if (field === 'qty') {
+      item.qty = parseInt(value) || 1;
+    } else if (field === 'gstPercent') {
+      item.gstPercent = parseFloat(value) || 0;
+    }
+    
+    // Recalculate amounts
+    const totalAmount = item.rate * item.qty;
+    const gstPercent = item.gstPercent;
+    const taxableAmount = gstPercent > 0 ? totalAmount / (1 + gstPercent / 100) : totalAmount;
+    const cgstPercent = gstPercent / 2;
+    const sgstPercent = gstPercent / 2;
+    const cgst = taxableAmount * (cgstPercent / 100);
+    const sgst = taxableAmount * (sgstPercent / 100);
+    
+    item.totalAmount = totalAmount;
+    item.taxableAmount = taxableAmount;
+    item.cgstRate = `${cgstPercent}%`;
+    item.cgstAmount = cgst;
+    item.sgstRate = `${sgstPercent}%`;
+    item.sgstAmount = sgst;
+    
+    updatedItems[index] = item;
+    setBillingItems(updatedItems);
   };
 
   const saveInvoice = async () => {
@@ -538,20 +594,24 @@ export default function Billing() {
       }
       
       // Convert items to billing items
-      const loadedItems: BillingItem[] = (items || []).map(item => ({
-        id: item.id,
-        date: "-",
-        particulars: item.particulars,
-        rate: item.rate || 0,
-        qty: item.quantity || 1,
-        totalAmount: item.amount || 0,
-        taxableAmount: item.amount ? item.amount / (1 + (item.cgst_percent || 0) * 2 / 100) : 0,
-        cgstRate: `${item.cgst_percent || 0}%`,
-        cgstAmount: item.cgst_amount || 0,
-        sgstRate: `${item.sgst_percent || 0}%`,
-        sgstAmount: item.sgst_amount || 0,
-        isCustom: item.is_custom || false
-      }));
+      const loadedItems: BillingItem[] = (items || []).map(item => {
+        const gstPercent = (item.cgst_percent || 0) * 2;
+        return {
+          id: item.id,
+          date: "-",
+          particulars: item.particulars,
+          rate: item.rate || 0,
+          qty: item.quantity || 1,
+          totalAmount: item.amount || 0,
+          taxableAmount: item.amount ? item.amount / (1 + gstPercent / 100) : 0,
+          cgstRate: `${item.cgst_percent || 0}%`,
+          cgstAmount: item.cgst_amount || 0,
+          sgstRate: `${item.sgst_percent || 0}%`,
+          sgstAmount: item.sgst_amount || 0,
+          isCustom: item.is_custom || false,
+          gstPercent: gstPercent
+        };
+      });
       
       setBillingItems(loadedItems);
       setShowSavedInvoices(false);
@@ -905,9 +965,9 @@ export default function Billing() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="5">5% (2.5% + 2.5%)</SelectItem>
-                          <SelectItem value="12">12% (6% + 6%)</SelectItem>
-                          <SelectItem value="18">18% (9% + 9%)</SelectItem>
+                          {GST_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1046,34 +1106,66 @@ export default function Billing() {
                         {billingItems.map((item, index) => (
                           <tr key={index}>
                             <td className="border border-black p-2">{item.date}</td>
-                            <td className="border border-black p-2 font-medium">{item.particulars}</td>
-                            <td className="border border-black p-2 text-right">{item.rate.toFixed(0)}</td>
-                            <td className="border border-black p-2 text-right">{item.qty}</td>
+                            <td className="border border-black p-1 font-medium print:p-2">
+                              <input
+                                type="text"
+                                value={item.particulars}
+                                onChange={(e) => updateBillingItem(index, 'particulars', e.target.value)}
+                                className="w-full bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary print:ring-0 text-xs p-1"
+                              />
+                            </td>
+                            <td className="border border-black p-1 text-right print:p-2">
+                              <input
+                                type="number"
+                                value={item.rate}
+                                onChange={(e) => updateBillingItem(index, 'rate', e.target.value)}
+                                className="w-16 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary print:ring-0 text-xs text-right p-1"
+                              />
+                            </td>
+                            <td className="border border-black p-1 text-right print:p-2">
+                              <input
+                                type="number"
+                                value={item.qty}
+                                onChange={(e) => updateBillingItem(index, 'qty', e.target.value)}
+                                className="w-12 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary print:ring-0 text-xs text-right p-1"
+                              />
+                            </td>
                             <td className="border border-black p-2 text-right">
                               {item.totalAmount.toFixed(0)}
                             </td>
                             <td className="border border-black p-2 text-right">
                               {item.taxableAmount.toFixed(0)}
                             </td>
-                            <td className="border border-black p-2 text-right">{item.cgstRate}</td>
+                            <td className="border border-black p-1 text-right print:p-2">
+                              <select
+                                value={item.gstPercent.toString()}
+                                onChange={(e) => updateBillingItem(index, 'gstPercent', e.target.value)}
+                                className="w-14 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary print:ring-0 text-xs text-right p-1 print:hidden"
+                              >
+                                {GST_OPTIONS.map(opt => (
+                                  <option key={opt.value} value={opt.value}>{opt.value}%</option>
+                                ))}
+                              </select>
+                              <span className="hidden print:inline">{item.cgstRate}</span>
+                            </td>
                             <td className="border border-black p-2 text-right">
                               {item.cgstAmount.toFixed(0)}
                             </td>
-                            <td className="border border-black p-2 text-right">{item.sgstRate}</td>
+                            <td className="border border-black p-2 text-right print:hidden">
+                              <span className="print:inline">{item.sgstRate}</span>
+                            </td>
                             <td className="border border-black p-2 text-right">
                               {item.sgstAmount.toFixed(0)}
                             </td>
                             <td className="border border-black p-2 text-center print:hidden">
-                              {item.isCustom && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeCustomRow(index)}
-                                  className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeCustomRow(index)}
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </td>
                           </tr>
                         ))}
