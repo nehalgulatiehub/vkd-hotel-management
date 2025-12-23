@@ -59,7 +59,8 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
   if (!booking) return null;
 
   return (
-    <div className="hidden print:block p-8 bg-white text-black max-w-4xl mx-auto">
+    <div className="fixed inset-0 bg-white z-[9999] hidden print:block overflow-auto">
+      <div className="p-8 bg-white text-black max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -258,6 +259,7 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
               <p className="text-sm">{booking.notes}</p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

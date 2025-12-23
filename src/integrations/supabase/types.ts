@@ -753,34 +753,40 @@ export type Database = {
         Row: {
           amount: number
           booking_id: string | null
+          city_id: string | null
           created_at: string | null
           created_by: string | null
           id: string
           notes: string | null
           payment_date: string | null
           payment_mode: string | null
+          payment_type: string | null
           reference_number: string | null
         }
         Insert: {
           amount: number
           booking_id?: string | null
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
           notes?: string | null
           payment_date?: string | null
           payment_mode?: string | null
+          payment_type?: string | null
           reference_number?: string | null
         }
         Update: {
           amount?: number
           booking_id?: string | null
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
           notes?: string | null
           payment_date?: string | null
           payment_mode?: string | null
+          payment_type?: string | null
           reference_number?: string | null
         }
         Relationships: [
@@ -789,6 +795,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {
