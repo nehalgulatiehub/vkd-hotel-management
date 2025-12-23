@@ -57,6 +57,7 @@ import RestaurantOrders from "./pages/restaurant/RestaurantOrders";
 import RestaurantInvoice from "./pages/restaurant/RestaurantInvoice";
 import RestaurantReports from "./pages/restaurant/RestaurantReports";
 import Billing from "./pages/Billing";
+import InvoiceList from "./pages/InvoiceList";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -427,6 +428,7 @@ const App = () => (
           <Route path="/restaurant/invoice/:orderId" element={<DashboardLayout><RestaurantInvoice /></DashboardLayout>} />
           <Route path="/restaurant/reports" element={<DashboardLayout><RestaurantReports /></DashboardLayout>} />
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
+          <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

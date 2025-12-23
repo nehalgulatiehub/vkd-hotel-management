@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FileSpreadsheet, Printer, Search, Settings, Plus, Trash2, Save, List } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import {
   Dialog,
@@ -155,6 +155,9 @@ interface SavedInvoice {
 
 export default function Billing() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editInvoiceId = searchParams.get("edit");
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<string>("");
@@ -173,6 +176,7 @@ export default function Billing() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedInvoices, setSavedInvoices] = useState<SavedInvoice[]>([]);
   const [showSavedInvoices, setShowSavedInvoices] = useState(false);
+  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | null>(null);
   
   // Custom row state
   const [showAddRow, setShowAddRow] = useState(false);
@@ -189,6 +193,13 @@ export default function Billing() {
     fetchCompanySettings();
     fetchSavedInvoices();
   }, []);
+
+  // Load invoice if edit param is present
+  useEffect(() => {
+    if (editInvoiceId) {
+      loadSavedInvoice(editInvoiceId);
+    }
+  }, [editInvoiceId]);
 
   useEffect(() => {
     if (selectedBookingId) {
@@ -507,32 +518,65 @@ export default function Billing() {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Insert invoice
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from("billing_invoices")
-        .insert({
-          invoice_number: invoiceNumber,
-          invoice_date: invoiceDate,
-          booking_id: selectedBookingId,
-          customer_name: selectedBooking.customer_name || selectedBooking.reference,
-          customer_address: selectedBooking.address,
-          customer_gstin: customerGstNo,
-          customer_pan: customerPanNo,
-          subtotal: totals.totalTaxable,
-          total_cgst: totals.totalCgst,
-          total_sgst: totals.totalSgst,
-          total_amount: totals.totalAmount,
-          amount_in_words: numberToWords(totals.totalAmount),
-          created_by: user?.id
-        })
-        .select()
-        .single();
+      let invoiceId = currentInvoiceId;
       
-      if (invoiceError) throw invoiceError;
+      if (currentInvoiceId) {
+        // Update existing invoice
+        const { error: invoiceError } = await supabase
+          .from("billing_invoices")
+          .update({
+            invoice_number: invoiceNumber,
+            invoice_date: invoiceDate,
+            booking_id: selectedBookingId,
+            customer_name: selectedBooking.customer_name || selectedBooking.reference,
+            customer_address: selectedBooking.address,
+            customer_gstin: customerGstNo,
+            customer_pan: customerPanNo,
+            subtotal: totals.totalTaxable,
+            total_cgst: totals.totalCgst,
+            total_sgst: totals.totalSgst,
+            total_amount: totals.totalAmount,
+            amount_in_words: numberToWords(totals.totalAmount),
+          })
+          .eq("id", currentInvoiceId);
+        
+        if (invoiceError) throw invoiceError;
+        
+        // Delete existing items
+        await supabase
+          .from("billing_invoice_items")
+          .delete()
+          .eq("invoice_id", currentInvoiceId);
+      } else {
+        // Insert new invoice
+        const { data: invoiceData, error: invoiceError } = await supabase
+          .from("billing_invoices")
+          .insert({
+            invoice_number: invoiceNumber,
+            invoice_date: invoiceDate,
+            booking_id: selectedBookingId,
+            customer_name: selectedBooking.customer_name || selectedBooking.reference,
+            customer_address: selectedBooking.address,
+            customer_gstin: customerGstNo,
+            customer_pan: customerPanNo,
+            subtotal: totals.totalTaxable,
+            total_cgst: totals.totalCgst,
+            total_sgst: totals.totalSgst,
+            total_amount: totals.totalAmount,
+            amount_in_words: numberToWords(totals.totalAmount),
+            created_by: user?.id
+          })
+          .select()
+          .single();
+        
+        if (invoiceError) throw invoiceError;
+        invoiceId = invoiceData.id;
+        setCurrentInvoiceId(invoiceId);
+      }
       
       // Insert invoice items
       const invoiceItems = billingItems.map((item, index) => ({
-        invoice_id: invoiceData.id,
+        invoice_id: invoiceId,
         sr_no: index + 1,
         particulars: item.particulars,
         hsn_code: companySettings?.hsn_code || '996311',
@@ -554,7 +598,7 @@ export default function Billing() {
       
       if (itemsError) throw itemsError;
       
-      toast.success("Invoice saved successfully");
+      toast.success(currentInvoiceId ? "Invoice updated successfully" : "Invoice saved successfully");
       fetchSavedInvoices();
     } catch (error: any) {
       console.error("Failed to save invoice:", error);
@@ -615,6 +659,7 @@ export default function Billing() {
       });
       
       setBillingItems(loadedItems);
+      setCurrentInvoiceId(invoiceId);
       setShowSavedInvoices(false);
       toast.success("Invoice loaded");
     } catch (error: any) {
@@ -805,13 +850,17 @@ export default function Billing() {
                 </div>
               </DialogContent>
             </Dialog>
+            <Button variant="outline" onClick={() => navigate('/invoices')}>
+              <List className="h-4 w-4 mr-2" />
+              View All Invoices
+            </Button>
             <Button variant="outline" onClick={() => navigate('/settings')}>
               <Settings className="h-4 w-4 mr-2" />
               Company Settings
             </Button>
             <Button variant="outline" onClick={saveInvoice} disabled={!selectedBooking || isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Invoice'}
+              {isSaving ? 'Saving...' : (currentInvoiceId ? 'Update Invoice' : 'Save Invoice')}
             </Button>
             <Button variant="outline" onClick={exportToExcel} disabled={!selectedBooking}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
