@@ -1069,43 +1069,33 @@ export default function Billing() {
                     <table className="w-full text-xs border border-black border-collapse">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-black p-2 text-left">Date</th>
+                          <th className="border border-black p-2 text-left w-16">Date</th>
                           <th className="border border-black p-2 text-left">BILLING PARTICULARS</th>
                           <th className="border border-black p-2 text-right">Rate</th>
                           <th className="border border-black p-2 text-right">
-                            QTY/No.
-                            <br />
-                            Of Rooms
+                            QTY/No.<br />Of Rooms
                           </th>
                           <th className="border border-black p-2 text-right">
-                            Total
-                            <br />
-                            Amount
+                            Total<br />Amount
                           </th>
                           <th className="border border-black p-2 text-right">
-                            Taxable
-                            <br />
-                            Amount
+                            Taxable<br />Amount
                           </th>
                           <th className="border border-black p-2 text-right">
-                            Rate
-                            <br />
-                            CGST
+                            Rate<br />CGST
                           </th>
                           <th className="border border-black p-2 text-right">CGST</th>
                           <th className="border border-black p-2 text-right">
-                            Rate
-                            <br />
-                            SGST
+                            Rate<br />SGST
                           </th>
                           <th className="border border-black p-2 text-right">SGST</th>
-                          <th className="border border-black p-2 text-center print:hidden">Action</th>
+                          <th className="border border-black p-2 text-center print:hidden w-12">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {billingItems.map((item, index) => (
                           <tr key={index}>
-                            <td className="border border-black p-2">{item.date}</td>
+                            <td className="border border-black p-2 text-center">{item.date || '-'}</td>
                             <td className="border border-black p-1 font-medium print:p-2">
                               <input
                                 type="text"
@@ -1151,8 +1141,8 @@ export default function Billing() {
                             <td className="border border-black p-2 text-right">
                               {item.cgstAmount.toFixed(0)}
                             </td>
-                            <td className="border border-black p-2 text-right print:hidden">
-                              <span className="print:inline">{item.sgstRate}</span>
+                            <td className="border border-black p-2 text-right">
+                              {item.sgstRate}
                             </td>
                             <td className="border border-black p-2 text-right">
                               {item.sgstAmount.toFixed(0)}
