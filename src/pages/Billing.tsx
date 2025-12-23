@@ -819,7 +819,7 @@ export default function Billing() {
             </Button>
             <Button onClick={handlePrint} disabled={!selectedBooking}>
               <Printer className="h-4 w-4 mr-2" />
-              Print
+              Print Invoice
             </Button>
           </div>
         </div>
