@@ -86,17 +86,18 @@ export default function BookingAvailability() {
     return eachDayOfInterval({ start, end });
   };
 
-  const getBookingsForDate = (hotelId: string, roomName: string, date: Date) => {
+  const getBookingsForDate = (hotelId: string, roomId: string, date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     return hotelBookings.filter(booking => {
       if (booking.own_hotel_id !== hotelId) return false;
-      if (booking.room_type !== roomName) return false;
+      // room_type in hotel_bookings stores the room id, not the room name
+      if (booking.room_type !== roomId) return false;
       return dateStr >= booking.check_in_date && dateStr < booking.check_out_date;
     });
   };
 
   const getAvailableRooms = (room: Room, date: Date) => {
-    const bookings = getBookingsForDate(room.hotel_id, room.room_number, date);
+    const bookings = getBookingsForDate(room.hotel_id, room.id, date);
     const bookedRooms = bookings.reduce((sum, b) => sum + (b.number_of_rooms || 1), 0);
     return Math.max(0, (room.total_quantity || 1) - bookedRooms);
   };
@@ -174,7 +175,7 @@ export default function BookingAvailability() {
                   {getDaysInMonth(month).map((day) => {
                     const isToday = isSameDay(day, new Date());
                     const hasBookings = hotels.some(hotel => 
-                      hotel.rooms?.some(room => getBookingsForDate(hotel.id, room.room_number, day).length > 0)
+                      hotel.rooms?.some(room => getBookingsForDate(hotel.id, room.id, day).length > 0)
                     );
                     
                     return (
