@@ -1,5 +1,5 @@
 import { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface StatCardProps {
   title: string;
@@ -14,23 +14,21 @@ interface StatCardProps {
 
 export function StatCard({ title, value, icon: Icon, trend, className }: StatCardProps) {
   return (
-    <Card className={className}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <h3 className="text-3xl font-bold mt-2">{value}</h3>
-            {trend && (
-              <p className={`text-sm mt-2 ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
-                {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}% from last month
-              </p>
-            )}
-          </div>
-          <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center">
-            <Icon className="h-6 w-6 text-primary-foreground" />
-          </div>
+    <Card className={`p-3 ${className}`}>
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4 text-primary" />
         </div>
-      </CardContent>
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">{title}</p>
+          <h3 className="text-lg font-bold leading-tight">{value}</h3>
+          {trend && (
+            <p className={`text-[10px] ${trend.isPositive ? 'text-green-600' : 'text-destructive'}`}>
+              {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
+            </p>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }
