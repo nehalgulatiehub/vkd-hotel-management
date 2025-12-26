@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { CompactFormRow } from "@/components/booking/CompactFormRow";
 
 export default function Bookings() {
   const navigate = useNavigate();
@@ -901,9 +902,9 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-background">
       <Header title="Booking Management" />
-      <main className="p-6 print:hidden">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">
+      <main className="p-3 print:hidden">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-sm font-semibold">
             {showForm ? (editingBookingId ? "Edit Booking" : "Create Booking") : "View Booking"}
           </h2>
           <div className="flex gap-2">
@@ -911,8 +912,9 @@ export default function Bookings() {
               <Button 
                 onClick={() => {/* View all logic */}}
                 variant="outline"
+                size="sm"
               >
-                View All Records
+                View All
               </Button>
             )}
             <Button 
@@ -923,48 +925,48 @@ export default function Bookings() {
                 }
               }}
               className="bg-gradient-primary"
+              size="sm"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-3 w-3 mr-1" />
               {showForm ? "View Bookings" : "Create Booking"}
             </Button>
           </div>
         </div>
 
         {showForm ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>{editingBookingId ? "Edit Booking" : "Create New Booking"}</CardTitle>
+          <Card className="max-w-2xl">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-sm">{editingBookingId ? "Edit Booking" : "Create New Booking"}</CardTitle>
+              <p className="text-[10px] text-muted-foreground text-right">* Required fields</p>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="p-3">
+              <form onSubmit={handleSubmit} className="space-y-1">
                 {/* Type */}
-                <div className="space-y-2">
-                  <Label className="text-base">Type <span className="text-destructive">*</span></Label>
+                <CompactFormRow label="Type" required>
                   <RadioGroup
                     value={formData.booking_type}
                     onValueChange={(value) => setFormData({ ...formData, booking_type: value })}
-                    className="flex gap-4"
+                    className="flex gap-3"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="agent" id="agent" />
-                      <Label htmlFor="agent">Agent</Label>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="agent" id="agent" className="h-3 w-3" />
+                      <Label htmlFor="agent" className="text-[11px]">Agent</Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="direct" id="direct" />
-                      <Label htmlFor="direct">Direct from customer</Label>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="direct" id="direct" className="h-3 w-3" />
+                      <Label htmlFor="direct" className="text-[11px]">Direct from customer</Label>
                     </div>
                   </RadioGroup>
-                </div>
+                </CompactFormRow>
 
                 {/* Agent Selection */}
                 {formData.booking_type === "agent" && (
-                  <div className="space-y-2">
-                    <Label>Agent <span className="text-destructive">*</span></Label>
+                  <CompactFormRow label="Agent" required>
                     <Select
                       value={formData.agent_id}
                       onValueChange={(value) => setFormData({ ...formData, agent_id: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-64">
                         <SelectValue placeholder="-----Select-----" />
                       </SelectTrigger>
                       <SelectContent>
@@ -975,910 +977,784 @@ export default function Bookings() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </CompactFormRow>
                 )}
 
-                {/* Reference */}
-                <div className="space-y-2">
-                  <Label>Reference</Label>
+                <CompactFormRow label="Reference">
                   <Input
                     value={formData.reference}
                     onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
-                {/* Reference Email */}
-                <div className="space-y-2">
-                  <Label>Reference Email</Label>
+                <CompactFormRow label="Reference Email">
                   <Input
                     type="email"
                     value={formData.reference_email}
                     onChange={(e) => setFormData({ ...formData, reference_email: e.target.value })}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
-                {/* Customer Name */}
-                <div className="space-y-2">
-                  <Label>Customer Name</Label>
+                <CompactFormRow label="Customer Name">
                   <Input
                     value={formData.customer_name}
                     onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
-                {/* Address */}
-                <div className="space-y-2">
-                  <Label>Address</Label>
+                <CompactFormRow label="Address">
                   <Textarea
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    rows={4}
+                    rows={2}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
-                {/* Contact No */}
-                <div className="space-y-2">
-                  <Label>Contact No.</Label>
+                <CompactFormRow label="Contact No.">
                   <Input
                     value={formData.contact_no}
                     onChange={(e) => setFormData({ ...formData, contact_no: e.target.value })}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label>Email</Label>
+                <CompactFormRow label="Email">
                   <Input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
-                {/* Check-in Date */}
-                <div className="space-y-2">
-                  <Label>Check-in Date</Label>
-                  <Input
-                    type="date"
-                    value={formData.check_in_date}
-                    onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
-                  />
-                </div>
-
-                {/* Check-out Date */}
-                <div className="space-y-2">
-                  <Label>Check-out Date</Label>
-                  <Input
-                    type="date"
-                    value={formData.check_out_date}
-                    onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
-                  />
-                </div>
-
-                {/* No of People */}
-                <div className="space-y-2">
-                  <Label>No of People</Label>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={formData.adults}
-                        onChange={(e) => setFormData({ ...formData, adults: parseInt(e.target.value) || 0 })}
-                        className="w-24"
-                      />
-                      <span>Adult</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={formData.children}
-                        onChange={(e) => setFormData({ ...formData, children: parseInt(e.target.value) || 0 })}
-                        className="w-24"
-                      />
-                      <span>Children</span>
-                    </div>
+                <CompactFormRow label="No of People">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.adults}
+                      onChange={(e) => setFormData({ ...formData, adults: parseInt(e.target.value) || 0 })}
+                      className="w-16"
+                    />
+                    <span className="text-[11px]">Adult</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.children}
+                      onChange={(e) => setFormData({ ...formData, children: parseInt(e.target.value) || 0 })}
+                      className="w-16"
+                    />
+                    <span className="text-[11px]">Children</span>
                   </div>
-                </div>
+                </CompactFormRow>
 
-                {/* Note */}
-                <div className="space-y-2">
-                  <Label>Note</Label>
+                <CompactFormRow label="Note">
                   <Textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={4}
+                    rows={2}
+                    className="w-64"
                   />
-                </div>
+                </CompactFormRow>
 
                 {/* Service Inclusions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Booking */}
-                  <div className="space-y-2">
-                    <Label>Booking</Label>
-                    <RadioGroup
-                      value={formData.include_booking ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="booking-yes" />
-                        <Label htmlFor="booking-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="booking-no" />
-                        <Label htmlFor="booking-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {/* DELHI - MANALI */}
-                  <div className="space-y-2">
-                    <Label>DELHI - MANALI</Label>
-                    <RadioGroup
-                      value={formData.include_delhi_manali ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="dm-yes" />
-                        <Label htmlFor="dm-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="dm-no" />
-                        <Label htmlFor="dm-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {/* MANALI - DELHI */}
-                  <div className="space-y-2">
-                    <Label>MANALI - DELHI</Label>
-                    <RadioGroup
-                      value={formData.include_manali_delhi ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="md-yes" />
-                        <Label htmlFor="md-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="md-no" />
-                        <Label htmlFor="md-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {/* Safari */}
-                  <div className="space-y-2">
-                    <Label>Safari</Label>
-                    <RadioGroup
-                      value={formData.include_safari ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="safari-yes" />
-                        <Label htmlFor="safari-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="safari-no" />
-                        <Label htmlFor="safari-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {/* Another Hotel */}
-                  <div className="space-y-2">
-                    <Label>Another Hotel</Label>
-                    <RadioGroup
-                      value={formData.include_another_hotel ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="hotel-yes" />
-                        <Label htmlFor="hotel-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="hotel-no" />
-                        <Label htmlFor="hotel-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {/* Additional Vehicle */}
-                  <div className="space-y-2">
-                    <Label>Additional Vehicle</Label>
-                    <RadioGroup
-                      value={formData.include_additional_vehicle ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="vehicle-yes" />
-                        <Label htmlFor="vehicle-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="vehicle-no" />
-                        <Label htmlFor="vehicle-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {/* Group Expenses */}
-                  <div className="space-y-2">
-                    <Label>Group Expences</Label>
-                    <RadioGroup
-                      value={formData.include_group_expenses ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="expenses-yes" />
-                        <Label htmlFor="expenses-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="expenses-no" />
-                        <Label htmlFor="expenses-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
+                <CompactFormRow label="Booking">
+                  <RadioGroup
+                    value={formData.include_booking ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="booking-yes" className="h-3 w-3" />
+                      <Label htmlFor="booking-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="booking-no" className="h-3 w-3" />
+                      <Label htmlFor="booking-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
 
                 {/* Booking Details Section */}
                 {formData.include_booking && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Booking Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Hotel (Own)</Label>
-                        <Select
-                          value={formData.booking_hotel_id}
-                          onValueChange={(value) => {
-                            setFormData({ ...formData, booking_hotel_id: value, booking_room: "" });
-                            fetchRoomsForHotel(value);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="-----Select Hotel------" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white z-50">
-                            {ownHotels.map((hotel) => (
-                              <SelectItem key={hotel.id} value={hotel.id}>
-                                {hotel.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <CompactFormRow label="Hotel" className="!w-auto">
+                      <Select
+                        value={formData.booking_hotel_id}
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, booking_hotel_id: value, booking_room: "" });
+                          fetchRoomsForHotel(value);
+                        }}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="-----Select-----" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          {ownHotels.map((hotel) => (
+                            <SelectItem key={hotel.id} value={hotel.id}>
+                              {hotel.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
 
-                      <div className="space-y-2">
-                        <Label>Room</Label>
-                        <Select
-                          value={formData.booking_room}
-                          onValueChange={(value) => setFormData({ ...formData, booking_room: value })}
-                          disabled={!formData.booking_hotel_id}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="------Select Room------" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white z-50">
-                            {rooms.map((room) => (
-                              <SelectItem key={room.id} value={room.id}>
-                                Room {room.room_number} - {room.room_type} (₹{room.base_price}/night)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <CompactFormRow label="Room" className="!w-auto">
+                      <Select
+                        value={formData.booking_room}
+                        onValueChange={(value) => setFormData({ ...formData, booking_room: value })}
+                        disabled={!formData.booking_hotel_id}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="-----Select-----" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          {rooms.map((room) => (
+                            <SelectItem key={room.id} value={room.id}>
+                              {room.room_number} - {room.room_type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
 
-                      <div className="space-y-2">
-                        <Label>No of Rooms</Label>
+                    <CompactFormRow label="No of Rooms" className="!w-auto">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.booking_num_rooms}
+                        onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
+                        className="w-20"
+                      />
+                    </CompactFormRow>
+
+                    <CompactFormRow label="Package Type" className="!w-auto">
+                      <RadioGroup
+                        value={formData.booking_package_type}
+                        onValueChange={(value) => setFormData({ ...formData, booking_package_type: value })}
+                        className="flex gap-3"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="select" id="pkg-select" className="h-3 w-3" />
+                          <Label htmlFor="pkg-select" className="text-[11px]">Select Package</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="custom" id="pkg-custom" className="h-3 w-3" />
+                          <Label htmlFor="pkg-custom" className="text-[11px]">Custom Package</Label>
+                        </div>
+                      </RadioGroup>
+                    </CompactFormRow>
+
+                    <CompactFormRow label="Price" className="!w-auto">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.booking_price}
+                        onChange={(e) => setFormData({ ...formData, booking_price: e.target.value })}
+                        className="w-24"
+                      />
+                    </CompactFormRow>
+
+                    <div className="flex gap-2">
+                      <CompactFormRow label="From" className="!w-auto">
                         <Input
-                          type="number"
-                          min="1"
-                          value={formData.booking_num_rooms}
-                          onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
+                          type="date"
+                          value={formData.booking_from}
+                          onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Package Type</Label>
-                        <RadioGroup
-                          value={formData.booking_package_type}
-                          onValueChange={(value) => setFormData({ ...formData, booking_package_type: value })}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="select" id="pkg-select" />
-                            <Label htmlFor="pkg-select">Select Package</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="custom" id="pkg-custom" />
-                            <Label htmlFor="pkg-custom">Custom Package</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      {formData.booking_package_type === "custom" && (
-                        <div className="space-y-2">
-                          <Label>Custom Package</Label>
-                          <Textarea
-                            value={formData.booking_custom_package}
-                            onChange={(e) => setFormData({ ...formData, booking_custom_package: e.target.value })}
-                            rows={4}
-                          />
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <Label>Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="To" className="!w-auto">
                         <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.booking_price}
-                          onChange={(e) => setFormData({ ...formData, booking_price: e.target.value })}
+                          type="date"
+                          value={formData.booking_to}
+                          onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Booking From</Label>
-                          <Input
-                            type="date"
-                            value={formData.booking_from}
-                            onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Booking To</Label>
-                          <Input
-                            type="date"
-                            value={formData.booking_to}
-                            onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CompactFormRow>
+                    </div>
+                  </div>
                 )}
+
+                <CompactFormRow label="DELHI - MANALI">
+                  <RadioGroup
+                    value={formData.include_delhi_manali ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="dm-yes" className="h-3 w-3" />
+                      <Label htmlFor="dm-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="dm-no" className="h-3 w-3" />
+                      <Label htmlFor="dm-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
+
+                <CompactFormRow label="MANALI - DELHI">
+                  <RadioGroup
+                    value={formData.include_manali_delhi ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="md-yes" className="h-3 w-3" />
+                      <Label htmlFor="md-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="md-no" className="h-3 w-3" />
+                      <Label htmlFor="md-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
+
+                <CompactFormRow label="Safari">
+                  <RadioGroup
+                    value={formData.include_safari ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="safari-yes" className="h-3 w-3" />
+                      <Label htmlFor="safari-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="safari-no" className="h-3 w-3" />
+                      <Label htmlFor="safari-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
+
+                <CompactFormRow label="Another Hotel">
+                  <RadioGroup
+                    value={formData.include_another_hotel ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="hotel-yes" className="h-3 w-3" />
+                      <Label htmlFor="hotel-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="hotel-no" className="h-3 w-3" />
+                      <Label htmlFor="hotel-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
+
+                <CompactFormRow label="Add. Vehicle">
+                  <RadioGroup
+                    value={formData.include_additional_vehicle ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="vehicle-yes" className="h-3 w-3" />
+                      <Label htmlFor="vehicle-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="vehicle-no" className="h-3 w-3" />
+                      <Label htmlFor="vehicle-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
+
+                <CompactFormRow label="Group Expenses">
+                  <RadioGroup
+                    value={formData.include_group_expenses ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
+                    className="flex gap-3"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="expenses-yes" className="h-3 w-3" />
+                      <Label htmlFor="expenses-yes" className="text-[11px]">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="expenses-no" className="h-3 w-3" />
+                      <Label htmlFor="expenses-no" className="text-[11px]">No</Label>
+                    </div>
+                  </RadioGroup>
+                </CompactFormRow>
 
                 {/* DELHI - MANALI Details Section */}
                 {formData.include_delhi_manali && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">DELHI - MANALI Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>No of Tickets</Label>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <p className="text-[10px] font-semibold text-primary mb-1">DELHI - MANALI Details</p>
+                    <CompactFormRow label="No. Tickets" className="!w-auto">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.dm_num_tickets}
+                        onChange={(e) => setFormData({ ...formData, dm_num_tickets: e.target.value })}
+                        className="w-20"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Ticket No." className="!w-auto">
+                      <Input
+                        value={formData.dm_ticket_no}
+                        onChange={(e) => setFormData({ ...formData, dm_ticket_no: e.target.value })}
+                        className="w-32"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Seat No." className="!w-auto">
+                      <Input
+                        value={formData.dm_seat_no}
+                        onChange={(e) => setFormData({ ...formData, dm_seat_no: e.target.value })}
+                        className="w-32"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Transporter" className="!w-auto">
+                      <Select
+                        value={formData.dm_transporter_id}
+                        onValueChange={(value) => setFormData({ ...formData, dm_transporter_id: value })}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {transporters.map((transporter) => (
+                            <SelectItem key={transporter.id} value={transporter.id}>
+                              {transporter.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Date" className="!w-auto">
                         <Input
-                          type="number"
-                          min="1"
-                          value={formData.dm_num_tickets}
-                          onChange={(e) => setFormData({ ...formData, dm_num_tickets: e.target.value })}
+                          type="date"
+                          value={formData.dm_booking_date}
+                          onChange={(e) => setFormData({ ...formData, dm_booking_date: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Ticket No.</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Journey Date" className="!w-auto">
                         <Input
-                          value={formData.dm_ticket_no}
-                          onChange={(e) => setFormData({ ...formData, dm_ticket_no: e.target.value })}
+                          type="date"
+                          value={formData.dm_journey_date}
+                          onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Seat No.</Label>
-                        <Input
-                          value={formData.dm_seat_no}
-                          onChange={(e) => setFormData({ ...formData, dm_seat_no: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Transporter</Label>
-                        <Select
-                          value={formData.dm_transporter_id}
-                          onValueChange={(value) => setFormData({ ...formData, dm_transporter_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {transporters.map((transporter) => (
-                              <SelectItem key={transporter.id} value={transporter.id}>
-                                {transporter.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Volvo Booking Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.dm_booking_date}
-                            onChange={(e) => setFormData({ ...formData, dm_booking_date: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Volvo Journey Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.dm_journey_date}
-                            onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Volvo Booking Price</Label>
+                      </CompactFormRow>
+                    </div>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.dm_booking_price}
                           onChange={(e) => setFormData({ ...formData, dm_booking_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Volvo Selling Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Selling Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.dm_selling_price}
                           onChange={(e) => setFormData({ ...formData, dm_selling_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CompactFormRow>
+                    </div>
+                  </div>
                 )}
 
                 {/* MANALI - DELHI Details Section */}
                 {formData.include_manali_delhi && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">MANALI - DELHI Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>No of Tickets</Label>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <p className="text-[10px] font-semibold text-primary mb-1">MANALI - DELHI Details</p>
+                    <CompactFormRow label="No. Tickets" className="!w-auto">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.md_num_tickets}
+                        onChange={(e) => setFormData({ ...formData, md_num_tickets: e.target.value })}
+                        className="w-20"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Ticket No." className="!w-auto">
+                      <Input
+                        value={formData.md_ticket_no}
+                        onChange={(e) => setFormData({ ...formData, md_ticket_no: e.target.value })}
+                        className="w-32"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Seat No." className="!w-auto">
+                      <Input
+                        value={formData.md_seat_no}
+                        onChange={(e) => setFormData({ ...formData, md_seat_no: e.target.value })}
+                        className="w-32"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Transporter" className="!w-auto">
+                      <Select
+                        value={formData.md_transporter_id}
+                        onValueChange={(value) => setFormData({ ...formData, md_transporter_id: value })}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {transporters.map((transporter) => (
+                            <SelectItem key={transporter.id} value={transporter.id}>
+                              {transporter.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Date" className="!w-auto">
                         <Input
-                          type="number"
-                          min="1"
-                          value={formData.md_num_tickets}
-                          onChange={(e) => setFormData({ ...formData, md_num_tickets: e.target.value })}
+                          type="date"
+                          value={formData.md_booking_date}
+                          onChange={(e) => setFormData({ ...formData, md_booking_date: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Ticket No.</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Journey Date" className="!w-auto">
                         <Input
-                          value={formData.md_ticket_no}
-                          onChange={(e) => setFormData({ ...formData, md_ticket_no: e.target.value })}
+                          type="date"
+                          value={formData.md_journey_date}
+                          onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Seat No.</Label>
-                        <Input
-                          value={formData.md_seat_no}
-                          onChange={(e) => setFormData({ ...formData, md_seat_no: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Transporter</Label>
-                        <Select
-                          value={formData.md_transporter_id}
-                          onValueChange={(value) => setFormData({ ...formData, md_transporter_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {transporters.map((transporter) => (
-                              <SelectItem key={transporter.id} value={transporter.id}>
-                                {transporter.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Volvo Booking Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.md_booking_date}
-                            onChange={(e) => setFormData({ ...formData, md_booking_date: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Volvo Journey Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.md_journey_date}
-                            onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Volvo Booking Price</Label>
+                      </CompactFormRow>
+                    </div>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.md_booking_price}
                           onChange={(e) => setFormData({ ...formData, md_booking_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Volvo Selling Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Selling Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.md_selling_price}
                           onChange={(e) => setFormData({ ...formData, md_selling_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CompactFormRow>
+                    </div>
+                  </div>
                 )}
 
                 {/* Safari Details Section */}
                 {formData.include_safari && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Safari Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Transporter</Label>
-                        <Select
-                          value={formData.safari_transporter_id}
-                          onValueChange={(value) => setFormData({ ...formData, safari_transporter_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {transporters.map((transporter) => (
-                              <SelectItem key={transporter.id} value={transporter.id}>
-                                {transporter.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>No. of Safari</Label>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <p className="text-[10px] font-semibold text-primary mb-1">Safari Details</p>
+                    <CompactFormRow label="Transporter" className="!w-auto">
+                      <Select
+                        value={formData.safari_transporter_id}
+                        onValueChange={(value) => setFormData({ ...formData, safari_transporter_id: value })}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {transporters.map((transporter) => (
+                            <SelectItem key={transporter.id} value={transporter.id}>
+                              {transporter.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
+                    <CompactFormRow label="No. Safari" className="!w-auto">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.safari_num}
+                        onChange={(e) => setFormData({ ...formData, safari_num: e.target.value })}
+                        className="w-20"
+                      />
+                    </CompactFormRow>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Date" className="!w-auto">
                         <Input
-                          type="number"
-                          min="1"
-                          value={formData.safari_num}
-                          onChange={(e) => setFormData({ ...formData, safari_num: e.target.value })}
+                          type="date"
+                          value={formData.safari_booking_date}
+                          onChange={(e) => setFormData({ ...formData, safari_booking_date: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Safari Booking Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.safari_booking_date}
-                            onChange={(e) => setFormData({ ...formData, safari_booking_date: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Safari Journey Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.safari_journey_date}
-                            onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Safari Booking Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Journey Date" className="!w-auto">
+                        <Input
+                          type="date"
+                          value={formData.safari_journey_date}
+                          onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
+                          className="w-32"
+                        />
+                      </CompactFormRow>
+                    </div>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.safari_booking_price}
                           onChange={(e) => setFormData({ ...formData, safari_booking_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Safari Selling Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Selling Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.safari_selling_price}
                           onChange={(e) => setFormData({ ...formData, safari_selling_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Safari Note</Label>
-                        <Textarea
-                          value={formData.safari_note}
-                          onChange={(e) => setFormData({ ...formData, safari_note: e.target.value })}
-                          rows={4}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CompactFormRow>
+                    </div>
+                    <CompactFormRow label="Note" className="!w-auto">
+                      <Textarea
+                        value={formData.safari_note}
+                        onChange={(e) => setFormData({ ...formData, safari_note: e.target.value })}
+                        rows={2}
+                        className="w-48"
+                      />
+                    </CompactFormRow>
+                  </div>
                 )}
 
                 {/* Another Hotel Details Section */}
                 {formData.include_another_hotel && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Another Hotel Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Another Hotel Name</Label>
-                        <Select
-                          value={formData.another_hotel_id}
-                          onValueChange={(value) => setFormData({ ...formData, another_hotel_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="-------Select Another Hotel-------" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {anotherHotels.map((hotel) => (
-                              <SelectItem key={hotel.id} value={hotel.id}>
-                                {hotel.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Number of Rooms</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={formData.another_hotel_num_rooms}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_num_rooms: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Room Type</Label>
-                        <Select
-                          value={formData.another_hotel_room_type}
-                          onValueChange={(value) => setFormData({ ...formData, another_hotel_room_type: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="----Select Another Room Type----" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="standard">Standard</SelectItem>
-                            <SelectItem value="deluxe">Deluxe</SelectItem>
-                            <SelectItem value="suite">Suite</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Hotel Booking Date</Label>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <p className="text-[10px] font-semibold text-primary mb-1">Another Hotel Details</p>
+                    <CompactFormRow label="Hotel" className="!w-auto">
+                      <Select
+                        value={formData.another_hotel_id}
+                        onValueChange={(value) => setFormData({ ...formData, another_hotel_id: value })}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="-----Select-----" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {anotherHotels.map((hotel) => (
+                            <SelectItem key={hotel.id} value={hotel.id}>
+                              {hotel.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
+                    <CompactFormRow label="No. Rooms" className="!w-auto">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.another_hotel_num_rooms}
+                        onChange={(e) => setFormData({ ...formData, another_hotel_num_rooms: e.target.value })}
+                        className="w-20"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Room Type" className="!w-auto">
+                      <Select
+                        value={formData.another_hotel_room_type}
+                        onValueChange={(value) => setFormData({ ...formData, another_hotel_room_type: value })}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="deluxe">Deluxe</SelectItem>
+                          <SelectItem value="suite">Suite</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Check In" className="!w-auto">
                         <Input
                           type="date"
-                          value={formData.another_hotel_booking_date}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_booking_date: e.target.value })}
+                          value={formData.another_hotel_check_in}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_check_in: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Hotel Check In</Label>
-                          <Input
-                            type="date"
-                            value={formData.another_hotel_check_in}
-                            onChange={(e) => setFormData({ ...formData, another_hotel_check_in: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Hotel Check Out</Label>
-                          <Input
-                            type="date"
-                            value={formData.another_hotel_check_out}
-                            onChange={(e) => setFormData({ ...formData, another_hotel_check_out: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Room Booking Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Check Out" className="!w-auto">
+                        <Input
+                          type="date"
+                          value={formData.another_hotel_check_out}
+                          onChange={(e) => setFormData({ ...formData, another_hotel_check_out: e.target.value })}
+                          className="w-32"
+                        />
+                      </CompactFormRow>
+                    </div>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.another_hotel_booking_price}
                           onChange={(e) => setFormData({ ...formData, another_hotel_booking_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Room Selling Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Selling Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.another_hotel_selling_price}
                           onChange={(e) => setFormData({ ...formData, another_hotel_selling_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Another Hotel Note</Label>
-                        <Textarea
-                          value={formData.another_hotel_note}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_note: e.target.value })}
-                          rows={4}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CompactFormRow>
+                    </div>
+                    <CompactFormRow label="Note" className="!w-auto">
+                      <Textarea
+                        value={formData.another_hotel_note}
+                        onChange={(e) => setFormData({ ...formData, another_hotel_note: e.target.value })}
+                        rows={2}
+                        className="w-48"
+                      />
+                    </CompactFormRow>
+                  </div>
                 )}
 
                 {/* Additional Vehicle Details Section */}
                 {formData.include_additional_vehicle && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Additional Vehicle Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Vehicle Details</Label>
-                        <Input
-                          value={formData.vehicle_details}
-                          onChange={(e) => setFormData({ ...formData, vehicle_details: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Vehicle Booking Price</Label>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <p className="text-[10px] font-semibold text-primary mb-1">Vehicle Details</p>
+                    <CompactFormRow label="Details" className="!w-auto">
+                      <Input
+                        value={formData.vehicle_details}
+                        onChange={(e) => setFormData({ ...formData, vehicle_details: e.target.value })}
+                        className="w-48"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Transporter" className="!w-auto">
+                      <Select
+                        value={formData.vehicle_transporter_id}
+                        onValueChange={(value) => setFormData({ ...formData, vehicle_transporter_id: value })}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {transporters.map((transporter) => (
+                            <SelectItem key={transporter.id} value={transporter.id}>
+                              {transporter.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CompactFormRow>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.vehicle_booking_price}
                           onChange={(e) => setFormData({ ...formData, vehicle_booking_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Vehicle Selling Price</Label>
+                      </CompactFormRow>
+                      <CompactFormRow label="Selling Price" className="!w-auto">
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.vehicle_selling_price}
                           onChange={(e) => setFormData({ ...formData, vehicle_selling_price: e.target.value })}
+                          className="w-24"
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Transporter</Label>
-                        <Select
-                          value={formData.vehicle_transporter_id}
-                          onValueChange={(value) => setFormData({ ...formData, vehicle_transporter_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {transporters.map((transporter) => (
-                              <SelectItem key={transporter.id} value={transporter.id}>
-                                {transporter.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Vehicle Booking Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.vehicle_booking_date}
-                            onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Vehicle Journey Date</Label>
-                          <Input
-                            type="date"
-                            value={formData.vehicle_journey_date}
-                            onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Aditional Vehicle Note</Label>
-                        <Textarea
-                          value={formData.vehicle_note}
-                          onChange={(e) => setFormData({ ...formData, vehicle_note: e.target.value })}
-                          rows={4}
+                      </CompactFormRow>
+                    </div>
+                    <div className="flex gap-2">
+                      <CompactFormRow label="Booking Date" className="!w-auto">
+                        <Input
+                          type="date"
+                          value={formData.vehicle_booking_date}
+                          onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
+                          className="w-32"
                         />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CompactFormRow>
+                      <CompactFormRow label="Journey Date" className="!w-auto">
+                        <Input
+                          type="date"
+                          value={formData.vehicle_journey_date}
+                          onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
+                          className="w-32"
+                        />
+                      </CompactFormRow>
+                    </div>
+                    <CompactFormRow label="Note" className="!w-auto">
+                      <Textarea
+                        value={formData.vehicle_note}
+                        onChange={(e) => setFormData({ ...formData, vehicle_note: e.target.value })}
+                        rows={2}
+                        className="w-48"
+                      />
+                    </CompactFormRow>
+                  </div>
                 )}
 
                 {/* Group Expenses Details Section */}
                 {formData.include_group_expenses && (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Group Expenses Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Amount</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.group_expense_amount}
-                          onChange={(e) => setFormData({ ...formData, group_expense_amount: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Group Expence Details</Label>
-                        <Textarea
-                          value={formData.group_expense_details}
-                          onChange={(e) => setFormData({ ...formData, group_expense_details: e.target.value })}
-                          rows={4}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                    <p className="text-[10px] font-semibold text-primary mb-1">Group Expenses</p>
+                    <CompactFormRow label="Amount" className="!w-auto">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.group_expense_amount}
+                        onChange={(e) => setFormData({ ...formData, group_expense_amount: e.target.value })}
+                        className="w-24"
+                      />
+                    </CompactFormRow>
+                    <CompactFormRow label="Details" className="!w-auto">
+                      <Textarea
+                        value={formData.group_expense_details}
+                        onChange={(e) => setFormData({ ...formData, group_expense_details: e.target.value })}
+                        rows={2}
+                        className="w-48"
+                      />
+                    </CompactFormRow>
+                  </div>
                 )}
 
                 {/* Agent Commission */}
                 {formData.booking_type === "agent" && (
-                  <div className="space-y-2">
-                    <Label>Agent Commission</Label>
+                  <CompactFormRow label="Commission">
                     <Input
                       type="number"
                       step="0.01"
                       value={formData.agent_commission}
                       onChange={(e) => setFormData({ ...formData, agent_commission: e.target.value })}
+                      className="w-24"
                     />
-                  </div>
+                  </CompactFormRow>
                 )}
 
-                {/* Cheque No */}
-                <div className="space-y-2">
-                  <Label>Cheque No.</Label>
+                <CompactFormRow label="Cheque No.">
                   <Input
                     value={formData.cheque_no}
                     onChange={(e) => setFormData({ ...formData, cheque_no: e.target.value })}
+                    className="w-40"
                   />
-                </div>
+                </CompactFormRow>
 
-                <div className="flex gap-4">
-                  <Button type="submit" className="bg-gradient-primary">
-                    {editingBookingId ? "Update Booking" : "Create Booking"}
+                <div className="flex gap-2 pt-2 ml-28">
+                  <Button type="submit" size="sm" className="bg-gradient-primary">
+                    {editingBookingId ? "Update" : "Create Booking"}
                   </Button>
                   <Button 
                     type="button" 
-                    variant="outline" 
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setEditingBookingId(null);
                       setFormData({
