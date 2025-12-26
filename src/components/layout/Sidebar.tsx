@@ -140,21 +140,21 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-14" : "w-60"} print:hidden`}>
+    <Sidebar className={`${collapsed ? "w-14" : "w-52"} print:hidden transition-all duration-200`}>
       <SidebarContent>
-        <div className="px-4 py-6">
-          <h2 className={`font-bold text-xl bg-gradient-primary bg-clip-text text-transparent ${collapsed ? "hidden" : "block"}`}>
-            Hotel Management Software
+        <div className="px-2 py-3">
+          <h2 className={`font-bold text-sm bg-gradient-primary bg-clip-text text-transparent ${collapsed ? "hidden" : "block"}`}>
+            HMS
           </h2>
           {collapsed && (
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
-              HMS
+            <div className="w-6 h-6 rounded bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">
+              H
             </div>
           )}
         </div>
         
         <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className={`text-[10px] ${collapsed ? "sr-only" : ""}`}>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -167,12 +167,12 @@ export function AppSidebar() {
                     >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className="w-full">
-                            <item.icon className="h-4 w-4" />
+                          <SidebarMenuButton className="w-full h-6 text-[11px]" size="sm">
+                            <item.icon className="h-3 w-3" />
                             {!collapsed && (
                               <>
                                 <span>{item.title}</span>
-                                <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${openGroups.includes(item.title) ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`ml-auto h-3 w-3 transition-transform ${openGroups.includes(item.title) ? 'rotate-180' : ''}`} />
                               </>
                             )}
                           </SidebarMenuButton>
@@ -182,7 +182,7 @@ export function AppSidebar() {
                             <SidebarMenuSub>
                               {item.submenu.map((subItem) => (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild>
+                                  <SidebarMenuSubButton asChild className="text-[10px] h-5">
                                     <NavLink
                                       to={subItem.url}
                                       className={({ isActive }) =>
@@ -204,14 +204,14 @@ export function AppSidebar() {
                 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
                       <NavLink 
                         to={item.url}
                         className={({ isActive }) =>
                           isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
                         }
                       >
-                        <item.icon className="h-4 w-4" />
+                        <item.icon className="h-3 w-3" />
                         {!collapsed && <span>{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
@@ -226,16 +226,16 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
                   <NavLink to="/settings" className="hover:bg-sidebar-accent/50">
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-3 w-3" />
                     {!collapsed && <span>Settings</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
-                  <LogOut className="h-4 w-4" />
+                <SidebarMenuButton onClick={handleLogout} size="sm" className="h-6 text-[11px] hover:bg-destructive/10 hover:text-destructive">
+                  <LogOut className="h-3 w-3" />
                   {!collapsed && <span>Logout</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
