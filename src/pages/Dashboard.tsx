@@ -38,8 +38,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Header title="Dashboard" />
-      <main className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <main className="p-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
           <StatCard
             title="Total Bookings"
             value={stats.totalBookings}
@@ -62,10 +62,10 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="bg-card rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Welcome to Hotel Management Software</h2>
-          <p className="text-muted-foreground">
-            Comprehensive hotel management system for booking management, payments tracking, and operations.
+        <div className="bg-card rounded-md p-3 shadow-sm border">
+          <h2 className="text-sm font-semibold mb-1">Welcome to Hotel Management</h2>
+          <p className="text-[11px] text-muted-foreground">
+            Comprehensive system for booking management, payments & operations.
           </p>
         </div>
       </main>
