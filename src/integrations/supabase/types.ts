@@ -1672,26 +1672,26 @@ export type Database = {
           },
         ]
       }
-      user_module_assignments: {
+      user_menu_permissions: {
         Row: {
           assigned_by: string | null
           created_at: string | null
           id: string
-          module: Database["public"]["Enums"]["app_module"]
+          menu_key: string
           user_id: string
         }
         Insert: {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
-          module: Database["public"]["Enums"]["app_module"]
+          menu_key: string
           user_id: string
         }
         Update: {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
-          module?: Database["public"]["Enums"]["app_module"]
+          menu_key?: string
           user_id?: string
         }
         Relationships: []
@@ -1855,11 +1855,8 @@ export type Database = {
         Returns: boolean
       }
       get_email_by_username: { Args: { _username: string }; Returns: string }
-      has_module_access: {
-        Args: {
-          _module: Database["public"]["Enums"]["app_module"]
-          _user_id: string
-        }
+      has_menu_access: {
+        Args: { _menu_key: string; _user_id: string }
         Returns: boolean
       }
       has_role: {
@@ -1871,12 +1868,6 @@ export type Database = {
       }
     }
     Enums: {
-      app_module:
-        | "bookings"
-        | "payments"
-        | "restaurant"
-        | "hotels"
-        | "transporters"
       app_role: "admin" | "front_desk" | "housekeeping" | "manager" | "account"
       booking_status:
         | "enquiry"
@@ -2013,13 +2004,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_module: [
-        "bookings",
-        "payments",
-        "restaurant",
-        "hotels",
-        "transporters",
-      ],
       app_role: ["admin", "front_desk", "housekeeping", "manager", "account"],
       booking_status: [
         "enquiry",

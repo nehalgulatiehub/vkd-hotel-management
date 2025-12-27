@@ -1,18 +1,18 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { useAuth, AppRole, AppModule } from "@/hooks/useAuth";
+import { useAuth, AppRole } from "@/hooks/useAuth";
 import { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   roles: AppRole[];
-  modules: AppModule[];
+  menuPermissions: string[];
   loading: boolean;
   hasRole: (role: AppRole) => boolean;
   hasAnyRole: (roles: AppRole[]) => boolean;
   isAdmin: () => boolean;
   isAccount: () => boolean;
-  hasModuleAccess: (module: AppModule) => boolean;
+  hasMenuAccess: (menuKey: string) => boolean;
   canApprovePayment: (paymentMode: string) => boolean;
   refreshPermissions: () => Promise<void>;
 }
