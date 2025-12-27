@@ -3,13 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "front_desk" | "housekeeping" | "manager" | "account";
-export type AppModule = "bookings" | "payments" | "restaurant" | "hotels" | "transporters";
 
 interface AuthState {
   user: User | null;
   session: Session | null;
   roles: AppRole[];
-  modules: AppModule[];
+  menuPermissions: string[];
   loading: boolean;
 }
 
@@ -18,7 +17,7 @@ export function useAuth() {
     user: null,
     session: null,
     roles: [],
-    modules: [],
+    menuPermissions: [],
     loading: true,
   });
 
@@ -31,19 +30,18 @@ export function useAuth() {
 
     const roles = (rolesData?.map((r) => r.role as AppRole) || []);
 
-    // Fetch module assignments
-    const { data: modulesData } = await supabase
-      .from("user_module_assignments")
-      .select("module")
+    // Fetch menu permissions
+    const { data: menuData } = await supabase
+      .from("user_menu_permissions")
+      .select("menu_key")
       .eq("user_id", userId);
 
-    const modules = (modulesData?.map((m) => m.module as AppModule) || []);
+    const menuPermissions = (menuData?.map((m) => m.menu_key) || []);
 
-    return { roles, modules };
+    return { roles, menuPermissions };
   }, []);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setAuthState((prev) => ({
@@ -52,14 +50,13 @@ export function useAuth() {
           user: session?.user ?? null,
         }));
 
-        // Defer Supabase calls with setTimeout
         if (session?.user) {
           setTimeout(async () => {
-            const { roles, modules } = await fetchUserPermissions(session.user.id);
+            const { roles, menuPermissions } = await fetchUserPermissions(session.user.id);
             setAuthState((prev) => ({
               ...prev,
               roles,
-              modules,
+              menuPermissions,
               loading: false,
             }));
           }, 0);
@@ -67,22 +64,21 @@ export function useAuth() {
           setAuthState((prev) => ({
             ...prev,
             roles: [],
-            modules: [],
+            menuPermissions: [],
             loading: false,
           }));
         }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        const { roles, modules } = await fetchUserPermissions(session.user.id);
+        const { roles, menuPermissions } = await fetchUserPermissions(session.user.id);
         setAuthState({
           session,
           user: session.user,
           roles,
-          modules,
+          menuPermissions,
           loading: false,
         });
       } else {
@@ -113,15 +109,15 @@ export function useAuth() {
     [authState.roles]
   );
 
-  const hasModuleAccess = useCallback(
-    (module: AppModule) => {
-      // Admin and Account have access to all modules
+  const hasMenuAccess = useCallback(
+    (menuKey: string) => {
+      // Admin and Account have access to all menus
       if (authState.roles.includes("admin") || authState.roles.includes("account")) {
         return true;
       }
-      return authState.modules.includes(module);
+      return authState.menuPermissions.includes(menuKey);
     },
-    [authState.roles, authState.modules]
+    [authState.roles, authState.menuPermissions]
   );
 
   const canApprovePayment = useCallback(
@@ -135,8 +131,8 @@ export function useAuth() {
 
   const refreshPermissions = useCallback(async () => {
     if (authState.user) {
-      const { roles, modules } = await fetchUserPermissions(authState.user.id);
-      setAuthState((prev) => ({ ...prev, roles, modules }));
+      const { roles, menuPermissions } = await fetchUserPermissions(authState.user.id);
+      setAuthState((prev) => ({ ...prev, roles, menuPermissions }));
     }
   }, [authState.user, fetchUserPermissions]);
 
@@ -146,7 +142,7 @@ export function useAuth() {
     hasAnyRole,
     isAdmin,
     isAccount,
-    hasModuleAccess,
+    hasMenuAccess,
     canApprovePayment,
     refreshPermissions,
   };
