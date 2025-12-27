@@ -146,6 +146,9 @@ export default function PaymentApprovals() {
       return;
     }
 
+    // Optimistically remove the payment from the list immediately
+    setPayments(prev => prev.filter(p => !(p.id === payment.id && p.type === payment.type)));
+
     try {
       const updateData = {
         approval_status: status,
@@ -182,10 +185,11 @@ export default function PaymentApprovals() {
       if (error) throw error;
 
       toast.success(`Payment ${status} successfully`);
-      fetchPayments();
     } catch (error) {
       console.error("Error updating payment:", error);
       toast.error("Failed to update payment status");
+      // Refetch to restore the payment if the update failed
+      fetchPayments();
     }
   };
 
