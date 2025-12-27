@@ -10,10 +10,12 @@ import { Hotel } from "lucide-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [loginIdentifier, setLoginIdentifier] = useState(""); // Can be email or username
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -33,14 +35,45 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        let emailToUse = loginIdentifier;
+        
+        // Check if loginIdentifier is not an email (username login)
+        if (!loginIdentifier.includes("@")) {
+          // Get email by username using the database function
+          const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
+            _username: loginIdentifier
+          });
+          
+          if (lookupError || !data) {
+            throw new Error("Username not found");
+          }
+          emailToUse = data;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: emailToUse,
           password,
         });
         if (error) throw error;
         toast.success("Welcome back!");
         navigate("/dashboard");
       } else {
+        // Validate username
+        if (!username.trim()) {
+          throw new Error("Username is required");
+        }
+        
+        // Check if username already exists
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('username')
+          .ilike('username', username)
+          .maybeSingle();
+        
+        if (existingUser) {
+          throw new Error("Username already taken");
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -48,6 +81,7 @@ export default function Auth() {
             data: {
               first_name: firstName,
               last_name: lastName,
+              username: username,
             },
             emailRedirectTo: `${window.location.origin}/dashboard`,
           },
@@ -79,40 +113,66 @@ export default function Auth() {
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
-              <div className="grid grid-cols-2 gap-4">
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required={!isLogin}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required={!isLogin}
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="username">Username</Label>
                   <Input
-                    id="firstName"
+                    id="username"
                     type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Choose a username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                     required={!isLogin}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="lastName"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required={!isLogin}
                   />
                 </div>
+              </>
+            )}
+            {isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="loginIdentifier">Username or Email</Label>
+                <Input
+                  id="loginIdentifier"
+                  type="text"
+                  placeholder="Enter username or email"
+                  value={loginIdentifier}
+                  onChange={(e) => setLoginIdentifier(e.target.value)}
+                  required
+                />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
