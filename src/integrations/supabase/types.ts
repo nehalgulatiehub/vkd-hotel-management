@@ -1091,6 +1091,7 @@ export type Database = {
           last_name: string | null
           phone: string | null
           updated_at: string | null
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1100,6 +1101,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1109,6 +1111,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -1851,6 +1854,7 @@ export type Database = {
         Args: { _payment_mode: string; _user_id: string }
         Returns: boolean
       }
+      get_email_by_username: { Args: { _username: string }; Returns: string }
       has_module_access: {
         Args: {
           _module: Database["public"]["Enums"]["app_module"]

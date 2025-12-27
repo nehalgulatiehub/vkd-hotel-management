@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserPlus, Shield, Settings2 } from "lucide-react";
+import { UserPlus, Shield, Settings2, Pencil } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 type AppRole = "admin" | "front_desk" | "housekeeping" | "manager" | "account";
@@ -21,6 +22,7 @@ interface UserWithRoles {
   email: string;
   first_name: string | null;
   last_name: string | null;
+  username: string | null;
   roles: AppRole[];
   modules: AppModule[];
 }
@@ -48,8 +50,10 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
+  const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AppRole | "">("");
   const [selectedModules, setSelectedModules] = useState<AppModule[]>([]);
+  const [newUsername, setNewUsername] = useState("");
 
   const canManage = isAdmin() || isAccount();
 
@@ -60,33 +64,30 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name");
+        .select("id, first_name, last_name, username");
 
       if (profilesError) throw profilesError;
 
-      // Fetch all roles
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
 
       if (rolesError) throw rolesError;
 
-      // Fetch all module assignments
       const { data: modulesData, error: modulesError } = await supabase
         .from("user_module_assignments")
         .select("user_id, module");
 
       if (modulesError) throw modulesError;
 
-      // Combine data
       const usersWithRoles: UserWithRoles[] = (profiles || []).map((profile) => ({
         id: profile.id,
-        email: "", // We don't have email in profiles, just display name
+        email: "",
         first_name: profile.first_name,
         last_name: profile.last_name,
+        username: profile.username,
         roles: (rolesData || [])
           .filter((r) => r.user_id === profile.id)
           .map((r) => r.role as AppRole),
@@ -154,13 +155,11 @@ export default function UserManagement() {
     if (!selectedUser) return;
 
     try {
-      // Delete existing module assignments
       await supabase
         .from("user_module_assignments")
         .delete()
         .eq("user_id", selectedUser.id);
 
-      // Insert new assignments
       if (selectedModules.length > 0) {
         const { error } = await supabase.from("user_module_assignments").insert(
           selectedModules.map((module) => ({
@@ -181,10 +180,44 @@ export default function UserManagement() {
     }
   };
 
+  const handleUpdateUsername = async () => {
+    if (!selectedUser || !newUsername.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username: newUsername.toLowerCase().replace(/[^a-z0-9_]/g, '') })
+        .eq("id", selectedUser.id);
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Username already taken");
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      toast.success("Username updated successfully");
+      setIsUsernameDialogOpen(false);
+      setNewUsername("");
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating username:", error);
+      toast.error("Failed to update username");
+    }
+  };
+
   const openModuleDialog = (user: UserWithRoles) => {
     setSelectedUser(user);
     setSelectedModules(user.modules);
     setIsModuleDialogOpen(true);
+  };
+
+  const openUsernameDialog = (user: UserWithRoles) => {
+    setSelectedUser(user);
+    setNewUsername(user.username || "");
+    setIsUsernameDialogOpen(true);
   };
 
   const toggleModule = (module: AppModule) => {
@@ -229,9 +262,10 @@ export default function UserManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Modules</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[130px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -241,6 +275,15 @@ export default function UserManagement() {
                         {user.first_name || user.last_name
                           ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
                           : "Unknown User"}
+                      </TableCell>
+                      <TableCell>
+                        {user.username ? (
+                          <Badge variant="outline" className="text-xs font-mono">
+                            {user.username}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Not set</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -278,6 +321,16 @@ export default function UserManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openUsernameDialog(user)}
+                            title="Edit username"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+
                           <Dialog open={isRoleDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setIsRoleDialogOpen(open);
                             if (open) setSelectedUser(user);
@@ -357,6 +410,34 @@ export default function UserManagement() {
               ))}
               <Button onClick={handleSaveModules} className="w-full">
                 Save Modules
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Username Dialog */}
+        <Dialog open={isUsernameDialogOpen} onOpenChange={setIsUsernameDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Edit Username for {selectedUser?.first_name || "User"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  placeholder="Enter username"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Only lowercase letters, numbers, and underscores allowed
+                </p>
+              </div>
+              <Button onClick={handleUpdateUsername} disabled={!newUsername.trim()} className="w-full">
+                Save Username
               </Button>
             </div>
           </DialogContent>
