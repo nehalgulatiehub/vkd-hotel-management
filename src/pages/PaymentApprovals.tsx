@@ -126,7 +126,12 @@ export default function PaymentApprovals() {
         });
       });
 
-      setPayments(allPayments);
+      // Filter out cash payments for account users (they can't approve them)
+      const filteredPayments = isAccount() && !isAdmin()
+        ? allPayments.filter(p => p.payment_mode.toLowerCase() !== "cash")
+        : allPayments;
+
+      setPayments(filteredPayments);
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Failed to fetch payments");
