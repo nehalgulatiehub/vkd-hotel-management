@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileSpreadsheet, Printer, Search, Settings, Plus, Trash2, Save, List } from "lucide-react";
+import { FileSpreadsheet, Printer, Search, Settings, Plus, Trash2, Save, List, FileText } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import {
@@ -144,6 +144,25 @@ interface CompanySettings {
   terms_conditions: string | null;
 }
 
+interface InvoiceTemplate {
+  id: string;
+  template_name: string;
+  company_name: string;
+  sub_title: string | null;
+  address: string | null;
+  contact_no: string | null;
+  gstin: string | null;
+  pan_no: string | null;
+  hsn_code: string | null;
+  logo_url: string | null;
+  bank_name: string | null;
+  account_no: string | null;
+  ifsc_code: string | null;
+  branch_name: string | null;
+  terms_conditions: string | null;
+  is_default: boolean;
+}
+
 interface SavedInvoice {
   id: string;
   invoice_number: string;
@@ -171,6 +190,8 @@ export default function Billing() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
+  const [invoiceTemplates, setInvoiceTemplates] = useState<InvoiceTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [customerGstNo, setCustomerGstNo] = useState("");
   const [customerPanNo, setCustomerPanNo] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -191,6 +212,7 @@ export default function Billing() {
   useEffect(() => {
     fetchBookings();
     fetchCompanySettings();
+    fetchInvoiceTemplates();
     fetchSavedInvoices();
   }, []);
 
@@ -217,6 +239,52 @@ export default function Billing() {
       console.error("Failed to load company settings", error);
     } else if (data) {
       setCompanySettings(data);
+    }
+  };
+
+  const fetchInvoiceTemplates = async () => {
+    const { data, error } = await supabase
+      .from("invoice_templates")
+      .select("*")
+      .order("is_default", { ascending: false })
+      .order("template_name");
+    if (error) {
+      console.error("Failed to load invoice templates", error);
+    } else {
+      setInvoiceTemplates(data || []);
+      // Select default template if available
+      const defaultTemplate = data?.find(t => t.is_default);
+      if (defaultTemplate) {
+        setSelectedTemplateId(defaultTemplate.id);
+        applyTemplate(defaultTemplate);
+      }
+    }
+  };
+
+  const applyTemplate = (template: InvoiceTemplate) => {
+    setCompanySettings({
+      id: template.id,
+      company_name: template.company_name,
+      sub_title: template.sub_title,
+      address: template.address,
+      contact_no: template.contact_no,
+      gstin: template.gstin,
+      pan_no: template.pan_no,
+      hsn_code: template.hsn_code,
+      logo_url: template.logo_url,
+      bank_name: template.bank_name,
+      account_no: template.account_no,
+      ifsc_code: template.ifsc_code,
+      branch_name: template.branch_name,
+      terms_conditions: template.terms_conditions,
+    });
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const template = invoiceTemplates.find(t => t.id === templateId);
+    if (template) {
+      applyTemplate(template);
     }
   };
 
@@ -854,6 +922,10 @@ export default function Billing() {
               <List className="h-4 w-4 mr-2" />
               View All Invoices
             </Button>
+            <Button variant="outline" onClick={() => navigate('/invoice-templates')}>
+              <FileText className="h-4 w-4 mr-2" />
+              Templates
+            </Button>
             <Button variant="outline" onClick={() => navigate('/settings')}>
               <Settings className="h-4 w-4 mr-2" />
               Company Settings
@@ -911,6 +983,27 @@ export default function Billing() {
                   </div>
                 ))}
               </div>
+
+              <Separator />
+
+              {/* Template Selector */}
+              {invoiceTemplates.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium">Invoice Template</Label>
+                  <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Select template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {invoiceTemplates.map(template => (
+                        <SelectItem key={template.id} value={template.id} className="text-xs">
+                          {template.template_name} {template.is_default && '(Default)'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <Separator />
 

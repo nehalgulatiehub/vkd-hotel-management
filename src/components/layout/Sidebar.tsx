@@ -115,7 +115,15 @@ const menuItems = [
       { title: "Reports", url: "/restaurant/reports" },
     ]
   },
-  { title: "Billing / Invoice", url: "/billing", icon: Receipt },
+  {
+    title: "Billing",
+    icon: Receipt,
+    submenu: [
+      { title: "Create Invoice", url: "/billing" },
+      { title: "Saved Invoices", url: "/invoices" },
+      { title: "Invoice Templates", url: "/invoice-templates" },
+    ]
+  },
 ];
 
 export function AppSidebar() {

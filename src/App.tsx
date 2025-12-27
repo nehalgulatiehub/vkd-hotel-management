@@ -58,6 +58,7 @@ import RestaurantInvoice from "./pages/restaurant/RestaurantInvoice";
 import RestaurantReports from "./pages/restaurant/RestaurantReports";
 import Billing from "./pages/Billing";
 import InvoiceList from "./pages/InvoiceList";
+import InvoiceTemplates from "./pages/InvoiceTemplates";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -429,6 +430,7 @@ const App = () => (
           <Route path="/restaurant/reports" element={<DashboardLayout><RestaurantReports /></DashboardLayout>} />
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
           <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
+          <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
