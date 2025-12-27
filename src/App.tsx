@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -59,15 +60,19 @@ import RestaurantReports from "./pages/restaurant/RestaurantReports";
 import Billing from "./pages/Billing";
 import InvoiceList from "./pages/InvoiceList";
 import InvoiceTemplates from "./pages/InvoiceTemplates";
+import UserManagement from "./pages/UserManagement";
+import PaymentApprovals from "./pages/PaymentApprovals";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route
@@ -431,9 +436,12 @@ const App = () => (
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
           <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
           <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
+          <Route path="/admin/users" element={<DashboardLayout><UserManagement /></DashboardLayout>} />
+          <Route path="/admin/approvals" element={<DashboardLayout><PaymentApprovals /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown, Upload, UtensilsCrossed, Receipt
+  ChevronDown, Upload, UtensilsCrossed, Receipt, Shield
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
@@ -122,6 +122,14 @@ const menuItems = [
       { title: "Create Invoice", url: "/billing" },
       { title: "Saved Invoices", url: "/invoices" },
       { title: "Invoice Templates", url: "/invoice-templates" },
+    ]
+  },
+  {
+    title: "Admin",
+    icon: Shield,
+    submenu: [
+      { title: "User Management", url: "/admin/users" },
+      { title: "Payment Approvals", url: "/admin/approvals" },
     ]
   },
 ];

@@ -1012,6 +1012,9 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           booking_id: string | null
           city_id: string | null
           created_at: string | null
@@ -1025,6 +1028,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           booking_id?: string | null
           city_id?: string | null
           created_at?: string | null
@@ -1038,6 +1044,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           booking_id?: string | null
           city_id?: string | null
           created_at?: string | null
@@ -1105,6 +1114,9 @@ export type Database = {
       }
       refunds: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           booking_id: string | null
           cancellation_id: string | null
           created_at: string | null
@@ -1117,6 +1129,9 @@ export type Database = {
           refund_mode: string | null
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           booking_id?: string | null
           cancellation_id?: string | null
           created_at?: string | null
@@ -1129,6 +1144,9 @@ export type Database = {
           refund_mode?: string | null
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           booking_id?: string | null
           cancellation_id?: string | null
           created_at?: string | null
@@ -1393,6 +1411,9 @@ export type Database = {
       restaurant_payments: {
         Row: {
           amount: number
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           created_at: string | null
           created_by: string | null
           id: string
@@ -1404,6 +1425,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
@@ -1415,6 +1439,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
@@ -1642,6 +1669,30 @@ export type Database = {
           },
         ]
       }
+      user_module_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string | null
+          id: string
+          module: Database["public"]["Enums"]["app_module"]
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string | null
+          id?: string
+          module: Database["public"]["Enums"]["app_module"]
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string | null
+          id?: string
+          module?: Database["public"]["Enums"]["app_module"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1796,6 +1847,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_approve_payment: {
+        Args: { _payment_mode: string; _user_id: string }
+        Returns: boolean
+      }
+      has_module_access: {
+        Args: {
+          _module: Database["public"]["Enums"]["app_module"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1805,7 +1867,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "front_desk" | "housekeeping" | "manager"
+      app_module:
+        | "bookings"
+        | "payments"
+        | "restaurant"
+        | "hotels"
+        | "transporters"
+      app_role: "admin" | "front_desk" | "housekeeping" | "manager" | "account"
       booking_status:
         | "enquiry"
         | "hold"
@@ -1941,7 +2009,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "front_desk", "housekeeping", "manager"],
+      app_module: [
+        "bookings",
+        "payments",
+        "restaurant",
+        "hotels",
+        "transporters",
+      ],
+      app_role: ["admin", "front_desk", "housekeeping", "manager", "account"],
       booking_status: [
         "enquiry",
         "hold",
