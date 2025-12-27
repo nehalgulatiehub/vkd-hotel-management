@@ -138,7 +138,7 @@ const MENU_ITEMS = [
 ];
 
 export default function UserManagement() {
-  const { isAdmin, isAccount } = useAuthContext();
+  const { isAdmin, isAccount, loading: authLoading } = useAuthContext();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
@@ -161,8 +161,10 @@ export default function UserManagement() {
   const canManage = isAdmin() || isAccount();
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (!authLoading && canManage) {
+      fetchUsers();
+    }
+  }, [authLoading, canManage]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -390,6 +392,21 @@ export default function UserManagement() {
       setSelectedMenuKeys((prev) => [...new Set([...prev, ...categoryKeys])]);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen">
+        <Header title="User Management" />
+        <main className="p-4">
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Loading...
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   if (!canManage) {
     return (

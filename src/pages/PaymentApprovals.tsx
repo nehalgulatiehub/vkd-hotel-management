@@ -24,7 +24,7 @@ interface PendingPayment {
 }
 
 export default function PaymentApprovals() {
-  const { isAdmin, isAccount, canApprovePayment, user } = useAuthContext();
+  const { isAdmin, isAccount, canApprovePayment, user, loading: authLoading } = useAuthContext();
   const [payments, setPayments] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
@@ -32,10 +32,10 @@ export default function PaymentApprovals() {
   const canView = isAdmin() || isAccount();
 
   useEffect(() => {
-    if (canView) {
+    if (!authLoading && canView) {
       fetchPayments();
     }
-  }, [canView, activeTab]);
+  }, [authLoading, canView, activeTab]);
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -207,6 +207,21 @@ export default function PaymentApprovals() {
         return <Badge variant="outline">{type}</Badge>;
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen">
+        <Header title="Payment Approvals" />
+        <main className="p-4">
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Loading...
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   if (!canView) {
     return (
