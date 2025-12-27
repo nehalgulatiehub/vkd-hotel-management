@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,17 @@ export default function BookingPayments() {
       .select("*, bookings(booking_number, customer_name)")
       .order("payment_date", { ascending: false });
     setPayments(data || []);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500">Approved</Badge>;
+      case "rejected":
+        return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return <Badge variant="secondary">Pending</Badge>;
+    }
   };
 
   return (
@@ -92,6 +104,7 @@ export default function BookingPayments() {
                     {!bookingId && <th className="p-3 text-left">Customer</th>}
                     <th className="p-3 text-left">Amount</th>
                     <th className="p-3 text-left">Mode</th>
+                    <th className="p-3 text-left">Status</th>
                     <th className="p-3 text-left">Reference</th>
                     <th className="p-3 text-left">Notes</th>
                   </tr>
@@ -99,7 +112,7 @@ export default function BookingPayments() {
                 <tbody>
                   {payments.length === 0 ? (
                     <tr>
-                      <td colSpan={bookingId ? 6 : 8} className="p-6 text-center text-muted-foreground">
+                      <td colSpan={bookingId ? 7 : 9} className="p-6 text-center text-muted-foreground">
                         No payments found
                       </td>
                     </tr>
@@ -112,6 +125,7 @@ export default function BookingPayments() {
                         {!bookingId && <td className="p-3">{payment.bookings?.customer_name}</td>}
                         <td className="p-3">Rs. {payment.amount?.toFixed(2) || "0.00"}/-</td>
                         <td className="p-3 capitalize">{payment.payment_mode || "-"}</td>
+                        <td className="p-3">{getStatusBadge(payment.approval_status || "pending")}</td>
                         <td className="p-3">{payment.reference_number || "-"}</td>
                         <td className="p-3">{payment.notes || "-"}</td>
                       </tr>

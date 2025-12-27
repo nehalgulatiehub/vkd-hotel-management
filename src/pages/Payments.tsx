@@ -84,6 +84,7 @@ export default function Payments() {
                     <th className="text-left p-4 font-semibold">Contact</th>
                     <th className="text-left p-4 font-semibold">Amount</th>
                     <th className="text-left p-4 font-semibold">Mode</th>
+                    <th className="text-left p-4 font-semibold">Status</th>
                     <th className="text-left p-4 font-semibold">Reference</th>
                     <th className="text-left p-4 font-semibold">Notes</th>
                   </tr>
@@ -102,6 +103,20 @@ export default function Payments() {
                       <td className="p-4">
                         <Badge variant="outline" className="capitalize">
                           {payment.payment_mode || "N/A"}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <Badge 
+                          variant={
+                            payment.approval_status === "approved" ? "default" : 
+                            payment.approval_status === "rejected" ? "destructive" : 
+                            "secondary"
+                          }
+                          className={
+                            payment.approval_status === "approved" ? "bg-green-500" : ""
+                          }
+                        >
+                          {payment.approval_status || "pending"}
                         </Badge>
                       </td>
                       <td className="p-4">{payment.reference_number || "-"}</td>
