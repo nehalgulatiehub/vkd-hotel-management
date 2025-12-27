@@ -987,14 +987,14 @@ export default function Billing() {
               <Separator />
 
               {/* Template Selector */}
-              {invoiceTemplates.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium">Invoice Template</Label>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Invoice Template</Label>
+                {invoiceTemplates.length > 0 ? (
                   <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="h-8 text-xs bg-background">
                       <SelectValue placeholder="Select template" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border z-50">
                       {invoiceTemplates.map(template => (
                         <SelectItem key={template.id} value={template.id} className="text-xs">
                           {template.template_name} {template.is_default && '(Default)'}
@@ -1002,8 +1002,20 @@ export default function Billing() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-              )}
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    <p className="mb-1">No templates saved</p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-7 text-[10px]"
+                      onClick={() => navigate('/invoice-templates')}
+                    >
+                      Create Template
+                    </Button>
+                  </div>
+                )}
+              </div>
 
               <Separator />
 
