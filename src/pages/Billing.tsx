@@ -315,6 +315,32 @@ export default function Billing() {
     }
   };
 
+  const generateNextInvoiceNumber = async () => {
+    const year = new Date().getFullYear();
+    const nextYear = (year + 1).toString().slice(-2);
+    const prefix = `INV/${year}-${nextYear}/`;
+    
+    // Get the latest invoice number for this year
+    const { data, error } = await supabase
+      .from("billing_invoices")
+      .select("invoice_number")
+      .like("invoice_number", `${prefix}%`)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    
+    let nextNumber = 1;
+    if (!error && data && data.length > 0) {
+      const lastInvoice = data[0].invoice_number;
+      const lastNumberStr = lastInvoice.replace(prefix, "");
+      const lastNumber = parseInt(lastNumberStr, 10);
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+    
+    return `${prefix}${nextNumber.toString().padStart(4, '0')}`;
+  };
+
   const fetchBookingDetails = async () => {
     if (!selectedBookingId) return;
     const { data: bookingData, error: bookingError } = await supabase
@@ -327,9 +353,12 @@ export default function Billing() {
       return;
     }
     setSelectedBooking(bookingData);
-    const year = new Date().getFullYear();
-    const nextYear = (year + 1).toString().slice(-2);
-    setInvoiceNumber(`INV/${year}-${nextYear}/${bookingData.booking_number}`);
+    
+    // Generate sequential invoice number only for new invoices
+    if (!currentInvoiceId) {
+      const newInvoiceNumber = await generateNextInvoiceNumber();
+      setInvoiceNumber(newInvoiceNumber);
+    }
     
     const [hotelRes, volvoRes, safariRes, vehicleRes, restaurantRes] = await Promise.all([
       supabase.from("hotel_bookings").select("*").eq("booking_id", selectedBookingId),
