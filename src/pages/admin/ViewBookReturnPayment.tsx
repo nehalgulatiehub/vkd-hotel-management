@@ -12,6 +12,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { RotateCcw } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface RefundWithDetails {
   id: string;
@@ -34,11 +35,28 @@ export default function ViewBookReturnPayment() {
   const [refunds, setRefunds] = useState<RefundWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchBooking, setSearchBooking] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredRefunds = refunds.filter(r => {
-    return !searchBooking || 
+    const matchesSearch = !searchBooking || 
       r.booking?.booking_number?.toLowerCase().includes(searchBooking.toLowerCase()) ||
       r.booking?.customer_name?.toLowerCase().includes(searchBooking.toLowerCase());
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const refundDate = r.refund_date ? new Date(r.refund_date) : null;
+      if (refundDate) {
+        if (appliedFromDate) matchesDate = matchesDate && refundDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && refundDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredRefunds, { itemsPerPage: 10 });
@@ -71,6 +89,18 @@ export default function ViewBookReturnPayment() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="View Book Return Payment" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -83,6 +113,15 @@ export default function ViewBookReturnPayment() {
     <div className="min-h-screen">
       <Header title="View Book Return Payment" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">

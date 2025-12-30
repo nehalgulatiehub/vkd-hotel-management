@@ -13,6 +13,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { Wallet } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface PaymentWithDetails {
   id: string;
@@ -36,6 +37,10 @@ export default function ViewPaidPayment() {
   const [loading, setLoading] = useState(true);
   const [searchCustomer, setSearchCustomer] = useState("");
   const [filterPaymentMode, setFilterPaymentMode] = useState<string>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredPayments = payments.filter(payment => {
     const matchesCustomer = !searchCustomer || 
@@ -43,7 +48,19 @@ export default function ViewPaidPayment() {
       payment.booking?.booking_number?.toLowerCase().includes(searchCustomer.toLowerCase());
     const matchesMode = filterPaymentMode === "all" || 
       payment.payment_mode?.toLowerCase() === filterPaymentMode.toLowerCase();
-    return matchesCustomer && matchesMode;
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const paymentDate = payment.payment_date ? new Date(payment.payment_date) : null;
+      if (paymentDate) {
+        if (appliedFromDate) matchesDate = matchesDate && paymentDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && paymentDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesCustomer && matchesMode && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments, { itemsPerPage: 10 });
@@ -77,6 +94,18 @@ export default function ViewPaidPayment() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="View Paid Payment" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -89,6 +118,15 @@ export default function ViewPaidPayment() {
     <div className="min-h-screen">
       <Header title="View Paid Payment" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">

@@ -5,12 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { List, Eye } from "lucide-react";
+import { List } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface BookingWithReference {
   id: string;
@@ -25,6 +25,7 @@ interface BookingWithReference {
   paid_amount: number | null;
   due_amount: number | null;
   booking_type: string | null;
+  created_at: string | null;
   agent?: { name: string; company_name: string | null } | null;
   created_by_profile?: { username: string | null; first_name: string | null } | null;
 }
@@ -35,11 +36,28 @@ export default function ViewReferenceList() {
   const [bookings, setBookings] = useState<BookingWithReference[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchReference, setSearchReference] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredBookings = bookings.filter(booking => {
-    return !searchReference || 
+    const matchesSearch = !searchReference || 
       booking.reference?.toLowerCase().includes(searchReference.toLowerCase()) ||
       booking.booking_number?.toLowerCase().includes(searchReference.toLowerCase());
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const checkInDate = booking.check_in_date ? new Date(booking.check_in_date) : null;
+      if (checkInDate) {
+        if (appliedFromDate) matchesDate = matchesDate && checkInDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && checkInDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings, { itemsPerPage: 10 });
@@ -57,7 +75,7 @@ export default function ViewReferenceList() {
         .from("bookings")
         .select(`
           id, booking_number, reference, reference_email, customer_name, contact_no, 
-          check_in_date, check_out_date, total_amount, paid_amount, due_amount, booking_type, created_by,
+          check_in_date, check_out_date, total_amount, paid_amount, due_amount, booking_type, created_by, created_at,
           agent:agents(name, company_name)
         `)
         .not("reference", "is", null)
@@ -65,7 +83,6 @@ export default function ViewReferenceList() {
 
       if (error) throw error;
 
-      // Fetch created_by profiles
       const creatorIds = [...new Set((data || []).map(b => b.created_by).filter(Boolean))];
       let profilesMap: Record<string, any> = {};
       
@@ -91,6 +108,18 @@ export default function ViewReferenceList() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="View Reference List" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -103,6 +132,15 @@ export default function ViewReferenceList() {
     <div className="min-h-screen">
       <Header title="View Reference List" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">

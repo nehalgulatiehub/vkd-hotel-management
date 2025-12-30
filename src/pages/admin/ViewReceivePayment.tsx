@@ -13,6 +13,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { ArrowDownToLine } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface PaymentWithDetails {
   id: string;
@@ -38,6 +39,10 @@ export default function ViewReceivePayment() {
   const [loading, setLoading] = useState(true);
   const [searchCustomer, setSearchCustomer] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredPayments = payments.filter(payment => {
     const matchesCustomer = !searchCustomer || 
@@ -45,7 +50,19 @@ export default function ViewReceivePayment() {
       payment.booking?.booking_number?.toLowerCase().includes(searchCustomer.toLowerCase());
     const matchesStatus = filterStatus === "all" || 
       payment.approval_status?.toLowerCase() === filterStatus.toLowerCase();
-    return matchesCustomer && matchesStatus;
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const createdDate = payment.created_at ? new Date(payment.created_at) : null;
+      if (createdDate) {
+        if (appliedFromDate) matchesDate = matchesDate && createdDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && createdDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesCustomer && matchesStatus && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments, { itemsPerPage: 10 });
@@ -71,7 +88,6 @@ export default function ViewReceivePayment() {
 
       if (error) throw error;
 
-      // Fetch created_by profiles
       const creatorIds = [...new Set((data || []).map(p => p.created_by).filter(Boolean))];
       let profilesMap: Record<string, any> = {};
       
@@ -97,6 +113,18 @@ export default function ViewReceivePayment() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="View Receive Payment" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -109,6 +137,15 @@ export default function ViewReceivePayment() {
     <div className="min-h-screen">
       <Header title="View Receive Payment" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">

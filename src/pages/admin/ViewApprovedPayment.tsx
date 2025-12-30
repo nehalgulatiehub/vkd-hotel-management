@@ -10,9 +10,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { CheckCircle, Eye } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface PaymentWithDetails {
   id: string;
@@ -44,13 +45,29 @@ export default function ViewApprovedPayment() {
   const [loading, setLoading] = useState(true);
   const [searchCustomer, setSearchCustomer] = useState("");
   const [filterPaymentMode, setFilterPaymentMode] = useState<string>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredPayments = payments.filter(payment => {
     const matchesCustomer = !searchCustomer || 
       payment.booking?.customer_name?.toLowerCase().includes(searchCustomer.toLowerCase());
     const matchesMode = filterPaymentMode === "all" || 
       payment.payment_mode?.toLowerCase() === filterPaymentMode.toLowerCase();
-    return matchesCustomer && matchesMode;
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const approvedDate = payment.approved_at ? new Date(payment.approved_at) : null;
+      if (approvedDate) {
+        if (appliedFromDate) matchesDate = matchesDate && approvedDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && approvedDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesCustomer && matchesMode && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments, { itemsPerPage: 10 });
@@ -75,7 +92,6 @@ export default function ViewApprovedPayment() {
 
       if (error) throw error;
 
-      // Fetch approved_by profiles
       const approverIds = [...new Set((data || []).map(p => p.approved_by).filter(Boolean))];
       let profilesMap: Record<string, any> = {};
       
@@ -101,6 +117,18 @@ export default function ViewApprovedPayment() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="View Approved Payment" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -113,6 +141,15 @@ export default function ViewApprovedPayment() {
     <div className="min-h-screen">
       <Header title="View Approved Payment" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -121,7 +158,6 @@ export default function ViewApprovedPayment() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Filters */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <Input
                 placeholder="Search by customer name..."

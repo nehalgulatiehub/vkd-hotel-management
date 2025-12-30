@@ -11,6 +11,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { Users } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface BookingWithPax {
   id: string;
@@ -29,11 +30,28 @@ export default function ViewTotalPax() {
   const [bookings, setBookings] = useState<BookingWithPax[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchCustomer, setSearchCustomer] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredBookings = bookings.filter(booking => {
-    return !searchCustomer || 
+    const matchesSearch = !searchCustomer || 
       booking.customer_name?.toLowerCase().includes(searchCustomer.toLowerCase()) ||
       booking.booking_number?.toLowerCase().includes(searchCustomer.toLowerCase());
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const checkInDate = booking.check_in_date ? new Date(booking.check_in_date) : null;
+      if (checkInDate) {
+        if (appliedFromDate) matchesDate = matchesDate && checkInDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && checkInDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings, { itemsPerPage: 10 });
@@ -68,6 +86,18 @@ export default function ViewTotalPax() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="Total Pax" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -80,6 +110,15 @@ export default function ViewTotalPax() {
     <div className="min-h-screen">
       <Header title="Total Pax" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
