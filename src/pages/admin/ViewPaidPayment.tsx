@@ -46,7 +46,7 @@ export default function ViewPaidPayment() {
     return matchesCustomer && matchesMode;
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredPayments, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments, { itemsPerPage: 10 });
 
   const totalPaid = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
@@ -123,7 +123,7 @@ export default function ViewPaidPayment() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No paid payments found.</div>
             ) : (
               <>
@@ -142,7 +142,7 @@ export default function ViewPaidPayment() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((payment, index) => (
+                    {paginatedItems.map((payment, index) => (
                       <TableRow key={payment.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell className="font-medium">{payment.booking?.booking_number || "N/A"}</TableCell>
@@ -161,7 +161,7 @@ export default function ViewPaidPayment() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>

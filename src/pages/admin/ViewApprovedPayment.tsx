@@ -53,7 +53,7 @@ export default function ViewApprovedPayment() {
     return matchesCustomer && matchesMode;
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredPayments, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments, { itemsPerPage: 10 });
 
   useEffect(() => {
     if (!authLoading && isAdmin()) {
@@ -145,7 +145,7 @@ export default function ViewApprovedPayment() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No approved payments found.</div>
             ) : (
               <>
@@ -165,7 +165,7 @@ export default function ViewApprovedPayment() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((payment, index) => (
+                    {paginatedItems.map((payment, index) => (
                       <TableRow key={payment.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell>
@@ -216,7 +216,7 @@ export default function ViewApprovedPayment() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>

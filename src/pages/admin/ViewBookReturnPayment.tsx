@@ -41,7 +41,7 @@ export default function ViewBookReturnPayment() {
       r.booking?.customer_name?.toLowerCase().includes(searchBooking.toLowerCase());
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredRefunds, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredRefunds, { itemsPerPage: 10 });
 
   const totalRefunds = filteredRefunds.reduce((sum, r) => sum + (r.refund_amount || 0), 0);
 
@@ -104,7 +104,7 @@ export default function ViewBookReturnPayment() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No refunds found.</div>
             ) : (
               <>
@@ -124,7 +124,7 @@ export default function ViewBookReturnPayment() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((refund, index) => (
+                    {paginatedItems.map((refund, index) => (
                       <TableRow key={refund.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell className="font-medium">{refund.booking?.booking_number || "N/A"}</TableCell>
@@ -148,7 +148,7 @@ export default function ViewBookReturnPayment() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>

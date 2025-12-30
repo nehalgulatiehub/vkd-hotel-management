@@ -38,7 +38,7 @@ export default function ViewDueAmount() {
       booking.booking_number?.toLowerCase().includes(searchCustomer.toLowerCase());
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredBookings, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings, { itemsPerPage: 10 });
 
   const totalDue = filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0);
 
@@ -103,7 +103,7 @@ export default function ViewDueAmount() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No bookings with due amount found.</div>
             ) : (
               <>
@@ -121,7 +121,7 @@ export default function ViewDueAmount() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((booking, index) => (
+                    {paginatedItems.map((booking, index) => (
                       <TableRow key={booking.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell>
@@ -149,7 +149,7 @@ export default function ViewDueAmount() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>

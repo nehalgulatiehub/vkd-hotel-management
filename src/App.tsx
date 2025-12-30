@@ -62,6 +62,15 @@ import InvoiceList from "./pages/InvoiceList";
 import InvoiceTemplates from "./pages/InvoiceTemplates";
 import UserManagement from "./pages/UserManagement";
 import PaymentApprovals from "./pages/PaymentApprovals";
+import ViewPendingPayment from "./pages/admin/ViewPendingPayment";
+import ViewApprovedPayment from "./pages/admin/ViewApprovedPayment";
+import ViewReferenceList from "./pages/admin/ViewReferenceList";
+import ViewDueAmount from "./pages/admin/ViewDueAmount";
+import ViewTotalPax from "./pages/admin/ViewTotalPax";
+import ViewCancellationCharge from "./pages/admin/ViewCancellationCharge";
+import ViewBookReturnPayment from "./pages/admin/ViewBookReturnPayment";
+import ViewPaidPayment from "./pages/admin/ViewPaidPayment";
+import ViewReceivePayment from "./pages/admin/ViewReceivePayment";
 
 const queryClient = new QueryClient();
 
@@ -438,6 +447,15 @@ const App = () => (
           <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
           <Route path="/admin/users" element={<DashboardLayout><UserManagement /></DashboardLayout>} />
           <Route path="/admin/approvals" element={<DashboardLayout><PaymentApprovals /></DashboardLayout>} />
+          <Route path="/admin/pending-payments" element={<DashboardLayout><ViewPendingPayment /></DashboardLayout>} />
+          <Route path="/admin/approved-payments" element={<DashboardLayout><ViewApprovedPayment /></DashboardLayout>} />
+          <Route path="/admin/reference-list" element={<DashboardLayout><ViewReferenceList /></DashboardLayout>} />
+          <Route path="/admin/due-amount" element={<DashboardLayout><ViewDueAmount /></DashboardLayout>} />
+          <Route path="/admin/total-pax" element={<DashboardLayout><ViewTotalPax /></DashboardLayout>} />
+          <Route path="/admin/cancellation-charges" element={<DashboardLayout><ViewCancellationCharge /></DashboardLayout>} />
+          <Route path="/admin/book-return-payments" element={<DashboardLayout><ViewBookReturnPayment /></DashboardLayout>} />
+          <Route path="/admin/paid-payments" element={<DashboardLayout><ViewPaidPayment /></DashboardLayout>} />
+          <Route path="/admin/receive-payments" element={<DashboardLayout><ViewReceivePayment /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

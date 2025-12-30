@@ -147,6 +147,15 @@ const menuItems: MenuItem[] = [
     submenu: [
       { title: "User Management", url: "/admin/users" },
       { title: "Payment Approvals", url: "/admin/approvals" },
+      { title: "View Pending Payment", url: "/admin/pending-payments" },
+      { title: "View Approved Payment", url: "/admin/approved-payments" },
+      { title: "View Reference List", url: "/admin/reference-list" },
+      { title: "View Due Amount", url: "/admin/due-amount" },
+      { title: "View Total Pax", url: "/admin/total-pax" },
+      { title: "View Cancellation Charge", url: "/admin/cancellation-charges" },
+      { title: "View Book Return Payment", url: "/admin/book-return-payments" },
+      { title: "View Paid Payment", url: "/admin/paid-payments" },
+      { title: "View Receive Payment", url: "/admin/receive-payments" },
     ]
   },
 ];

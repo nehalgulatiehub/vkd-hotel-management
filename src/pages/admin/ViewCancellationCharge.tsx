@@ -40,7 +40,7 @@ export default function ViewCancellationCharge() {
       c.booking?.customer_name?.toLowerCase().includes(searchBooking.toLowerCase());
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredCancellations, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredCancellations, { itemsPerPage: 10 });
 
   const totalCharges = filteredCancellations.reduce((sum, c) => sum + (c.cancellation_charges || 0), 0);
 
@@ -103,7 +103,7 @@ export default function ViewCancellationCharge() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No cancellations found.</div>
             ) : (
               <>
@@ -122,7 +122,7 @@ export default function ViewCancellationCharge() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((cancellation, index) => (
+                    {paginatedItems.map((cancellation, index) => (
                       <TableRow key={cancellation.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell className="font-medium">{cancellation.booking?.booking_number || "N/A"}</TableCell>
@@ -141,7 +141,7 @@ export default function ViewCancellationCharge() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>
