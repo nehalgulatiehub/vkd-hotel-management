@@ -207,8 +207,8 @@ export default function ViewApprovedPayment() {
                             <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${payment.booking?.id}`)}>
                               View Booking
                             </Button>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs">
-                              View Payment
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${payment.booking?.id}`)}>
+                              View Payments
                             </Button>
                           </div>
                         </TableCell>

@@ -174,6 +174,9 @@ export default function ViewReferenceList() {
                             <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${booking.id}`)}>
                               View Booking
                             </Button>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${booking.id}`)}>
+                              View Payments
+                            </Button>
                             <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => window.print()}>
                               Print Booking
                             </Button>
