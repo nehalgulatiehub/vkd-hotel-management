@@ -12,6 +12,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { Ban } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface CancellationWithDetails {
   id: string;
@@ -33,11 +34,28 @@ export default function ViewCancellationCharge() {
   const [cancellations, setCancellations] = useState<CancellationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchBooking, setSearchBooking] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredCancellations = cancellations.filter(c => {
-    return !searchBooking || 
+    const matchesSearch = !searchBooking || 
       c.booking?.booking_number?.toLowerCase().includes(searchBooking.toLowerCase()) ||
       c.booking?.customer_name?.toLowerCase().includes(searchBooking.toLowerCase());
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const cancelDate = c.cancellation_date ? new Date(c.cancellation_date) : null;
+      if (cancelDate) {
+        if (appliedFromDate) matchesDate = matchesDate && cancelDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && cancelDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredCancellations, { itemsPerPage: 10 });
@@ -70,6 +88,18 @@ export default function ViewCancellationCharge() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="View Cancellation Charge" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -82,6 +112,15 @@ export default function ViewCancellationCharge() {
     <div className="min-h-screen">
       <Header title="View Cancellation Charge" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">

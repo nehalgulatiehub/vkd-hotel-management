@@ -11,6 +11,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { AlertCircle } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 
 interface BookingWithDue {
   id: string;
@@ -31,11 +32,28 @@ export default function ViewDueAmount() {
   const [bookings, setBookings] = useState<BookingWithDue[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchCustomer, setSearchCustomer] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   const filteredBookings = bookings.filter(booking => {
-    return !searchCustomer || 
+    const matchesSearch = !searchCustomer || 
       booking.customer_name?.toLowerCase().includes(searchCustomer.toLowerCase()) ||
       booking.booking_number?.toLowerCase().includes(searchCustomer.toLowerCase());
+    
+    let matchesDate = true;
+    if (appliedFromDate || appliedToDate) {
+      const checkInDate = booking.check_in_date ? new Date(booking.check_in_date) : null;
+      if (checkInDate) {
+        if (appliedFromDate) matchesDate = matchesDate && checkInDate >= new Date(appliedFromDate);
+        if (appliedToDate) matchesDate = matchesDate && checkInDate <= new Date(appliedToDate);
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings, { itemsPerPage: 10 });
@@ -70,6 +88,18 @@ export default function ViewDueAmount() {
     }
   };
 
+  const handleDateSearch = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const handleDateClear = () => {
+    setFromDate("");
+    setToDate("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen"><Header title="Due Amount" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
   }
@@ -82,6 +112,15 @@ export default function ViewDueAmount() {
     <div className="min-h-screen">
       <Header title="Due Amount" />
       <main className="p-4 space-y-4">
+        <DateRangeFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onSearch={handleDateSearch}
+          onClear={handleDateClear}
+        />
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
