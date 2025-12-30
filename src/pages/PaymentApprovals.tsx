@@ -481,15 +481,26 @@ export default function PaymentApprovals() {
                             <TableCell>
                               <div className="flex flex-col gap-1">
                                 {payment.booking_id && (
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    className="h-auto p-0 text-xs justify-start"
-                                    onClick={() => navigate(`/bookings/${payment.booking_id}`)}
-                                  >
-                                    <Eye className="h-3 w-3 mr-1" />
-                                    View Booking
-                                  </Button>
+                                  <>
+                                    <Button
+                                      variant="link"
+                                      size="sm"
+                                      className="h-auto p-0 text-xs justify-start"
+                                      onClick={() => navigate(`/bookings/${payment.booking_id}`)}
+                                    >
+                                      <Eye className="h-3 w-3 mr-1" />
+                                      View Booking
+                                    </Button>
+                                    <Button
+                                      variant="link"
+                                      size="sm"
+                                      className="h-auto p-0 text-xs justify-start text-blue-600"
+                                      onClick={() => navigate(`/payments/booking?id=${payment.booking_id}`)}
+                                    >
+                                      <Eye className="h-3 w-3 mr-1" />
+                                      View Payments
+                                    </Button>
+                                  </>
                                 )}
                                 {activeTab === "pending" && (
                                   <div className="flex gap-1">
