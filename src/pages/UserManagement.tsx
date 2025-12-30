@@ -85,6 +85,33 @@ const MENU_ITEMS = [
     ],
   },
   {
+    category: "Booking Manager",
+    items: [
+      { key: "booking_manager_reference", label: "View Reference List" },
+      { key: "booking_manager_view", label: "View Booking" },
+      { key: "booking_manager_pending_payment", label: "View Pending Payment" },
+      { key: "booking_manager_approved_payment", label: "View Approved Payment" },
+      { key: "booking_manager_due_amount", label: "Due Amount" },
+      { key: "booking_manager_total_pax", label: "Total Pax" },
+    ],
+  },
+  {
+    category: "Cancel Booking Manager",
+    items: [
+      { key: "cancel_booking_view", label: "View Cancel Booking" },
+      { key: "cancel_booking_return_payment", label: "View Book Return Payment" },
+      { key: "cancel_booking_charges", label: "View Cancellation Charge" },
+    ],
+  },
+  {
+    category: "Payment Manager",
+    items: [
+      { key: "payment_manager_refund", label: "View Refund Payment" },
+      { key: "payment_manager_paid", label: "View Paid Payment" },
+      { key: "payment_manager_receive", label: "View Receive Payment" },
+    ],
+  },
+  {
     category: "Payment & Financials",
     items: [
       { key: "payments_view", label: "View Payment" },
