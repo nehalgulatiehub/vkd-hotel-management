@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserPlus, Shield, Settings2, Pencil, Plus } from "lucide-react";
+import { UserPlus, Shield, Settings2, Pencil, Plus, Ban, CheckCircle } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -22,6 +22,7 @@ interface UserWithRoles {
   first_name: string | null;
   last_name: string | null;
   username: string | null;
+  is_active: boolean;
   roles: AppRole[];
   menuPermissions: string[];
 }
@@ -171,7 +172,7 @@ export default function UserManagement() {
     try {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, username");
+        .select("id, first_name, last_name, username, is_active");
 
       if (profilesError) throw profilesError;
 
@@ -192,6 +193,7 @@ export default function UserManagement() {
         first_name: profile.first_name,
         last_name: profile.last_name,
         username: profile.username,
+        is_active: profile.is_active !== false, // Default to true if null
         roles: (rolesData || [])
           .filter((r) => r.user_id === profile.id)
           .map((r) => r.role as AppRole),
@@ -364,6 +366,24 @@ export default function UserManagement() {
     }
   };
 
+  const handleToggleUserStatus = async (user: UserWithRoles) => {
+    const newStatus = !user.is_active;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_active: newStatus })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      toast.error("Failed to update user status");
+    }
+  };
+
   const openMenuDialog = (user: UserWithRoles) => {
     setSelectedUser(user);
     setSelectedMenuKeys(user.menuPermissions);
@@ -447,9 +467,10 @@ export default function UserManagement() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Username</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Menu Access</TableHead>
-                    <TableHead className="w-[130px]">Actions</TableHead>
+                    <TableHead className="w-[160px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -468,6 +489,14 @@ export default function UserManagement() {
                         ) : (
                           <span className="text-muted-foreground text-sm">Not set</span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={user.is_active ? "default" : "destructive"}
+                          className="text-xs"
+                        >
+                          {user.is_active ? "Active" : "Blocked"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -559,6 +588,18 @@ export default function UserManagement() {
                           >
                             <Settings2 className="h-3 w-3" />
                           </Button>
+
+                          {isAdmin() && (
+                            <Button
+                              variant={user.is_active ? "destructive" : "default"}
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => handleToggleUserStatus(user)}
+                              title={user.is_active ? "Block user" : "Activate user"}
+                            >
+                              {user.is_active ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
