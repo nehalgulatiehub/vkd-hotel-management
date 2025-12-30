@@ -36,7 +36,7 @@ export default function ViewTotalPax() {
       booking.booking_number?.toLowerCase().includes(searchCustomer.toLowerCase());
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredBookings, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings, { itemsPerPage: 10 });
 
   const totalAdults = filteredBookings.reduce((sum, b) => sum + (b.adults || 0), 0);
   const totalChildren = filteredBookings.reduce((sum, b) => sum + (b.children || 0), 0);
@@ -119,7 +119,7 @@ export default function ViewTotalPax() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No bookings found.</div>
             ) : (
               <>
@@ -139,7 +139,7 @@ export default function ViewTotalPax() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((booking, index) => (
+                    {paginatedItems.map((booking, index) => (
                       <TableRow key={booking.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell className="font-medium">{booking.booking_number}</TableCell>
@@ -159,7 +159,7 @@ export default function ViewTotalPax() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>

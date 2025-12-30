@@ -42,7 +42,7 @@ export default function ViewReferenceList() {
       booking.booking_number?.toLowerCase().includes(searchReference.toLowerCase());
   });
 
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination(filteredBookings, 10);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings, { itemsPerPage: 10 });
 
   useEffect(() => {
     if (!authLoading && isAdmin()) {
@@ -121,7 +121,7 @@ export default function ViewReferenceList() {
 
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedData.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No bookings with references found.</div>
             ) : (
               <>
@@ -139,7 +139,7 @@ export default function ViewReferenceList() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((booking, index) => (
+                    {paginatedItems.map((booking, index) => (
                       <TableRow key={booking.id}>
                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
                         <TableCell>
@@ -183,7 +183,7 @@ export default function ViewReferenceList() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
               </>
             )}
           </CardContent>
