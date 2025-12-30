@@ -133,9 +133,14 @@ export default function ViewCancellationCharge() {
                         <TableCell className="text-green-600">Rs. {cancellation.refund_amount?.toLocaleString() || 0}/-</TableCell>
                         <TableCell className="max-w-[200px] truncate">{cancellation.cancellation_reason || "N/A"}</TableCell>
                         <TableCell>
-                          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${cancellation.booking?.id}`)}>
-                            View Booking
-                          </Button>
+                          <div className="flex flex-col gap-1">
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${cancellation.booking?.id}`)}>
+                              View Booking
+                            </Button>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${cancellation.booking?.id}`)}>
+                              View Payments
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -141,9 +141,14 @@ export default function ViewDueAmount() {
                         <TableCell className="text-green-600">Rs. {booking.paid_amount?.toLocaleString() || 0}/-</TableCell>
                         <TableCell className="text-destructive font-medium">Rs. {booking.due_amount?.toLocaleString() || 0}/-</TableCell>
                         <TableCell>
-                          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${booking.id}`)}>
-                            View Booking
-                          </Button>
+                          <div className="flex flex-col gap-1">
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${booking.id}`)}>
+                              View Booking
+                            </Button>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${booking.id}`)}>
+                              View Payments
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

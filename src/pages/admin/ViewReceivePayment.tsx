@@ -175,9 +175,14 @@ export default function ViewReceivePayment() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${payment.booking?.id}`)}>
-                            View Booking
-                          </Button>
+                          <div className="flex flex-col gap-1">
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${payment.booking?.id}`)}>
+                              View Booking
+                            </Button>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${payment.booking?.id}`)}>
+                              View Payments
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
