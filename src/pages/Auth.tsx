@@ -50,11 +50,25 @@ export default function Auth() {
           emailToUse = data;
         }
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
           email: emailToUse,
           password,
         });
         if (error) throw error;
+
+        // Check if user is blocked
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_active')
+          .eq('id', authData.user?.id)
+          .single();
+
+        if (profile && profile.is_active === false) {
+          // Sign out the blocked user immediately
+          await supabase.auth.signOut();
+          throw new Error("Your account has been deactivated. Please contact the administrator.");
+        }
+
         toast.success("Welcome back!");
         navigate("/dashboard");
       } else {
