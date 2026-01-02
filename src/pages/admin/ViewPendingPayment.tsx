@@ -421,13 +421,13 @@ export default function ViewPendingPayment() {
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1 text-xs">
-                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/bookings/${payment.booking?.id}`)}>
+                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/admin/bookings/${payment.booking?.id}`)}>
                                 View Booking
                               </Button>
-                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/payments/booking?id=${payment.booking?.id}`)}>
+                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/admin/booking-payments?id=${payment.booking?.id}`)}>
                                 View Payment
                               </Button>
-                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80">
+                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/admin/refund-payments?id=${payment.booking?.id}`)}>
                                 View Refund Payment
                               </Button>
                             </div>
