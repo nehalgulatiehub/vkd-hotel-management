@@ -486,6 +486,8 @@ const App = () => (
           <Route path="/admin/paid-payments" element={<AdminLayout><ViewPaidPayment /></AdminLayout>} />
           <Route path="/admin/receive-payments" element={<AdminLayout><ViewReceivePayment /></AdminLayout>} />
           <Route path="/admin/bookings" element={<AdminLayout><Bookings /></AdminLayout>} />
+          <Route path="/admin/bookings/:id" element={<AdminLayout><BookingDetails /></AdminLayout>} />
+          <Route path="/admin/booking-payments" element={<AdminLayout><BookingPayments /></AdminLayout>} />
           <Route path="/admin/cancelled-bookings" element={<AdminLayout><CancelledBookings /></AdminLayout>} />
           <Route path="/admin/refund-payments" element={<AdminLayout><Refunds /></AdminLayout>} />
           <Route path="/admin/group-expenses" element={<AdminLayout><Expenses /></AdminLayout>} />

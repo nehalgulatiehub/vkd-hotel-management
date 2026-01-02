@@ -486,7 +486,7 @@ export default function PaymentApprovals() {
                                       variant="link"
                                       size="sm"
                                       className="h-auto p-0 text-xs justify-start"
-                                      onClick={() => navigate(`/bookings/${payment.booking_id}`)}
+                                      onClick={() => navigate(`/admin/bookings/${payment.booking_id}`)}
                                     >
                                       <Eye className="h-3 w-3 mr-1" />
                                       View Booking
@@ -495,7 +495,7 @@ export default function PaymentApprovals() {
                                       variant="link"
                                       size="sm"
                                       className="h-auto p-0 text-xs justify-start text-blue-600"
-                                      onClick={() => navigate(`/payments/booking?id=${payment.booking_id}`)}
+                                      onClick={() => navigate(`/admin/booking-payments?id=${payment.booking_id}`)}
                                     >
                                       <Eye className="h-3 w-3 mr-1" />
                                       View Payments
