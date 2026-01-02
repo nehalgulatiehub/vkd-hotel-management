@@ -96,6 +96,14 @@ import AdminNews from "./pages/admin/AdminNews";
 import AdminQuotes from "./pages/admin/AdminQuotes";
 import AdminSafariPendingPayments from "./pages/admin/AdminSafariPendingPayments";
 import AdminSafariApprovedPayments from "./pages/admin/AdminSafariApprovedPayments";
+import AdminDMVolvoPendingPayments from "./pages/admin/AdminDMVolvoPendingPayments";
+import AdminDMVolvoApprovedPayments from "./pages/admin/AdminDMVolvoApprovedPayments";
+import AdminMDVolvoPendingPayments from "./pages/admin/AdminMDVolvoPendingPayments";
+import AdminMDVolvoApprovedPayments from "./pages/admin/AdminMDVolvoApprovedPayments";
+import AdminVehiclePendingPayments from "./pages/admin/AdminVehiclePendingPayments";
+import AdminVehicleApprovedPayments from "./pages/admin/AdminVehicleApprovedPayments";
+import AdminHotelPendingPayments from "./pages/admin/AdminHotelPendingPayments";
+import AdminHotelApprovedPayments from "./pages/admin/AdminHotelApprovedPayments";
 
 const queryClient = new QueryClient();
 
@@ -548,12 +556,12 @@ const App = () => (
           <Route path="/admin/safari-transporter-due" element={<AdminLayout><ViewSafariDue /></AdminLayout>} />
           
           {/* D-M Volvo Manager Routes */}
-          <Route path="/admin/dm-volvo-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
-          <Route path="/admin/dm-volvo-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/dm-volvo-pending" element={<AdminLayout><AdminDMVolvoPendingPayments /></AdminLayout>} />
+          <Route path="/admin/dm-volvo-approved" element={<AdminLayout><AdminDMVolvoApprovedPayments /></AdminLayout>} />
           
           {/* M-D Volvo Manager Routes */}
-          <Route path="/admin/md-volvo-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
-          <Route path="/admin/md-volvo-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/md-volvo-pending" element={<AdminLayout><AdminMDVolvoPendingPayments /></AdminLayout>} />
+          <Route path="/admin/md-volvo-approved" element={<AdminLayout><AdminMDVolvoApprovedPayments /></AdminLayout>} />
           
           {/* Transport Payment Manager Routes */}
           <Route path="/admin/dm-transporter-money" element={<AdminLayout><VolvoDelhiManali /></AdminLayout>} />
@@ -564,14 +572,14 @@ const App = () => (
           <Route path="/admin/md-transporter-due" element={<AdminLayout><ViewManaliDelhiDue /></AdminLayout>} />
           
           {/* Another Hotel Manager Routes */}
-          <Route path="/admin/another-hotel-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
-          <Route path="/admin/another-hotel-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/another-hotel-pending" element={<AdminLayout><AdminHotelPendingPayments /></AdminLayout>} />
+          <Route path="/admin/another-hotel-approved" element={<AdminLayout><AdminHotelApprovedPayments /></AdminLayout>} />
           <Route path="/admin/another-hotel-money" element={<AdminLayout><HotelDetails /></AdminLayout>} />
           <Route path="/admin/another-hotel-payment-due" element={<AdminLayout><ViewHotelDue /></AdminLayout>} />
           
           {/* Additional Vehicle Manager Routes */}
-          <Route path="/admin/vehicle-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
-          <Route path="/admin/vehicle-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/vehicle-pending" element={<AdminLayout><AdminVehiclePendingPayments /></AdminLayout>} />
+          <Route path="/admin/vehicle-approved" element={<AdminLayout><AdminVehicleApprovedPayments /></AdminLayout>} />
           <Route path="/admin/vehicle-transporter-money" element={<AdminLayout><VehicleDetails /></AdminLayout>} />
           <Route path="/admin/vehicle-transporter-payments" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
           <Route path="/admin/vehicle-transporter-payments/add" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
