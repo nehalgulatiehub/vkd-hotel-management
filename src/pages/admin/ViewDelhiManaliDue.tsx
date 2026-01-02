@@ -183,7 +183,7 @@ export default function ViewDelhiManaliDue() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => volvo.booking && navigate(`/bookings/${volvo.booking.id}`)}
+                            onClick={() => volvo.booking && navigate(`/admin/bookings/${volvo.booking.id}`)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

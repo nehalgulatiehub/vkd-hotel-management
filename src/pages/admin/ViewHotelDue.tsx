@@ -189,7 +189,7 @@ export default function ViewHotelDue() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => hotel.booking && navigate(`/bookings/${hotel.booking.id}`)}
+                            onClick={() => hotel.booking && navigate(`/admin/bookings/${hotel.booking.id}`)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

@@ -181,10 +181,10 @@ export default function ViewDueAmount() {
                         <TableCell className="text-destructive font-medium">Rs. {booking.due_amount?.toLocaleString() || 0}/-</TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${booking.id}`)}>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/admin/bookings/${booking.id}`)}>
                               View Booking
                             </Button>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${booking.id}`)}>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/admin/booking-payments?id=${booking.id}`)}>
                               View Payments
                             </Button>
                           </div>
