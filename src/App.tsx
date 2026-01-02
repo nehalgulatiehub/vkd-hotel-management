@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { AdminLayout } from "./components/layout/AdminLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -62,6 +63,8 @@ import InvoiceList from "./pages/InvoiceList";
 import InvoiceTemplates from "./pages/InvoiceTemplates";
 import UserManagement from "./pages/UserManagement";
 import PaymentApprovals from "./pages/PaymentApprovals";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPlaceholder from "./pages/admin/AdminPlaceholder";
 import ViewPendingPayment from "./pages/admin/ViewPendingPayment";
 import ViewApprovedPayment from "./pages/admin/ViewApprovedPayment";
 import ViewReferenceList from "./pages/admin/ViewReferenceList";
@@ -445,17 +448,30 @@ const App = () => (
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
           <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
           <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
-          <Route path="/admin/users" element={<DashboardLayout><UserManagement /></DashboardLayout>} />
-          <Route path="/admin/approvals" element={<DashboardLayout><PaymentApprovals /></DashboardLayout>} />
-          <Route path="/admin/pending-payments" element={<DashboardLayout><ViewPendingPayment /></DashboardLayout>} />
-          <Route path="/admin/approved-payments" element={<DashboardLayout><ViewApprovedPayment /></DashboardLayout>} />
-          <Route path="/admin/reference-list" element={<DashboardLayout><ViewReferenceList /></DashboardLayout>} />
-          <Route path="/admin/due-amount" element={<DashboardLayout><ViewDueAmount /></DashboardLayout>} />
-          <Route path="/admin/total-pax" element={<DashboardLayout><ViewTotalPax /></DashboardLayout>} />
-          <Route path="/admin/cancellation-charges" element={<DashboardLayout><ViewCancellationCharge /></DashboardLayout>} />
-          <Route path="/admin/book-return-payments" element={<DashboardLayout><ViewBookReturnPayment /></DashboardLayout>} />
-          <Route path="/admin/paid-payments" element={<DashboardLayout><ViewPaidPayment /></DashboardLayout>} />
-          <Route path="/admin/receive-payments" element={<DashboardLayout><ViewReceivePayment /></DashboardLayout>} />
+          
+          {/* Admin Panel Routes */}
+          <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+          <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
+          <Route path="/admin/approvals" element={<AdminLayout><PaymentApprovals /></AdminLayout>} />
+          <Route path="/admin/pending-payments" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
+          <Route path="/admin/approved-payments" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/reference-list" element={<AdminLayout><ViewReferenceList /></AdminLayout>} />
+          <Route path="/admin/due-amount" element={<AdminLayout><ViewDueAmount /></AdminLayout>} />
+          <Route path="/admin/total-pax" element={<AdminLayout><ViewTotalPax /></AdminLayout>} />
+          <Route path="/admin/cancellation-charges" element={<AdminLayout><ViewCancellationCharge /></AdminLayout>} />
+          <Route path="/admin/book-return-payments" element={<AdminLayout><ViewBookReturnPayment /></AdminLayout>} />
+          <Route path="/admin/paid-payments" element={<AdminLayout><ViewPaidPayment /></AdminLayout>} />
+          <Route path="/admin/receive-payments" element={<AdminLayout><ViewReceivePayment /></AdminLayout>} />
+          <Route path="/admin/bookings" element={<AdminLayout><Bookings /></AdminLayout>} />
+          <Route path="/admin/cancelled-bookings" element={<AdminLayout><CancelledBookings /></AdminLayout>} />
+          <Route path="/admin/refund-payments" element={<AdminLayout><Refunds /></AdminLayout>} />
+          <Route path="/admin/group-expenses" element={<AdminLayout><Expenses /></AdminLayout>} />
+          <Route path="/admin/booking-availability" element={<AdminLayout><BookingAvailability /></AdminLayout>} />
+          <Route path="/admin/room-bookings" element={<AdminLayout><RoomBookings /></AdminLayout>} />
+          <Route path="/admin/enquiries" element={<AdminLayout><Enquiries /></AdminLayout>} />
+          {/* Admin placeholder routes for pages under development */}
+          <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
