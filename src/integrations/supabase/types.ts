@@ -1507,6 +1507,54 @@ export type Database = {
         }
         Relationships: []
       }
+      room_blocks: {
+        Row: {
+          block_date: string
+          blocked_quantity: number
+          created_at: string
+          created_by: string | null
+          id: string
+          reason: string | null
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          block_date: string
+          blocked_quantity?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          block_date?: string
+          blocked_quantity?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_blocks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_blocks_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           adult_capacity: number | null

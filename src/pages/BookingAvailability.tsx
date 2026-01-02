@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays, startOfDay, parse, isValid } from "date-fns";
+import { format, addDays, startOfDay, parse, isValid, eachDayOfInterval } from "date-fns";
 import { ChevronLeft, ChevronRight, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 interface Room {
   id: string;
@@ -34,14 +53,33 @@ interface HotelBooking {
   number_of_rooms: number;
 }
 
+interface RoomBlock {
+  id: string;
+  room_id: string;
+  block_date: string;
+  blocked_quantity: number;
+  reason: string | null;
+}
+
 const DAYS_TO_SHOW = 15;
 
 export default function BookingAvailability() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [hotelBookings, setHotelBookings] = useState<HotelBooking[]>([]);
+  const [roomBlocks, setRoomBlocks] = useState<RoomBlock[]>([]);
   const [startDate, setStartDate] = useState(startOfDay(new Date()));
   const [loading, setLoading] = useState(true);
   const [searchDate, setSearchDate] = useState(format(new Date(), "dd-MM-yyyy"));
+
+  // Bulk Update Modal State
+  const [bulkUpdateOpen, setBulkUpdateOpen] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
+  const [bulkFromDate, setBulkFromDate] = useState("");
+  const [bulkToDate, setBulkToDate] = useState("");
+  const [bulkAction, setBulkAction] = useState<"block" | "unblock">("block");
+  const [bulkQuantity, setBulkQuantity] = useState("1");
+  const [bulkReason, setBulkReason] = useState("");
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -66,8 +104,14 @@ export default function BookingAvailability() {
       .not("own_hotel_id", "is", null)
       .in("bookings.status", ["confirmed", "completed", "hold"]);
 
+    // Fetch all room blocks
+    const { data: blocksData } = await supabase
+      .from("room_blocks")
+      .select("id, room_id, block_date, blocked_quantity, reason");
+
     setRooms(roomsData || []);
     setHotelBookings(bookingsData || []);
+    setRoomBlocks(blocksData || []);
     setLoading(false);
   };
 
@@ -82,13 +126,18 @@ export default function BookingAvailability() {
     });
   };
 
+  const getBlocksForDate = (roomId: string, date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return roomBlocks.filter((block) => block.room_id === roomId && block.block_date === dateStr);
+  };
+
   const getStats = (room: Room, date: Date) => {
     const bookings = getBookingsForDate(room.id, date);
+    const blocks = getBlocksForDate(room.id, date);
     const booked = bookings.reduce((sum, b) => sum + (b.number_of_rooms || 1), 0);
+    const blocked = blocks.reduce((sum, b) => sum + (b.blocked_quantity || 0), 0);
     const total = room.total_quantity || 1;
-    const available = Math.max(0, total - booked);
-    // For now, we don't track blocked separately - could be added later
-    const blocked = 0;
+    const available = Math.max(0, total - booked - blocked);
     return { available, booked, blocked, total };
   };
 
@@ -142,6 +191,120 @@ export default function BookingAvailability() {
     return "bg-gray-100 text-gray-600";
   };
 
+  // Download Inventory as Excel
+  const handleDownloadInventory = () => {
+    if (rooms.length === 0) {
+      toast.error("No rooms to export");
+      return;
+    }
+
+    const exportData: Record<string, unknown>[] = [];
+
+    roomCategories.forEach(([categoryName, room]) => {
+      const rowTypes = ["Available", "Booked", "Blocked"] as const;
+      rowTypes.forEach((rowType) => {
+        const row: Record<string, unknown> = {
+          "Room Category": categoryName,
+          "Price": room.base_price,
+          "Type": rowType,
+        };
+
+        dates.forEach((date) => {
+          const stats = getStats(room, date);
+          const dateKey = format(date, "dd-MMM");
+          if (rowType === "Available") row[dateKey] = stats.available;
+          else if (rowType === "Booked") row[dateKey] = stats.booked;
+          else row[dateKey] = stats.blocked;
+        });
+
+        exportData.push(row);
+      });
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Room Inventory");
+    XLSX.writeFile(wb, `Room_Inventory_${format(startDate, "yyyy-MM-dd")}.xlsx`);
+    toast.success("Inventory downloaded successfully");
+  };
+
+  // Bulk Update Handler
+  const handleBulkUpdate = async () => {
+    if (!selectedRoomId || !bulkFromDate || !bulkToDate) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    const fromDate = parse(bulkFromDate, "yyyy-MM-dd", new Date());
+    const toDate = parse(bulkToDate, "yyyy-MM-dd", new Date());
+
+    if (!isValid(fromDate) || !isValid(toDate)) {
+      toast.error("Invalid date format");
+      return;
+    }
+
+    if (fromDate > toDate) {
+      toast.error("From date must be before To date");
+      return;
+    }
+
+    setBulkUpdating(true);
+
+    try {
+      const datesToUpdate = eachDayOfInterval({ start: fromDate, end: toDate });
+
+      if (bulkAction === "block") {
+        // Insert or update blocks for each date
+        const blocksToUpsert = datesToUpdate.map((date) => ({
+          room_id: selectedRoomId,
+          block_date: format(date, "yyyy-MM-dd"),
+          blocked_quantity: parseInt(bulkQuantity) || 1,
+          reason: bulkReason || null,
+        }));
+
+        for (const block of blocksToUpsert) {
+          const { error } = await supabase
+            .from("room_blocks")
+            .upsert(block, { onConflict: "room_id,block_date" });
+          if (error) throw error;
+        }
+
+        toast.success(`Blocked ${datesToUpdate.length} dates successfully`);
+      } else {
+        // Delete blocks for the date range
+        const dateStrings = datesToUpdate.map((date) => format(date, "yyyy-MM-dd"));
+
+        const { error } = await supabase
+          .from("room_blocks")
+          .delete()
+          .eq("room_id", selectedRoomId)
+          .in("block_date", dateStrings);
+
+        if (error) throw error;
+        toast.success(`Unblocked ${datesToUpdate.length} dates successfully`);
+      }
+
+      // Refresh data
+      await fetchData();
+      setBulkUpdateOpen(false);
+      resetBulkForm();
+    } catch (error) {
+      console.error("Bulk update error:", error);
+      toast.error("Failed to update. Please try again.");
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const resetBulkForm = () => {
+    setSelectedRoomId("");
+    setBulkFromDate("");
+    setBulkToDate("");
+    setBulkAction("block");
+    setBulkQuantity("1");
+    setBulkReason("");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -160,11 +323,11 @@ export default function BookingAvailability() {
         {/* Top Actions */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadInventory}>
               <Download className="h-4 w-4" />
               Download Inventory
             </Button>
-            <Button variant="default" size="sm" className="gap-2">
+            <Button variant="default" size="sm" className="gap-2" onClick={() => setBulkUpdateOpen(true)}>
               <Upload className="h-4 w-4" />
               Bulk Update
             </Button>
@@ -207,7 +370,7 @@ export default function BookingAvailability() {
                       <TableHead className="min-w-[180px] sticky left-0 bg-muted z-10 font-semibold">
                         Room Category
                       </TableHead>
-                      <TableHead className="w-16 text-center font-semibold">Pre</TableHead>
+                      <TableHead className="w-16 text-center font-semibold">Price</TableHead>
                       <TableHead className="w-16 text-center font-semibold">Type</TableHead>
                       {dates.map((date) => (
                         <TableHead key={date.toISOString()} className="w-12 text-center p-1">
@@ -319,6 +482,100 @@ export default function BookingAvailability() {
           </div>
         </div>
       </main>
+
+      {/* Bulk Update Dialog */}
+      <Dialog open={bulkUpdateOpen} onOpenChange={setBulkUpdateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Update Room Availability</DialogTitle>
+            <DialogDescription>
+              Block or unblock rooms for a date range
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Room Category</Label>
+              <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select room" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.room_type} ({room.total_quantity} rooms)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>From Date</Label>
+                <Input
+                  type="date"
+                  value={bulkFromDate}
+                  onChange={(e) => setBulkFromDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>To Date</Label>
+                <Input
+                  type="date"
+                  value={bulkToDate}
+                  onChange={(e) => setBulkToDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Action</Label>
+              <Select value={bulkAction} onValueChange={(v) => setBulkAction(v as "block" | "unblock")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="block">Block Rooms</SelectItem>
+                  <SelectItem value="unblock">Unblock Rooms</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {bulkAction === "block" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Quantity to Block</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={bulkQuantity}
+                    onChange={(e) => setBulkQuantity(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Reason (optional)</Label>
+                  <Textarea
+                    placeholder="Enter reason for blocking..."
+                    value={bulkReason}
+                    onChange={(e) => setBulkReason(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkUpdateOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkUpdate} disabled={bulkUpdating}>
+              {bulkUpdating ? "Updating..." : bulkAction === "block" ? "Block Rooms" : "Unblock Rooms"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
