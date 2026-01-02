@@ -35,6 +35,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
+interface Hotel {
+  id: string;
+  name: string;
+}
+
 interface Room {
   id: string;
   room_number: string;
@@ -42,6 +47,7 @@ interface Room {
   total_quantity: number;
   base_price: number;
   hotel_id: string;
+  hotel_name?: string;
 }
 
 interface HotelBooking {
@@ -64,6 +70,7 @@ interface RoomBlock {
 const DAYS_TO_SHOW = 15;
 
 export default function BookingAvailability() {
+  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [hotelBookings, setHotelBookings] = useState<HotelBooking[]>([]);
   const [roomBlocks, setRoomBlocks] = useState<RoomBlock[]>([]);
@@ -88,6 +95,12 @@ export default function BookingAvailability() {
   const fetchData = async () => {
     setLoading(true);
 
+    // Fetch all hotels
+    const { data: hotelsData } = await supabase
+      .from("own_hotels")
+      .select("id, name")
+      .order("name");
+
     // Fetch all rooms
     const { data: roomsData } = await supabase
       .from("rooms")
@@ -109,7 +122,19 @@ export default function BookingAvailability() {
       .from("room_blocks")
       .select("id, room_id, block_date, blocked_quantity, reason");
 
-    setRooms(roomsData || []);
+    // Map hotel names to rooms
+    const hotelsMap = (hotelsData || []).reduce((acc, hotel) => {
+      acc[hotel.id] = hotel.name;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const roomsWithHotels = (roomsData || []).map((room) => ({
+      ...room,
+      hotel_name: hotelsMap[room.hotel_id] || "Unknown Hotel",
+    }));
+
+    setHotels(hotelsData || []);
+    setRooms(roomsWithHotels);
     setHotelBookings(bookingsData || []);
     setRoomBlocks(blocksData || []);
     setLoading(false);
@@ -162,17 +187,6 @@ export default function BookingAvailability() {
     }
   };
 
-  // Group rooms by room_type for display
-  const groupedRooms = rooms.reduce((acc, room) => {
-    const key = `${room.room_type} (${room.total_quantity})`;
-    if (!acc[key]) {
-      acc[key] = room;
-    }
-    return acc;
-  }, {} as Record<string, Room>);
-
-  const roomCategories = Object.entries(groupedRooms);
-
   const getCellColor = (value: number, type: "available" | "booked" | "blocked", total: number) => {
     if (type === "available") {
       if (value === 0) return "bg-red-500 text-white";
@@ -200,11 +214,12 @@ export default function BookingAvailability() {
 
     const exportData: Record<string, unknown>[] = [];
 
-    roomCategories.forEach(([categoryName, room]) => {
+    rooms.forEach((room) => {
       const rowTypes = ["Available", "Booked", "Blocked"] as const;
       rowTypes.forEach((rowType) => {
         const row: Record<string, unknown> = {
-          "Room Category": categoryName,
+          "Hotel Name": room.hotel_name,
+          "Room Category": `${room.room_type} (${room.total_quantity})`,
           "Price": room.base_price,
           "Type": rowType,
         };
@@ -367,7 +382,10 @@ export default function BookingAvailability() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
-                      <TableHead className="min-w-[180px] sticky left-0 bg-muted z-10 font-semibold">
+                      <TableHead className="min-w-[120px] sticky left-0 bg-muted z-10 font-semibold">
+                        Hotel
+                      </TableHead>
+                      <TableHead className="min-w-[150px] font-semibold">
                         Room Category
                       </TableHead>
                       <TableHead className="w-16 text-center font-semibold">Price</TableHead>
@@ -384,24 +402,32 @@ export default function BookingAvailability() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {roomCategories.length === 0 ? (
+                    {rooms.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={DAYS_TO_SHOW + 3} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={DAYS_TO_SHOW + 4} className="text-center py-8 text-muted-foreground">
                           No rooms configured. Add rooms to your hotels first.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      roomCategories.map(([categoryName, room]) => {
+                      rooms.map((room) => {
                         const rowTypes = ["available", "booked", "blocked"] as const;
                         return rowTypes.map((rowType, rowIdx) => (
                           <TableRow key={`${room.id}-${rowType}`} className={cn(rowIdx === 2 && "border-b-2")}>
                             {rowIdx === 0 && (
-                              <TableCell
-                                rowSpan={3}
-                                className="font-medium sticky left-0 bg-background z-10 border-r"
-                              >
-                                {categoryName}
-                              </TableCell>
+                              <>
+                                <TableCell
+                                  rowSpan={3}
+                                  className="font-medium sticky left-0 bg-background z-10 border-r text-xs"
+                                >
+                                  {room.hotel_name}
+                                </TableCell>
+                                <TableCell
+                                  rowSpan={3}
+                                  className="font-medium border-r text-xs"
+                                >
+                                  {room.room_type} ({room.total_quantity})
+                                </TableCell>
+                              </>
                             )}
                             <TableCell className="text-center p-1">
                               <span className="text-xs font-medium">₹{room.base_price}</span>
@@ -503,7 +529,7 @@ export default function BookingAvailability() {
                 <SelectContent>
                   {rooms.map((room) => (
                     <SelectItem key={room.id} value={room.id}>
-                      {room.room_type} ({room.total_quantity} rooms)
+                      {room.hotel_name} - {room.room_type} ({room.total_quantity} rooms)
                     </SelectItem>
                   ))}
                 </SelectContent>
