@@ -4,10 +4,22 @@ import {
   ChevronDown, Upload, UtensilsCrossed, Receipt, Shield
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { 
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, 
-  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, 
-  SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, useSidebar
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
@@ -224,9 +236,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={`${collapsed ? "w-14" : "w-52"} print:hidden transition-all duration-200`}>
-      <SidebarContent>
+      <SidebarHeader className="p-0">
         <div className="px-2 py-3">
-          <h2 className={`font-bold text-sm bg-gradient-primary bg-clip-text text-transparent ${collapsed ? "hidden" : "block"}`}>
+          <h2
+            className={`font-bold text-sm bg-gradient-primary bg-clip-text text-transparent ${
+              collapsed ? "hidden" : "block"
+            }`}
+          >
             HMS
           </h2>
           {collapsed && (
@@ -235,7 +251,11 @@ export function AppSidebar() {
             </div>
           )}
         </div>
-        
+        <SidebarSeparator />
+      </SidebarHeader>
+
+      {/* Scrollable menu area */}
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className={`text-[10px] ${collapsed ? "sr-only" : ""}`}>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -255,7 +275,11 @@ export function AppSidebar() {
                             {!collapsed && (
                               <>
                                 <span>{item.title}</span>
-                                <ChevronDown className={`ml-auto h-3 w-3 transition-transform ${openGroups.includes(item.title) ? 'rotate-180' : ''}`} />
+                                <ChevronDown
+                                  className={`ml-auto h-3 w-3 transition-transform ${
+                                    openGroups.includes(item.title) ? "rotate-180" : ""
+                                  }`}
+                                />
                               </>
                             )}
                           </SidebarMenuButton>
@@ -269,7 +293,9 @@ export function AppSidebar() {
                                     <NavLink
                                       to={subItem.url}
                                       className={({ isActive }) =>
-                                        isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                                        isActive
+                                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                          : "hover:bg-sidebar-accent/50"
                                       }
                                     >
                                       {subItem.title}
@@ -284,14 +310,16 @@ export function AppSidebar() {
                     </Collapsible>
                   );
                 }
-                
+
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
-                      <NavLink 
+                      <NavLink
                         to={item.url!}
                         className={({ isActive }) =>
-                          isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "hover:bg-sidebar-accent/50"
                         }
                       >
                         <item.icon className="h-3 w-3" />
@@ -304,28 +332,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
-                  <NavLink to="/settings" className="hover:bg-sidebar-accent/50">
-                    <Settings className="h-3 w-3" />
-                    {!collapsed && <span>Settings</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} size="sm" className="h-6 text-[11px] hover:bg-destructive/10 hover:text-destructive">
-                  <LogOut className="h-3 w-3" />
-                  {!collapsed && <span>Logout</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
+
+      {/* Fixed footer actions (prevents menu items from being hidden under Settings/Logout) */}
+      <SidebarFooter className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
+              <NavLink to="/settings" className="hover:bg-sidebar-accent/50">
+                <Settings className="h-3 w-3" />
+                {!collapsed && <span>Settings</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              size="sm"
+              className="h-6 text-[11px] hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="h-3 w-3" />
+              {!collapsed && <span>Logout</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
