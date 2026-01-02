@@ -173,10 +173,10 @@ export default function ViewCancellationCharge() {
                         <TableCell className="max-w-[200px] truncate">{cancellation.cancellation_reason || "N/A"}</TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/bookings/${cancellation.booking?.id}`)}>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/admin/bookings/${cancellation.booking?.id}`)}>
                               View Booking
                             </Button>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/payments/booking?id=${cancellation.booking?.id}`)}>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/admin/booking-payments?id=${cancellation.booking?.id}`)}>
                               View Payments
                             </Button>
                           </div>

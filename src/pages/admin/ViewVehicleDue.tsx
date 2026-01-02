@@ -186,7 +186,7 @@ export default function ViewVehicleDue() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => vehicle.booking && navigate(`/bookings/${vehicle.booking.id}`)}
+                            onClick={() => vehicle.booking && navigate(`/admin/bookings/${vehicle.booking.id}`)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
