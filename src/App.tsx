@@ -85,6 +85,17 @@ import ViewDelhiManaliDue from "./pages/admin/ViewDelhiManaliDue";
 import ViewManaliDelhiDue from "./pages/admin/ViewManaliDelhiDue";
 import ViewVehicleDue from "./pages/admin/ViewVehicleDue";
 import ViewHotelDue from "./pages/admin/ViewHotelDue";
+import AdminChangePassword from "./pages/admin/AdminChangePassword";
+import AdminEmail from "./pages/admin/AdminEmail";
+import AdminFollowups from "./pages/admin/AdminFollowups";
+import AdminGuestUsers from "./pages/admin/AdminGuestUsers";
+import AdminAccounts from "./pages/admin/AdminAccounts";
+import AdminRoomTypes from "./pages/admin/AdminRoomTypes";
+import AdminPlaces from "./pages/admin/AdminPlaces";
+import AdminNews from "./pages/admin/AdminNews";
+import AdminQuotes from "./pages/admin/AdminQuotes";
+import AdminSafariPendingPayments from "./pages/admin/AdminSafariPendingPayments";
+import AdminSafariApprovedPayments from "./pages/admin/AdminSafariApprovedPayments";
 
 const queryClient = new QueryClient();
 
