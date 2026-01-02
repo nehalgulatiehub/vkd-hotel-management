@@ -1,29 +1,28 @@
 import { Header } from "@/components/layout/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, isSameDay } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format, addDays, startOfDay, parse, isValid } from "date-fns";
+import { ChevronLeft, ChevronRight, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Room {
   id: string;
   room_number: string;
+  room_type: string;
   total_quantity: number;
   base_price: number;
   hotel_id: string;
-}
-
-interface Hotel {
-  id: string;
-  name: string;
-  rooms?: Room[];
 }
 
 interface HotelBooking {
@@ -35,11 +34,14 @@ interface HotelBooking {
   number_of_rooms: number;
 }
 
+const DAYS_TO_SHOW = 15;
+
 export default function BookingAvailability() {
-  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [hotelBookings, setHotelBookings] = useState<HotelBooking[]>([]);
-  const [baseDate, setBaseDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(startOfDay(new Date()));
   const [loading, setLoading] = useState(true);
+  const [searchDate, setSearchDate] = useState(format(new Date(), "dd-MM-yyyy"));
 
   useEffect(() => {
     fetchData();
@@ -47,20 +49,14 @@ export default function BookingAvailability() {
 
   const fetchData = async () => {
     setLoading(true);
-    
-    // Fetch hotels with their rooms
-    const { data: hotelsData } = await supabase
-      .from("own_hotels")
-      .select("id, name")
-      .order("name");
 
     // Fetch all rooms
     const { data: roomsData } = await supabase
       .from("rooms")
-      .select("id, room_number, total_quantity, base_price, hotel_id")
-      .order("room_number");
+      .select("id, room_number, room_type, total_quantity, base_price, hotel_id")
+      .order("room_type");
 
-    // Fetch all hotel bookings (from confirmed/completed bookings only, exclude cancelled)
+    // Fetch all hotel bookings (from confirmed/completed/hold bookings only, exclude cancelled)
     const { data: bookingsData } = await supabase
       .from("hotel_bookings")
       .select(`
@@ -70,47 +66,81 @@ export default function BookingAvailability() {
       .not("own_hotel_id", "is", null)
       .in("bookings.status", ["confirmed", "completed", "hold"]);
 
-    // Map rooms to hotels
-    const hotelsWithRooms = (hotelsData || []).map(hotel => ({
-      ...hotel,
-      rooms: (roomsData || []).filter(room => room.hotel_id === hotel.id)
-    }));
-
-    setHotels(hotelsWithRooms);
+    setRooms(roomsData || []);
     setHotelBookings(bookingsData || []);
     setLoading(false);
   };
 
-  // Generate 12 months starting from baseDate
-  const months = Array.from({ length: 12 }, (_, i) => addMonths(baseDate, i));
+  // Generate the dates to display
+  const dates = Array.from({ length: DAYS_TO_SHOW }, (_, i) => addDays(startDate, i));
 
-  const getDaysInMonth = (date: Date) => {
-    const start = startOfMonth(date);
-    const end = endOfMonth(date);
-    return eachDayOfInterval({ start, end });
-  };
-
-  const getBookingsForDate = (hotelId: string, roomId: string, date: Date) => {
+  const getBookingsForDate = (roomId: string, date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    return hotelBookings.filter(booking => {
-      if (booking.own_hotel_id !== hotelId) return false;
-      // room_type in hotel_bookings stores the room id, not the room name
+    return hotelBookings.filter((booking) => {
       if (booking.room_type !== roomId) return false;
       return dateStr >= booking.check_in_date && dateStr < booking.check_out_date;
     });
   };
 
-  const getAvailableRooms = (room: Room, date: Date) => {
-    const bookings = getBookingsForDate(room.hotel_id, room.id, date);
-    const bookedRooms = bookings.reduce((sum, b) => sum + (b.number_of_rooms || 1), 0);
-    return Math.max(0, (room.total_quantity || 1) - bookedRooms);
+  const getStats = (room: Room, date: Date) => {
+    const bookings = getBookingsForDate(room.id, date);
+    const booked = bookings.reduce((sum, b) => sum + (b.number_of_rooms || 1), 0);
+    const total = room.total_quantity || 1;
+    const available = Math.max(0, total - booked);
+    // For now, we don't track blocked separately - could be added later
+    const blocked = 0;
+    return { available, booked, blocked, total };
   };
 
-  const isDateBooked = (room: Room, date: Date) => {
-    return getAvailableRooms(room, date) === 0;
+  const handlePrevious = () => {
+    setStartDate(addDays(startDate, -DAYS_TO_SHOW));
   };
 
-  const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+  const handleNext = () => {
+    setStartDate(addDays(startDate, DAYS_TO_SHOW));
+  };
+
+  const handleSearch = () => {
+    const parsed = parse(searchDate, "dd-MM-yyyy", new Date());
+    if (isValid(parsed)) {
+      setStartDate(startOfDay(parsed));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // Group rooms by room_type for display
+  const groupedRooms = rooms.reduce((acc, room) => {
+    const key = `${room.room_type} (${room.total_quantity})`;
+    if (!acc[key]) {
+      acc[key] = room;
+    }
+    return acc;
+  }, {} as Record<string, Room>);
+
+  const roomCategories = Object.entries(groupedRooms);
+
+  const getCellColor = (value: number, type: "available" | "booked" | "blocked", total: number) => {
+    if (type === "available") {
+      if (value === 0) return "bg-red-500 text-white";
+      if (value === total) return "bg-green-500 text-white";
+      return "bg-yellow-500 text-white";
+    }
+    if (type === "booked") {
+      if (value === 0) return "bg-gray-100 text-gray-600";
+      if (value === total) return "bg-red-500 text-white";
+      return "bg-orange-400 text-white";
+    }
+    if (type === "blocked") {
+      if (value === 0) return "bg-gray-100 text-gray-600";
+      return "bg-purple-500 text-white";
+    }
+    return "bg-gray-100 text-gray-600";
+  };
 
   if (loading) {
     return (
@@ -126,144 +156,168 @@ export default function BookingAvailability() {
   return (
     <div className="min-h-screen bg-background">
       <Header title="Booking Availability" />
-      <main className="p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold">Booking Availability</h2>
-            <p className="text-muted-foreground">View room availability across all hotels</p>
+      <main className="p-4">
+        {/* Top Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Download Inventory
+            </Button>
+            <Button variant="default" size="sm" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Bulk Update
+            </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setBaseDate(addMonths(baseDate, -12))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium px-2">
-              {format(baseDate, "yyyy")} - {format(addMonths(baseDate, 11), "yyyy")}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setBaseDate(addMonths(baseDate, 12))}
-            >
-              <ChevronRight className="h-4 w-4" />
+            <span className="text-sm text-muted-foreground">Search</span>
+            <Input
+              type="text"
+              placeholder="dd-MM-yyyy"
+              value={searchDate}
+              onChange={(e) => setSearchDate(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-32 h-8 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={handleSearch}>
+              Go
             </Button>
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-          {months.map((month, idx) => (
-            <Card key={idx} className="overflow-hidden">
-              <CardHeader className="py-2 px-3 bg-primary/10">
-                <CardTitle className="text-sm font-semibold text-center">
-                  {format(month, "MMMM yyyy")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
-                <div className="grid grid-cols-7 gap-0.5 text-center mb-1">
-                  {weekDays.map((day, i) => (
-                    <div key={i} className="text-xs font-medium text-muted-foreground p-1">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-0.5">
-                  {/* Empty cells for days before the first of the month */}
-                  {Array.from({ length: getDay(startOfMonth(month)) }).map((_, i) => (
-                    <div key={`empty-${i}`} className="aspect-square" />
-                  ))}
-                  {/* Days of the month */}
-                  {getDaysInMonth(month).map((day) => {
-                    const isToday = isSameDay(day, new Date());
-                    const hasBookings = hotels.some(hotel => 
-                      hotel.rooms?.some(room => getBookingsForDate(hotel.id, room.id, day).length > 0)
-                    );
-                    
-                    return (
-                      <HoverCard key={day.toISOString()} openDelay={200}>
-                        <HoverCardTrigger asChild>
-                          <div
-                            className={cn(
-                              "aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-colors",
-                              isToday && "ring-2 ring-primary",
-                              hasBookings ? "bg-rose-100 text-rose-700 hover:bg-rose-200" : "hover:bg-muted"
-                            )}
-                          >
-                            {format(day, "d")}
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-80 p-3" side="right">
-                          <div className="space-y-2">
-                            <p className="font-semibold text-sm">
-                              {format(day, "EEEE, MMMM d, yyyy")}
-                            </p>
-                            {hotels.filter(h => h.rooms && h.rooms.length > 0).map(hotel => (
-                              <div key={hotel.id} className="text-xs">
-                                <p className="font-medium text-primary">{hotel.name}</p>
-                                <div className="ml-2 space-y-0.5">
-                                  {hotel.rooms?.map(room => {
-                                    const available = getAvailableRooms(room, day);
-                                    const total = room.total_quantity || 1;
-                                    return (
-                                      <p key={room.id} className={cn(
-                                        available === 0 ? "text-destructive" : "text-muted-foreground"
-                                      )}>
-                                        {room.room_number}: {available}/{total} available
-                                      </p>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
-                            {hotels.filter(h => h.rooms && h.rooms.length > 0).length === 0 && (
-                              <p className="text-xs text-muted-foreground">No rooms configured</p>
-                            )}
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* Availability Grid */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="flex items-center">
+              {/* Prev Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex-shrink-0 h-full rounded-none border-r"
+                onClick={handlePrevious}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
 
-        {/* Hotel Room Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Room Inventory Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {hotels.filter(h => h.rooms && h.rooms.length > 0).length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No hotels with rooms configured. Add rooms to your hotels first.
-              </p>
-            ) : (
-              <div className="space-y-6">
-                {hotels.filter(h => h.rooms && h.rooms.length > 0).map(hotel => (
-                  <div key={hotel.id}>
-                    <h3 className="font-semibold text-primary mb-2">{hotel.name}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {hotel.rooms?.map(room => (
-                        <div 
-                          key={room.id} 
-                          className="flex justify-between items-center p-2 bg-muted/50 rounded text-sm"
-                        >
-                          <span>{room.room_number}</span>
-                          <span className="font-medium">{room.total_quantity || 1} Rooms</span>
-                        </div>
+              {/* Table */}
+              <div className="flex-1 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="min-w-[180px] sticky left-0 bg-muted z-10 font-semibold">
+                        Room Category
+                      </TableHead>
+                      <TableHead className="w-16 text-center font-semibold">Pre</TableHead>
+                      <TableHead className="w-16 text-center font-semibold">Type</TableHead>
+                      {dates.map((date) => (
+                        <TableHead key={date.toISOString()} className="w-12 text-center p-1">
+                          <div className="flex flex-col items-center">
+                            <span className="text-[10px] font-medium">{format(date, "EEE")}</span>
+                            <span className="text-xs font-bold">{format(date, "d")}</span>
+                            <span className="text-[10px] text-muted-foreground">{format(date, "MMM")}</span>
+                          </div>
+                        </TableHead>
                       ))}
-                    </div>
-                  </div>
-                ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {roomCategories.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={DAYS_TO_SHOW + 3} className="text-center py-8 text-muted-foreground">
+                          No rooms configured. Add rooms to your hotels first.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      roomCategories.map(([categoryName, room]) => {
+                        const rowTypes = ["available", "booked", "blocked"] as const;
+                        return rowTypes.map((rowType, rowIdx) => (
+                          <TableRow key={`${room.id}-${rowType}`} className={cn(rowIdx === 2 && "border-b-2")}>
+                            {rowIdx === 0 && (
+                              <TableCell
+                                rowSpan={3}
+                                className="font-medium sticky left-0 bg-background z-10 border-r"
+                              >
+                                {categoryName}
+                              </TableCell>
+                            )}
+                            <TableCell className="text-center p-1">
+                              <span className="text-xs font-medium">₹{room.base_price}</span>
+                            </TableCell>
+                            <TableCell className="text-center p-1">
+                              <span
+                                className={cn(
+                                  "text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded",
+                                  rowType === "available" && "bg-green-100 text-green-700",
+                                  rowType === "booked" && "bg-orange-100 text-orange-700",
+                                  rowType === "blocked" && "bg-purple-100 text-purple-700"
+                                )}
+                              >
+                                {rowType}
+                              </span>
+                            </TableCell>
+                            {dates.map((date) => {
+                              const stats = getStats(room, date);
+                              const value = stats[rowType];
+                              return (
+                                <TableCell
+                                  key={date.toISOString()}
+                                  className={cn(
+                                    "text-center p-1 min-w-[40px]",
+                                    getCellColor(value, rowType, stats.total)
+                                  )}
+                                >
+                                  <span className="text-xs font-bold">{value}</span>
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        ));
+                      })
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-            )}
+
+              {/* Next Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex-shrink-0 h-full rounded-none border-l"
+                onClick={handleNext}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-4 mt-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded bg-green-500" />
+            <span>Fully Available</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded bg-yellow-500" />
+            <span>Partially Available</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded bg-red-500" />
+            <span>Sold Out</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded bg-orange-400" />
+            <span>Booked</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded bg-purple-500" />
+            <span>Blocked</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded bg-gray-100 border" />
+            <span>None</span>
+          </div>
+        </div>
       </main>
     </div>
   );
