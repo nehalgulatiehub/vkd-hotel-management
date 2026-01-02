@@ -14,12 +14,15 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
 
 export default function Bookings() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   const [showForm, setShowForm] = useState(false);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [agents, setAgents] = useState<any[]>([]);
@@ -658,7 +661,7 @@ export default function Bookings() {
 
   // Action handlers
   const handleViewDetails = (booking: any) => {
-    navigate(`/bookings/${booking.id}`);
+    navigate(isAdminRoute ? `/admin/bookings/${booking.id}` : `/bookings/${booking.id}`);
   };
 
   const handlePrintBooking = (booking: any) => {
@@ -670,11 +673,11 @@ export default function Bookings() {
   };
 
   const handleViewPayment = (booking: any) => {
-    navigate(`/payments/booking?id=${booking.id}`);
+    navigate(isAdminRoute ? `/admin/booking-payments?id=${booking.id}` : `/payments/booking?id=${booking.id}`);
   };
 
   const handleRefundPayment = (booking: any) => {
-    navigate(`/refunds?id=${booking.id}`);
+    navigate(isAdminRoute ? `/admin/refund-payments?id=${booking.id}` : `/refunds?id=${booking.id}`);
   };
 
   const handleEditBooking = async (booking: any) => {
