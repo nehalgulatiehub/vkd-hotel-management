@@ -9,10 +9,12 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function HoldBookings() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const [holdBookings, setHoldBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -250,7 +252,7 @@ export default function HoldBookings() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => navigate(`/bookings/${booking.id}`)}
+                              onClick={() => navigate(isAdminRoute ? `/admin/bookings/${booking.id}` : `/bookings/${booking.id}`)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>

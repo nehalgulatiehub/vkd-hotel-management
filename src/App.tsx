@@ -513,13 +513,73 @@ const App = () => (
           <Route path="/admin/another-hotel-due" element={<AdminLayout><ViewHotelDue /></AdminLayout>} />
           <Route path="/admin/safari-details" element={<AdminLayout><SafariDetails /></AdminLayout>} />
           <Route path="/admin/safari-payments" element={<AdminLayout><SafariPayments /></AdminLayout>} />
+          <Route path="/admin/safari-payments/add" element={<AdminLayout><SafariPayments /></AdminLayout>} />
           <Route path="/admin/vehicle-details" element={<AdminLayout><VehicleDetails /></AdminLayout>} />
           <Route path="/admin/vehicle-payments" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
           <Route path="/admin/another-hotel-details" element={<AdminLayout><HotelDetails /></AdminLayout>} />
           <Route path="/admin/another-hotel-payments" element={<AdminLayout><HotelPayments /></AdminLayout>} />
+          <Route path="/admin/another-hotel-payments/add" element={<AdminLayout><HotelPayments /></AdminLayout>} />
           <Route path="/admin/dm-volvo-details" element={<AdminLayout><VolvoDelhiManali /></AdminLayout>} />
           <Route path="/admin/md-volvo-details" element={<AdminLayout><VolvoManaliDelhi /></AdminLayout>} />
           <Route path="/admin/volvo-payments" element={<AdminLayout><VolvoPayments /></AdminLayout>} />
+          
+          {/* New Admin Module Routes */}
+          <Route path="/admin/email" element={<AdminLayout><AdminEmail /></AdminLayout>} />
+          <Route path="/admin/change-password" element={<AdminLayout><AdminChangePassword /></AdminLayout>} />
+          <Route path="/admin/followups" element={<AdminLayout><AdminFollowups /></AdminLayout>} />
+          <Route path="/admin/guest-users" element={<AdminLayout><AdminGuestUsers /></AdminLayout>} />
+          <Route path="/admin/guest-users/add" element={<AdminLayout><AdminGuestUsers /></AdminLayout>} />
+          <Route path="/admin/accounts" element={<AdminLayout><AdminAccounts /></AdminLayout>} />
+          <Route path="/admin/accounts/add" element={<AdminLayout><AdminAccounts /></AdminLayout>} />
+          <Route path="/admin/room-types" element={<AdminLayout><AdminRoomTypes /></AdminLayout>} />
+          <Route path="/admin/room-types/add" element={<AdminLayout><AdminRoomTypes /></AdminLayout>} />
+          <Route path="/admin/places" element={<AdminLayout><AdminPlaces /></AdminLayout>} />
+          <Route path="/admin/places/add" element={<AdminLayout><AdminPlaces /></AdminLayout>} />
+          <Route path="/admin/news" element={<AdminLayout><AdminNews /></AdminLayout>} />
+          <Route path="/admin/news/add" element={<AdminLayout><AdminNews /></AdminLayout>} />
+          <Route path="/admin/quotes" element={<AdminLayout><AdminQuotes /></AdminLayout>} />
+          <Route path="/admin/quotes/add" element={<AdminLayout><AdminQuotes /></AdminLayout>} />
+          <Route path="/admin/enquiries/export" element={<AdminLayout><ExportEnquiries /></AdminLayout>} />
+          
+          {/* Safari Manager Routes */}
+          <Route path="/admin/safari-pending" element={<AdminLayout><AdminSafariPendingPayments /></AdminLayout>} />
+          <Route path="/admin/safari-approved" element={<AdminLayout><AdminSafariApprovedPayments /></AdminLayout>} />
+          <Route path="/admin/safari-money" element={<AdminLayout><SafariPayments /></AdminLayout>} />
+          <Route path="/admin/safari-transporter-due" element={<AdminLayout><ViewSafariDue /></AdminLayout>} />
+          
+          {/* D-M Volvo Manager Routes */}
+          <Route path="/admin/dm-volvo-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
+          <Route path="/admin/dm-volvo-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          
+          {/* M-D Volvo Manager Routes */}
+          <Route path="/admin/md-volvo-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
+          <Route path="/admin/md-volvo-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          
+          {/* Transport Payment Manager Routes */}
+          <Route path="/admin/dm-transporter-money" element={<AdminLayout><VolvoDelhiManali /></AdminLayout>} />
+          <Route path="/admin/md-transporter-money" element={<AdminLayout><VolvoManaliDelhi /></AdminLayout>} />
+          <Route path="/admin/transporter-payments" element={<AdminLayout><VolvoPayments /></AdminLayout>} />
+          <Route path="/admin/transporter-payments/add" element={<AdminLayout><VolvoPayments /></AdminLayout>} />
+          <Route path="/admin/dm-transporter-due" element={<AdminLayout><ViewDelhiManaliDue /></AdminLayout>} />
+          <Route path="/admin/md-transporter-due" element={<AdminLayout><ViewManaliDelhiDue /></AdminLayout>} />
+          
+          {/* Another Hotel Manager Routes */}
+          <Route path="/admin/another-hotel-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
+          <Route path="/admin/another-hotel-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/another-hotel-money" element={<AdminLayout><HotelDetails /></AdminLayout>} />
+          <Route path="/admin/another-hotel-payment-due" element={<AdminLayout><ViewHotelDue /></AdminLayout>} />
+          
+          {/* Additional Vehicle Manager Routes */}
+          <Route path="/admin/vehicle-pending" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
+          <Route path="/admin/vehicle-approved" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
+          <Route path="/admin/vehicle-transporter-money" element={<AdminLayout><VehicleDetails /></AdminLayout>} />
+          <Route path="/admin/vehicle-transporter-payments" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
+          <Route path="/admin/vehicle-transporter-payments/add" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
+          <Route path="/admin/vehicle-transporter-due" element={<AdminLayout><ViewVehicleDue /></AdminLayout>} />
+          
+          {/* User Add Route */}
+          <Route path="/admin/users/add" element={<AdminLayout><UserManagement /></AdminLayout>} />
+          
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
           

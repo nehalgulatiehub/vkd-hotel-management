@@ -7,12 +7,14 @@ import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -109,7 +111,7 @@ export default function CancelledBookings() {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => navigate(`/refunds?id=${booking.id}`)}
+                            onClick={() => navigate(isAdminRoute ? `/admin/refund-payments?id=${booking.id}` : `/refunds?id=${booking.id}`)}
                           >
                             Process Refund
                           </Button>
