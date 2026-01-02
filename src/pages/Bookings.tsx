@@ -2279,12 +2279,13 @@ export default function Bookings() {
                     <SelectValue placeholder="Select payment type" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
-                    <SelectItem value="booking_advance">Booking Advance Payment</SelectItem>
-                    <SelectItem value="safari_payment">Safari Payment</SelectItem>
-                    <SelectItem value="volvo_payment">Volvo Payment</SelectItem>
-                    <SelectItem value="hotel_payment">Hotel Payment</SelectItem>
-                    <SelectItem value="vehicle_payment">Vehicle Payment</SelectItem>
-                    <SelectItem value="final_payment">Final Payment</SelectItem>
+                    <SelectItem value="booking">Booking Advance Payment</SelectItem>
+                    <SelectItem value="safari">Safari Payment</SelectItem>
+                    <SelectItem value="delhi_manali">D-M Volvo Payment</SelectItem>
+                    <SelectItem value="manali_delhi">M-D Volvo Payment</SelectItem>
+                    <SelectItem value="hotel">Another Hotel Payment</SelectItem>
+                    <SelectItem value="vehicle">Vehicle Payment</SelectItem>
+                    <SelectItem value="final">Final Payment</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
