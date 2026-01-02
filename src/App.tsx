@@ -70,6 +70,7 @@ import AdminAgents from "./pages/admin/AdminAgents";
 import AdminTransporters from "./pages/admin/AdminTransporters";
 import AdminAnotherHotels from "./pages/admin/AdminAnotherHotels";
 import AdminOwnHotels from "./pages/admin/AdminOwnHotels";
+import AdminUserList from "./pages/admin/AdminUserList";
 import ViewPendingPayment from "./pages/admin/ViewPendingPayment";
 import ViewApprovedPayment from "./pages/admin/ViewApprovedPayment";
 import ViewReferenceList from "./pages/admin/ViewReferenceList";
@@ -79,6 +80,11 @@ import ViewCancellationCharge from "./pages/admin/ViewCancellationCharge";
 import ViewBookReturnPayment from "./pages/admin/ViewBookReturnPayment";
 import ViewPaidPayment from "./pages/admin/ViewPaidPayment";
 import ViewReceivePayment from "./pages/admin/ViewReceivePayment";
+import ViewSafariDue from "./pages/admin/ViewSafariDue";
+import ViewDelhiManaliDue from "./pages/admin/ViewDelhiManaliDue";
+import ViewManaliDelhiDue from "./pages/admin/ViewManaliDelhiDue";
+import ViewVehicleDue from "./pages/admin/ViewVehicleDue";
+import ViewHotelDue from "./pages/admin/ViewHotelDue";
 
 const queryClient = new QueryClient();
 
@@ -486,6 +492,21 @@ const App = () => (
           <Route path="/admin/booking-availability" element={<AdminLayout><BookingAvailability /></AdminLayout>} />
           <Route path="/admin/room-bookings" element={<AdminLayout><RoomBookings /></AdminLayout>} />
           <Route path="/admin/enquiries" element={<AdminLayout><Enquiries /></AdminLayout>} />
+          <Route path="/admin/user-list" element={<AdminLayout><AdminUserList /></AdminLayout>} />
+          <Route path="/admin/safari-due" element={<AdminLayout><ViewSafariDue /></AdminLayout>} />
+          <Route path="/admin/dm-volvo-due" element={<AdminLayout><ViewDelhiManaliDue /></AdminLayout>} />
+          <Route path="/admin/md-volvo-due" element={<AdminLayout><ViewManaliDelhiDue /></AdminLayout>} />
+          <Route path="/admin/vehicle-due" element={<AdminLayout><ViewVehicleDue /></AdminLayout>} />
+          <Route path="/admin/another-hotel-due" element={<AdminLayout><ViewHotelDue /></AdminLayout>} />
+          <Route path="/admin/safari-details" element={<AdminLayout><SafariDetails /></AdminLayout>} />
+          <Route path="/admin/safari-payments" element={<AdminLayout><SafariPayments /></AdminLayout>} />
+          <Route path="/admin/vehicle-details" element={<AdminLayout><VehicleDetails /></AdminLayout>} />
+          <Route path="/admin/vehicle-payments" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
+          <Route path="/admin/another-hotel-details" element={<AdminLayout><HotelDetails /></AdminLayout>} />
+          <Route path="/admin/another-hotel-payments" element={<AdminLayout><HotelPayments /></AdminLayout>} />
+          <Route path="/admin/dm-volvo-details" element={<AdminLayout><VolvoDelhiManali /></AdminLayout>} />
+          <Route path="/admin/md-volvo-details" element={<AdminLayout><VolvoManaliDelhi /></AdminLayout>} />
+          <Route path="/admin/volvo-payments" element={<AdminLayout><VolvoPayments /></AdminLayout>} />
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
           
