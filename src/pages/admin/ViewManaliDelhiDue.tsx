@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
+import { AdminHeader } from "@/components/layout/AdminHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -101,7 +101,7 @@ export default function ViewManaliDelhiDue() {
   if (authLoading) {
     return (
       <div className="min-h-screen">
-        <Header title="View Manali-Delhi Due" />
+        <AdminHeader title="View Manali-Delhi Due" />
         <main className="p-4">
           <Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card>
         </main>
@@ -112,7 +112,7 @@ export default function ViewManaliDelhiDue() {
   if (!canManage) {
     return (
       <div className="min-h-screen">
-        <Header title="Access Denied" />
+        <AdminHeader title="Access Denied" />
         <main className="p-4">
           <Card><CardContent className="py-8 text-center text-muted-foreground">Access denied.</CardContent></Card>
         </main>
@@ -122,7 +122,7 @@ export default function ViewManaliDelhiDue() {
 
   return (
     <div className="min-h-screen">
-      <Header title="View Manali-Delhi Due" />
+      <AdminHeader title="View Manali-Delhi Due" />
       <main className="p-4 space-y-4">
         <DateRangeFilter 
           fromDate={fromDate}

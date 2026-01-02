@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/Header";
+import { AdminHeader } from "@/components/layout/AdminHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +83,7 @@ export default function AdminUserList() {
   if (authLoading) {
     return (
       <div className="min-h-screen">
-        <Header title="View User List" />
+        <AdminHeader title="View User List" />
         <main className="p-4">
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent>
@@ -96,7 +96,7 @@ export default function AdminUserList() {
   if (!canManage) {
     return (
       <div className="min-h-screen">
-        <Header title="Access Denied" />
+        <AdminHeader title="Access Denied" />
         <main className="p-4">
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
@@ -110,7 +110,7 @@ export default function AdminUserList() {
 
   return (
     <div className="min-h-screen">
-      <Header title="View User List" />
+      <AdminHeader title="View User List" />
       <main className="p-4 space-y-4">
         <Card>
           <CardHeader>
