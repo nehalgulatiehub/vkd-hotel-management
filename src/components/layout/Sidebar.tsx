@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown, Upload, UtensilsCrossed, Receipt, Shield
+  ChevronDown, Upload, UtensilsCrossed, Receipt
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -150,24 +150,6 @@ const menuItems: MenuItem[] = [
       { title: "Create Invoice", url: "/billing", menuKey: "billing_create" },
       { title: "Saved Invoices", url: "/invoices", menuKey: "billing_invoices" },
       { title: "Invoice Templates", url: "/invoice-templates", menuKey: "billing_templates" },
-    ]
-  },
-  {
-    title: "Admin",
-    icon: Shield,
-    adminOnly: true,
-    submenu: [
-      { title: "User Management", url: "/admin/users" },
-      { title: "Payment Approvals", url: "/admin/approvals" },
-      { title: "View Pending Payment", url: "/admin/pending-payments" },
-      { title: "View Approved Payment", url: "/admin/approved-payments" },
-      { title: "View Reference List", url: "/admin/reference-list" },
-      { title: "View Due Amount", url: "/admin/due-amount" },
-      { title: "View Total Pax", url: "/admin/total-pax" },
-      { title: "View Cancellation Charge", url: "/admin/cancellation-charges" },
-      { title: "View Book Return Payment", url: "/admin/book-return-payments" },
-      { title: "View Paid Payment", url: "/admin/paid-payments" },
-      { title: "View Receive Payment", url: "/admin/receive-payments" },
     ]
   },
 ];
