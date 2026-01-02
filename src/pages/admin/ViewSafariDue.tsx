@@ -185,7 +185,7 @@ export default function ViewSafariDue() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => safari.booking && navigate(`/bookings/${safari.booking.id}`)}
+                            onClick={() => safari.booking && navigate(`/admin/bookings/${safari.booking.id}`)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

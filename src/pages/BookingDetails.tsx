@@ -1,7 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import { BookingReceipt } from "@/components/booking/BookingReceipt";
 export default function BookingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const [booking, setBooking] = useState<any>(null);
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const [volvoBookings, setVolvoBookings] = useState<any[]>([]);
@@ -108,7 +110,7 @@ export default function BookingDetails() {
       <Header title="Booking Details" />
       <main className="p-6 print:hidden">
         <div className="flex justify-between items-center mb-6">
-          <Button variant="outline" onClick={() => navigate("/bookings")}>
+          <Button variant="outline" onClick={() => navigate(isAdminRoute ? "/admin/bookings" : "/bookings")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Bookings
           </Button>
