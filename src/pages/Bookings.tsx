@@ -269,11 +269,12 @@ export default function Bookings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Use the most specific dates available:
-    // - If "Booking" section is enabled and From/To are provided, use them.
-    // - Otherwise fall back to the main check-in/check-out dates.
-    const effectiveCheckIn = formData.booking_from || formData.check_in_date;
-    const effectiveCheckOut = formData.booking_to || formData.check_out_date;
+    // Use the most specific dates available (priority order):
+    // 1. If "Booking" section is enabled and From/To are provided, use them.
+    // 2. If "Another Hotel" section is enabled and check-in/out are provided, use them.
+    // 3. Otherwise fall back to the main check-in/check-out dates.
+    const effectiveCheckIn = formData.booking_from || formData.another_hotel_check_in || formData.check_in_date;
+    const effectiveCheckOut = formData.booking_to || formData.another_hotel_check_out || formData.check_out_date;
 
     // Required fields validation (prevents Postgres "invalid input syntax for type date: \"\"" errors)
     if (!effectiveCheckIn || !effectiveCheckOut) {
