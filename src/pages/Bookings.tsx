@@ -269,15 +269,21 @@ export default function Bookings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Use the most specific dates available:
+    // - If "Booking" section is enabled and From/To are provided, use them.
+    // - Otherwise fall back to the main check-in/check-out dates.
+    const effectiveCheckIn = formData.booking_from || formData.check_in_date;
+    const effectiveCheckOut = formData.booking_to || formData.check_out_date;
+
     // Required fields validation (prevents Postgres "invalid input syntax for type date: \"\"" errors)
-    if (!formData.check_in_date || !formData.check_out_date) {
+    if (!effectiveCheckIn || !effectiveCheckOut) {
       toast.error("Please select check-in and check-out dates.");
       return;
     }
 
     try {
       const isEditing = !!editingBookingId;
-      
+
       // Prepare main booking data
       const bookingData = {
         ...(!isEditing && { booking_number: `BK${Date.now().toString().slice(-8)}` }),
@@ -289,8 +295,8 @@ export default function Bookings() {
         address: formData.address,
         contact_no: formData.contact_no,
         email: formData.email,
-        check_in_date: formData.check_in_date,
-        check_out_date: formData.check_out_date,
+        check_in_date: effectiveCheckIn,
+        check_out_date: effectiveCheckOut,
         adults: formData.adults,
         children: formData.children,
         notes: formData.notes,
