@@ -268,7 +268,13 @@ export default function Bookings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Required fields validation (prevents Postgres "invalid input syntax for type date: \"\"" errors)
+    if (!formData.check_in_date || !formData.check_out_date) {
+      toast.error("Please select check-in and check-out dates.");
+      return;
+    }
+
     try {
       const isEditing = !!editingBookingId;
       
