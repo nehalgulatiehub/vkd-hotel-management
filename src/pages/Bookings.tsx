@@ -600,7 +600,19 @@ export default function Bookings() {
         group_expense_amount: "",
         group_expense_details: ""
       });
-    } catch (error) {
+    } catch (error: any) {
+      // If the session/refresh token is invalid, Supabase will fail before any DB write.
+      if (
+        error?.code === "refresh_token_not_found" ||
+        String(error?.message || "").includes("Invalid Refresh Token")
+      ) {
+        console.error("Auth expired while creating booking:", error);
+        toast.error("Session expired. Please sign in again.");
+        await supabase.auth.signOut();
+        navigate("/auth", { replace: true });
+        return;
+      }
+
       console.error("Error creating booking:", error);
       toast.error("Failed to create booking. Please try again.");
     }
