@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown, Upload, UtensilsCrossed, Receipt
+  ChevronDown, Upload, UtensilsCrossed, Receipt, ShoppingCart
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -150,6 +150,19 @@ const menuItems: MenuItem[] = [
       { title: "Create Invoice", url: "/billing", menuKey: "billing_create" },
       { title: "Saved Invoices", url: "/invoices", menuKey: "billing_invoices" },
       { title: "Invoice Templates", url: "/invoice-templates", menuKey: "billing_templates" },
+    ]
+  },
+  {
+    title: "Purchase",
+    icon: ShoppingCart,
+    submenu: [
+      { title: "Vendors", url: "/purchase/vendors", menuKey: "purchase_vendors" },
+      { title: "Item Master", url: "/purchase/items", menuKey: "purchase_items" },
+      { title: "Purchase Requests", url: "/purchase/requests", menuKey: "purchase_requests" },
+      { title: "Purchase Orders", url: "/purchase/orders", menuKey: "purchase_orders" },
+      { title: "Goods Receipt", url: "/purchase/grn", menuKey: "purchase_grn" },
+      { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
+      { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
     ]
   },
 ];

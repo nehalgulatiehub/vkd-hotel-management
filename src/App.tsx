@@ -62,6 +62,13 @@ import Billing from "./pages/Billing";
 import InvoiceList from "./pages/InvoiceList";
 import InvoiceTemplates from "./pages/InvoiceTemplates";
 import UserManagement from "./pages/UserManagement";
+import Vendors from "./pages/purchase/Vendors";
+import ItemMaster from "./pages/purchase/ItemMaster";
+import PurchaseRequests from "./pages/purchase/PurchaseRequests";
+import PurchaseOrders from "./pages/purchase/PurchaseOrders";
+import GoodsReceipt from "./pages/purchase/GoodsReceipt";
+import PurchaseInvoices from "./pages/purchase/PurchaseInvoices";
+import Inventory from "./pages/purchase/Inventory";
 import PaymentApprovals from "./pages/PaymentApprovals";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPlaceholder from "./pages/admin/AdminPlaceholder";
@@ -478,6 +485,15 @@ const App = () => (
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
           <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
           <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
+          
+          {/* Purchase Module Routes */}
+          <Route path="/purchase/vendors" element={<DashboardLayout><Vendors /></DashboardLayout>} />
+          <Route path="/purchase/items" element={<DashboardLayout><ItemMaster /></DashboardLayout>} />
+          <Route path="/purchase/requests" element={<DashboardLayout><PurchaseRequests /></DashboardLayout>} />
+          <Route path="/purchase/orders" element={<DashboardLayout><PurchaseOrders /></DashboardLayout>} />
+          <Route path="/purchase/grn" element={<DashboardLayout><GoodsReceipt /></DashboardLayout>} />
+          <Route path="/purchase/invoices" element={<DashboardLayout><PurchaseInvoices /></DashboardLayout>} />
+          <Route path="/purchase/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
           
           {/* Admin Panel Routes */}
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
