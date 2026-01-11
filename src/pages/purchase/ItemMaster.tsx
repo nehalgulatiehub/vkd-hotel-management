@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,11 +111,11 @@ export default function ItemMaster() {
   const {
     currentPage,
     totalPages,
-    paginatedData,
+    paginatedItems: paginatedData,
     startIndex,
     endIndex,
-    setCurrentPage,
-  } = usePagination({ data: filteredItems, itemsPerPage: 10 });
+    goToPage,
+  } = usePagination(filteredItems, { itemsPerPage: 10 });
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -440,7 +440,7 @@ export default function ItemMaster() {
                 <TablePagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={goToPage}
                   totalItems={filteredItems.length}
                   startIndex={startIndex}
                   endIndex={endIndex}

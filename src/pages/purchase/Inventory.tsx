@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -90,11 +90,11 @@ export default function Inventory() {
   const {
     currentPage,
     totalPages,
-    paginatedData,
+    paginatedItems: paginatedData,
     startIndex,
     endIndex,
-    setCurrentPage,
-  } = usePagination({ data: filteredInventory, itemsPerPage: 15 });
+    goToPage,
+  } = usePagination(filteredInventory, { itemsPerPage: 15 });
 
   // Stats
   const totalItems = inventory.length;
@@ -265,7 +265,7 @@ export default function Inventory() {
                 <TablePagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={goToPage}
                   totalItems={filteredInventory.length}
                   startIndex={startIndex}
                   endIndex={endIndex}

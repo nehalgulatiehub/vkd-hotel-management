@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -161,11 +161,11 @@ export default function PurchaseInvoices() {
   const {
     currentPage,
     totalPages,
-    paginatedData,
+    paginatedItems: paginatedData,
     startIndex,
     endIndex,
-    setCurrentPage,
-  } = usePagination({ data: filteredInvoices, itemsPerPage: 10 });
+    goToPage,
+  } = usePagination(filteredInvoices, { itemsPerPage: 10 });
 
   const generateInvoiceNumber = () => {
     const date = new Date();
@@ -561,7 +561,7 @@ export default function PurchaseInvoices() {
                 <TablePagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={goToPage}
                   totalItems={filteredInvoices.length}
                   startIndex={startIndex}
                   endIndex={endIndex}
