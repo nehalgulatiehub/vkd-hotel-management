@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -199,10 +198,9 @@ export default function ItemMaster() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
             <h1 className="text-2xl font-bold">Item Master</h1>
             <p className="text-muted-foreground text-sm">
               Manage items for purchasing
@@ -450,6 +448,5 @@ export default function ItemMaster() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
 }
