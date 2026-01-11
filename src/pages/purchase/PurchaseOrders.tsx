@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -168,11 +168,11 @@ export default function PurchaseOrders() {
   const {
     currentPage,
     totalPages,
-    paginatedData,
+    paginatedItems: paginatedData,
     startIndex,
     endIndex,
-    setCurrentPage,
-  } = usePagination({ data: filteredOrders, itemsPerPage: 10 });
+    goToPage,
+  } = usePagination(filteredOrders, { itemsPerPage: 10 });
 
   const generatePONumber = () => {
     const date = new Date();
@@ -591,7 +591,7 @@ export default function PurchaseOrders() {
                 <TablePagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={goToPage}
                   totalItems={filteredOrders.length}
                   startIndex={startIndex}
                   endIndex={endIndex}

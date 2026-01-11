@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,8 +125,7 @@ export default function PurchaseRequests() {
         .from("purchase_requests")
         .select(`
           *,
-          purchase_items (item_name, unit),
-          profiles:created_by (first_name, last_name)
+          purchase_items (item_name, unit)
         `)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -144,11 +143,11 @@ export default function PurchaseRequests() {
   const {
     currentPage,
     totalPages,
-    paginatedData,
+    paginatedItems: paginatedData,
     startIndex,
     endIndex,
-    setCurrentPage,
-  } = usePagination({ data: filteredRequests, itemsPerPage: 10 });
+    goToPage,
+  } = usePagination(filteredRequests, { itemsPerPage: 10 });
 
   const generatePRNumber = () => {
     const date = new Date();
@@ -468,7 +467,7 @@ export default function PurchaseRequests() {
                 <TablePagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={goToPage}
                   totalItems={filteredRequests.length}
                   startIndex={startIndex}
                   endIndex={endIndex}
