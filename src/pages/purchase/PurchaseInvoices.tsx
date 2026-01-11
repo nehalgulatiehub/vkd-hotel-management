@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -303,8 +302,7 @@ export default function PurchaseInvoices() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">Purchase Invoices</h1>
@@ -714,6 +712,5 @@ export default function PurchaseInvoices() {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
   );
 }

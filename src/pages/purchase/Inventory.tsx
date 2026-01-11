@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -110,8 +109,7 @@ export default function Inventory() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-bold">Inventory</h1>
           <p className="text-muted-foreground text-sm">
@@ -275,6 +273,5 @@ export default function Inventory() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
 }
