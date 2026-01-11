@@ -710,6 +710,112 @@ export type Database = {
           },
         ]
       }
+      goods_receipt_notes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          grn_number: string
+          id: string
+          notes: string | null
+          po_id: string
+          receipt_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          grn_number: string
+          id?: string
+          notes?: string | null
+          po_id: string
+          receipt_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          grn_number?: string
+          id?: string
+          notes?: string | null
+          po_id?: string
+          receipt_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_notes_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grn_items: {
+        Row: {
+          accepted_quantity: number | null
+          created_at: string | null
+          damaged_quantity: number | null
+          grn_id: string
+          id: string
+          item_id: string
+          notes: string | null
+          po_item_id: string
+          received_quantity: number
+        }
+        Insert: {
+          accepted_quantity?: number | null
+          created_at?: string | null
+          damaged_quantity?: number | null
+          grn_id: string
+          id?: string
+          item_id: string
+          notes?: string | null
+          po_item_id: string
+          received_quantity?: number
+        }
+        Update: {
+          accepted_quantity?: number | null
+          created_at?: string | null
+          damaged_quantity?: number | null
+          grn_id?: string
+          id?: string
+          item_id?: string
+          notes?: string | null
+          po_item_id?: string
+          received_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grn_items_grn_id_fkey"
+            columns: ["grn_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grn_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grn_items_po_item_id_fkey"
+            columns: ["po_item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_expenses: {
         Row: {
           amount: number
@@ -886,6 +992,96 @@ export type Database = {
             columns: ["own_hotel_id"]
             isOneToOne: false
             referencedRelation: "own_hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory: {
+        Row: {
+          current_stock: number | null
+          id: string
+          item_id: string
+          last_updated: string | null
+        }
+        Insert: {
+          current_stock?: number | null
+          id?: string
+          item_id: string
+          last_updated?: string | null
+        }
+        Update: {
+          current_stock?: number | null
+          id?: string
+          item_id?: string
+          last_updated?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "purchase_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_history: {
+        Row: {
+          change_type: string
+          created_at: string | null
+          created_by: string | null
+          grn_id: string | null
+          id: string
+          item_id: string
+          new_stock: number | null
+          notes: string | null
+          previous_stock: number | null
+          quantity_change: number
+        }
+        Insert: {
+          change_type: string
+          created_at?: string | null
+          created_by?: string | null
+          grn_id?: string | null
+          id?: string
+          item_id: string
+          new_stock?: number | null
+          notes?: string | null
+          previous_stock?: number | null
+          quantity_change: number
+        }
+        Update: {
+          change_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          grn_id?: string | null
+          id?: string
+          item_id?: string
+          new_stock?: number | null
+          notes?: string | null
+          previous_stock?: number | null
+          quantity_change?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_history_grn_id_fkey"
+            columns: ["grn_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_items"
             referencedColumns: ["id"]
           },
         ]
@@ -1117,6 +1313,421 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      purchase_invoices: {
+        Row: {
+          balance_amount: number | null
+          cgst_amount: number | null
+          created_at: string | null
+          created_by: string | null
+          due_date: string | null
+          grn_id: string | null
+          id: string
+          igst_amount: number | null
+          invoice_date: string | null
+          invoice_number: string
+          notes: string | null
+          paid_amount: number | null
+          payment_status:
+            | Database["public"]["Enums"]["invoice_payment_status"]
+            | null
+          po_id: string
+          sgst_amount: number | null
+          subtotal: number | null
+          total_amount: number | null
+          updated_at: string | null
+          vendor_id: string
+          vendor_invoice_number: string | null
+        }
+        Insert: {
+          balance_amount?: number | null
+          cgst_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          grn_id?: string | null
+          id?: string
+          igst_amount?: number | null
+          invoice_date?: string | null
+          invoice_number: string
+          notes?: string | null
+          paid_amount?: number | null
+          payment_status?:
+            | Database["public"]["Enums"]["invoice_payment_status"]
+            | null
+          po_id: string
+          sgst_amount?: number | null
+          subtotal?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          vendor_id: string
+          vendor_invoice_number?: string | null
+        }
+        Update: {
+          balance_amount?: number | null
+          cgst_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          grn_id?: string | null
+          id?: string
+          igst_amount?: number | null
+          invoice_date?: string | null
+          invoice_number?: string
+          notes?: string | null
+          paid_amount?: number | null
+          payment_status?:
+            | Database["public"]["Enums"]["invoice_payment_status"]
+            | null
+          po_id?: string
+          sgst_amount?: number | null
+          subtotal?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          vendor_id?: string
+          vendor_invoice_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_grn_id_fkey"
+            columns: ["grn_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_items: {
+        Row: {
+          category: Database["public"]["Enums"]["item_category"]
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          gst_percentage: number | null
+          hsn_code: string | null
+          id: string
+          is_active: boolean | null
+          item_name: string
+          reorder_level: number | null
+          unit: Database["public"]["Enums"]["item_unit"]
+          updated_at: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["item_category"]
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          gst_percentage?: number | null
+          hsn_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          item_name: string
+          reorder_level?: number | null
+          unit?: Database["public"]["Enums"]["item_unit"]
+          updated_at?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["item_category"]
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          gst_percentage?: number | null
+          hsn_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          item_name?: string
+          reorder_level?: number | null
+          unit?: Database["public"]["Enums"]["item_unit"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_order_items: {
+        Row: {
+          created_at: string | null
+          gst_amount: number | null
+          gst_percentage: number | null
+          id: string
+          item_id: string
+          po_id: string
+          pr_id: string | null
+          quantity: number
+          rate: number
+          received_quantity: number | null
+          total_amount: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          gst_amount?: number | null
+          gst_percentage?: number | null
+          id?: string
+          item_id: string
+          po_id: string
+          pr_id?: string | null
+          quantity?: number
+          rate?: number
+          received_quantity?: number | null
+          total_amount?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          gst_amount?: number | null
+          gst_percentage?: number | null
+          id?: string
+          item_id?: string
+          po_id?: string
+          pr_id?: string | null
+          quantity?: number
+          rate?: number
+          received_quantity?: number | null
+          total_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_pr_id_fkey"
+            columns: ["pr_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expected_delivery_date: string | null
+          id: string
+          notes: string | null
+          po_number: string
+          status: Database["public"]["Enums"]["po_status"] | null
+          subtotal: number | null
+          total_amount: number | null
+          total_gst: number | null
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          po_number: string
+          status?: Database["public"]["Enums"]["po_status"] | null
+          subtotal?: number | null
+          total_amount?: number | null
+          total_gst?: number | null
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          po_number?: string
+          status?: Database["public"]["Enums"]["po_status"] | null
+          subtotal?: number | null
+          total_amount?: number | null
+          total_gst?: number | null
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_date: string | null
+          payment_mode: string
+          reference_number: string | null
+          vendor_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_mode: string
+          reference_number?: string | null
+          vendor_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_mode?: string
+          reference_number?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_payments_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          created_by: string | null
+          department: Database["public"]["Enums"]["department_type"]
+          id: string
+          item_id: string
+          pr_number: string
+          priority: Database["public"]["Enums"]["priority_level"] | null
+          quantity: number
+          rejection_reason: string | null
+          remarks: string | null
+          status: Database["public"]["Enums"]["pr_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department: Database["public"]["Enums"]["department_type"]
+          id?: string
+          item_id: string
+          pr_number: string
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          quantity?: number
+          rejection_reason?: string | null
+          remarks?: string | null
+          status?: Database["public"]["Enums"]["pr_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: Database["public"]["Enums"]["department_type"]
+          id?: string
+          item_id?: string
+          pr_number?: string
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          quantity?: number
+          rejection_reason?: string | null
+          remarks?: string | null
+          status?: Database["public"]["Enums"]["pr_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_requests_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       refunds: {
         Row: {
@@ -1843,6 +2454,62 @@ export type Database = {
           },
         ]
       }
+      vendors: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          gst_number: string | null
+          id: string
+          is_active: boolean | null
+          mobile_number: string | null
+          notes: string | null
+          payment_terms: number | null
+          updated_at: string | null
+          vendor_name: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          is_active?: boolean | null
+          mobile_number?: string | null
+          notes?: string | null
+          payment_terms?: number | null
+          updated_at?: string | null
+          vendor_name: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          is_active?: boolean | null
+          mobile_number?: string | null
+          notes?: string | null
+          payment_terms?: number | null
+          updated_at?: string | null
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendors_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       volvo_bookings: {
         Row: {
           booking_id: string | null
@@ -1926,7 +2593,39 @@ export type Database = {
         | "confirmed"
         | "cancelled"
         | "completed"
+      department_type:
+        | "kitchen"
+        | "housekeeping"
+        | "maintenance"
+        | "front_desk"
+        | "admin"
+        | "other"
+      invoice_payment_status: "pending" | "partially_paid" | "paid"
+      item_category:
+        | "kitchen_items"
+        | "housekeeping_items"
+        | "linen"
+        | "toiletries"
+        | "maintenance"
+        | "other"
+      item_unit:
+        | "kg"
+        | "liter"
+        | "piece"
+        | "box"
+        | "packet"
+        | "dozen"
+        | "meter"
+        | "set"
       payment_status: "pending" | "partial" | "paid" | "refunded"
+      po_status:
+        | "created"
+        | "sent_to_vendor"
+        | "partially_received"
+        | "closed"
+        | "cancelled"
+      pr_status: "pending" | "approved" | "rejected"
+      priority_level: "low" | "medium" | "high"
       vehicle_type: "bus" | "car" | "tempo_traveller" | "other"
     }
     CompositeTypes: {
@@ -2063,7 +2762,43 @@ export const Constants = {
         "cancelled",
         "completed",
       ],
+      department_type: [
+        "kitchen",
+        "housekeeping",
+        "maintenance",
+        "front_desk",
+        "admin",
+        "other",
+      ],
+      invoice_payment_status: ["pending", "partially_paid", "paid"],
+      item_category: [
+        "kitchen_items",
+        "housekeeping_items",
+        "linen",
+        "toiletries",
+        "maintenance",
+        "other",
+      ],
+      item_unit: [
+        "kg",
+        "liter",
+        "piece",
+        "box",
+        "packet",
+        "dozen",
+        "meter",
+        "set",
+      ],
       payment_status: ["pending", "partial", "paid", "refunded"],
+      po_status: [
+        "created",
+        "sent_to_vendor",
+        "partially_received",
+        "closed",
+        "cancelled",
+      ],
+      pr_status: ["pending", "approved", "rejected"],
+      priority_level: ["low", "medium", "high"],
       vehicle_type: ["bus", "car", "tempo_traveller", "other"],
     },
   },
