@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Check, X, Search, Eye } from "lucide-react";
+import { Plus, Search, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
@@ -57,10 +57,6 @@ interface PurchaseRequest {
   purchase_items?: {
     item_name: string;
     unit: string;
-  };
-  profiles?: {
-    first_name: string | null;
-    last_name: string | null;
   };
 }
 
@@ -95,11 +91,10 @@ const initialFormData = {
 
 export default function PurchaseRequests() {
   const queryClient = useQueryClient();
-  const { user, isAdmin } = useAuthContext();
+  const { user } = useAuthContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedPR, setSelectedPR] = useState<PurchaseRequest | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
   const [formData, setFormData] = useState(initialFormData);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -179,34 +174,14 @@ export default function PurchaseRequests() {
     },
   });
 
-  const approveMutation = useMutation({
-    mutationFn: async ({ id, status, rejection_reason }: { id: string; status: PrStatus; rejection_reason?: string }) => {
-      const { error } = await supabase
-        .from("purchase_requests")
-        .update({
-          status,
-          approved_by: user?.id,
-          approved_at: new Date().toISOString(),
-          rejection_reason: rejection_reason || null,
-        })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["purchase-requests"] });
-      toast.success(`Request ${variables.status} successfully`);
-      setIsApprovalDialogOpen(false);
-      setSelectedPR(null);
-      setRejectionReason("");
-    },
-    onError: (error) => {
-      toast.error("Failed to update request: " + error.message);
-    },
-  });
-
   const resetForm = () => {
     setFormData(initialFormData);
     setIsDialogOpen(false);
+  };
+
+  const handleViewRequest = (pr: PurchaseRequest) => {
+    setSelectedPR(pr);
+    setIsViewDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -222,58 +197,94 @@ export default function PurchaseRequests() {
     createMutation.mutate(formData);
   };
 
-  const handleApproval = (pr: PurchaseRequest) => {
-    setSelectedPR(pr);
-    setIsApprovalDialogOpen(true);
-  };
-
-  const confirmApproval = (status: PrStatus) => {
-    if (!selectedPR) return;
-    if (status === "rejected" && !rejectionReason.trim()) {
-      toast.error("Please provide a rejection reason");
-      return;
-    }
-    approveMutation.mutate({
-      id: selectedPR.id,
-      status,
-      rejection_reason: status === "rejected" ? rejectionReason : undefined,
-    });
-  };
-
   return (
     <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Purchase Requests</h1>
-            <p className="text-muted-foreground text-sm">
-              Create and manage purchase requests
-            </p>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Request
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Create Purchase Request</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Purchase Requests</h1>
+          <p className="text-muted-foreground text-sm">
+            Create and track purchase requests (Admin approval required)
+          </p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => resetForm()}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Request
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Create Purchase Request</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="department">Department *</Label>
+                <Select
+                  value={formData.department}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, department: value as DepartmentType })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(departmentLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="item_id">Item *</Label>
+                <Select
+                  value={formData.item_id}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, item_id: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.item_name} ({item.unit})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="department">Department *</Label>
+                  <Label htmlFor="quantity">Quantity *</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
                   <Select
-                    value={formData.department}
+                    value={formData.priority}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, department: value as DepartmentType })
+                      setFormData({ ...formData, priority: value as PriorityLevel })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(departmentLabels).map(([value, label]) => (
+                      {Object.entries(priorityLabels).map(([value, label]) => (
                         <SelectItem key={value} value={value}>
                           {label}
                         </SelectItem>
@@ -281,273 +292,196 @@ export default function PurchaseRequests() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="item_id">Item *</Label>
-                  <Select
-                    value={formData.item_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, item_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select item" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {items.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.item_name} ({item.unit})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity *</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min="1"
-                      value={formData.quantity}
-                      onChange={(e) =>
-                        setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">Priority</Label>
-                    <Select
-                      value={formData.priority}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, priority: value as PriorityLevel })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(priorityLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="remarks">Remarks</Label>
-                  <Textarea
-                    id="remarks"
-                    value={formData.remarks}
-                    onChange={(e) =>
-                      setFormData({ ...formData, remarks: e.target.value })
-                    }
-                    placeholder="Any additional notes..."
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    Create Request
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <CardTitle className="text-base">Requests List</CardTitle>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-32">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search requests..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Loading...</div>
-            ) : (
-              <>
-                <div className="rounded-md border overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>PR Number</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedData.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8">
-                            No requests found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        paginatedData.map((pr) => (
-                          <TableRow key={pr.id}>
-                            <TableCell className="font-medium">
-                              {pr.pr_number}
-                            </TableCell>
-                            <TableCell>{departmentLabels[pr.department]}</TableCell>
-                            <TableCell>
-                              {pr.purchase_items?.item_name || "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {pr.quantity} {pr.purchase_items?.unit}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={pr.priority === "high" ? "destructive" : pr.priority === "medium" ? "default" : "secondary"}
-                              >
-                                {priorityLabels[pr.priority]}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={statusColors[pr.status]}>
-                                {pr.status.charAt(0).toUpperCase() + pr.status.slice(1)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {pr.created_at ? format(new Date(pr.created_at), "dd/MM/yyyy") : "-"}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-1">
-                                {pr.status === "pending" && (isAdmin() || true) && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleApproval(pr)}
-                                    title="Approve/Reject"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-                <TablePagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={goToPage}
-                  totalItems={filteredRequests.length}
-                  startIndex={startIndex}
-                  endIndex={endIndex}
+              <div className="space-y-2">
+                <Label htmlFor="remarks">Remarks</Label>
+                <Textarea
+                  id="remarks"
+                  value={formData.remarks}
+                  onChange={(e) =>
+                    setFormData({ ...formData, remarks: e.target.value })
+                  }
+                  placeholder="Any additional notes..."
                 />
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Approval Dialog */}
-        <Dialog open={isApprovalDialogOpen} onOpenChange={setIsApprovalDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Review Purchase Request</DialogTitle>
-            </DialogHeader>
-            {selectedPR && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">PR Number:</span>
-                    <p className="font-medium">{selectedPR.pr_number}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Department:</span>
-                    <p className="font-medium">{departmentLabels[selectedPR.department]}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Item:</span>
-                    <p className="font-medium">{selectedPR.purchase_items?.item_name}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Quantity:</span>
-                    <p className="font-medium">{selectedPR.quantity} {selectedPR.purchase_items?.unit}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Priority:</span>
-                    <p className="font-medium">{priorityLabels[selectedPR.priority]}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Requested By:</span>
-                    <p className="font-medium">
-                      {selectedPR.profiles?.first_name} {selectedPR.profiles?.last_name}
-                    </p>
-                  </div>
-                  {selectedPR.remarks && (
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground">Remarks:</span>
-                      <p className="font-medium">{selectedPR.remarks}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Rejection Reason (if rejecting)</Label>
-                  <Textarea
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Enter reason for rejection..."
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="destructive"
-                    onClick={() => confirmApproval("rejected")}
-                    disabled={approveMutation.isPending}
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Reject
-                  </Button>
-                  <Button
-                    onClick={() => confirmApproval("approved")}
-                    disabled={approveMutation.isPending}
-                  >
-                    <Check className="h-4 w-4 mr-1" />
-                    Approve
-                  </Button>
-                </div>
               </div>
-            )}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  Create Request
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <CardTitle className="text-base">Requests List</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-32">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search requests..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : (
+            <>
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>PR Number</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8">
+                          No requests found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedData.map((pr) => (
+                        <TableRow key={pr.id}>
+                          <TableCell className="font-medium">
+                            {pr.pr_number}
+                          </TableCell>
+                          <TableCell>{departmentLabels[pr.department]}</TableCell>
+                          <TableCell>
+                            {pr.purchase_items?.item_name || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {pr.quantity} {pr.purchase_items?.unit}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={pr.priority === "high" ? "destructive" : pr.priority === "medium" ? "default" : "secondary"}
+                            >
+                              {priorityLabels[pr.priority]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusColors[pr.status]}>
+                              {pr.status.charAt(0).toUpperCase() + pr.status.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {pr.created_at ? format(new Date(pr.created_at), "dd/MM/yyyy") : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewRequest(pr)}
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={filteredRequests.length}
+                startIndex={startIndex}
+                endIndex={endIndex}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* View Details Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request Details</DialogTitle>
+          </DialogHeader>
+          {selectedPR && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">PR Number:</span>
+                  <p className="font-medium">{selectedPR.pr_number}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Department:</span>
+                  <p className="font-medium">{departmentLabels[selectedPR.department]}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Item:</span>
+                  <p className="font-medium">{selectedPR.purchase_items?.item_name}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Quantity:</span>
+                  <p className="font-medium">{selectedPR.quantity} {selectedPR.purchase_items?.unit}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Priority:</span>
+                  <Badge variant={selectedPR.priority === "high" ? "destructive" : selectedPR.priority === "medium" ? "default" : "secondary"}>
+                    {priorityLabels[selectedPR.priority]}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <Badge variant={statusColors[selectedPR.status]} className="ml-1">
+                    {selectedPR.status.charAt(0).toUpperCase() + selectedPR.status.slice(1)}
+                  </Badge>
+                </div>
+                {selectedPR.remarks && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Remarks:</span>
+                    <p className="font-medium">{selectedPR.remarks}</p>
+                  </div>
+                )}
+                {selectedPR.rejection_reason && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground text-destructive">Rejection Reason:</span>
+                    <p className="font-medium text-destructive">{selectedPR.rejection_reason}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

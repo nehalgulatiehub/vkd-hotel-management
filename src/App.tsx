@@ -111,6 +111,13 @@ import AdminVehiclePendingPayments from "./pages/admin/AdminVehiclePendingPaymen
 import AdminVehicleApprovedPayments from "./pages/admin/AdminVehicleApprovedPayments";
 import AdminHotelPendingPayments from "./pages/admin/AdminHotelPendingPayments";
 import AdminHotelApprovedPayments from "./pages/admin/AdminHotelApprovedPayments";
+import AdminPurchaseItemApprovals from "./pages/admin/AdminPurchaseItemApprovals";
+import AdminPurchaseRequestApprovals from "./pages/admin/AdminPurchaseRequestApprovals";
+import AdminPurchaseOrders from "./pages/admin/AdminPurchaseOrders";
+import AdminGoodsReceipt from "./pages/admin/AdminGoodsReceipt";
+import AdminPurchaseInvoices from "./pages/admin/AdminPurchaseInvoices";
+import AdminVendors from "./pages/admin/AdminVendors";
+import AdminInventory from "./pages/admin/AdminInventory";
 
 const queryClient = new QueryClient();
 
@@ -603,6 +610,17 @@ const App = () => (
           
           {/* User Add Route */}
           <Route path="/admin/users/add" element={<AdminLayout><UserManagement /></AdminLayout>} />
+          
+          {/* Admin Purchase Module Routes */}
+          <Route path="/admin/purchase/items-pending" element={<AdminLayout><AdminPurchaseItemApprovals statusFilter="pending" /></AdminLayout>} />
+          <Route path="/admin/purchase/items-approved" element={<AdminLayout><AdminPurchaseItemApprovals statusFilter="approved" /></AdminLayout>} />
+          <Route path="/admin/purchase/requests-pending" element={<AdminLayout><AdminPurchaseRequestApprovals statusFilter="pending" /></AdminLayout>} />
+          <Route path="/admin/purchase/requests-approved" element={<AdminLayout><AdminPurchaseRequestApprovals statusFilter="approved" /></AdminLayout>} />
+          <Route path="/admin/purchase/orders" element={<AdminLayout><AdminPurchaseOrders /></AdminLayout>} />
+          <Route path="/admin/purchase/grn" element={<AdminLayout><AdminGoodsReceipt /></AdminLayout>} />
+          <Route path="/admin/purchase/invoices" element={<AdminLayout><AdminPurchaseInvoices /></AdminLayout>} />
+          <Route path="/admin/purchase/vendors" element={<AdminLayout><AdminVendors /></AdminLayout>} />
+          <Route path="/admin/purchase/inventory" element={<AdminLayout><AdminInventory /></AdminLayout>} />
           
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
