@@ -163,6 +163,7 @@ const menuItems: MenuItem[] = [
       { title: "Goods Receipt", url: "/purchase/grn", menuKey: "purchase_grn" },
       { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
       { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
+      { title: "Reports", url: "/purchase/reports", menuKey: "purchase_reports" },
     ]
   },
 ];

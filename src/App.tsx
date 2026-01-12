@@ -69,6 +69,7 @@ import PurchaseOrders from "./pages/purchase/PurchaseOrders";
 import GoodsReceipt from "./pages/purchase/GoodsReceipt";
 import PurchaseInvoices from "./pages/purchase/PurchaseInvoices";
 import Inventory from "./pages/purchase/Inventory";
+import PurchaseReports from "./pages/purchase/PurchaseReports";
 import PaymentApprovals from "./pages/PaymentApprovals";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPlaceholder from "./pages/admin/AdminPlaceholder";
@@ -118,6 +119,7 @@ import AdminGoodsReceipt from "./pages/admin/AdminGoodsReceipt";
 import AdminPurchaseInvoices from "./pages/admin/AdminPurchaseInvoices";
 import AdminVendors from "./pages/admin/AdminVendors";
 import AdminInventory from "./pages/admin/AdminInventory";
+import AdminPurchaseReports from "./pages/admin/AdminPurchaseReports";
 
 const queryClient = new QueryClient();
 
@@ -501,6 +503,7 @@ const App = () => (
           <Route path="/purchase/grn" element={<DashboardLayout><GoodsReceipt /></DashboardLayout>} />
           <Route path="/purchase/invoices" element={<DashboardLayout><PurchaseInvoices /></DashboardLayout>} />
           <Route path="/purchase/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
+          <Route path="/purchase/reports" element={<DashboardLayout><PurchaseReports /></DashboardLayout>} />
           
           {/* Admin Panel Routes */}
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
@@ -621,6 +624,7 @@ const App = () => (
           <Route path="/admin/purchase/invoices" element={<AdminLayout><AdminPurchaseInvoices /></AdminLayout>} />
           <Route path="/admin/purchase/vendors" element={<AdminLayout><AdminVendors /></AdminLayout>} />
           <Route path="/admin/purchase/inventory" element={<AdminLayout><AdminInventory /></AdminLayout>} />
+          <Route path="/admin/purchase/reports" element={<AdminLayout><AdminPurchaseReports /></AdminLayout>} />
           
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
