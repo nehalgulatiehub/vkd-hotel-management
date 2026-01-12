@@ -272,10 +272,10 @@ const adminMenuItems: MenuItem[] = [
     title: "Purchase Manager", 
     color: "#26A69A", 
     submenu: [
-      { title: "Pending Items", url: "/admin/purchase/items-pending" },
-      { title: "Approved Items", url: "/admin/purchase/items-approved" },
       { title: "Pending Requests", url: "/admin/purchase/requests-pending" },
       { title: "Approved Requests", url: "/admin/purchase/requests-approved" },
+      { title: "Pending PO Approvals", url: "/admin/purchase/po-pending" },
+      { title: "Approved POs", url: "/admin/purchase/po-approved" },
       { title: "Purchase Orders", url: "/admin/purchase/orders" },
       { title: "Goods Receipt", url: "/admin/purchase/grn" },
       { title: "Invoices", url: "/admin/purchase/invoices" },
