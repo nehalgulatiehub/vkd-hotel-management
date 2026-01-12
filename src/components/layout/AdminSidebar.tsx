@@ -281,6 +281,7 @@ const adminMenuItems: MenuItem[] = [
       { title: "Invoices", url: "/admin/purchase/invoices" },
       { title: "Vendors", url: "/admin/purchase/vendors" },
       { title: "Inventory", url: "/admin/purchase/inventory" },
+      { title: "Reports", url: "/admin/purchase/reports" },
     ] 
   },
 ];
