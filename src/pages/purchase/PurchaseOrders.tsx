@@ -36,7 +36,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 
-type PoStatus = "created" | "sent_to_vendor" | "partially_received" | "closed" | "cancelled";
+type PoStatus = "pending" | "approved" | "rejected" | "created" | "sent_to_vendor" | "partially_received" | "closed" | "cancelled";
 
 interface PurchaseOrder {
   id: string;
@@ -65,6 +65,9 @@ interface POItem {
 }
 
 const statusLabels: Record<PoStatus, string> = {
+  pending: "Pending Approval",
+  approved: "Approved",
+  rejected: "Rejected",
   created: "Created",
   sent_to_vendor: "Sent to Vendor",
   partially_received: "Partially Received",
@@ -73,6 +76,9 @@ const statusLabels: Record<PoStatus, string> = {
 };
 
 const statusColors: Record<PoStatus, "default" | "secondary" | "destructive" | "outline"> = {
+  pending: "secondary",
+  approved: "default",
+  rejected: "destructive",
   created: "secondary",
   sent_to_vendor: "default",
   partially_received: "outline",
@@ -209,6 +215,7 @@ export default function PurchaseOrders() {
           total_amount: totalAmount,
           notes: notes || null,
           created_by: user?.id,
+          status: "pending",
         }])
         .select()
         .single();

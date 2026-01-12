@@ -111,7 +111,7 @@ import AdminVehiclePendingPayments from "./pages/admin/AdminVehiclePendingPaymen
 import AdminVehicleApprovedPayments from "./pages/admin/AdminVehicleApprovedPayments";
 import AdminHotelPendingPayments from "./pages/admin/AdminHotelPendingPayments";
 import AdminHotelApprovedPayments from "./pages/admin/AdminHotelApprovedPayments";
-import AdminPurchaseItemApprovals from "./pages/admin/AdminPurchaseItemApprovals";
+import AdminPOApprovals from "./pages/admin/AdminPOApprovals";
 import AdminPurchaseRequestApprovals from "./pages/admin/AdminPurchaseRequestApprovals";
 import AdminPurchaseOrders from "./pages/admin/AdminPurchaseOrders";
 import AdminGoodsReceipt from "./pages/admin/AdminGoodsReceipt";
@@ -612,10 +612,10 @@ const App = () => (
           <Route path="/admin/users/add" element={<AdminLayout><UserManagement /></AdminLayout>} />
           
           {/* Admin Purchase Module Routes */}
-          <Route path="/admin/purchase/items-pending" element={<AdminLayout><AdminPurchaseItemApprovals statusFilter="pending" /></AdminLayout>} />
-          <Route path="/admin/purchase/items-approved" element={<AdminLayout><AdminPurchaseItemApprovals statusFilter="approved" /></AdminLayout>} />
           <Route path="/admin/purchase/requests-pending" element={<AdminLayout><AdminPurchaseRequestApprovals statusFilter="pending" /></AdminLayout>} />
           <Route path="/admin/purchase/requests-approved" element={<AdminLayout><AdminPurchaseRequestApprovals statusFilter="approved" /></AdminLayout>} />
+          <Route path="/admin/purchase/po-pending" element={<AdminLayout><AdminPOApprovals status="pending" /></AdminLayout>} />
+          <Route path="/admin/purchase/po-approved" element={<AdminLayout><AdminPOApprovals status="approved" /></AdminLayout>} />
           <Route path="/admin/purchase/orders" element={<AdminLayout><AdminPurchaseOrders /></AdminLayout>} />
           <Route path="/admin/purchase/grn" element={<AdminLayout><AdminGoodsReceipt /></AdminLayout>} />
           <Route path="/admin/purchase/invoices" element={<AdminLayout><AdminPurchaseInvoices /></AdminLayout>} />

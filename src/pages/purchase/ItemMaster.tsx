@@ -118,7 +118,7 @@ export default function ItemMaster() {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from("purchase_items").insert([{ ...data, is_active: false }]);
+      const { error } = await supabase.from("purchase_items").insert([{ ...data, is_active: true }]);
       if (error) throw error;
     },
     onSuccess: () => {

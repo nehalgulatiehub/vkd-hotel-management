@@ -2624,6 +2624,9 @@ export type Database = {
         | "partially_received"
         | "closed"
         | "cancelled"
+        | "pending"
+        | "approved"
+        | "rejected"
       pr_status: "pending" | "approved" | "rejected"
       priority_level: "low" | "medium" | "high"
       vehicle_type: "bus" | "car" | "tempo_traveller" | "other"
@@ -2796,6 +2799,9 @@ export const Constants = {
         "partially_received",
         "closed",
         "cancelled",
+        "pending",
+        "approved",
+        "rejected",
       ],
       pr_status: ["pending", "approved", "rejected"],
       priority_level: ["low", "medium", "high"],
