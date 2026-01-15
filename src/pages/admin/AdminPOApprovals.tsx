@@ -90,15 +90,54 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First, get the PO items
+      const { data: poItems, error: itemsError } = await supabase
+        .from("purchase_order_items")
+        .select("item_id, quantity")
+        .eq("po_id", id);
+      if (itemsError) throw itemsError;
+
+      // Update PO status
       const { error } = await supabase
         .from("purchase_orders")
         .update({ status: "approved" })
         .eq("id", id);
       if (error) throw error;
+
+      // Add items to inventory
+      for (const item of poItems || []) {
+        // Check if inventory entry exists
+        const { data: existing } = await supabase
+          .from("inventory")
+          .select("id, current_stock")
+          .eq("item_id", item.item_id)
+          .single();
+
+        if (existing) {
+          // Update existing stock
+          await supabase
+            .from("inventory")
+            .update({ 
+              current_stock: existing.current_stock + item.quantity,
+              last_updated: new Date().toISOString()
+            })
+            .eq("id", existing.id);
+        } else {
+          // Create new inventory entry
+          await supabase
+            .from("inventory")
+            .insert({
+              item_id: item.item_id,
+              current_stock: item.quantity,
+              last_updated: new Date().toISOString()
+            });
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-orders-admin"] });
-      toast.success("Purchase Order approved successfully");
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      toast.success("Purchase Order approved and inventory updated");
       setIsViewDialogOpen(false);
     },
     onError: (error) => {
