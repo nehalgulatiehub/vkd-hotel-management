@@ -85,7 +85,6 @@ export default function PurchaseInvoices() {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
   const [selectedPO, setSelectedPO] = useState("");
-  const [selectedGRN, setSelectedGRN] = useState("");
   const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [dueDate, setDueDate] = useState("");
@@ -100,8 +99,8 @@ export default function PurchaseInvoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: closedPOs = [] } = useQuery({
-    queryKey: ["closed-pos-for-invoice"],
+  const { data: approvedPOs = [] } = useQuery({
+    queryKey: ["approved-pos-for-invoice"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("purchase_orders")
@@ -112,26 +111,13 @@ export default function PurchaseInvoices() {
           total_amount,
           vendors (vendor_name)
         `)
-        .eq("status", "closed")
+        .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
-  const { data: grnsByPO = [] } = useQuery({
-    queryKey: ["grns-by-po", selectedPO],
-    queryFn: async () => {
-      if (!selectedPO) return [];
-      const { data, error } = await supabase
-        .from("goods_receipt_notes")
-        .select("id, grn_number")
-        .eq("po_id", selectedPO);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedPO,
-  });
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["purchase-invoices"],
@@ -180,8 +166,7 @@ export default function PurchaseInvoices() {
 
   const handlePOSelect = (poId: string) => {
     setSelectedPO(poId);
-    setSelectedGRN("");
-    const po = closedPOs.find((p: any) => p.id === poId);
+    const po = approvedPOs.find((p: any) => p.id === poId);
     if (po) {
       setSubtotal(po.total_amount || 0);
     }
@@ -193,7 +178,7 @@ export default function PurchaseInvoices() {
         throw new Error("Please select a PO");
       }
 
-      const po = closedPOs.find((p: any) => p.id === selectedPO);
+      const po = approvedPOs.find((p: any) => p.id === selectedPO);
       const totalAmount = subtotal + cgst + sgst + igst;
 
       const { error } = await supabase
@@ -202,7 +187,7 @@ export default function PurchaseInvoices() {
           invoice_number: generateInvoiceNumber(),
           vendor_invoice_number: vendorInvoiceNumber || null,
           po_id: selectedPO,
-          grn_id: selectedGRN || null,
+          grn_id: null,
           vendor_id: po?.vendor_id,
           invoice_date: invoiceDate,
           due_date: dueDate || null,
@@ -278,7 +263,6 @@ export default function PurchaseInvoices() {
 
   const resetForm = () => {
     setSelectedPO("");
-    setSelectedGRN("");
     setVendorInvoiceNumber("");
     setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
     setDueDate("");
@@ -322,37 +306,20 @@ export default function PurchaseInvoices() {
                 <DialogTitle>Create Purchase Invoice</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Select PO *</Label>
-                    <Select value={selectedPO} onValueChange={handlePOSelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select PO" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {closedPOs.map((po: any) => (
-                          <SelectItem key={po.id} value={po.id}>
-                            {po.po_number} - {po.vendors?.vendor_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Link GRN (Optional)</Label>
-                    <Select value={selectedGRN} onValueChange={setSelectedGRN}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select GRN" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {grnsByPO.map((grn: any) => (
-                          <SelectItem key={grn.id} value={grn.id}>
-                            {grn.grn_number}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Select PO *</Label>
+                  <Select value={selectedPO} onValueChange={handlePOSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select approved PO" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {approvedPOs.map((po: any) => (
+                        <SelectItem key={po.id} value={po.id}>
+                          {po.po_number} - {po.vendors?.vendor_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

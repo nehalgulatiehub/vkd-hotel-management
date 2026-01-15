@@ -160,7 +160,6 @@ const menuItems: MenuItem[] = [
       { title: "Item Master", url: "/purchase/items", menuKey: "purchase_items" },
       { title: "Purchase Requests", url: "/purchase/requests", menuKey: "purchase_requests" },
       { title: "Purchase Orders", url: "/purchase/orders", menuKey: "purchase_orders" },
-      { title: "Goods Receipt", url: "/purchase/grn", menuKey: "purchase_grn" },
       { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
       { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
       { title: "Reports", url: "/purchase/reports", menuKey: "purchase_reports" },
