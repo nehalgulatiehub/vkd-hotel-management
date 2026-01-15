@@ -8,7 +8,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
+
+// Type for another hotel entry
+interface AnotherHotelEntry {
+  hotel_id: string;
+  num_rooms: string;
+  room_type: string;
+  check_in: string;
+  check_out: string;
+  booking_price: string;
+  selling_price: string;
+  note: string;
+}
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
@@ -33,6 +45,18 @@ export default function Bookings() {
   const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Multiple another hotels state
+  const [anotherHotelsList, setAnotherHotelsList] = useState<AnotherHotelEntry[]>([{
+    hotel_id: "",
+    num_rooms: "",
+    room_type: "",
+    check_in: "",
+    check_out: "",
+    booking_price: "",
+    selling_price: "",
+    note: ""
+  }]);
   
   // Dialog states
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -127,16 +151,7 @@ export default function Bookings() {
     safari_booking_price: "",
     safari_selling_price: "",
     safari_note: "",
-    // Another Hotel section fields
-    another_hotel_id: "",
-    another_hotel_num_rooms: "",
-    another_hotel_room_type: "",
-    another_hotel_booking_date: "",
-    another_hotel_check_in: "",
-    another_hotel_check_out: "",
-    another_hotel_booking_price: "",
-    another_hotel_selling_price: "",
-    another_hotel_note: "",
+    // Another Hotel section fields - removed (now using anotherHotelsList state)
     // Additional Vehicle section fields
     vehicle_details: "",
     vehicle_booking_price: "",
@@ -271,10 +286,12 @@ export default function Bookings() {
 
     // Use the most specific dates available (priority order):
     // 1. If "Booking" section is enabled and From/To are provided, use them.
-    // 2. If "Another Hotel" section is enabled and check-in/out are provided, use them.
+    // 2. If "Another Hotel" section is enabled and check-in/out are provided, use first hotel's dates.
     // 3. Otherwise fall back to the main check-in/check-out dates.
-    const effectiveCheckIn = formData.booking_from || formData.another_hotel_check_in || formData.check_in_date;
-    const effectiveCheckOut = formData.booking_to || formData.another_hotel_check_out || formData.check_out_date;
+    const firstAnotherHotelCheckIn = anotherHotelsList[0]?.check_in || "";
+    const firstAnotherHotelCheckOut = anotherHotelsList[0]?.check_out || "";
+    const effectiveCheckIn = formData.booking_from || firstAnotherHotelCheckIn || formData.check_in_date;
+    const effectiveCheckOut = formData.booking_to || firstAnotherHotelCheckOut || formData.check_out_date;
 
     // Required fields validation (prevents Postgres "invalid input syntax for type date: \"\"" errors)
     if (!effectiveCheckIn || !effectiveCheckOut) {
@@ -451,31 +468,34 @@ export default function Bookings() {
         if (safariError) console.error("Safari booking error:", safariError);
       }
 
-      // Insert Another Hotel Booking if included
-      if (formData.include_another_hotel && formData.another_hotel_id) {
-        const anotherHotelAmount = formData.another_hotel_selling_price ? parseFloat(formData.another_hotel_selling_price) : 0;
-        totalAmount += anotherHotelAmount;
-        
-        const anotherHotelData = {
-          booking_id: bookingId,
-          hotel_id: formData.another_hotel_id,
-          own_hotel_id: null,
-          check_in_date: formData.another_hotel_check_in,
-          check_out_date: formData.another_hotel_check_out,
-          room_type: formData.another_hotel_room_type,
-          number_of_rooms: formData.another_hotel_num_rooms ? parseInt(formData.another_hotel_num_rooms) : 1,
-          room_rate: formData.another_hotel_booking_price ? parseFloat(formData.another_hotel_booking_price) : 0,
-          total_amount: anotherHotelAmount,
-          paid_amount: 0,
-          due_amount: anotherHotelAmount,
-          notes: formData.another_hotel_note
-        };
-        
-        const { error: anotherHotelError } = await supabase
-          .from("hotel_bookings")
-          .insert([anotherHotelData]);
-        
-        if (anotherHotelError) console.error("Another hotel booking error:", anotherHotelError);
+      // Insert Another Hotel Bookings if included (supports multiple hotels)
+      if (formData.include_another_hotel) {
+        const validHotels = anotherHotelsList.filter(h => h.hotel_id);
+        for (const hotel of validHotels) {
+          const hotelAmount = hotel.selling_price ? parseFloat(hotel.selling_price) : 0;
+          totalAmount += hotelAmount;
+          
+          const anotherHotelData = {
+            booking_id: bookingId,
+            hotel_id: hotel.hotel_id,
+            own_hotel_id: null,
+            check_in_date: hotel.check_in,
+            check_out_date: hotel.check_out,
+            room_type: hotel.room_type,
+            number_of_rooms: hotel.num_rooms ? parseInt(hotel.num_rooms) : 1,
+            room_rate: hotel.booking_price ? parseFloat(hotel.booking_price) : 0,
+            total_amount: hotelAmount,
+            paid_amount: 0,
+            due_amount: hotelAmount,
+            notes: hotel.note
+          };
+          
+          const { error: anotherHotelError } = await supabase
+            .from("hotel_bookings")
+            .insert([anotherHotelData]);
+          
+          if (anotherHotelError) console.error("Another hotel booking error:", anotherHotelError);
+        }
       }
 
       // Insert Additional Vehicle Booking if included
@@ -594,15 +614,6 @@ export default function Bookings() {
         safari_booking_price: "",
         safari_selling_price: "",
         safari_note: "",
-        another_hotel_id: "",
-        another_hotel_num_rooms: "",
-        another_hotel_room_type: "",
-        another_hotel_booking_date: "",
-        another_hotel_check_in: "",
-        another_hotel_check_out: "",
-        another_hotel_booking_price: "",
-        another_hotel_selling_price: "",
-        another_hotel_note: "",
         vehicle_details: "",
         vehicle_booking_price: "",
         vehicle_selling_price: "",
@@ -613,6 +624,17 @@ export default function Bookings() {
         group_expense_amount: "",
         group_expense_details: ""
       });
+      // Reset another hotels list
+      setAnotherHotelsList([{
+        hotel_id: "",
+        num_rooms: "",
+        room_type: "",
+        check_in: "",
+        check_out: "",
+        booking_price: "",
+        selling_price: "",
+        note: ""
+      }]);
     } catch (error: any) {
       // If the session/refresh token is invalid, Supabase will fail before any DB write.
       if (
@@ -784,16 +806,7 @@ export default function Bookings() {
         safari_booking_price: safariBooking?.rate_per_person?.toString() || "",
         safari_selling_price: safariBooking?.total_amount?.toString() || "",
         safari_note: safariBooking?.notes || "",
-        // Another hotel data
-        another_hotel_id: "",
-        another_hotel_num_rooms: "",
-        another_hotel_room_type: "",
-        another_hotel_booking_date: "",
-        another_hotel_check_in: "",
-        another_hotel_check_out: "",
-        another_hotel_booking_price: "",
-        another_hotel_selling_price: "",
-        another_hotel_note: "",
+        // Another hotel data is now managed via anotherHotelsList state
         // Vehicle data
         vehicle_details: vehicleBooking?.notes?.split("\n")[0] || "",
         vehicle_booking_price: vehicleBooking?.rate?.toString() || "",
@@ -1559,97 +1572,152 @@ export default function Bookings() {
                   </div>
                 )}
 
-                {/* Another Hotel Details Section */}
+                {/* Another Hotel Details Section - Supports Multiple Hotels */}
                 {formData.include_another_hotel && (
-                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
-                    <p className="text-[10px] font-semibold text-primary mb-1">Another Hotel Details</p>
-                    <CompactFormRow label="Hotel" className="!w-auto">
-                      <Select
-                        value={formData.another_hotel_id}
-                        onValueChange={(value) => setFormData({ ...formData, another_hotel_id: value })}
+                  <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-semibold text-primary">Another Hotel Details</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => setAnotherHotelsList([...anotherHotelsList, {
+                          hotel_id: "",
+                          num_rooms: "",
+                          room_type: "",
+                          check_in: "",
+                          check_out: "",
+                          booking_price: "",
+                          selling_price: "",
+                          note: ""
+                        }])}
                       >
-                        <SelectTrigger className="w-48">
-                          <SelectValue placeholder="-----Select-----" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {anotherHotels.map((hotel) => (
-                            <SelectItem key={hotel.id} value={hotel.id}>
-                              {hotel.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </CompactFormRow>
-                    <CompactFormRow label="No. Rooms" className="!w-auto">
-                      <Input
-                        type="number"
-                        min="1"
-                        value={formData.another_hotel_num_rooms}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_num_rooms: e.target.value })}
-                        className="w-20"
-                      />
-                    </CompactFormRow>
-                    <CompactFormRow label="Room Type" className="!w-auto">
-                      <Select
-                        value={formData.another_hotel_room_type}
-                        onValueChange={(value) => setFormData({ ...formData, another_hotel_room_type: value })}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="deluxe">Deluxe</SelectItem>
-                          <SelectItem value="suite">Suite</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </CompactFormRow>
-                    <div className="flex gap-2">
-                      <CompactFormRow label="Check In" className="!w-auto">
-                        <Input
-                          type="date"
-                          value={formData.another_hotel_check_in}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_check_in: e.target.value })}
-                          className="w-32"
-                        />
-                      </CompactFormRow>
-                      <CompactFormRow label="Check Out" className="!w-auto">
-                        <Input
-                          type="date"
-                          value={formData.another_hotel_check_out}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_check_out: e.target.value })}
-                          className="w-32"
-                        />
-                      </CompactFormRow>
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add More Hotel
+                      </Button>
                     </div>
-                    <div className="flex gap-2">
-                      <CompactFormRow label="Booking Price" className="!w-auto">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.another_hotel_booking_price}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_booking_price: e.target.value })}
-                          className="w-24"
-                        />
-                      </CompactFormRow>
-                      <CompactFormRow label="Selling Price" className="!w-auto">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.another_hotel_selling_price}
-                          onChange={(e) => setFormData({ ...formData, another_hotel_selling_price: e.target.value })}
-                          className="w-24"
-                        />
-                      </CompactFormRow>
-                    </div>
-                    <CompactFormRow label="Note" className="!w-auto">
-                      <Textarea
-                        value={formData.another_hotel_note}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_note: e.target.value })}
-                        rows={2}
-                        className="w-48"
-                      />
-                    </CompactFormRow>
+                    
+                    {anotherHotelsList.map((hotel, index) => {
+                      const updateHotel = (field: keyof AnotherHotelEntry, value: string) => {
+                        const newList = [...anotherHotelsList];
+                        newList[index] = { ...newList[index], [field]: value };
+                        setAnotherHotelsList(newList);
+                      };
+                      
+                      const removeHotel = () => {
+                        if (anotherHotelsList.length > 1) {
+                          const newList = anotherHotelsList.filter((_, i) => i !== index);
+                          setAnotherHotelsList(newList);
+                        }
+                      };
+                      
+                      return (
+                        <div key={index} className="border border-muted rounded-md p-2 space-y-1 relative">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[9px] font-medium text-muted-foreground">Hotel #{index + 1}</span>
+                            {anotherHotelsList.length > 1 && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                onClick={removeHotel}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                          <CompactFormRow label="Hotel" className="!w-auto">
+                            <Select
+                              value={hotel.hotel_id}
+                              onValueChange={(value) => updateHotel('hotel_id', value)}
+                            >
+                              <SelectTrigger className="w-48">
+                                <SelectValue placeholder="-----Select-----" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {anotherHotels.map((h) => (
+                                  <SelectItem key={h.id} value={h.id}>
+                                    {h.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </CompactFormRow>
+                          <CompactFormRow label="No. Rooms" className="!w-auto">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={hotel.num_rooms}
+                              onChange={(e) => updateHotel('num_rooms', e.target.value)}
+                              className="w-20"
+                            />
+                          </CompactFormRow>
+                          <CompactFormRow label="Room Type" className="!w-auto">
+                            <Select
+                              value={hotel.room_type}
+                              onValueChange={(value) => updateHotel('room_type', value)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="standard">Standard</SelectItem>
+                                <SelectItem value="deluxe">Deluxe</SelectItem>
+                                <SelectItem value="suite">Suite</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </CompactFormRow>
+                          <div className="flex gap-2">
+                            <CompactFormRow label="Check In" className="!w-auto">
+                              <Input
+                                type="date"
+                                value={hotel.check_in}
+                                onChange={(e) => updateHotel('check_in', e.target.value)}
+                                className="w-32"
+                              />
+                            </CompactFormRow>
+                            <CompactFormRow label="Check Out" className="!w-auto">
+                              <Input
+                                type="date"
+                                value={hotel.check_out}
+                                onChange={(e) => updateHotel('check_out', e.target.value)}
+                                className="w-32"
+                              />
+                            </CompactFormRow>
+                          </div>
+                          <div className="flex gap-2">
+                            <CompactFormRow label="Booking Price" className="!w-auto">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={hotel.booking_price}
+                                onChange={(e) => updateHotel('booking_price', e.target.value)}
+                                className="w-24"
+                              />
+                            </CompactFormRow>
+                            <CompactFormRow label="Selling Price" className="!w-auto">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={hotel.selling_price}
+                                onChange={(e) => updateHotel('selling_price', e.target.value)}
+                                className="w-24"
+                              />
+                            </CompactFormRow>
+                          </div>
+                          <CompactFormRow label="Note" className="!w-auto">
+                            <Textarea
+                              value={hotel.note}
+                              onChange={(e) => updateHotel('note', e.target.value)}
+                              rows={2}
+                              className="w-48"
+                            />
+                          </CompactFormRow>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -1839,15 +1907,6 @@ export default function Bookings() {
                         safari_booking_price: "",
                         safari_selling_price: "",
                         safari_note: "",
-                        another_hotel_id: "",
-                        another_hotel_num_rooms: "",
-                        another_hotel_room_type: "",
-                        another_hotel_booking_date: "",
-                        another_hotel_check_in: "",
-                        another_hotel_check_out: "",
-                        another_hotel_booking_price: "",
-                        another_hotel_selling_price: "",
-                        another_hotel_note: "",
                         vehicle_details: "",
                         vehicle_booking_price: "",
                         vehicle_selling_price: "",
@@ -1858,6 +1917,17 @@ export default function Bookings() {
                         group_expense_amount: "",
                         group_expense_details: ""
                       });
+                      // Reset another hotels list
+                      setAnotherHotelsList([{
+                        hotel_id: "",
+                        num_rooms: "",
+                        room_type: "",
+                        check_in: "",
+                        check_out: "",
+                        booking_price: "",
+                        selling_price: "",
+                        note: ""
+                      }]);
                     }}
                   >
                     Reset
