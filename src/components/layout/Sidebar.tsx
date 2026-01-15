@@ -231,7 +231,7 @@ export function AppSidebar() {
   }, [loading, hasMenuAccess, isAdmin, isAccount]);
 
   return (
-    <Sidebar className={`${collapsed ? "w-14" : "w-52"} print:hidden transition-all duration-200`}>
+    <Sidebar className="print:hidden" collapsible="icon">
       <SidebarHeader className="p-0">
         <div className="px-2 py-3">
           <h2
