@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Eye, Trash2 } from "lucide-react";
+import { Plus, Search, Eye, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
@@ -92,6 +92,7 @@ export default function PurchaseOrders() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
+  const [editingPO, setEditingPO] = useState<PurchaseOrder | null>(null);
   const [selectedVendor, setSelectedVendor] = useState("");
   const [selectedPRs, setSelectedPRs] = useState<string[]>([]);
   const [poItems, setPoItems] = useState<POItem[]>([]);
@@ -267,13 +268,137 @@ export default function PurchaseOrders() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // Delete PO items first
+      const { error: itemsError } = await supabase
+        .from("purchase_order_items")
+        .delete()
+        .eq("po_id", id);
+      if (itemsError) throw itemsError;
+
+      // Delete PO
+      const { error } = await supabase
+        .from("purchase_orders")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      toast.success("Purchase order deleted");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete: " + error.message);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingPO || !selectedVendor || poItems.length === 0) {
+        throw new Error("Invalid data");
+      }
+
+      const subtotal = poItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+      const totalGst = poItems.reduce((sum, item) => {
+        const amount = item.quantity * item.rate;
+        return sum + (amount * item.gst_percentage / 100);
+      }, 0);
+      const totalAmount = subtotal + totalGst;
+
+      // Update PO
+      const { error: poError } = await supabase
+        .from("purchase_orders")
+        .update({
+          vendor_id: selectedVendor,
+          expected_delivery_date: expectedDate || null,
+          subtotal,
+          total_gst: totalGst,
+          total_amount: totalAmount,
+          notes: notes || null,
+        })
+        .eq("id", editingPO.id);
+
+      if (poError) throw poError;
+
+      // Delete existing items and re-insert
+      await supabase
+        .from("purchase_order_items")
+        .delete()
+        .eq("po_id", editingPO.id);
+
+      const itemsToInsert = poItems.map((item) => ({
+        po_id: editingPO.id,
+        pr_id: item.pr_id,
+        item_id: item.item_id,
+        quantity: item.quantity,
+        rate: item.rate,
+        gst_percentage: item.gst_percentage,
+        gst_amount: (item.quantity * item.rate * item.gst_percentage / 100),
+        total_amount: item.quantity * item.rate + (item.quantity * item.rate * item.gst_percentage / 100),
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("purchase_order_items")
+        .insert(itemsToInsert);
+
+      if (itemsError) throw itemsError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      toast.success("Purchase order updated");
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error("Failed to update: " + error.message);
+    },
+  });
+
   const resetForm = () => {
     setSelectedVendor("");
     setSelectedPRs([]);
     setPoItems([]);
     setExpectedDate("");
     setNotes("");
+    setEditingPO(null);
     setIsDialogOpen(false);
+  };
+
+  const handleEdit = async (po: PurchaseOrder) => {
+    setEditingPO(po);
+    setSelectedVendor(po.vendor_id);
+    setExpectedDate(po.expected_delivery_date || "");
+    setNotes(po.notes || "");
+
+    // Load existing PO items
+    const { data: items } = await supabase
+      .from("purchase_order_items")
+      .select(`
+        *,
+        purchase_items (id, item_name, unit, gst_percentage)
+      `)
+      .eq("po_id", po.id);
+
+    if (items) {
+      setPoItems(items.map((item: any) => ({
+        pr_id: item.pr_id || "",
+        item_id: item.item_id,
+        item_name: item.purchase_items?.item_name || "",
+        unit: item.purchase_items?.unit || "",
+        quantity: item.quantity,
+        rate: item.rate,
+        gst_percentage: item.gst_percentage || 18,
+      })));
+      setSelectedPRs(items.filter((i: any) => i.pr_id).map((i: any) => i.pr_id));
+    }
+
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this purchase order?")) {
+      deleteMutation.mutate(id);
+    }
   };
 
   const handleAddPR = (prId: string) => {
@@ -349,7 +474,7 @@ export default function PurchaseOrders() {
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create Purchase Order</DialogTitle>
+                <DialogTitle>{editingPO ? "Edit Purchase Order" : "Create Purchase Order"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -478,10 +603,10 @@ export default function PurchaseOrders() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => createMutation.mutate()}
-                    disabled={createMutation.isPending || poItems.length === 0 || !selectedVendor}
+                    onClick={() => editingPO ? updateMutation.mutate() : createMutation.mutate()}
+                    disabled={(editingPO ? updateMutation.isPending : createMutation.isPending) || poItems.length === 0 || !selectedVendor}
                   >
-                    Create PO
+                    {editingPO ? "Update PO" : "Create PO"}
                   </Button>
                 </div>
               </div>
@@ -576,6 +701,25 @@ export default function PurchaseOrders() {
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
+                                {(po.status === "pending" || po.status === "created") && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEdit(po)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() => handleDelete(po.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
                                 {po.status === "created" && (
                                   <Button
                                     variant="ghost"
