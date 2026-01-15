@@ -77,6 +77,7 @@ export default function BookingAvailability() {
   const [startDate, setStartDate] = useState(startOfDay(new Date()));
   const [loading, setLoading] = useState(true);
   const [searchDate, setSearchDate] = useState(format(new Date(), "dd-MM-yyyy"));
+  const [selectedHotelFilter, setSelectedHotelFilter] = useState<string>("all");
 
   // Bulk Update Modal State
   const [bulkUpdateOpen, setBulkUpdateOpen] = useState(false);
@@ -139,6 +140,11 @@ export default function BookingAvailability() {
     setRoomBlocks(blocksData || []);
     setLoading(false);
   };
+
+  // Filter rooms by selected hotel
+  const filteredRooms = selectedHotelFilter === "all" 
+    ? rooms 
+    : rooms.filter(room => room.hotel_id === selectedHotelFilter);
 
   // Generate the dates to display
   const dates = Array.from({ length: DAYS_TO_SHOW }, (_, i) => addDays(startDate, i));
@@ -347,19 +353,39 @@ export default function BookingAvailability() {
               Bulk Update
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Search</span>
-            <Input
-              type="text"
-              placeholder="dd-MM-yyyy"
-              value={searchDate}
-              onChange={(e) => setSearchDate(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-32 h-8 text-sm"
-            />
-            <Button size="sm" variant="outline" onClick={handleSearch}>
-              Go
-            </Button>
+          <div className="flex items-center gap-4">
+            {/* Hotel Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Hotel</span>
+              <Select value={selectedHotelFilter} onValueChange={setSelectedHotelFilter}>
+                <SelectTrigger className="w-40 h-8 text-sm">
+                  <SelectValue placeholder="All Hotels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Hotels</SelectItem>
+                  {hotels.map((hotel) => (
+                    <SelectItem key={hotel.id} value={hotel.id}>
+                      {hotel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Date Search */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Search</span>
+              <Input
+                type="text"
+                placeholder="dd-MM-yyyy"
+                value={searchDate}
+                onChange={(e) => setSearchDate(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-32 h-8 text-sm"
+              />
+              <Button size="sm" variant="outline" onClick={handleSearch}>
+                Go
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -402,14 +428,16 @@ export default function BookingAvailability() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rooms.length === 0 ? (
+                    {filteredRooms.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={DAYS_TO_SHOW + 4} className="text-center py-8 text-muted-foreground">
-                          No rooms configured. Add rooms to your hotels first.
+                          {rooms.length === 0 
+                            ? "No rooms configured. Add rooms to your hotels first."
+                            : "No rooms found for the selected hotel."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      rooms.map((room) => {
+                      filteredRooms.map((room) => {
                         const rowTypes = ["available", "booked", "blocked"] as const;
                         return rowTypes.map((rowType, rowIdx) => (
                           <TableRow key={`${room.id}-${rowType}`} className={cn(rowIdx === 2 && "border-b-2")}>
