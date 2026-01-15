@@ -51,17 +51,19 @@ export default function AdminVehicleApprovedPayments() {
 
       const bookingIds = [...new Set((data || []).map(p => p.booking?.id).filter(Boolean))];
       let hotelBookingsMap: Record<string, { hotel_name: string | null; room_name: string | null }> = {};
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
       if (bookingIds.length > 0) {
         const { data: hotelBookings } = await supabase.from("hotel_bookings").select(`booking_id, room_type, hotel:another_hotels(name), own_hotel:own_hotels(name)`).in("booking_id", bookingIds);
-        const roomIds = [...new Set((hotelBookings || []).map((hb: any) => hb.room_type).filter(Boolean))];
+        const roomIds = [...new Set((hotelBookings || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
         let roomsMap: Record<string, string> = {};
         if (roomIds.length > 0) {
           const { data: rooms } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
           roomsMap = (rooms || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
         }
         hotelBookings?.forEach((hb: any) => {
-          hotelBookingsMap[hb.booking_id] = { hotel_name: hb.hotel?.name || hb.own_hotel?.name || null, room_name: roomsMap[hb.room_type] || hb.room_type || null };
+          const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
+          hotelBookingsMap[hb.booking_id] = { hotel_name: hb.hotel?.name || hb.own_hotel?.name || null, room_name: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type || null };
         });
       }
 

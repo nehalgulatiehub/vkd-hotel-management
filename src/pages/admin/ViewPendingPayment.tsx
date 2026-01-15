@@ -135,8 +135,9 @@ export default function ViewPendingPayment() {
           .select(`booking_id, room_type, number_of_rooms, hotel:another_hotels(name), own_hotel:own_hotels(name)`)
           .in("booking_id", bookingIds);
         
-        // Fetch room names for room_type IDs
-        const roomIds = [...new Set((hotelBookings || []).map((hb: any) => hb.room_type).filter(Boolean))];
+        // Check if room_type is a UUID and fetch room names
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const roomIds = [...new Set((hotelBookings || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
         let roomsMap: Record<string, string> = {};
         
         if (roomIds.length > 0) {
@@ -152,9 +153,10 @@ export default function ViewPendingPayment() {
         }
         
         hotelBookings?.forEach((hb: any) => {
+          const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
           hotelBookingsMap[hb.booking_id] = {
             hotel_name: hb.hotel?.name || hb.own_hotel?.name || null,
-            room_type: roomsMap[hb.room_type] || hb.room_type,
+            room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
             number_of_rooms: hb.number_of_rooms
           };
         });
