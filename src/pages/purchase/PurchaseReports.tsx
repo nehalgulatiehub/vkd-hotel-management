@@ -44,8 +44,8 @@ interface ItemReport {
 
 interface DetailedPurchase {
   id: string;
-  grn_number: string;
-  receipt_date: string;
+  po_number: string;
+  order_date: string;
   vendor_name: string;
   item_name: string;
   quantity: number;
@@ -72,37 +72,32 @@ export default function PurchaseReports() {
     },
   });
 
-  // Fetch vendor-wise report
+  // Fetch vendor-wise report from approved POs
   const { data: vendorReport = [], isLoading: vendorLoading } = useQuery({
     queryKey: ["purchase-vendor-report", dateFrom, dateTo],
     queryFn: async () => {
-      // Get all GRNs with their items
       let query = supabase
-        .from("goods_receipt_notes")
+        .from("purchase_orders")
         .select(`
           id,
-          receipt_date,
-          purchase_orders (
-            id,
-            vendor_id,
-            vendors (id, vendor_name),
+          po_number,
+          created_at,
+          vendor_id,
+          total_amount,
+          vendors (id, vendor_name),
+          purchase_order_items (
+            quantity,
+            rate,
             total_amount
-          ),
-          grn_items (
-            received_quantity,
-            accepted_quantity,
-            purchase_order_items (
-              rate,
-              total_amount
-            )
           )
-        `);
+        `)
+        .eq("status", "approved");
 
       if (dateFrom) {
-        query = query.gte("receipt_date", dateFrom);
+        query = query.gte("created_at", dateFrom);
       }
       if (dateTo) {
-        query = query.lte("receipt_date", dateTo);
+        query = query.lte("created_at", dateTo + "T23:59:59");
       }
 
       const { data, error } = await query;
@@ -111,9 +106,9 @@ export default function PurchaseReports() {
       // Aggregate by vendor
       const vendorMap = new Map<string, VendorReport>();
       
-      data?.forEach((grn: any) => {
-        const vendorId = grn.purchase_orders?.vendor_id;
-        const vendorName = grn.purchase_orders?.vendors?.vendor_name || "Unknown";
+      data?.forEach((po: any) => {
+        const vendorId = po.vendor_id;
+        const vendorName = po.vendors?.vendor_name || "Unknown";
         
         if (!vendorId) return;
 
@@ -129,10 +124,10 @@ export default function PurchaseReports() {
 
         const vendor = vendorMap.get(vendorId)!;
         vendor.total_orders += 1;
+        vendor.total_amount += po.total_amount || 0;
         
-        grn.grn_items?.forEach((item: any) => {
-          vendor.total_items_received += item.accepted_quantity || item.received_quantity || 0;
-          vendor.total_amount += item.purchase_order_items?.total_amount || 0;
+        po.purchase_order_items?.forEach((item: any) => {
+          vendor.total_items_received += item.quantity || 0;
         });
       });
 
@@ -141,35 +136,38 @@ export default function PurchaseReports() {
     enabled: reportType === "vendor",
   });
 
-  // Fetch item-wise report
+  // Fetch item-wise report from approved POs
   const { data: itemReport = [], isLoading: itemLoading } = useQuery({
     queryKey: ["purchase-item-report", dateFrom, dateTo],
     queryFn: async () => {
       let query = supabase
-        .from("grn_items")
+        .from("purchase_order_items")
         .select(`
           id,
-          received_quantity,
-          accepted_quantity,
+          quantity,
+          rate,
+          total_amount,
           purchase_items:item_id (id, item_name, unit),
-          purchase_order_items:po_item_id (rate, total_amount),
-          goods_receipt_notes:grn_id (
-            receipt_date,
-            purchase_orders (vendor_id)
+          purchase_orders:po_id (
+            id,
+            status,
+            created_at,
+            vendor_id
           )
         `);
 
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filter by date if provided
-      let filteredData = data;
+      // Filter by approved status and date
+      let filteredData = data?.filter((item: any) => item.purchase_orders?.status === "approved");
+      
       if (dateFrom || dateTo) {
-        filteredData = data?.filter((item: any) => {
-          const receiptDate = item.goods_receipt_notes?.receipt_date;
-          if (!receiptDate) return false;
-          if (dateFrom && receiptDate < dateFrom) return false;
-          if (dateTo && receiptDate > dateTo) return false;
+        filteredData = filteredData?.filter((item: any) => {
+          const orderDate = item.purchase_orders?.created_at?.split("T")[0];
+          if (!orderDate) return false;
+          if (dateFrom && orderDate < dateFrom) return false;
+          if (dateTo && orderDate > dateTo) return false;
           return true;
         });
       }
@@ -177,11 +175,11 @@ export default function PurchaseReports() {
       // Aggregate by item
       const itemMap = new Map<string, ItemReport & { vendors: Set<string> }>();
       
-      filteredData?.forEach((grn: any) => {
-        const itemId = grn.purchase_items?.id;
-        const itemName = grn.purchase_items?.item_name || "Unknown";
-        const unit = grn.purchase_items?.unit || "";
-        const vendorId = grn.goods_receipt_notes?.purchase_orders?.vendor_id;
+      filteredData?.forEach((poItem: any) => {
+        const itemId = poItem.purchase_items?.id;
+        const itemName = poItem.purchase_items?.item_name || "Unknown";
+        const unit = poItem.purchase_items?.unit || "";
+        const vendorId = poItem.purchase_orders?.vendor_id;
         
         if (!itemId) return;
 
@@ -199,9 +197,8 @@ export default function PurchaseReports() {
         }
 
         const item = itemMap.get(itemId)!;
-        const qty = grn.accepted_quantity || grn.received_quantity || 0;
-        item.total_quantity += qty;
-        item.total_amount += grn.purchase_order_items?.total_amount || 0;
+        item.total_quantity += poItem.quantity || 0;
+        item.total_amount += poItem.total_amount || 0;
         if (vendorId) item.vendors.add(vendorId);
       });
 
@@ -214,24 +211,23 @@ export default function PurchaseReports() {
     enabled: reportType === "item",
   });
 
-  // Fetch detailed purchase report
+  // Fetch detailed purchase report from approved POs
   const { data: detailedReport = [], isLoading: detailedLoading } = useQuery({
     queryKey: ["purchase-detailed-report", dateFrom, dateTo],
     queryFn: async () => {
       let query = supabase
-        .from("grn_items")
+        .from("purchase_order_items")
         .select(`
           id,
-          received_quantity,
-          accepted_quantity,
+          quantity,
+          rate,
+          total_amount,
           purchase_items:item_id (item_name, unit),
-          purchase_order_items:po_item_id (rate, total_amount),
-          goods_receipt_notes:grn_id (
-            grn_number,
-            receipt_date,
-            purchase_orders (
-              vendors (vendor_name)
-            )
+          purchase_orders:po_id (
+            po_number,
+            created_at,
+            status,
+            vendors (vendor_name)
           )
         `)
         .order("created_at", { ascending: false });
@@ -239,27 +235,28 @@ export default function PurchaseReports() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filter by date if provided
-      let filteredData = data;
+      // Filter by approved status and date
+      let filteredData = data?.filter((item: any) => item.purchase_orders?.status === "approved");
+      
       if (dateFrom || dateTo) {
-        filteredData = data?.filter((item: any) => {
-          const receiptDate = item.goods_receipt_notes?.receipt_date;
-          if (!receiptDate) return false;
-          if (dateFrom && receiptDate < dateFrom) return false;
-          if (dateTo && receiptDate > dateTo) return false;
+        filteredData = filteredData?.filter((item: any) => {
+          const orderDate = item.purchase_orders?.created_at?.split("T")[0];
+          if (!orderDate) return false;
+          if (dateFrom && orderDate < dateFrom) return false;
+          if (dateTo && orderDate > dateTo) return false;
           return true;
         });
       }
 
       return filteredData?.map((item: any) => ({
         id: item.id,
-        grn_number: item.goods_receipt_notes?.grn_number || "",
-        receipt_date: item.goods_receipt_notes?.receipt_date || "",
-        vendor_name: item.goods_receipt_notes?.purchase_orders?.vendors?.vendor_name || "Unknown",
+        po_number: item.purchase_orders?.po_number || "",
+        order_date: item.purchase_orders?.created_at?.split("T")[0] || "",
+        vendor_name: item.purchase_orders?.vendors?.vendor_name || "Unknown",
         item_name: item.purchase_items?.item_name || "Unknown",
-        quantity: item.accepted_quantity || item.received_quantity || 0,
-        rate: item.purchase_order_items?.rate || 0,
-        amount: item.purchase_order_items?.total_amount || 0,
+        quantity: item.quantity || 0,
+        rate: item.rate || 0,
+        amount: item.total_amount || 0,
       })) as DetailedPurchase[];
     },
     enabled: reportType === "detailed",
@@ -286,7 +283,7 @@ export default function PurchaseReports() {
       return detailedReport.filter(d => 
         d.vendor_name.toLowerCase().includes(term) ||
         d.item_name.toLowerCase().includes(term) ||
-        d.grn_number.toLowerCase().includes(term)
+        d.po_number.toLowerCase().includes(term)
       );
     }
   };
@@ -310,9 +307,9 @@ export default function PurchaseReports() {
         csvContent += `"${i.item_name}","${i.unit}",${i.total_quantity},${i.average_rate.toFixed(2)},${i.total_amount.toFixed(2)},${i.vendor_count}\n`;
       });
     } else {
-      csvContent = "GRN Number,Date,Vendor,Item,Quantity,Rate,Amount\n";
+      csvContent = "PO Number,Date,Vendor,Item,Quantity,Rate,Amount\n";
       detailedReport.forEach(d => {
-        csvContent += `"${d.grn_number}","${d.receipt_date}","${d.vendor_name}","${d.item_name}",${d.quantity},${d.rate.toFixed(2)},${d.amount.toFixed(2)}\n`;
+        csvContent += `"${d.po_number}","${d.order_date}","${d.vendor_name}","${d.item_name}",${d.quantity},${d.rate.toFixed(2)},${d.amount.toFixed(2)}\n`;
       });
     }
 
@@ -495,7 +492,7 @@ export default function PurchaseReports() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>GRN #</TableHead>
+                      <TableHead>PO #</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Vendor</TableHead>
                       <TableHead>Item</TableHead>
@@ -514,9 +511,9 @@ export default function PurchaseReports() {
                     ) : (
                       (pagination.paginatedItems as DetailedPurchase[]).map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.grn_number}</TableCell>
+                          <TableCell className="font-medium">{item.po_number}</TableCell>
                           <TableCell>
-                            {item.receipt_date ? format(new Date(item.receipt_date), "dd/MM/yyyy") : "-"}
+                            {item.order_date ? format(new Date(item.order_date), "dd/MM/yyyy") : "-"}
                           </TableCell>
                           <TableCell>{item.vendor_name}</TableCell>
                           <TableCell>{item.item_name}</TableCell>
