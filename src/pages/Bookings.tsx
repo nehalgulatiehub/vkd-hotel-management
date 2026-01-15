@@ -2310,6 +2310,22 @@ export default function Bookings() {
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Summary Footer */}
+                <div className="bg-pink-100 border border-pink-300 p-3 space-y-1">
+                  <div className="font-semibold text-sm">
+                    Total Booking Price : Rs. {filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0).toLocaleString('en-IN')} /-
+                  </div>
+                  <div className="flex gap-8 text-sm">
+                    <span className="font-semibold">
+                      Total Received Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.paid_amount || 0), 0).toLocaleString('en-IN')} /-
+                    </span>
+                    <span className="font-semibold">
+                      Total Due Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0).toLocaleString('en-IN')} /-
+                    </span>
+                  </div>
+                </div>
+
                 <TablePagination
                   currentPage={pagination.currentPage}
                   totalPages={pagination.totalPages}
