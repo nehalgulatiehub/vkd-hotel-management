@@ -44,7 +44,22 @@ export default function BookingDetails() {
         .from("hotel_bookings")
         .select("*, own_hotels(name), another_hotels(name)")
         .eq("booking_id", id);
-      setHotelBookings(hotelData || []);
+      
+      // Resolve room_type UUIDs to room names
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const roomIds = [...new Set((hotelData || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
+      let roomsMap: Record<string, string> = {};
+      
+      if (roomIds.length > 0) {
+        const { data: rooms } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
+        roomsMap = (rooms || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
+      }
+      
+      const hotelBookingsWithRoomNames = (hotelData || []).map((hb: any) => {
+        const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
+        return { ...hb, room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type };
+      });
+      setHotelBookings(hotelBookingsWithRoomNames);
 
       // Fetch volvo bookings
       const { data: volvoData } = await supabase
