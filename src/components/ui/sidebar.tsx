@@ -14,9 +14,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
-const SIDEBAR_WIDTH_MOBILE = "18rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
+const SIDEBAR_WIDTH = "14rem";
+const SIDEBAR_WIDTH_MOBILE = "16rem";
+const SIDEBAR_WIDTH_ICON = "3.5rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 type SidebarContext = {
@@ -331,7 +331,8 @@ const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<"di
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-sidebar-border scrollbar-track-transparent group-data-[collapsible=icon]:overflow-hidden",
+        "[&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border/50 [&::-webkit-scrollbar-track]:bg-transparent",
         className,
       )}
       {...props}
@@ -564,7 +565,7 @@ const SidebarMenuSub = React.forwardRef<HTMLUListElement, React.ComponentProps<"
       ref={ref}
       data-sidebar="menu-sub"
       className={cn(
-        "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
+        "mx-3.5 flex min-w-0 w-full translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5 bg-sidebar",
         "group-data-[collapsible=icon]:hidden",
         className,
       )}
