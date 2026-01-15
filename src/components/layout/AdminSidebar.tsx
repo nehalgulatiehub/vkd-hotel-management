@@ -277,7 +277,6 @@ const adminMenuItems: MenuItem[] = [
       { title: "Pending PO Approvals", url: "/admin/purchase/po-pending" },
       { title: "Approved POs", url: "/admin/purchase/po-approved" },
       { title: "Purchase Orders", url: "/admin/purchase/orders" },
-      { title: "Goods Receipt", url: "/admin/purchase/grn" },
       { title: "Invoices", url: "/admin/purchase/invoices" },
       { title: "Vendors", url: "/admin/purchase/vendors" },
       { title: "Inventory", url: "/admin/purchase/inventory" },
