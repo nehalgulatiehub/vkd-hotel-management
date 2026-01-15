@@ -281,11 +281,11 @@ export function AppSidebar() {
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         {!collapsed && (
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
+                          <CollapsibleContent className="relative z-50">
+                            <SidebarMenuSub className="bg-sidebar border-l border-sidebar-border">
                               {item.submenu.map((subItem) => (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild className="text-[10px] h-5">
+                                  <SidebarMenuSubButton asChild className="text-[10px] h-5 bg-sidebar hover:bg-sidebar-accent/50">
                                     <NavLink
                                       to={subItem.url}
                                       className={({ isActive }) =>
