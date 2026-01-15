@@ -37,6 +37,7 @@ export default function Bookings() {
   const isAddRoute = location.pathname === "/bookings/add";
 
   const [showForm, setShowForm] = useState(isAddRoute);
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   
   // Auto-show form when navigating to /bookings/add
   useEffect(() => {
@@ -45,7 +46,6 @@ export default function Bookings() {
       setEditingBookingId(null);
     }
   }, [isAddRoute]);
-  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
