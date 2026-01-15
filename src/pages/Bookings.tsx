@@ -1190,6 +1190,18 @@ export default function Bookings() {
                       </RadioGroup>
                     </CompactFormRow>
 
+                    {formData.booking_package_type === "custom" && (
+                      <CompactFormRow label="Package Note" className="!w-auto">
+                        <Textarea
+                          placeholder="Enter custom package details..."
+                          value={formData.booking_custom_package}
+                          onChange={(e) => setFormData({ ...formData, booking_custom_package: e.target.value })}
+                          rows={2}
+                          className="w-48"
+                        />
+                      </CompactFormRow>
+                    )}
+
                     <CompactFormRow label="Price" className="!w-auto">
                       <Input
                         type="number"
