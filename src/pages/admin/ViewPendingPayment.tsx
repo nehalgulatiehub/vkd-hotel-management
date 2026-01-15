@@ -135,10 +135,26 @@ export default function ViewPendingPayment() {
           .select(`booking_id, room_type, number_of_rooms, hotel:another_hotels(name), own_hotel:own_hotels(name)`)
           .in("booking_id", bookingIds);
         
+        // Fetch room names for room_type IDs
+        const roomIds = [...new Set((hotelBookings || []).map((hb: any) => hb.room_type).filter(Boolean))];
+        let roomsMap: Record<string, string> = {};
+        
+        if (roomIds.length > 0) {
+          const { data: rooms } = await supabase
+            .from("rooms")
+            .select("id, room_type, room_number")
+            .in("id", roomIds);
+          
+          roomsMap = (rooms || []).reduce((acc: Record<string, string>, r: any) => ({ 
+            ...acc, 
+            [r.id]: r.room_type || r.room_number 
+          }), {});
+        }
+        
         hotelBookings?.forEach((hb: any) => {
           hotelBookingsMap[hb.booking_id] = {
             hotel_name: hb.hotel?.name || hb.own_hotel?.name || null,
-            room_type: hb.room_type,
+            room_type: roomsMap[hb.room_type] || hb.room_type,
             number_of_rooms: hb.number_of_rooms
           };
         });
