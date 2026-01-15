@@ -10,10 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface PaymentWithDetails {
   id: string;
@@ -36,6 +38,8 @@ interface PaymentWithDetails {
     agent?: { name: string; company_name: string | null } | null;
   } | null;
   approved_by_profile?: { username: string | null; first_name: string | null; last_name: string | null } | null;
+  hotel_name?: string | null;
+  room_name?: string | null;
 }
 
 export default function ViewApprovedPayment() {
@@ -49,6 +53,8 @@ export default function ViewApprovedPayment() {
   const [toDate, setToDate] = useState("");
   const [appliedFromDate, setAppliedFromDate] = useState("");
   const [appliedToDate, setAppliedToDate] = useState("");
+  const [rejectingPaymentId, setRejectingPaymentId] = useState<string | null>(null);
+  const [rejectLoading, setRejectLoading] = useState(false);
 
   const filteredPayments = payments.filter(payment => {
     const matchesCustomer = !searchCustomer || 
@@ -104,9 +110,37 @@ export default function ViewApprovedPayment() {
         profilesMap = (profiles || []).reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
       }
 
+      // Fetch hotel and room details
+      const bookingIds = [...new Set((data || []).map(p => p.booking?.id).filter(Boolean))];
+      let hotelBookingsMap: Record<string, { hotel_name: string | null; room_name: string | null }> = {};
+
+      if (bookingIds.length > 0) {
+        const { data: hotelBookings } = await supabase
+          .from("hotel_bookings")
+          .select(`booking_id, room_type, hotel:another_hotels(name), own_hotel:own_hotels(name)`)
+          .in("booking_id", bookingIds);
+
+        const roomIds = [...new Set((hotelBookings || []).map((hb: any) => hb.room_type).filter(Boolean))];
+        let roomsMap: Record<string, string> = {};
+
+        if (roomIds.length > 0) {
+          const { data: rooms } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
+          roomsMap = (rooms || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
+        }
+
+        hotelBookings?.forEach((hb: any) => {
+          hotelBookingsMap[hb.booking_id] = {
+            hotel_name: hb.hotel?.name || hb.own_hotel?.name || null,
+            room_name: roomsMap[hb.room_type] || hb.room_type || null
+          };
+        });
+      }
+
       const paymentsWithProfiles = (data || []).map(p => ({
         ...p,
-        approved_by_profile: p.approved_by ? profilesMap[p.approved_by] : null
+        approved_by_profile: p.approved_by ? profilesMap[p.approved_by] : null,
+        hotel_name: p.booking?.id ? hotelBookingsMap[p.booking.id]?.hotel_name : null,
+        room_name: p.booking?.id ? hotelBookingsMap[p.booking.id]?.room_name : null
       }));
 
       setPayments(paymentsWithProfiles as PaymentWithDetails[]);
@@ -114,6 +148,23 @@ export default function ViewApprovedPayment() {
       console.error("Error fetching approved payments:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRejectPayment = async () => {
+    if (!rejectingPaymentId) return;
+    setRejectLoading(true);
+    try {
+      const { error } = await supabase.from("payments").update({ approval_status: "pending", approved_at: null, approved_by: null }).eq("id", rejectingPaymentId);
+      if (error) throw error;
+      toast.success("Payment reverted to pending status");
+      fetchApprovedPayments();
+    } catch (error) {
+      console.error("Error rejecting payment:", error);
+      toast.error("Failed to reject payment");
+    } finally {
+      setRejectLoading(false);
+      setRejectingPaymentId(null);
     }
   };
 
@@ -222,8 +273,8 @@ export default function ViewApprovedPayment() {
                         <TableCell>
                           <div className="text-xs space-y-1">
                             <div>Agent: {payment.booking?.agent?.name || "Direct"}</div>
-                            <div>Hotel: -</div>
-                            <div>Room: -</div>
+                            <div>Hotel: {payment.hotel_name || "-"}</div>
+                            <div>Room: {payment.room_name || "-"}</div>
                           </div>
                         </TableCell>
                         <TableCell>Rs. {payment.amount?.toLocaleString() || 0}/-</TableCell>
@@ -246,6 +297,9 @@ export default function ViewApprovedPayment() {
                             <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/admin/booking-payments?id=${payment.booking?.id}`)}>
                               View Payments
                             </Button>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-red-600" onClick={() => setRejectingPaymentId(payment.id)}>
+                              Reject
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -258,6 +312,19 @@ export default function ViewApprovedPayment() {
           </CardContent>
         </Card>
       </main>
+
+      <AlertDialog open={!!rejectingPaymentId} onOpenChange={() => setRejectingPaymentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Payment</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to reject this payment? It will be reverted to pending status.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={rejectLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRejectPayment} disabled={rejectLoading} className="bg-red-600 hover:bg-red-700">{rejectLoading ? "Rejecting..." : "Reject"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
