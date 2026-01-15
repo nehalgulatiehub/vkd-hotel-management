@@ -34,8 +34,17 @@ export default function Bookings() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isAddRoute = location.pathname === "/bookings/add";
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(isAddRoute);
+  
+  // Auto-show form when navigating to /bookings/add
+  useEffect(() => {
+    if (isAddRoute) {
+      setShowForm(true);
+      setEditingBookingId(null);
+    }
+  }, [isAddRoute]);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
