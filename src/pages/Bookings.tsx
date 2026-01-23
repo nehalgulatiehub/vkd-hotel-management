@@ -53,6 +53,7 @@ export default function Bookings() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [filterRooms, setFilterRooms] = useState<any[]>([]);
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -225,6 +226,24 @@ export default function Bookings() {
       console.error("Failed to load rooms", error);
     } else {
       setRooms(data || []);
+    }
+  };
+
+  const fetchFilterRoomsForHotel = async (hotelId: string) => {
+    if (!hotelId) {
+      setFilterRooms([]);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("rooms")
+      .select("*")
+      .eq("hotel_id", hotelId)
+      .order("room_number");
+    
+    if (error) {
+      console.error("Failed to load filter rooms", error);
+    } else {
+      setFilterRooms(data || []);
     }
   };
 
@@ -2070,16 +2089,23 @@ export default function Bookings() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs mt-2">
                   <div className="flex items-center gap-1">
                     <Label className="text-xs font-medium">Hotel :</Label>
-                    <Select value={filters.hotel} onValueChange={(value) => setFilters({...filters, hotel: value})}>
+                    <Select value={filters.hotel} onValueChange={(value) => {
+                      setFilters({...filters, hotel: value, room: ""});
+                      fetchFilterRoomsForHotel(value);
+                    }}>
                       <SelectTrigger className="h-7 w-36 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
                       <SelectContent className="bg-white z-50">{ownHotels.map(hotel => (<SelectItem key={hotel.id} value={hotel.id}>{hotel.name}</SelectItem>))}</SelectContent>
                     </Select>
                   </div>
                   <div className="flex items-center gap-1">
                     <Label className="text-xs font-medium">Room :</Label>
-                    <Select value={filters.room} onValueChange={(value) => setFilters({...filters, room: value})}>
-                      <SelectTrigger className="h-7 w-28 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
-                      <SelectContent className="bg-white z-50"><SelectItem value="standard">Standard</SelectItem><SelectItem value="deluxe">Deluxe</SelectItem><SelectItem value="suite">Suite</SelectItem></SelectContent>
+                    <Select value={filters.room} onValueChange={(value) => setFilters({...filters, room: value})} disabled={!filters.hotel}>
+                      <SelectTrigger className="h-7 w-28 text-xs bg-white"><SelectValue placeholder={filters.hotel ? "--Select--" : "Select hotel first"} /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {filterRooms.map(room => (
+                          <SelectItem key={room.id} value={room.id}>{room.room_type || room.room_number}</SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                   <div className="flex items-center gap-1">
