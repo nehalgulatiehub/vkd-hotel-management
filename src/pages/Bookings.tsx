@@ -75,7 +75,9 @@ export default function Bookings() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
+  const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [bookingPayments, setBookingPayments] = useState<any[]>([]);
   const [viewDetailHotelInfo, setViewDetailHotelInfo] = useState<{
     hotelName: string;
     roomName: string;
@@ -841,8 +843,20 @@ export default function Bookings() {
     }, 800);
   };
 
-  const handleViewPayment = (booking: any) => {
-    navigate(isAdminRoute ? `/admin/booking-payments?id=${booking.id}` : `/payments/booking?id=${booking.id}`);
+  const fetchBookingPayments = async (bookingId: string) => {
+    const { data } = await supabase
+      .from("payments")
+      .select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)")
+      .eq("booking_id", bookingId)
+      .order("payment_date", { ascending: false });
+    setBookingPayments(data || []);
+  };
+
+  const handleViewPayment = async (booking: any) => {
+    setSelectedBooking(booking);
+    setBookingPayments([]);
+    setShowViewPaymentDialog(true);
+    await fetchBookingPayments(booking.id);
   };
 
   const handleRefundPayment = (booking: any) => {
@@ -2475,6 +2489,96 @@ export default function Bookings() {
                       <td className="py-1.5 pr-4 text-right font-medium">Date :</td>
                       <td className="py-1.5">{selectedBooking?.created_at ? new Date(selectedBooking.created_at).toLocaleDateString('en-GB') : "-"}</td>
                     </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="bg-[#1e6e99] h-3"></div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Payment Dialog */}
+        <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
+          <DialogContent className="max-w-2xl p-0 overflow-hidden">
+            <div className="bg-[#1e6e99] text-white px-4 py-2 text-sm font-medium">
+              View Payment
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Summary Header */}
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr style={{ backgroundColor: "#D4A59A" }}>
+                    <th className="border border-border px-3 py-1.5"></th>
+                    <th className="border border-border px-3 py-1.5 text-center font-medium">Total Payment</th>
+                    <th className="border border-border px-3 py-1.5 text-center font-medium">Total Received Payment</th>
+                    <th className="border border-border px-3 py-1.5 text-center font-medium">Total Due Payment</th>
+                    <th className="border border-border px-3 py-1.5 text-center font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ backgroundColor: "#F5E6E0" }}>
+                    <td className="border border-border px-3 py-1.5 font-medium">Booking</td>
+                    <td className="border border-border px-3 py-1.5 text-center">Rs. {selectedBooking?.total_amount?.toLocaleString('en-IN') || 0}/-</td>
+                    <td className="border border-border px-3 py-1.5 text-center">Rs. {selectedBooking?.paid_amount?.toLocaleString('en-IN') || 0}/-</td>
+                    <td className="border border-border px-3 py-1.5 text-center">Rs. {selectedBooking?.due_amount?.toLocaleString('en-IN') || 0}/-</td>
+                    <td className="border border-border px-3 py-1.5 text-center">
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-xs text-primary underline"
+                        onClick={() => {
+                          setShowViewPaymentDialog(false);
+                          handleViewDetails(selectedBooking);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Payment History Section */}
+              <div>
+                <div className="text-sm font-medium mb-2">Booking</div>
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr style={{ backgroundColor: "#D4A59A" }}>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">S.No.</th>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">Payment</th>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">Date</th>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">Mode</th>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">Payment Detail</th>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">Place</th>
+                      <th className="border border-border px-2 py-1.5 text-center font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookingPayments.length === 0 ? (
+                      <tr style={{ backgroundColor: "#F5E6E0" }}>
+                        <td colSpan={7} className="border border-border px-3 py-4 text-center text-muted-foreground">
+                          No payments found
+                        </td>
+                      </tr>
+                    ) : (
+                      bookingPayments.map((payment, idx) => (
+                        <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
+                          <td className="border border-border px-2 py-1.5 text-center">{idx + 1}</td>
+                          <td className="border border-border px-2 py-1.5 text-center">Rs. {payment.amount?.toLocaleString('en-IN') || 0}/-</td>
+                          <td className="border border-border px-2 py-1.5 text-center">
+                            {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('en-GB') : "-"}
+                          </td>
+                          <td className="border border-border px-2 py-1.5">
+                            <div className="capitalize">{payment.payment_mode || "-"}</div>
+                            {payment.reference_number && (
+                              <div className="text-xs text-muted-foreground">Code={payment.reference_number}</div>
+                            )}
+                          </td>
+                          <td className="border border-border px-2 py-1.5">{payment.notes || "-"}</td>
+                          <td className="border border-border px-2 py-1.5 text-center">{payment.cities?.name || "-"}</td>
+                          <td className="border border-border px-2 py-1.5 text-center capitalize">{payment.approval_status || "Pending"}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
