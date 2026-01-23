@@ -74,7 +74,17 @@ export default function Bookings() {
   // Dialog states
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [viewDetailHotelInfo, setViewDetailHotelInfo] = useState<{
+    hotelName: string;
+    roomName: string;
+    numberOfRooms: number;
+    notes: string;
+    checkIn: string;
+    checkOut: string;
+    totalAmount: number;
+  } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
@@ -783,8 +793,44 @@ export default function Bookings() {
   const years = Array.from({ length: 10 }, (_, i) => (currentYear - i).toString());
 
   // Action handlers
-  const handleViewDetails = (booking: any) => {
-    navigate(isAdminRoute ? `/admin/bookings/${booking.id}` : `/bookings/${booking.id}`);
+  const handleViewDetails = async (booking: any) => {
+    setSelectedBooking(booking);
+    setViewDetailHotelInfo(null);
+    setShowViewDetailDialog(true);
+    
+    // Fetch hotel booking details
+    const { data: hotelData } = await supabase
+      .from("hotel_bookings")
+      .select("*, own_hotels(name), another_hotels(name)")
+      .eq("booking_id", booking.id)
+      .maybeSingle();
+    
+    if (hotelData) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let roomName = hotelData.room_type || "-";
+      
+      // Resolve room UUID to name
+      if (hotelData.room_type && uuidRegex.test(hotelData.room_type)) {
+        const { data: roomData } = await supabase
+          .from("rooms")
+          .select("room_type, room_number")
+          .eq("id", hotelData.room_type)
+          .maybeSingle();
+        if (roomData) {
+          roomName = roomData.room_type || roomData.room_number || "-";
+        }
+      }
+      
+      setViewDetailHotelInfo({
+        hotelName: hotelData.own_hotels?.name || hotelData.another_hotels?.name || "-",
+        roomName,
+        numberOfRooms: hotelData.number_of_rooms || 1,
+        notes: hotelData.notes || "",
+        checkIn: hotelData.check_in_date || "",
+        checkOut: hotelData.check_out_date || "",
+        totalAmount: hotelData.total_amount || 0
+      });
+    }
   };
 
   const handlePrintBooking = (booking: any) => {
@@ -2370,6 +2416,72 @@ export default function Bookings() {
             </Card>
           </>
         )}
+
+        {/* View Booking Details Dialog */}
+        <Dialog open={showViewDetailDialog} onOpenChange={setShowViewDetailDialog}>
+          <DialogContent className="max-w-xl p-0 overflow-hidden">
+            <div className="bg-[#1e6e99] text-white px-4 py-2 text-sm font-medium">
+              View Booking Details
+            </div>
+            <div className="p-4">
+              <div className="border border-[#1e6e99]/30 rounded-lg bg-[#FDE1E1] p-4">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium w-1/3">Type :</td>
+                      <td className="py-1.5 capitalize">{selectedBooking?.booking_type === "direct" ? "Direct" : selectedBooking?.agents?.name || "Agent"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Reference :</td>
+                      <td className="py-1.5">{selectedBooking?.reference || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Customer Name :</td>
+                      <td className="py-1.5">{selectedBooking?.customer_name || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">No. of People :</td>
+                      <td className="py-1.5">{selectedBooking?.adults || 0} Adult{selectedBooking?.children ? `, ${selectedBooking.children} Children` : ""}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Hotel :</td>
+                      <td className="py-1.5">{viewDetailHotelInfo?.hotelName || selectedBooking?.hotel_info?.hotel_name || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Room :</td>
+                      <td className="py-1.5">{viewDetailHotelInfo?.roomName || selectedBooking?.hotel_info?.room_type || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">No. of Rooms :</td>
+                      <td className="py-1.5">{viewDetailHotelInfo?.numberOfRooms || selectedBooking?.hotel_info?.number_of_rooms || 1}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Package :</td>
+                      <td className="py-1.5">{viewDetailHotelInfo?.notes || selectedBooking?.notes || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Price :</td>
+                      <td className="py-1.5">Rs. {viewDetailHotelInfo?.totalAmount || selectedBooking?.total_amount || 0}/-</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Booking From :</td>
+                      <td className="py-1.5">{selectedBooking?.check_in_date ? new Date(selectedBooking.check_in_date).toLocaleDateString('en-GB') : "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Booking To :</td>
+                      <td className="py-1.5">{selectedBooking?.check_out_date ? new Date(selectedBooking.check_out_date).toLocaleDateString('en-GB') : "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-4 text-right font-medium">Date :</td>
+                      <td className="py-1.5">{selectedBooking?.created_at ? new Date(selectedBooking.created_at).toLocaleDateString('en-GB') : "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="bg-[#1e6e99] h-3"></div>
+          </DialogContent>
+        </Dialog>
 
         {/* Add Payment Dialog */}
         <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
