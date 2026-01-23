@@ -1,6 +1,4 @@
 import { Header } from "@/components/layout/Header";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -35,6 +33,8 @@ interface PaymentWithBooking {
     check_in_date: string;
     check_out_date: string;
     total_amount: number | null;
+    paid_amount: number | null;
+    due_amount: number | null;
     created_at: string | null;
   } | null;
   cities: {
@@ -48,6 +48,17 @@ interface HotelInfo {
   number_of_rooms: number | null;
 }
 
+interface BookingPayment {
+  id: string;
+  amount: number;
+  payment_date: string | null;
+  payment_mode: string | null;
+  reference_number: string | null;
+  notes: string | null;
+  approval_status: string | null;
+  cities: { name: string } | null;
+}
+
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const years = Array.from({ length: 10 }, (_, i) => 2020 + i);
@@ -59,6 +70,8 @@ export default function Payments() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentWithBooking | null>(null);
   const [hotelInfo, setHotelInfo] = useState<HotelInfo | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewPaymentDialogOpen, setViewPaymentDialogOpen] = useState(false);
+  const [bookingPayments, setBookingPayments] = useState<BookingPayment[]>([]);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -86,7 +99,7 @@ export default function Payments() {
       .from("payments")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, contact_no, booking_type, reference, adults, children, check_in_date, check_out_date, total_amount, created_at),
+        bookings(id, booking_number, customer_name, contact_no, booking_type, reference, adults, children, check_in_date, check_out_date, total_amount, paid_amount, due_amount, created_at),
         cities(name)
       `)
       .order("payment_date", { ascending: false });
@@ -94,8 +107,30 @@ export default function Payments() {
     if (error) {
       toast.error("Failed to load payments");
     } else {
-      setPayments((data as PaymentWithBooking[]) || []);
+      setPayments((data as unknown as PaymentWithBooking[]) || []);
     }
+  };
+
+  const fetchBookingPayments = async (bookingId: string) => {
+    const { data, error } = await supabase
+      .from("payments")
+      .select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)")
+      .eq("booking_id", bookingId)
+      .order("payment_date", { ascending: false });
+
+    if (error) {
+      toast.error("Failed to load booking payments");
+    } else {
+      setBookingPayments((data as unknown as BookingPayment[]) || []);
+    }
+  };
+
+  const handleViewPayment = async (payment: PaymentWithBooking) => {
+    setSelectedPayment(payment);
+    if (payment.bookings?.id) {
+      await fetchBookingPayments(payment.bookings.id);
+    }
+    setViewPaymentDialogOpen(true);
   };
 
   const fetchCities = async () => {
@@ -339,7 +374,7 @@ export default function Payments() {
                     <div className="flex flex-col gap-0.5 text-primary">
                       <button onClick={() => handleViewDetails(payment)} className="text-left hover:underline">View Details</button>
                       <button onClick={() => payment.bookings?.id && navigate(`/booking/${payment.bookings.id}/receipt`)} className="text-left hover:underline">Print Booking</button>
-                      <button onClick={() => payment.bookings?.id && navigate(`/booking-payments?bookingId=${payment.bookings.id}`)} className="text-left hover:underline">View Payment</button>
+                      <button onClick={() => handleViewPayment(payment)} className="text-left hover:underline">View Payment</button>
                       <button onClick={() => navigate("/refunds")} className="text-left hover:underline">Refund Payment</button>
                       <button onClick={() => navigate("/cancelling-payments")} className="text-left hover:underline">View Refund Payment</button>
                     </div>
@@ -424,6 +459,90 @@ export default function Payments() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Payment Dialog */}
+        <Dialog open={viewPaymentDialogOpen} onOpenChange={setViewPaymentDialogOpen}>
+          <DialogContent className="max-w-2xl p-0 overflow-hidden">
+            <DialogHeader className="bg-[#2563EB] text-white px-4 py-3">
+              <DialogTitle className="text-lg font-semibold">View Payment</DialogTitle>
+            </DialogHeader>
+            <div className="p-4">
+              {/* Summary Header */}
+              <table className="w-full text-xs border-collapse mb-4">
+                <thead>
+                  <tr className="bg-[#D4A59A]">
+                    <th className="border border-border p-2 text-left font-semibold"></th>
+                    <th className="border border-border p-2 text-left font-semibold">Total Payment</th>
+                    <th className="border border-border p-2 text-left font-semibold">Total Recieved Payment</th>
+                    <th className="border border-border p-2 text-left font-semibold">Total Due Payment</th>
+                    <th className="border border-border p-2 text-left font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-[#F5E6E0]">
+                    <td className="border border-border p-2 font-semibold">Booking</td>
+                    <td className="border border-border p-2">Rs. {selectedPayment?.bookings?.total_amount?.toLocaleString() || 0}/-</td>
+                    <td className="border border-border p-2">Rs. {selectedPayment?.bookings?.paid_amount?.toLocaleString() || 0}/-</td>
+                    <td className="border border-border p-2">Rs. {selectedPayment?.bookings?.due_amount?.toLocaleString() || 0}/-</td>
+                    <td className="border border-border p-2">
+                      <button 
+                        onClick={() => { setViewPaymentDialogOpen(false); handleViewDetails(selectedPayment!); }}
+                        className="text-primary hover:underline"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Payment History */}
+              <div className="text-xs">
+                <div className="font-semibold mb-2">Booking</div>
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#D4A59A]">
+                      <th className="border border-border p-2 text-left font-semibold">S.No.</th>
+                      <th className="border border-border p-2 text-left font-semibold">Payment</th>
+                      <th className="border border-border p-2 text-left font-semibold">Date</th>
+                      <th className="border border-border p-2 text-left font-semibold">Mode</th>
+                      <th className="border border-border p-2 text-left font-semibold">Payment Detail</th>
+                      <th className="border border-border p-2 text-left font-semibold">Place</th>
+                      <th className="border border-border p-2 text-left font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookingPayments.length === 0 ? (
+                      <tr className="bg-[#F5E6E0]">
+                        <td colSpan={7} className="border border-border p-4 text-center text-muted-foreground">
+                          No payments found
+                        </td>
+                      </tr>
+                    ) : (
+                      bookingPayments.map((bp, index) => (
+                        <tr key={bp.id} className="bg-[#F5E6E0]">
+                          <td className="border border-border p-2">{index + 1}</td>
+                          <td className="border border-border p-2">Rs. {bp.amount?.toLocaleString() || 0}/-</td>
+                          <td className="border border-border p-2">
+                            {bp.payment_date ? new Date(bp.payment_date).toLocaleDateString("en-GB") : "-"}
+                          </td>
+                          <td className="border border-border p-2">
+                            {bp.payment_mode || "N/A"} Code={bp.reference_number ? `[${bp.reference_number}]` : "[]"}
+                          </td>
+                          <td className="border border-border p-2">
+                            {bp.notes || `rs ${bp.amount?.toLocaleString() || 0}/-recd`}
+                          </td>
+                          <td className="border border-border p-2">{bp.cities?.name || "-"}</td>
+                          <td className="border border-border p-2 capitalize">{bp.approval_status || "Pending"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </DialogContent>
