@@ -2025,7 +2025,7 @@ export default function Bookings() {
             </CardContent>
           </Card>
         ) : (
-          <div className="mx-auto" style={{ maxWidth: '810px' }}>
+          <>
             {/* Compact Filter Section - Matching Reference Design */}
             <div className="mb-3 border border-border bg-muted/50">
               {/* Row 1: Dates and Search with Date */}
@@ -2368,7 +2368,7 @@ export default function Bookings() {
                 />
               </CardContent>
             </Card>
-          </div>
+          </>
         )}
 
         {/* Add Payment Dialog */}
