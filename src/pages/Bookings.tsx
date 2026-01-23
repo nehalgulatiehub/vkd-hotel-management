@@ -331,6 +331,8 @@ export default function Bookings() {
         hotelData?.forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
           hotelBookingsMap[hb.booking_id] = {
+            hotel_id: hb.own_hotel_id || hb.hotel_id,
+            room_id: isUuid ? hb.room_type : null,
             hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
             room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
             number_of_rooms: hb.number_of_rooms
@@ -746,6 +748,12 @@ export default function Bookings() {
     const matchesCheque = !filters.chequeNo || 
       booking.cheque_no?.toLowerCase().includes(filters.chequeNo.toLowerCase());
     
+    // Hotel filter - check if booking has hotel_bookings matching selected hotel
+    const matchesHotel = !filters.hotel || booking.hotel_info?.hotel_id === filters.hotel;
+    
+    // Room filter - check if booking has hotel_bookings matching selected room
+    const matchesRoom = !filters.room || booking.hotel_info?.room_id === filters.room;
+    
     // Date filter
     let matchesDate = true;
     if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
@@ -760,7 +768,7 @@ export default function Bookings() {
     }
     
     return matchesSearch && matchesType && matchesAgent && matchesCustomer && 
-           matchesReference && matchesCheque && matchesDate;
+           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom;
   });
 
   const pagination = usePagination(filteredBookings);
