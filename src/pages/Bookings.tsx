@@ -289,7 +289,44 @@ export default function Bookings() {
     if (error) {
       toast.error("Failed to load bookings");
     } else {
-      setBookings(data || []);
+      // Fetch hotel bookings to show hotel and room names
+      const bookingIds = (data || []).map(b => b.id);
+      if (bookingIds.length > 0) {
+        const { data: hotelData } = await supabase
+          .from("hotel_bookings")
+          .select("*, own_hotels(name), another_hotels(name)")
+          .in("booking_id", bookingIds);
+        
+        // Get room names for UUIDs
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const roomIds = [...new Set((hotelData || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
+        let roomsMap: Record<string, string> = {};
+        
+        if (roomIds.length > 0) {
+          const { data: roomsData } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
+          roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
+        }
+        
+        // Map hotel bookings to their booking_id with resolved room names
+        const hotelBookingsMap: Record<string, any> = {};
+        hotelData?.forEach((hb: any) => {
+          const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
+          hotelBookingsMap[hb.booking_id] = {
+            hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
+            room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
+            number_of_rooms: hb.number_of_rooms
+          };
+        });
+        
+        // Attach hotel info to bookings
+        const bookingsWithHotelInfo = (data || []).map(b => ({
+          ...b,
+          hotel_info: hotelBookingsMap[b.id] || null
+        }));
+        setBookings(bookingsWithHotelInfo);
+      } else {
+        setBookings(data || []);
+      }
     }
   };
 
@@ -1962,217 +1999,105 @@ export default function Bookings() {
           </Card>
         ) : (
           <>
-            {/* Filter Section */}
-            <Card className="mb-6 bg-pink-50">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* From Date */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">From</Label>
-                    <div className="flex gap-2">
-                      <Select value={filters.fromMonth} onValueChange={(value) => setFilters({...filters, fromMonth: value})}>
-                        <SelectTrigger className="w-20 bg-white">
-                          <SelectValue placeholder="Nov" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white z-50">
-                          {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select value={filters.fromDay} onValueChange={(value) => setFilters({...filters, fromDay: value})}>
-                        <SelectTrigger className="w-16 bg-white">
-                          <SelectValue placeholder="1" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white z-50">
-                          {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        type="number" 
-                        placeholder="2025" 
-                        value={filters.fromYear}
-                        onChange={(e) => setFilters({...filters, fromYear: e.target.value})}
-                        className="w-20 bg-white"
-                      />
-                    </div>
+            {/* Compact Filter Section */}
+            <Card className="mb-3 bg-pink-50 border-pink-200">
+              <CardContent className="p-3">
+                {/* Row 1: Dates and Search with Date */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium whitespace-nowrap">From :</Label>
+                    <Select value={filters.fromMonth} onValueChange={(value) => setFilters({...filters, fromMonth: value})}>
+                      <SelectTrigger className="h-7 w-16 text-xs bg-white"><SelectValue placeholder="Jan" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">{months.map(m => <SelectItem key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value={filters.fromDay} onValueChange={(value) => setFilters({...filters, fromDay: value})}>
+                      <SelectTrigger className="h-7 w-14 text-xs bg-white"><SelectValue placeholder="1" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input type="number" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} className="h-7 w-16 text-xs bg-white" />
                   </div>
-
-                  {/* To Date */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">To</Label>
-                    <div className="flex gap-2">
-                      <Select value={filters.toMonth} onValueChange={(value) => setFilters({...filters, toMonth: value})}>
-                        <SelectTrigger className="w-20 bg-white">
-                          <SelectValue placeholder="Nov" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white z-50">
-                          {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select value={filters.toDay} onValueChange={(value) => setFilters({...filters, toDay: value})}>
-                        <SelectTrigger className="w-16 bg-white">
-                          <SelectValue placeholder="1" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white z-50">
-                          {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        type="number" 
-                        placeholder="2025" 
-                        value={filters.toYear}
-                        onChange={(e) => setFilters({...filters, toYear: e.target.value})}
-                        className="w-20 bg-white"
-                      />
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium whitespace-nowrap">To :</Label>
+                    <Select value={filters.toMonth} onValueChange={(value) => setFilters({...filters, toMonth: value})}>
+                      <SelectTrigger className="h-7 w-16 text-xs bg-white"><SelectValue placeholder="Jan" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">{months.map(m => <SelectItem key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value={filters.toDay} onValueChange={(value) => setFilters({...filters, toDay: value})}>
+                      <SelectTrigger className="h-7 w-14 text-xs bg-white"><SelectValue placeholder="1" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input type="number" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} className="h-7 w-16 text-xs bg-white" />
                   </div>
-
-                  {/* Search with Date */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Search with Date</Label>
-                    <RadioGroup
-                      value={filters.searchWithDate ? "yes" : "no"}
-                      onValueChange={(value) => setFilters({...filters, searchWithDate: value === "yes"})}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="date-yes" />
-                        <Label htmlFor="date-yes">YES</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="date-no" />
-                        <Label htmlFor="date-no">NO</Label>
-                      </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-medium whitespace-nowrap">Search with Date :</Label>
+                    <RadioGroup value={filters.searchWithDate ? "yes" : "no"} onValueChange={(value) => setFilters({...filters, searchWithDate: value === "yes"})} className="flex gap-2">
+                      <div className="flex items-center gap-1"><RadioGroupItem value="yes" id="date-yes" className="h-3 w-3" /><Label htmlFor="date-yes" className="text-xs">YES</Label></div>
+                      <div className="flex items-center gap-1"><RadioGroupItem value="no" id="date-no" className="h-3 w-3" /><Label htmlFor="date-no" className="text-xs">NO</Label></div>
                     </RadioGroup>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                  {/* Type */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Type</Label>
+                {/* Row 2: Type, Agent, Hotel, Room, Reference, User */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs mt-2">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Type :</Label>
                     <Select value={filters.type} onValueChange={(value) => setFilters({...filters, type: value})}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="--Select--" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="agent">Agent</SelectItem>
-                        <SelectItem value="direct">Direct</SelectItem>
-                      </SelectContent>
+                      <SelectTrigger className="h-7 w-24 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50"><SelectItem value="agent">Agent</SelectItem><SelectItem value="direct">Direct</SelectItem></SelectContent>
                     </Select>
                   </div>
-
-                  {/* Agent Name */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Agent Name</Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Agent Name :</Label>
                     <Select value={filters.agentName} onValueChange={(value) => setFilters({...filters, agentName: value})}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="--Select--" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {agents.map(agent => (
-                          <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
-                        ))}
-                      </SelectContent>
+                      <SelectTrigger className="h-7 w-32 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">{agents.map(agent => (<SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>))}</SelectContent>
                     </Select>
                   </div>
-
-                  {/* Reference */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Reference</Label>
-                    <Input 
-                      value={filters.reference}
-                      onChange={(e) => setFilters({...filters, reference: e.target.value})}
-                      className="bg-white"
-                    />
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Reference :</Label>
+                    <Input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className="h-7 w-24 text-xs bg-white" />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                  {/* Hotel */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Hotel (Own)</Label>
-                    <Select value={filters.hotel} onValueChange={(value) => setFilters({...filters, hotel: value})}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="--Select--" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {ownHotels.map(hotel => (
-                          <SelectItem key={hotel.id} value={hotel.id}>{hotel.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Room */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Room</Label>
-                    <Select value={filters.room} onValueChange={(value) => setFilters({...filters, room: value})}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="--Select--" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="deluxe">Deluxe</SelectItem>
-                        <SelectItem value="suite">Suite</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* User */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">User</Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">User :</Label>
                     <Select value={filters.user} onValueChange={(value) => setFilters({...filters, user: value})}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="--Select--" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="all">All Users</SelectItem>
-                      </SelectContent>
+                      <SelectTrigger className="h-7 w-24 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50"><SelectItem value="all">All Users</SelectItem></SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                  {/* Package */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Package</Label>
-                    <Select value={filters.package} onValueChange={(value) => setFilters({...filters, package: value})}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="--Select--" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="all">All Packages</SelectItem>
-                      </SelectContent>
+                {/* Row 3: Hotel, Room, Package, Customer, Cheque, Search */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs mt-2">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Hotel :</Label>
+                    <Select value={filters.hotel} onValueChange={(value) => setFilters({...filters, hotel: value})}>
+                      <SelectTrigger className="h-7 w-36 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50">{ownHotels.map(hotel => (<SelectItem key={hotel.id} value={hotel.id}>{hotel.name}</SelectItem>))}</SelectContent>
                     </Select>
                   </div>
-
-                  {/* Customer */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Customer</Label>
-                    <Input 
-                      value={filters.customer}
-                      onChange={(e) => setFilters({...filters, customer: e.target.value})}
-                      className="bg-white"
-                    />
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Room :</Label>
+                    <Select value={filters.room} onValueChange={(value) => setFilters({...filters, room: value})}>
+                      <SelectTrigger className="h-7 w-28 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50"><SelectItem value="standard">Standard</SelectItem><SelectItem value="deluxe">Deluxe</SelectItem><SelectItem value="suite">Suite</SelectItem></SelectContent>
+                    </Select>
                   </div>
-
-                  {/* Cheque No */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Cheque No.</Label>
-                    <Input 
-                      value={filters.chequeNo}
-                      onChange={(e) => setFilters({...filters, chequeNo: e.target.value})}
-                      className="bg-white"
-                    />
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Package :</Label>
+                    <Select value={filters.package} onValueChange={(value) => setFilters({...filters, package: value})}>
+                      <SelectTrigger className="h-7 w-36 text-xs bg-white"><SelectValue placeholder="--Select--" /></SelectTrigger>
+                      <SelectContent className="bg-white z-50"><SelectItem value="all">All Packages</SelectItem></SelectContent>
+                    </Select>
                   </div>
-
-                  {/* Search Button */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">&nbsp;</Label>
-                    <Button className="w-full bg-gray-800 hover:bg-gray-700">
-                      Search
-                    </Button>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Customer :</Label>
+                    <Input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-7 w-28 text-xs bg-white" />
                   </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-medium">Cheque No. :</Label>
+                    <Input value={filters.chequeNo} onChange={(e) => setFilters({...filters, chequeNo: e.target.value})} className="h-7 w-24 text-xs bg-white" />
+                  </div>
+                  <Button size="sm" className="h-7 px-4 text-xs bg-gray-800 hover:bg-gray-700">Search</Button>
                 </div>
               </CardContent>
             </Card>
@@ -2220,12 +2145,19 @@ export default function Bookings() {
                             </td>
                             <td className="border border-gray-300 px-3 py-2 text-sm">
                               <div className="space-y-1 text-xs">
-                                {booking.include_booking && <div>✓ Hotel Booking</div>}
+                                {booking.hotel_info && (
+                                  <>
+                                    <div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div>
+                                    <div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>
+                                    {booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}
+                                  </>
+                                )}
+                                {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
                                 {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
                                 {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
                                 {booking.include_safari && <div>✓ Safari</div>}
                                 {booking.include_another_hotel && <div>✓ Another Hotel</div>}
-                                {booking.include_additional_vehicle && <div>✓ Additional Vehicle</div>}
+                                {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
                               </div>
                             </td>
