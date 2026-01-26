@@ -1,5 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingDetailsDialogProps {
   open: boolean;
@@ -16,6 +18,42 @@ export function BookingDetailsDialog({
   serviceType, 
   serviceData 
 }: BookingDetailsDialogProps) {
+  const [resolvedRoomName, setResolvedRoomName] = useState<string | null>(null);
+
+  // Resolve room UUID to name when dialog opens
+  useEffect(() => {
+    const resolveRoomName = async () => {
+      if (!serviceData?.room_type) {
+        setResolvedRoomName(null);
+        return;
+      }
+
+      const roomType = serviceData.room_type;
+      // Check if it's a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(roomType);
+      
+      if (isUUID) {
+        const { data } = await supabase
+          .from("rooms")
+          .select("room_type, room_number")
+          .eq("id", roomType)
+          .maybeSingle();
+        
+        if (data) {
+          setResolvedRoomName(data.room_type || data.room_number || roomType);
+        } else {
+          setResolvedRoomName(roomType);
+        }
+      } else {
+        setResolvedRoomName(roomType);
+      }
+    };
+
+    if (open && serviceData) {
+      resolveRoomName();
+    }
+  }, [open, serviceData]);
+
   if (!booking || !serviceData) return null;
 
   const formatDate = (date: string | null) => {
@@ -43,10 +81,10 @@ export function BookingDetailsDialog({
   const renderSafariDetails = () => (
     <>
       {renderSectionHeader("Safari :")}
-      {renderRow("Transporter :", serviceData.transporters?.name)}
+      {renderRow("Safari Name :", serviceData.safari_name)}
       {renderRow("Safari Booking Date :", formatDate(booking.created_at))}
       {renderRow("Safari Date :", formatDate(serviceData.safari_date))}
-      {renderRow("No of Safari :", serviceData.number_of_persons)}
+      {renderRow("No of Persons :", serviceData.number_of_persons)}
       {renderRow("Safari Booking Price :", formatPrice(serviceData.rate_per_person))}
       {renderRow("Safari Selling Price :", formatPrice(serviceData.total_amount))}
     </>
@@ -69,6 +107,9 @@ export function BookingDetailsDialog({
     const isOwnHotel = serviceData.own_hotel_id && serviceData.own_hotels?.name;
     const isAnotherHotel = serviceData.hotel_id && serviceData.another_hotels?.name;
     
+    // Use resolved room name or fallback to raw value
+    const roomName = resolvedRoomName || serviceData.room_type || "-";
+    
     if (isOwnHotel) {
       // Own Hotel Section
       return (
@@ -76,7 +117,7 @@ export function BookingDetailsDialog({
           {renderSectionHeader("Hotel :")}
           {renderRow("Hotel Name :", serviceData.own_hotels?.name)}
           {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-          {renderRow("Room Name :", serviceData.room_type || "-")}
+          {renderRow("Room Name :", roomName)}
           {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
           {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
           {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
@@ -90,7 +131,7 @@ export function BookingDetailsDialog({
           {renderSectionHeader("Another Hotel :")}
           {renderRow("Another Hotel Name :", serviceData.another_hotels?.name)}
           {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-          {renderRow("Room Type :", serviceData.room_type || "-")}
+          {renderRow("Room Type :", roomName)}
           {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
           {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
           {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
@@ -104,7 +145,7 @@ export function BookingDetailsDialog({
         <>
           {renderSectionHeader("Hotel :")}
           {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-          {renderRow("Room Type :", serviceData.room_type || "-")}
+          {renderRow("Room Type :", roomName)}
           {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
           {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
           {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
