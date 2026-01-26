@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { usePaymentDialog } from "@/hooks/usePaymentDialog";
+import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 
 export default function BookingDue() {
   const navigate = useNavigate();
@@ -16,9 +18,7 @@ export default function BookingDue() {
   
   // Dialog states
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
-  const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [bookingPayments, setBookingPayments] = useState<any[]>([]);
   const [viewDetailHotelInfo, setViewDetailHotelInfo] = useState<{
     hotelName: string;
     roomName: string;
@@ -48,6 +48,8 @@ export default function BookingDue() {
     chequeNo: "",
     searchWithDate: false
   });
+
+  const paymentDialog = usePaymentDialog(() => fetchBookingsWithDue());
 
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -216,22 +218,6 @@ export default function BookingDue() {
         totalAmount: hotelData.total_amount || 0
       });
     }
-  };
-
-  const fetchBookingPayments = async (bookingId: string) => {
-    const { data } = await supabase
-      .from("payments")
-      .select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)")
-      .eq("booking_id", bookingId)
-      .order("payment_date", { ascending: false });
-    setBookingPayments(data || []);
-  };
-
-  const handleViewPayment = async (booking: any) => {
-    setSelectedBooking(booking);
-    setBookingPayments([]);
-    setShowViewPaymentDialog(true);
-    await fetchBookingPayments(booking.id);
   };
 
   return (
@@ -528,7 +514,7 @@ export default function BookingDue() {
                               size="sm" 
                               variant="link" 
                               className="h-auto p-0 text-[11px] text-primary justify-start"
-                              onClick={() => navigate(`/booking-payments?booking_id=${booking.id}`)}
+                              onClick={() => paymentDialog.handleAddPayment(booking)}
                             >
                               Add Payment
                             </Button>
@@ -536,7 +522,7 @@ export default function BookingDue() {
                               size="sm" 
                               variant="link" 
                               className="h-auto p-0 text-[11px] text-primary justify-start"
-                              onClick={() => handleViewPayment(booking)}
+                              onClick={() => paymentDialog.handleViewPayment(booking)}
                             >
                               View Payment
                             </Button>
@@ -654,89 +640,22 @@ export default function BookingDue() {
           </DialogContent>
         </Dialog>
 
-        {/* View Payment Dialog */}
-        <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
-          <DialogContent className="max-w-2xl p-0 overflow-hidden">
-            <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
-              <DialogTitle className="text-white text-sm font-semibold">View Payment</DialogTitle>
-            </div>
-            {selectedBooking && (
-              <div className="p-4">
-                {/* Summary Table */}
-                <table className="w-full mb-4 text-xs border-collapse">
-                  <thead>
-                    <tr style={{ backgroundColor: "#D4A59A" }}>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Total Payment</th>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Total Received Payment</th>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Total Due Payment</th>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ backgroundColor: "#F5E6E0" }}>
-                      <td className="border border-[#c99] px-3 py-1.5">₹{selectedBooking.total_amount?.toLocaleString("en-IN") || 0}</td>
-                      <td className="border border-[#c99] px-3 py-1.5">₹{selectedBooking.paid_amount?.toLocaleString("en-IN") || 0}</td>
-                      <td className="border border-[#c99] px-3 py-1.5 text-destructive">₹{selectedBooking.due_amount?.toLocaleString("en-IN") || 0}</td>
-                      <td className="border border-[#c99] px-3 py-1.5">
-                        <Button
-                          size="sm"
-                          variant="link"
-                          className="h-auto p-0 text-[11px] text-primary"
-                          onClick={() => {
-                            setShowViewPaymentDialog(false);
-                            handleViewDetails(selectedBooking);
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* Payment History */}
-                <h4 className="text-xs font-semibold mb-2">Payment History</h4>
-                <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr style={{ backgroundColor: "#D4A59A" }}>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">S.No.</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Amount</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Date</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Mode</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Notes</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Place</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookingPayments.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="border border-[#c99] px-2 py-4 text-center text-muted-foreground">
-                          No payments found
-                        </td>
-                      </tr>
-                    ) : (
-                      bookingPayments.map((payment, idx) => (
-                        <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
-                          <td className="border border-[#c99] px-2 py-1.5">{idx + 1}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">₹{payment.amount?.toLocaleString("en-IN") || 0}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString("en-GB") : "-"}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">{payment.payment_mode || "-"} {payment.reference_number ? `(${payment.reference_number})` : ""}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">{payment.notes || "-"}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">{(payment as any).cities?.name || "-"}</td>
-                          <td className="border border-[#c99] px-2 py-1.5 capitalize">{payment.approval_status || "pending"}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
-              <span className="text-white text-xs">Booking: {selectedBooking?.booking_number} | Customer: {selectedBooking?.customer_name}</span>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <PaymentDialogs
+          showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
+          setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
+          showPaymentDialog={paymentDialog.showPaymentDialog}
+          setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
+          selectedBooking={paymentDialog.selectedBooking}
+          bookingPayments={paymentDialog.bookingPayments}
+          paymentAmount={paymentDialog.paymentAmount}
+          setPaymentAmount={paymentDialog.setPaymentAmount}
+          paymentMode={paymentDialog.paymentMode}
+          setPaymentMode={paymentDialog.setPaymentMode}
+          paymentReference={paymentDialog.paymentReference}
+          setPaymentReference={paymentDialog.setPaymentReference}
+          isSubmittingPayment={paymentDialog.isSubmittingPayment}
+          onSubmitPayment={paymentDialog.submitPayment}
+        />
       </main>
     </div>
   );
