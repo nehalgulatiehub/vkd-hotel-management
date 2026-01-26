@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Eye, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Eye, Trash2, Pencil, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
@@ -91,8 +91,11 @@ export default function PurchaseOrders() {
   const { user } = useAuthContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditPriceDialogOpen, setIsEditPriceDialogOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
   const [editingPO, setEditingPO] = useState<PurchaseOrder | null>(null);
+  const [editPricePO, setEditPricePO] = useState<PurchaseOrder | null>(null);
+  const [editPriceItems, setEditPriceItems] = useState<any[]>([]);
   const [selectedVendor, setSelectedVendor] = useState("");
   const [selectedPRs, setSelectedPRs] = useState<string[]>([]);
   const [poItems, setPoItems] = useState<POItem[]>([]);
@@ -354,6 +357,62 @@ export default function PurchaseOrders() {
     },
   });
 
+  // Mutation to update prices only (for approved POs)
+  const updatePricesMutation = useMutation({
+    mutationFn: async () => {
+      if (!editPricePO || editPriceItems.length === 0) {
+        throw new Error("Invalid data");
+      }
+
+      // Update each item's rate and recalculate amounts
+      for (const item of editPriceItems) {
+        const gstAmount = item.quantity * item.rate * (item.gst_percentage / 100);
+        const totalAmount = item.quantity * item.rate + gstAmount;
+        
+        const { error } = await supabase
+          .from("purchase_order_items")
+          .update({
+            rate: item.rate,
+            gst_amount: gstAmount,
+            total_amount: totalAmount,
+          })
+          .eq("id", item.id);
+        
+        if (error) throw error;
+      }
+
+      // Recalculate PO totals
+      const subtotal = editPriceItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+      const totalGst = editPriceItems.reduce((sum, item) => {
+        const amount = item.quantity * item.rate;
+        return sum + (amount * item.gst_percentage / 100);
+      }, 0);
+      const totalAmount = subtotal + totalGst;
+
+      const { error: poError } = await supabase
+        .from("purchase_orders")
+        .update({
+          subtotal,
+          total_gst: totalGst,
+          total_amount: totalAmount,
+        })
+        .eq("id", editPricePO.id);
+
+      if (poError) throw poError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["po-items"] });
+      toast.success("Prices updated successfully");
+      setIsEditPriceDialogOpen(false);
+      setEditPricePO(null);
+      setEditPriceItems([]);
+    },
+    onError: (error) => {
+      toast.error("Failed to update prices: " + error.message);
+    },
+  });
+
   const resetForm = () => {
     setSelectedVendor("");
     setSelectedPRs([]);
@@ -453,6 +512,51 @@ export default function PurchaseOrders() {
     setSelectedPO(po);
     setIsViewDialogOpen(true);
   };
+
+  // Handler for editing prices (for approved or other POs)
+  const handleEditPrices = async (po: PurchaseOrder) => {
+    setEditPricePO(po);
+    
+    // Load existing PO items with all details
+    const { data: items } = await supabase
+      .from("purchase_order_items")
+      .select(`
+        *,
+        purchase_items (id, item_name, unit, gst_percentage)
+      `)
+      .eq("po_id", po.id);
+
+    if (items) {
+      setEditPriceItems(items.map((item: any) => ({
+        id: item.id,
+        item_id: item.item_id,
+        item_name: item.purchase_items?.item_name || "",
+        unit: item.purchase_items?.unit || "",
+        quantity: item.quantity,
+        rate: item.rate,
+        gst_percentage: item.gst_percentage || 18,
+      })));
+    }
+
+    setIsEditPriceDialogOpen(true);
+  };
+
+  const handleUpdateEditPriceItemRate = (index: number, rate: number) => {
+    const updated = [...editPriceItems];
+    updated[index].rate = rate;
+    setEditPriceItems(updated);
+  };
+
+  const calculateEditPriceTotals = () => {
+    const subtotal = editPriceItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+    const totalGst = editPriceItems.reduce((sum, item) => {
+      const amount = item.quantity * item.rate;
+      return sum + (amount * item.gst_percentage / 100);
+    }, 0);
+    return { subtotal, totalGst, total: subtotal + totalGst };
+  };
+
+  const editPriceTotals = calculateEditPriceTotals();
 
   const totals = calculateTotals();
 
@@ -698,15 +802,28 @@ export default function PurchaseOrders() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleView(po)}
+                                  title="View Details"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
+                                {/* Edit Prices button - available for approved, sent_to_vendor, partially_received POs */}
+                                {(po.status === "approved" || po.status === "sent_to_vendor" || po.status === "partially_received") && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEditPrices(po)}
+                                    title="Edit Prices"
+                                  >
+                                    <DollarSign className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 {(po.status === "pending" || po.status === "created") && (
                                   <>
                                     <Button
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => handleEdit(po)}
+                                      title="Edit PO"
                                     >
                                       <Pencil className="h-4 w-4" />
                                     </Button>
@@ -715,6 +832,7 @@ export default function PurchaseOrders() {
                                       size="icon"
                                       className="text-destructive hover:text-destructive"
                                       onClick={() => handleDelete(po.id)}
+                                      title="Delete PO"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -816,6 +934,92 @@ export default function PurchaseOrders() {
                     <p>GST: ₹{selectedPO.total_gst?.toFixed(2)}</p>
                     <p className="font-bold">Total: ₹{selectedPO.total_amount?.toFixed(2)}</p>
                   </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Prices Dialog */}
+        <Dialog open={isEditPriceDialogOpen} onOpenChange={setIsEditPriceDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Prices - {editPricePO?.po_number}</DialogTitle>
+            </DialogHeader>
+            {editPricePO && (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  <p>Vendor: <span className="font-medium text-foreground">{editPricePO.vendors?.vendor_name}</span></p>
+                  <p className="mt-1">Update item prices below. This is useful when prices change after receiving goods.</p>
+                </div>
+
+                {editPriceItems.length > 0 && (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead>Unit</TableHead>
+                          <TableHead>Qty</TableHead>
+                          <TableHead>Rate</TableHead>
+                          <TableHead>GST %</TableHead>
+                          <TableHead>Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {editPriceItems.map((item, index) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.item_name}</TableCell>
+                            <TableCell>{item.unit}</TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.rate}
+                                onChange={(e) => handleUpdateEditPriceItemRate(index, parseFloat(e.target.value) || 0)}
+                                className="w-24"
+                              />
+                            </TableCell>
+                            <TableCell>{item.gst_percentage}%</TableCell>
+                            <TableCell>
+                              ₹{(item.quantity * item.rate * (1 + item.gst_percentage / 100)).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {editPriceItems.length > 0 && (
+                  <div className="flex justify-end">
+                    <div className="text-right space-y-1">
+                      <p className="text-sm">Subtotal: ₹{editPriceTotals.subtotal.toFixed(2)}</p>
+                      <p className="text-sm">GST: ₹{editPriceTotals.totalGst.toFixed(2)}</p>
+                      <p className="font-bold">Total: ₹{editPriceTotals.total.toFixed(2)}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsEditPriceDialogOpen(false);
+                      setEditPricePO(null);
+                      setEditPriceItems([]);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => updatePricesMutation.mutate()}
+                    disabled={updatePricesMutation.isPending || editPriceItems.length === 0}
+                  >
+                    {updatePricesMutation.isPending ? "Updating..." : "Update Prices"}
+                  </Button>
                 </div>
               </div>
             )}
