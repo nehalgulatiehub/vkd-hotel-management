@@ -12,6 +12,7 @@ export default function VehicleDue() {
   const [vehicleBookings, setVehicleBookings] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   
   // Dialog states
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
@@ -29,8 +30,11 @@ export default function VehicleDue() {
     toYear: "",
     type: "",
     agentName: "",
+    user: "",
     transporter: "",
     customer: "",
+    vehicle: "",
+    reference: "",
     searchWithDate: false
   });
 
@@ -41,6 +45,7 @@ export default function VehicleDue() {
     fetchVehicleBookings();
     fetchAgents();
     fetchTransporters();
+    fetchUsers();
   }, []);
 
   const fetchAgents = async () => {
@@ -53,10 +58,15 @@ export default function VehicleDue() {
     setTransporters(data || []);
   };
 
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("*").order("first_name");
+    setUsers(data || []);
+  };
+
   const fetchVehicleBookings = async () => {
     const { data, error } = await supabase
       .from("vehicle_bookings")
-      .select("*, bookings(id, booking_number, customer_name, status, contact_no, booking_type, agents(name)), transporters(name)")
+      .select("*, bookings(id, booking_number, customer_name, status, contact_no, address, booking_type, created_at, agents(name)), transporters(name)")
       .gt("due_amount", 0)
       .order("pickup_date", { ascending: true });
     
@@ -72,6 +82,9 @@ export default function VehicleDue() {
     const matchesCustomer = !filters.customer || 
       booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
     const matchesTransporter = !filters.transporter || booking.transporter_id === filters.transporter;
+    const matchesUser = !filters.user || booking.bookings?.created_by === filters.user;
+    const matchesVehicle = !filters.vehicle || 
+      booking.vehicle_type?.toLowerCase().includes(filters.vehicle.toLowerCase());
     
     let matchesDate = true;
     if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
@@ -85,7 +98,7 @@ export default function VehicleDue() {
       }
     }
     
-    return matchesType && matchesCustomer && matchesTransporter && matchesDate;
+    return matchesType && matchesCustomer && matchesTransporter && matchesUser && matchesVehicle && matchesDate;
   });
 
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
@@ -117,11 +130,11 @@ export default function VehicleDue() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Vehicle Due Amount" />
+      <Header title="Due Amount Vehicle Details" />
       <main className="p-4">
         {/* Blue Header Bar */}
         <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Vehicle Due Amount</span>
+          <span className="text-white font-semibold text-sm">Due Amount Vehicle Details</span>
           <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/vehicle-details")}>
             View All Records
           </Button>
@@ -129,6 +142,7 @@ export default function VehicleDue() {
 
         {/* Compact Filter Section */}
         <div className="mb-3 border border-border bg-muted/50">
+          {/* Row 1: Dates and Search with Date */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-muted-foreground">From :</span>
@@ -161,33 +175,53 @@ export default function VehicleDue() {
             </div>
           </div>
 
+          {/* Row 2: Type, Agent, Reference */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground">Type :</span>
+              <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
+                <option value="">--Select--</option>
+                <option value="agent">Agent</option>
+                <option value="direct">Direct</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground">Agent Name :</span>
+              <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[140px] rounded-sm">
+                <option value="">--Select--</option>
+                {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
+              </select>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground">Reference :</span>
+              <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+            </div>
+          </div>
+
+          {/* Row 3: User, Customer, Vehicle, Transporter, Search button */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
               <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Type :</span>
-                <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
+                <span className="text-[11px] text-muted-foreground">User :</span>
+                <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] rounded-sm">
                   <option value="">--Select--</option>
-                  <option value="agent">Agent</option>
-                  <option value="direct">Direct</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Agent Name :</span>
-                <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
-                  <option value="">--Select--</option>
-                  {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Transporter :</span>
-                <select value={filters.transporter} onChange={(e) => setFilters({...filters, transporter: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
-                  <option value="">--Select--</option>
-                  {transporters.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                  {users.map(user => (<option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>))}
                 </select>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-[11px] text-muted-foreground">Customer :</span>
                 <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Vehicle :</span>
+                <input value={filters.vehicle} onChange={(e) => setFilters({...filters, vehicle: e.target.value})} className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Transporter :</span>
+                <select value={filters.transporter} onChange={(e) => setFilters({...filters, transporter: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
+                  <option value="">Select</option>
+                  {transporters.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                </select>
               </div>
             </div>
             <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
@@ -203,9 +237,9 @@ export default function VehicleDue() {
                   <tr style={{ backgroundColor: "#D4A59A" }}>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer Details</th>
-                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Vehicle Details</th>
-                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking Price</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Vehicle Detail</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
                   </tr>
@@ -218,31 +252,41 @@ export default function VehicleDue() {
                       <tr key={booking.id} style={{ backgroundColor: "#F5E6E0" }}>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">{index + 1}</td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div className="capitalize">{booking.bookings?.booking_type || "-"}</div>
-                          <div className="text-muted-foreground">{booking.bookings?.agents?.name || "Direct"}</div>
+                          <div className="capitalize">{booking.bookings?.booking_type || "Direct"}</div>
+                          <div className="text-muted-foreground">{booking.bookings?.agents?.name || ""}</div>
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          company
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
-                          <div className="text-muted-foreground">Contact: {booking.bookings?.contact_no || "-"}</div>
+                          {booking.bookings?.address && <div className="text-muted-foreground">{booking.bookings?.address}</div>}
+                          <div className="text-muted-foreground">Contact No.: {booking.bookings?.contact_no || ""}</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div><strong>Transporter:</strong> {booking.transporters?.name || "-"}</div>
-                          <div><strong>Vehicle:</strong> {booking.vehicle_type || "-"}</div>
-                          {booking.notes && <div className="text-muted-foreground">{booking.notes}</div>}
+                          <div><strong>Vehicle :</strong> {booking.vehicle_type || "-"}</div>
+                          <div><strong>Transporter :</strong> {booking.transporters?.name || "-"}</div>
+                          <div><strong>Journey Date :</strong> {booking.pickup_date ? new Date(booking.pickup_date).toLocaleDateString("en-GB") : "-"}</div>
+                          <div><strong>Booking Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
+                          <div><strong>Selling Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
+                          <div><strong>Total Received Payment :</strong> Rs. {booking.paid_amount?.toLocaleString("en-IN") || 0}/-</div>
+                          <div className="text-destructive"><strong>Due Payment :</strong> Rs. {booking.due_amount?.toLocaleString("en-IN") || 0}/-</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div><strong>Total:</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
-                          <div><strong>Paid:</strong> Rs. {booking.paid_amount?.toLocaleString("en-IN") || 0}/-</div>
-                          <div className="text-destructive"><strong>Due:</strong> Rs. {booking.due_amount?.toLocaleString("en-IN") || 0}/-</div>
-                        </td>
-                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div><strong>Pickup:</strong> {booking.pickup_date ? new Date(booking.pickup_date).toLocaleDateString("en-GB") : "-"}</div>
+                          <div><strong>Journey Date</strong></div>
+                          <div>:{booking.pickup_date ? new Date(booking.pickup_date).toLocaleDateString("en-GB") : "-"}</div>
+                          <div><strong>Booking Date</strong></div>
+                          <div>:{booking.bookings?.created_at ? new Date(booking.bookings.created_at).toLocaleDateString("en-GB") : "-"}</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 align-top">
                           <div className="flex flex-col gap-0.5">
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>View Details</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/booking-details/${booking.bookings?.id}`)}>Print Booking</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/booking-details/${booking.bookings?.id}`)}>Edit Booking</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/vehicle-payments?booking_id=${booking.bookings?.id}`)}>Add Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/refunds?booking_id=${booking.bookings?.id}`)}>Refund Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/refunds?booking_id=${booking.bookings?.id}`)}>View Refund Payment</Button>
                           </div>
                         </td>
                       </tr>
@@ -271,11 +315,12 @@ export default function VehicleDue() {
                   <tbody>
                     <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold w-32">Booking No</td><td className="py-1.5">{selectedBooking.bookings?.booking_number || "-"}</td></tr>
                     <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Customer</td><td className="py-1.5">{selectedBooking.bookings?.customer_name || "-"}</td></tr>
+                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Contact</td><td className="py-1.5">{selectedBooking.bookings?.contact_no || "-"}</td></tr>
+                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Vehicle</td><td className="py-1.5">{selectedBooking.vehicle_type || "-"}</td></tr>
                     <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Transporter</td><td className="py-1.5">{selectedBooking.transporters?.name || "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Vehicle Type</td><td className="py-1.5">{selectedBooking.vehicle_type || "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Pickup Date</td><td className="py-1.5">{selectedBooking.pickup_date ? new Date(selectedBooking.pickup_date).toLocaleDateString("en-GB") : "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Total Amount</td><td className="py-1.5">₹{selectedBooking.total_amount?.toLocaleString("en-IN") || 0}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Paid Amount</td><td className="py-1.5">₹{selectedBooking.paid_amount?.toLocaleString("en-IN") || 0}</td></tr>
+                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Journey Date</td><td className="py-1.5">{selectedBooking.pickup_date ? new Date(selectedBooking.pickup_date).toLocaleDateString("en-GB") : "-"}</td></tr>
+                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Booking Price</td><td className="py-1.5">₹{selectedBooking.total_amount?.toLocaleString("en-IN") || 0}</td></tr>
+                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Received</td><td className="py-1.5">₹{selectedBooking.paid_amount?.toLocaleString("en-IN") || 0}</td></tr>
                     <tr><td className="py-1.5 font-semibold">Due Amount</td><td className="py-1.5 text-destructive">₹{selectedBooking.due_amount?.toLocaleString("en-IN") || 0}</td></tr>
                   </tbody>
                 </table>
@@ -293,43 +338,61 @@ export default function VehicleDue() {
             </div>
             {selectedBooking && (
               <div className="p-4">
-                <table className="w-full mb-4 text-xs border-collapse">
-                  <thead>
-                    <tr style={{ backgroundColor: "#D4A59A" }}>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Total</th>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Paid</th>
-                      <th className="border border-[#c99] px-3 py-1.5 text-left font-semibold">Due</th>
-                    </tr>
-                  </thead>
+                {/* Summary */}
+                <table className="w-full text-xs border-collapse mb-4" style={{ backgroundColor: "#FDE1E1" }}>
                   <tbody>
-                    <tr style={{ backgroundColor: "#F5E6E0" }}>
-                      <td className="border border-[#c99] px-3 py-1.5">₹{selectedBooking.total_amount?.toLocaleString("en-IN") || 0}</td>
-                      <td className="border border-[#c99] px-3 py-1.5">₹{selectedBooking.paid_amount?.toLocaleString("en-IN") || 0}</td>
-                      <td className="border border-[#c99] px-3 py-1.5 text-destructive">₹{selectedBooking.due_amount?.toLocaleString("en-IN") || 0}</td>
+                    <tr className="border-b border-[#FFC1C1]">
+                      <td className="py-1.5 px-2 font-semibold">Total Payment</td>
+                      <td className="py-1.5 px-2">₹{selectedBooking.total_amount?.toLocaleString("en-IN") || 0}</td>
+                      <td className="py-1.5 px-2">
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          className="h-auto p-0 text-[11px] text-primary"
+                          onClick={() => { setShowViewPaymentDialog(false); handleViewDetails(selectedBooking); }}
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#FFC1C1]">
+                      <td className="py-1.5 px-2 font-semibold">Total Received Payment</td>
+                      <td className="py-1.5 px-2">₹{selectedBooking.paid_amount?.toLocaleString("en-IN") || 0}</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 px-2 font-semibold">Total Due Payment</td>
+                      <td className="py-1.5 px-2 text-destructive">₹{selectedBooking.due_amount?.toLocaleString("en-IN") || 0}</td>
+                      <td></td>
                     </tr>
                   </tbody>
                 </table>
-                <h4 className="text-xs font-semibold mb-2">Payment History</h4>
+
+                {/* Payment History */}
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr style={{ backgroundColor: "#D4A59A" }}>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">S.No.</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Amount</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Date</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Mode</th>
-                      <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Status</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">S.No.</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">Amount</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">Date</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">Mode</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">Notes</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">City/Place</th>
+                      <th className="border border-[#c99] px-2 py-1.5 text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookingPayments.length === 0 ? (
-                      <tr><td colSpan={5} className="border border-[#c99] px-2 py-4 text-center text-muted-foreground">No payments found</td></tr>
+                      <tr><td colSpan={7} className="border border-[#c99] px-2 py-4 text-center text-muted-foreground">No payments recorded</td></tr>
                     ) : (
                       bookingPayments.map((payment, idx) => (
                         <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
                           <td className="border border-[#c99] px-2 py-1.5">{idx + 1}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">₹{payment.amount?.toLocaleString("en-IN") || 0}</td>
+                          <td className="border border-[#c99] px-2 py-1.5">₹{payment.amount?.toLocaleString("en-IN")}</td>
                           <td className="border border-[#c99] px-2 py-1.5">{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString("en-GB") : "-"}</td>
-                          <td className="border border-[#c99] px-2 py-1.5">{payment.payment_mode || "-"}</td>
+                          <td className="border border-[#c99] px-2 py-1.5">{payment.payment_mode || "-"}{payment.reference_number ? ` (${payment.reference_number})` : ""}</td>
+                          <td className="border border-[#c99] px-2 py-1.5">{payment.notes || "-"}</td>
+                          <td className="border border-[#c99] px-2 py-1.5">{payment.cities?.name || "-"}</td>
                           <td className="border border-[#c99] px-2 py-1.5 capitalize">{payment.approval_status || "pending"}</td>
                         </tr>
                       ))
