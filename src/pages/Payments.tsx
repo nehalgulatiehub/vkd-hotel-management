@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 
 interface PaymentWithBooking {
   id: string;
@@ -72,6 +73,8 @@ export default function Payments() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewPaymentDialogOpen, setViewPaymentDialogOpen] = useState(false);
   const [bookingPayments, setBookingPayments] = useState<BookingPayment[]>([]);
+  const [serviceData, setServiceData] = useState<any>(null);
+  const [serviceType, setServiceType] = useState<"safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md">("hotel");
 
   // Filters
   const [filters, setFilters] = useState({
@@ -177,7 +180,57 @@ export default function Payments() {
   const handleViewDetails = async (payment: PaymentWithBooking) => {
     setSelectedPayment(payment);
     if (payment.bookings?.id) {
-      await fetchHotelInfo(payment.bookings.id);
+      const bookingId = payment.bookings.id;
+      // Determine service type from payment_type
+      const paymentType = payment.payment_type?.toLowerCase() || "";
+      let type: "safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md" = "hotel";
+      
+      if (paymentType.includes("safari")) {
+        type = "safari";
+        const { data } = await supabase
+          .from("safari_bookings")
+          .select("*")
+          .eq("booking_id", bookingId)
+          .maybeSingle();
+        setServiceData(data);
+      } else if (paymentType.includes("vehicle")) {
+        type = "vehicle";
+        const { data } = await supabase
+          .from("vehicle_bookings")
+          .select("*, transporters(name)")
+          .eq("booking_id", bookingId)
+          .maybeSingle();
+        setServiceData(data);
+      } else if (paymentType.includes("delhi_manali") || (paymentType.includes("delhi") && paymentType.includes("manali") && !paymentType.includes("manali_delhi"))) {
+        type = "volvo_dm";
+        const { data } = await supabase
+          .from("volvo_bookings")
+          .select("*, transporters(name)")
+          .eq("booking_id", bookingId)
+          .limit(1)
+          .maybeSingle();
+        setServiceData(data);
+      } else if (paymentType.includes("manali_delhi") || (paymentType.includes("manali") && paymentType.includes("delhi"))) {
+        type = "volvo_md";
+        const { data } = await supabase
+          .from("volvo_bookings")
+          .select("*, transporters(name)")
+          .eq("booking_id", bookingId)
+          .limit(1)
+          .maybeSingle();
+        setServiceData(data);
+      } else {
+        // Default to hotel
+        type = "hotel";
+        const { data } = await supabase
+          .from("hotel_bookings")
+          .select("*, own_hotels(name), another_hotels(name)")
+          .eq("booking_id", bookingId)
+          .maybeSingle();
+        setServiceData(data);
+      }
+      
+      setServiceType(type);
     }
     setDialogOpen(true);
   };
@@ -400,69 +453,13 @@ export default function Payments() {
         />
 
         {/* View Details Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md p-0 overflow-hidden">
-            <DialogHeader className="bg-[#2563EB] text-white px-4 py-3">
-              <DialogTitle className="text-lg font-semibold">View Booking Details</DialogTitle>
-            </DialogHeader>
-            <div className="p-4">
-              <div className="bg-[#F5E6E0] border border-border rounded p-4">
-                {selectedPayment?.bookings && (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Type :</span>
-                      <span>{selectedPayment.bookings.booking_type || "Direct"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Reference :</span>
-                      <span>{selectedPayment.bookings.reference || "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Customer Name :</span>
-                      <span>{selectedPayment.bookings.customer_name || "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">No. of People :</span>
-                      <span>{selectedPayment.bookings.adults || 0} Adult {selectedPayment.bookings.children || 0} Children</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Hotel :</span>
-                      <span>{hotelInfo?.hotel_name || "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Room :</span>
-                      <span>{hotelInfo?.room_type || "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">No. of Rooms :</span>
-                      <span>{hotelInfo?.number_of_rooms || "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Package :</span>
-                      <span>-</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Price :</span>
-                      <span>Rs. {selectedPayment.bookings.total_amount?.toLocaleString() || 0}/-</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Booking From :</span>
-                      <span>{selectedPayment.bookings.check_in_date ? new Date(selectedPayment.bookings.check_in_date).toLocaleDateString("en-GB") : "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Booking To :</span>
-                      <span>{selectedPayment.bookings.check_out_date ? new Date(selectedPayment.bookings.check_out_date).toLocaleDateString("en-GB") : "-"}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="w-32 text-muted-foreground">Date :</span>
-                      <span>{selectedPayment.bookings.created_at ? new Date(selectedPayment.bookings.created_at).toLocaleDateString("en-GB") : "-"}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <BookingDetailsDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          booking={selectedPayment?.bookings}
+          serviceType={serviceType}
+          serviceData={serviceData}
+        />
 
         {/* View Payment Dialog */}
         <Dialog open={viewPaymentDialogOpen} onOpenChange={setViewPaymentDialogOpen}>
