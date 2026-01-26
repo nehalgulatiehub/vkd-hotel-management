@@ -42,57 +42,79 @@ export function PaymentDialogs({
   return (
     <>
       <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
-        <DialogContent className="max-w-2xl p-0">
-          <div className="bg-[#1e6e99] text-white px-4 py-2 text-sm font-medium">
-            View Payment - {selectedBooking?.booking_number}
+        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+          <div className="bg-[#1e6e99] text-white px-4 py-2.5 flex justify-between items-center">
+            <span className="text-sm font-medium">View Payment</span>
           </div>
           <div className="p-4 space-y-4">
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="font-semibold">Total Amount:</span>
-                <div className="text-lg">₹{(selectedBooking?.total_amount || 0).toLocaleString()}</div>
-              </div>
-              <div>
-                <span className="font-semibold">Paid Amount:</span>
-                <div className="text-lg text-green-600">₹{(selectedBooking?.paid_amount || 0).toLocaleString()}</div>
-              </div>
-              <div>
-                <span className="font-semibold">Due Amount:</span>
-                <div className="text-lg text-destructive">₹{(selectedBooking?.due_amount || 0).toLocaleString()}</div>
-              </div>
-            </div>
+            {/* Summary Table */}
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr style={{ backgroundColor: "#D4A59A" }}>
+                  <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Total Payment</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Total Received Payment</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Total Due Payment</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ backgroundColor: "#F5E6E0" }}>
+                  <td className="border border-[#c99] px-3 py-2">Rs. {(selectedBooking?.total_amount || 0).toLocaleString('en-IN')}/-</td>
+                  <td className="border border-[#c99] px-3 py-2">Rs. {(selectedBooking?.paid_amount || 0).toLocaleString('en-IN')}/-</td>
+                  <td className="border border-[#c99] px-3 py-2">Rs. {(selectedBooking?.due_amount || 0).toLocaleString('en-IN')}/-</td>
+                  <td className="border border-[#c99] px-3 py-2">
+                    <Button 
+                      variant="link" 
+                      className="h-auto p-0 text-xs text-[#dc2626] hover:text-[#dc2626]/80 underline"
+                    >
+                      View Details
+                    </Button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             
-            <div>
-              <h4 className="font-semibold mb-2">Payment History</h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Mode</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookingPayments.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">No payments found</TableCell>
-                    </TableRow>
-                  ) : (
-                    bookingPayments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell>{format(new Date(payment.payment_date), "dd/MM/yyyy")}</TableCell>
-                        <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
-                        <TableCell className="capitalize">{payment.payment_mode?.replace(/_/g, " ")}</TableCell>
-                        <TableCell>{payment.reference_number || "-"}</TableCell>
-                        <TableCell className="capitalize">{payment.approval_status}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            {/* Payment History Label */}
+            <div className="text-sm font-semibold">Booking</div>
+            
+            {/* Payment History Table */}
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr style={{ backgroundColor: "#D4A59A" }}>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">S.No.</th>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">Payment</th>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">Date</th>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">Mode</th>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">Payment Detail</th>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">Place</th>
+                  <th className="border border-[#c99] px-2 py-2 text-left font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookingPayments.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="border border-[#c99] px-2 py-4 text-center text-muted-foreground">
+                      No payments found
+                    </td>
+                  </tr>
+                ) : (
+                  bookingPayments.map((payment, idx) => (
+                    <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
+                      <td className="border border-[#c99] px-2 py-2">{idx + 1}</td>
+                      <td className="border border-[#c99] px-2 py-2">Rs. {payment.amount.toLocaleString('en-IN')}/-</td>
+                      <td className="border border-[#c99] px-2 py-2">{format(new Date(payment.payment_date), "dd/MM/yyyy")}</td>
+                      <td className="border border-[#c99] px-2 py-2 capitalize">{payment.payment_mode?.replace(/_/g, " ") || "-"}</td>
+                      <td className="border border-[#c99] px-2 py-2">{payment.reference_number || "-"}</td>
+                      <td className="border border-[#c99] px-2 py-2">{(payment as any).cities?.name || "-"}</td>
+                      <td className="border border-[#c99] px-2 py-2 capitalize">{payment.approval_status || "Pending"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="bg-[#1e6e99] text-white px-4 py-2 text-xs">
+            Booking: {selectedBooking?.booking_number} | Customer: {selectedBooking?.customer_name}
           </div>
         </DialogContent>
       </Dialog>
