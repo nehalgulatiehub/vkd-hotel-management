@@ -258,12 +258,12 @@ export default function SafariDue() {
                         <td className="border border-[#c99] px-3 py-2 align-top">
                           <div className="flex flex-col gap-0.5">
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>View Details</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/booking-details/${getBookingId(booking)}`)}>Print Booking</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/booking-details/${getBookingId(booking)}`)}>Edit Booking</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/booking-payments?booking_id=${getBookingId(booking)}`)}>Add Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/bookings/${getBookingId(booking)}`)}>Print Booking</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/bookings`)}>Edit Booking</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/payments/booking?id=${getBookingId(booking)}`)}>Add Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>Refund Payment</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>View Refund Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}&view=true`)}>View Refund Payment</Button>
                           </div>
                         </td>
                       </tr>
