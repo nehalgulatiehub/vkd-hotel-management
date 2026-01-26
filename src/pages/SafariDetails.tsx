@@ -8,12 +8,18 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 
 export default function SafariDetails() {
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
   const paymentDialog = usePaymentDialog(() => fetchSafariBookings());
+  
+  // View Details Dialog State
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
+  const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
 
   useEffect(() => {
     fetchSafariBookings();
@@ -25,7 +31,7 @@ export default function SafariDetails() {
       .from("safari_bookings")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount),
+        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount),
         transporters(name)
       `)
       .order("safari_date", { ascending: false });
@@ -42,36 +48,32 @@ export default function SafariDetails() {
     fetchSafariBookings();
   };
 
+  const handleViewDetails = (booking: any) => {
+    setSelectedBookingData(booking.bookings);
+    setSelectedServiceData(booking);
+    setShowDetailsDialog(true);
+  };
+
   const filteredBookings = safariBookings.filter(booking => {
-    // Date filter
     if (filters.searchWithDate) {
       const safariDate = new Date(booking.safari_date);
       const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`);
       const toDate = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`);
       if (safariDate < fromDate || safariDate > toDate) return false;
     }
-
-    // Type filter
     if (filters.type) {
       const bookingType = booking.bookings?.booking_type || "direct";
       if (filters.type !== bookingType) return false;
     }
-
-    // Customer filter
     if (filters.customer) {
       if (!booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase())) return false;
     }
-
-    // Transporter filter
     if (filters.transporterId) {
       if (booking.transporter_id !== filters.transporterId) return false;
     }
-
-    // Reference filter
     if (filters.reference) {
       if (!booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     }
-
     return true;
   });
 
@@ -81,29 +83,18 @@ export default function SafariDetails() {
     <div className="min-h-screen bg-background">
       <Header title="Safari Details" />
       <main className="p-2">
-        {/* Header Bar */}
         <div className="flex justify-between items-center mb-2 px-3 py-2" style={{ backgroundColor: "#1e6e99" }}>
           <h2 className="text-white font-semibold text-sm">View Safari Details</h2>
           <button className="text-white text-sm hover:underline">View All Records</button>
         </div>
 
-        {/* Filters */}
         <DetailPageFilters
-          options={{
-            showType: true,
-            showAgent: true,
-            showUser: true,
-            showCustomer: true,
-            showReference: true,
-            showTransporter: true,
-            showNoOfSafari: true
-          }}
+          options={{ showType: true, showAgent: true, showUser: true, showCustomer: true, showReference: true, showTransporter: true, showNoOfSafari: true }}
           filters={filters}
           onFilterChange={setFilters}
           onSearch={handleSearch}
         />
 
-        {/* Data Table */}
         <div className="mt-2 overflow-x-auto">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
@@ -126,15 +117,10 @@ export default function SafariDetails() {
                     <td className="border border-[#c99] px-2 py-2 align-top">{startIndex + idx + 1}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       {booking.bookings?.booking_type === "agent" ? (
-                        <div>
-                          <div>Agent</div>
-                          <div className="text-[10px]">{booking.bookings?.agent?.name || ""}</div>
-                        </div>
+                        <div><div>Agent</div><div className="text-[10px]">{booking.bookings?.agent?.name || ""}</div></div>
                       ) : "Direct"}
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 align-top">
-                      {booking.bookings?.created_by ? "User" : "-"}
-                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">{booking.bookings?.created_by ? "User" : "-"}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
                       <div className="text-[10px]">Contact No.: {booking.bookings?.contact_no || ""}</div>
@@ -155,21 +141,9 @@ export default function SafariDetails() {
                     </td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                        <button 
-                          className="hover:underline text-left"
-                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
-                        >
-                          View Details
-                        </button>
-                        <button className="hover:underline text-left">
-                          Refund Payment
-                        </button>
-                        <button 
-                          className="hover:underline text-left"
-                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
-                        >
-                          View Refund Payment
-                        </button>
+                        <button className="hover:underline text-left" onClick={() => handleViewDetails(booking)}>View Details</button>
+                        <button className="hover:underline text-left">Refund Payment</button>
+                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
                       </div>
                     </td>
                   </tr>
@@ -182,15 +156,16 @@ export default function SafariDetails() {
           )}
         </div>
 
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={goToPage}
-          totalItems={totalItems}
-          startIndex={startIndex}
-          endIndex={endIndex}
-        />
+        <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
       </main>
+
+      <BookingDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        booking={selectedBookingData}
+        serviceType="safari"
+        serviceData={selectedServiceData}
+      />
 
       <PaymentDialogs
         showViewPaymentDialog={paymentDialog.showViewPaymentDialog}

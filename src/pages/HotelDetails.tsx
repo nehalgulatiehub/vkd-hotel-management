@@ -8,6 +8,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 
 export default function HotelDetails() {
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
@@ -15,6 +16,10 @@ export default function HotelDetails() {
   const [loading, setLoading] = useState(true);
   const [cities, setCities] = useState<any[]>([]);
   const paymentDialog = usePaymentDialog(() => fetchHotelBookings());
+  
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
+  const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
 
   useEffect(() => {
     fetchHotelBookings();
@@ -27,7 +32,7 @@ export default function HotelDetails() {
       .from("hotel_bookings")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
+        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
         another_hotels:hotel_id(id, name, city_id, cities(name))
       `)
       .not("hotel_id", "is", null)
@@ -50,41 +55,35 @@ export default function HotelDetails() {
     fetchHotelBookings();
   };
 
+  const handleViewDetails = (booking: any) => {
+    setSelectedBookingData(booking.bookings);
+    setSelectedServiceData(booking);
+    setShowDetailsDialog(true);
+  };
+
   const filteredBookings = hotelBookings.filter(booking => {
-    // Date filter
     if (filters.searchWithDate) {
       const checkInDate = new Date(booking.check_in_date);
       const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`);
       const toDate = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`);
       if (checkInDate < fromDate || checkInDate > toDate) return false;
     }
-
-    // Type filter
     if (filters.type) {
       const bookingType = booking.bookings?.booking_type || "direct";
       if (filters.type !== bookingType) return false;
     }
-
-    // Customer filter
     if (filters.customer) {
       if (!booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase())) return false;
     }
-
-    // Hotel filter
     if (filters.hotelId) {
       if (booking.hotel_id !== filters.hotelId) return false;
     }
-
-    // City filter
     if (filters.cityId) {
       if (booking.another_hotels?.city_id !== filters.cityId) return false;
     }
-
-    // Reference filter
     if (filters.reference) {
       if (!booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     }
-
     return true;
   });
 
@@ -94,29 +93,18 @@ export default function HotelDetails() {
     <div className="min-h-screen bg-background">
       <Header title="Another Hotel Details" />
       <main className="p-2">
-        {/* Header Bar */}
         <div className="flex justify-between items-center mb-2 px-3 py-2" style={{ backgroundColor: "#1e6e99" }}>
           <h2 className="text-white font-semibold text-sm">View Another Hotel Detail</h2>
           <button className="text-white text-sm hover:underline">View All Records</button>
         </div>
 
-        {/* Filters */}
         <DetailPageFilters
-          options={{
-            showType: true,
-            showAgent: true,
-            showUser: true,
-            showCustomer: true,
-            showReference: true,
-            showHotel: true,
-            showCity: true
-          }}
+          options={{ showType: true, showAgent: true, showUser: true, showCustomer: true, showReference: true, showHotel: true, showCity: true }}
           filters={filters}
           onFilterChange={setFilters}
           onSearch={handleSearch}
         />
 
-        {/* Data Table */}
         <div className="mt-2 overflow-x-auto">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
@@ -139,15 +127,10 @@ export default function HotelDetails() {
                     <td className="border border-[#c99] px-2 py-2 align-top">{startIndex + idx + 1}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       {booking.bookings?.booking_type === "agent" ? (
-                        <div>
-                          <div>Agent</div>
-                          <div className="text-[10px]">{booking.bookings?.agents?.name || ""}</div>
-                        </div>
+                        <div><div>Agent</div><div className="text-[10px]">{booking.bookings?.agents?.name || ""}</div></div>
                       ) : "Direct"}
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 align-top">
-                      {booking.bookings?.created_by ? "User" : "-"}
-                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">{booking.bookings?.created_by ? "User" : "-"}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
                       <div className="text-[10px]">Contact No.: {booking.bookings?.contact_no || ""}</div>
@@ -172,24 +155,10 @@ export default function HotelDetails() {
                     </td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                        <button 
-                          className="hover:underline text-left"
-                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
-                        >
-                          View Details
-                        </button>
-                        <button className="hover:underline text-left">
-                          Refund Payment
-                        </button>
-                        <button 
-                          className="hover:underline text-left"
-                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
-                        >
-                          View Refund Payment
-                        </button>
-                        <button className="hover:underline text-left">
-                          Cancel
-                        </button>
+                        <button className="hover:underline text-left" onClick={() => handleViewDetails(booking)}>View Details</button>
+                        <button className="hover:underline text-left">Refund Payment</button>
+                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
+                        <button className="hover:underline text-left">Cancel</button>
                       </div>
                     </td>
                   </tr>
@@ -202,15 +171,16 @@ export default function HotelDetails() {
           )}
         </div>
 
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={goToPage}
-          totalItems={totalItems}
-          startIndex={startIndex}
-          endIndex={endIndex}
-        />
+        <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
       </main>
+
+      <BookingDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        booking={selectedBookingData}
+        serviceType="hotel"
+        serviceData={selectedServiceData}
+      />
 
       <PaymentDialogs
         showViewPaymentDialog={paymentDialog.showViewPaymentDialog}

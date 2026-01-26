@@ -8,12 +8,17 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 
 export default function VolvoDelhiManali() {
   const [volvoBookings, setVolvoBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
   const paymentDialog = usePaymentDialog(() => fetchVolvoBookings());
+  
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
+  const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
 
   useEffect(() => {
     fetchVolvoBookings();
@@ -25,7 +30,7 @@ export default function VolvoDelhiManali() {
       .from("volvo_bookings")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
+        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
         transporters(name)
       `)
       .eq("route", "delhi_manali")
@@ -43,41 +48,35 @@ export default function VolvoDelhiManali() {
     fetchVolvoBookings();
   };
 
+  const handleViewDetails = (booking: any) => {
+    setSelectedBookingData(booking.bookings);
+    setSelectedServiceData(booking);
+    setShowDetailsDialog(true);
+  };
+
   const filteredBookings = volvoBookings.filter(booking => {
-    // Date filter
     if (filters.searchWithDate) {
       const travelDate = new Date(booking.travel_date);
       const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`);
       const toDate = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`);
       if (travelDate < fromDate || travelDate > toDate) return false;
     }
-
-    // Type filter
     if (filters.type) {
       const bookingType = booking.bookings?.booking_type || "direct";
       if (filters.type !== bookingType) return false;
     }
-
-    // Customer filter
     if (filters.customer) {
       if (!booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase())) return false;
     }
-
-    // Transporter filter
     if (filters.transporterId) {
       if (booking.transporter_id !== filters.transporterId) return false;
     }
-
-    // Ticket No filter
     if (filters.ticketNo) {
       if (!booking.ticket_number?.toLowerCase().includes(filters.ticketNo.toLowerCase())) return false;
     }
-
-    // Reference filter
     if (filters.reference) {
       if (!booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     }
-
     return true;
   });
 
@@ -87,29 +86,18 @@ export default function VolvoDelhiManali() {
     <div className="min-h-screen bg-background">
       <Header title="Volvo Delhi - Manali Details" />
       <main className="p-2">
-        {/* Header Bar */}
         <div className="flex justify-between items-center mb-2 px-3 py-2" style={{ backgroundColor: "#1e6e99" }}>
           <h2 className="text-white font-semibold text-sm">Volvo Delhi - Manali Details</h2>
           <button className="text-white text-sm hover:underline">View All Records</button>
         </div>
 
-        {/* Filters */}
         <DetailPageFilters
-          options={{
-            showType: true,
-            showAgent: true,
-            showUser: true,
-            showCustomer: true,
-            showReference: true,
-            showTransporter: true,
-            showTicketNo: true
-          }}
+          options={{ showType: true, showAgent: true, showUser: true, showCustomer: true, showReference: true, showTransporter: true, showTicketNo: true }}
           filters={filters}
           onFilterChange={setFilters}
           onSearch={handleSearch}
         />
 
-        {/* Data Table */}
         <div className="mt-2 overflow-x-auto">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
@@ -132,15 +120,10 @@ export default function VolvoDelhiManali() {
                     <td className="border border-[#c99] px-2 py-2 align-top">{startIndex + idx + 1}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       {booking.bookings?.booking_type === "agent" ? (
-                        <div>
-                          <div>Agent</div>
-                          <div className="text-[10px]">{booking.bookings?.agents?.name || ""}</div>
-                        </div>
+                        <div><div>Agent</div><div className="text-[10px]">{booking.bookings?.agents?.name || ""}</div></div>
                       ) : "Direct"}
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 align-top">
-                      {booking.bookings?.created_by ? "User" : "-"}
-                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">{booking.bookings?.created_by ? "User" : "-"}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
                       <div className="text-[10px]">Contact No.: {booking.bookings?.contact_no || ""}</div>
@@ -161,21 +144,9 @@ export default function VolvoDelhiManali() {
                     </td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                        <button 
-                          className="hover:underline text-left"
-                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
-                        >
-                          View Details
-                        </button>
-                        <button className="hover:underline text-left">
-                          Refund Payment
-                        </button>
-                        <button 
-                          className="hover:underline text-left"
-                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
-                        >
-                          View Refund Payment
-                        </button>
+                        <button className="hover:underline text-left" onClick={() => handleViewDetails(booking)}>View Details</button>
+                        <button className="hover:underline text-left">Refund Payment</button>
+                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
                       </div>
                     </td>
                   </tr>
@@ -188,15 +159,16 @@ export default function VolvoDelhiManali() {
           )}
         </div>
 
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={goToPage}
-          totalItems={totalItems}
-          startIndex={startIndex}
-          endIndex={endIndex}
-        />
+        <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
       </main>
+
+      <BookingDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        booking={selectedBookingData}
+        serviceType="volvo_dm"
+        serviceData={selectedServiceData}
+      />
 
       <PaymentDialogs
         showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
