@@ -1,25 +1,31 @@
 import { Header } from "@/components/layout/Header";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { DetailPageFilters, getDefaultFilters, FilterValues } from "@/components/ui/DetailPageFilters";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function VolvoManaliDelhi() {
   const [volvoBookings, setVolvoBookings] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchVolvoBookings();
   }, []);
 
   const fetchVolvoBookings = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("volvo_bookings")
-      .select("*, bookings(booking_number, customer_name, status, contact_no)")
-      .eq("route", "Manali-Delhi")
+      .select(`
+        *,
+        bookings(id, booking_number, customer_name, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
+        transporters(name)
+      `)
+      .eq("route", "manali_delhi")
       .order("travel_date", { ascending: false });
     
     if (error) {
@@ -27,82 +33,154 @@ export default function VolvoManaliDelhi() {
     } else {
       setVolvoBookings(data || []);
     }
+    setLoading(false);
   };
 
-  const filteredBookings = volvoBookings.filter(booking =>
-    booking.bookings?.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.bookings?.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = () => {
+    fetchVolvoBookings();
+  };
+
+  const filteredBookings = volvoBookings.filter(booking => {
+    // Date filter
+    if (filters.searchWithDate) {
+      const travelDate = new Date(booking.travel_date);
+      const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`);
+      const toDate = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`);
+      if (travelDate < fromDate || travelDate > toDate) return false;
+    }
+
+    // Type filter
+    if (filters.type) {
+      const bookingType = booking.bookings?.booking_type || "direct";
+      if (filters.type !== bookingType) return false;
+    }
+
+    // Customer filter
+    if (filters.customer) {
+      if (!booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase())) return false;
+    }
+
+    // Transporter filter
+    if (filters.transporterId) {
+      if (booking.transporter_id !== filters.transporterId) return false;
+    }
+
+    // Ticket No filter
+    if (filters.ticketNo) {
+      if (!booking.ticket_number?.toLowerCase().includes(filters.ticketNo.toLowerCase())) return false;
+    }
+
+    // Reference filter
+    if (filters.reference) {
+      if (!booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
+    }
+
+    return true;
+  });
+
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Volvo Manali - Delhi Detail" />
-      <main className="p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold">Volvo Manali - Delhi Detail</h2>
+      <Header title="Volvo Manali - Delhi Details" />
+      <main className="p-2">
+        {/* Header Bar */}
+        <div className="flex justify-between items-center mb-2 px-3 py-2" style={{ backgroundColor: "#1e6e99" }}>
+          <h2 className="text-white font-semibold text-sm">Volvo Manali - Delhi Details</h2>
+          <button className="text-white text-sm hover:underline">View All Records</button>
         </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by booking number or customer..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+        {/* Filters */}
+        <DetailPageFilters
+          options={{
+            showType: true,
+            showAgent: true,
+            showUser: true,
+            showCustomer: true,
+            showReference: true,
+            showTransporter: true,
+            showTicketNo: true
+          }}
+          filters={filters}
+          onFilterChange={setFilters}
+          onSearch={handleSearch}
+        />
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-semibold">Booking No</th>
-                    <th className="text-left p-4 font-semibold">Customer</th>
-                    <th className="text-left p-4 font-semibold">Contact</th>
-                    <th className="text-left p-4 font-semibold">Travel Date</th>
-                    <th className="text-left p-4 font-semibold">Seats</th>
-                    <th className="text-left p-4 font-semibold">Rate/Seat</th>
-                    <th className="text-left p-4 font-semibold">Total</th>
-                    <th className="text-left p-4 font-semibold">Paid</th>
-                    <th className="text-left p-4 font-semibold">Due</th>
-                    <th className="text-left p-4 font-semibold">Status</th>
+        {/* Data Table */}
+        <div className="mt-2 overflow-x-auto">
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : (
+            <table className="w-full text-[11px] border-collapse">
+              <thead>
+                <tr style={{ backgroundColor: "#D4A59A" }}>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">S.No.</th>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Type</th>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">User</th>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Customer Details</th>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">M - D Volvo Detail</th>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Date</th>
+                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.map((booking, idx) => (
+                  <tr key={booking.id} style={{ backgroundColor: "#F5E6E0" }}>
+                    <td className="border border-[#c99] px-2 py-2 align-top">{startIndex + idx + 1}</td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">
+                      {booking.bookings?.booking_type === "agent" ? (
+                        <div>
+                          <div>Agent</div>
+                          <div className="text-[10px]">{booking.bookings?.agents?.name || ""}</div>
+                        </div>
+                      ) : "Direct"}
+                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">
+                      {booking.bookings?.created_by ? "User" : "-"}
+                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">
+                      <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
+                      <div className="text-[10px]">Contact No.: {booking.bookings?.contact_no || ""}</div>
+                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">
+                      <div><strong>No of tickets :</strong> {booking.number_of_seats || 0}</div>
+                      <div><strong>Ticket no :</strong> {booking.ticket_number || "-"}</div>
+                      <div><strong>Seat no :</strong> {booking.seat_numbers || "-"}</div>
+                      <div><strong>Transporter :</strong> {booking.transporters?.name || "-"}</div>
+                      <div><strong>Booking Price :</strong> Rs. {(booking.rate_per_seat || 0).toLocaleString('en-IN')} /-</div>
+                      <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
+                      <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')} /-</div>
+                      <div><strong>Due Payment :</strong> Rs. {(booking.due_amount || 0).toLocaleString('en-IN')} /-</div>
+                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">
+                      <div><strong>Journey Date :</strong> {booking.travel_date ? format(new Date(booking.travel_date), "dd/MM/yyyy") : "-"}</div>
+                      <div><strong>Booking Date :</strong> {booking.bookings?.created_at ? format(new Date(booking.bookings.created_at), "dd/MM/yyyy") : "-"}</div>
+                    </td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">
+                      <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
+                        <button className="hover:underline text-left">View Details</button>
+                        <button className="hover:underline text-left">Refund Payment</button>
+                        <button className="hover:underline text-left">View Refund Payment</button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4">{booking.bookings?.booking_number || "-"}</td>
-                      <td className="p-4">{booking.bookings?.customer_name || "-"}</td>
-                      <td className="p-4">{booking.bookings?.contact_no || "-"}</td>
-                      <td className="p-4">
-                        {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="p-4">{booking.number_of_seats}</td>
-                      <td className="p-4">₹{booking.rate_per_seat?.toLocaleString() || 0}</td>
-                      <td className="p-4">₹{booking.total_amount?.toLocaleString() || 0}</td>
-                      <td className="p-4">₹{booking.paid_amount?.toLocaleString() || 0}</td>
-                      <td className="p-4">₹{booking.due_amount?.toLocaleString() || 0}</td>
-                      <td className="p-4">
-                        <Badge variant={booking.bookings?.status === "confirmed" ? "default" : "secondary"}>
-                          {booking.bookings?.status || "N/A"}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredBookings.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No Manali-Delhi volvo bookings found
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {!loading && filteredBookings.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">No Manali-Delhi volvo bookings found</div>
+          )}
+        </div>
+
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </main>
     </div>
   );
