@@ -64,18 +64,54 @@ export function BookingDetailsDialog({
     </>
   );
 
-  const renderHotelDetails = () => (
-    <>
-      {renderSectionHeader("Another Hotel :")}
-      {renderRow("Another Hotel Name :", serviceData.another_hotels?.name)}
-      {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-      {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
-      {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
-      {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
-      {renderRow("Room Booking Price :", formatPrice(serviceData.room_rate))}
-      {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
-    </>
-  );
+  const renderHotelDetails = () => {
+    // Check if this is an Own Hotel (has own_hotel_id and own_hotels data) or Another Hotel (has hotel_id and another_hotels data)
+    const isOwnHotel = serviceData.own_hotel_id && serviceData.own_hotels?.name;
+    const isAnotherHotel = serviceData.hotel_id && serviceData.another_hotels?.name;
+    
+    if (isOwnHotel) {
+      // Own Hotel Section
+      return (
+        <>
+          {renderSectionHeader("Hotel :")}
+          {renderRow("Hotel Name :", serviceData.own_hotels?.name)}
+          {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
+          {renderRow("Room Name :", serviceData.room_type || "-")}
+          {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
+          {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
+          {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
+          {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
+        </>
+      );
+    } else if (isAnotherHotel) {
+      // Another Hotel Section
+      return (
+        <>
+          {renderSectionHeader("Another Hotel :")}
+          {renderRow("Another Hotel Name :", serviceData.another_hotels?.name)}
+          {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
+          {renderRow("Room Type :", serviceData.room_type || "-")}
+          {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
+          {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
+          {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
+          {renderRow("Room Booking Price :", formatPrice(serviceData.room_rate))}
+          {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
+        </>
+      );
+    } else {
+      // Fallback - show generic hotel info
+      return (
+        <>
+          {renderSectionHeader("Hotel :")}
+          {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
+          {renderRow("Room Type :", serviceData.room_type || "-")}
+          {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
+          {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
+          {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
+        </>
+      );
+    }
+  };
 
   const renderVolvoDetails = () => (
     <>
