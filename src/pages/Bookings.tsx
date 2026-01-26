@@ -41,14 +41,21 @@ export default function Bookings() {
   
   // Auto-show form when navigating to /bookings/add, hide when on /bookings
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const editId = searchParams.get("edit");
+    
     if (isAddRoute) {
       setShowForm(true);
       setEditingBookingId(null);
-    } else if (location.pathname === "/bookings") {
+    } else if (editId) {
+      // Handle ?edit=bookingId query parameter
+      setEditingBookingId(editId);
+      setShowForm(true);
+    } else if (location.pathname === "/bookings" || location.pathname === "/admin/bookings") {
       setShowForm(false);
       setEditingBookingId(null);
     }
-  }, [isAddRoute, location.pathname]);
+  }, [isAddRoute, location.pathname, location.search]);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
