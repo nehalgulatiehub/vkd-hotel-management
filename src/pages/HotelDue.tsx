@@ -126,10 +126,13 @@ export default function HotelDue() {
     setSelectedBooking(booking);
     setBookingPayments([]);
     setShowViewPaymentDialog(true);
-    if (booking.bookings?.id) {
-      await fetchBookingPayments(booking.bookings.id);
+    const bookingId = booking.bookings?.id || booking.booking_id;
+    if (bookingId) {
+      await fetchBookingPayments(bookingId);
     }
   };
+
+  const getBookingId = (booking: any) => booking.bookings?.id || booking.booking_id;
 
   return (
     <div className="min-h-screen bg-background">
@@ -295,12 +298,12 @@ export default function HotelDue() {
                         <td className="border border-[#c99] px-3 py-2 align-top">
                           <div className="flex flex-col gap-0.5">
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>View Details</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/booking-details/${booking.bookings?.id}`)}>Print Booking</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/booking-details/${booking.bookings?.id}`)}>Edit Booking</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/hotel-payments?booking_id=${booking.bookings?.id}`)}>Add Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/booking-details/${getBookingId(booking)}`)}>Print Booking</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/booking-details/${getBookingId(booking)}`)}>Edit Booking</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/booking-payments?booking_id=${getBookingId(booking)}`)}>Add Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/refunds?booking_id=${booking.bookings?.id}`)}>Refund Payment</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/refunds?booking_id=${booking.bookings?.id}`)}>View Refund Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>Refund Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>View Refund Payment</Button>
                           </div>
                         </td>
                       </tr>
