@@ -6,11 +6,14 @@ import { format } from "date-fns";
 import { DetailPageFilters, getDefaultFilters, FilterValues } from "@/components/ui/DetailPageFilters";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { usePaymentDialog } from "@/hooks/usePaymentDialog";
+import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 
 export default function VolvoManaliDelhi() {
   const [volvoBookings, setVolvoBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
+  const paymentDialog = usePaymentDialog(() => fetchVolvoBookings());
 
   useEffect(() => {
     fetchVolvoBookings();
@@ -158,9 +161,21 @@ export default function VolvoManaliDelhi() {
                     </td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                        <button className="hover:underline text-left">View Details</button>
-                        <button className="hover:underline text-left">Refund Payment</button>
-                        <button className="hover:underline text-left">View Refund Payment</button>
+                        <button 
+                          className="hover:underline text-left"
+                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
+                        >
+                          View Details
+                        </button>
+                        <button className="hover:underline text-left">
+                          Refund Payment
+                        </button>
+                        <button 
+                          className="hover:underline text-left"
+                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
+                        >
+                          View Refund Payment
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -182,6 +197,23 @@ export default function VolvoManaliDelhi() {
           endIndex={endIndex}
         />
       </main>
+
+      <PaymentDialogs
+        showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
+        setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
+        showPaymentDialog={paymentDialog.showPaymentDialog}
+        setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
+        selectedBooking={paymentDialog.selectedBooking}
+        bookingPayments={paymentDialog.bookingPayments}
+        paymentAmount={paymentDialog.paymentAmount}
+        setPaymentAmount={paymentDialog.setPaymentAmount}
+        paymentMode={paymentDialog.paymentMode}
+        setPaymentMode={paymentDialog.setPaymentMode}
+        paymentReference={paymentDialog.paymentReference}
+        setPaymentReference={paymentDialog.setPaymentReference}
+        isSubmittingPayment={paymentDialog.isSubmittingPayment}
+        onSubmitPayment={paymentDialog.submitPayment}
+      />
     </div>
   );
 }

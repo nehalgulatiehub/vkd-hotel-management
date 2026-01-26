@@ -6,12 +6,15 @@ import { format } from "date-fns";
 import { DetailPageFilters, getDefaultFilters, FilterValues } from "@/components/ui/DetailPageFilters";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { usePaymentDialog } from "@/hooks/usePaymentDialog";
+import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 
 export default function HotelDetails() {
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
   const [cities, setCities] = useState<any[]>([]);
+  const paymentDialog = usePaymentDialog(() => fetchHotelBookings());
 
   useEffect(() => {
     fetchHotelBookings();
@@ -169,10 +172,24 @@ export default function HotelDetails() {
                     </td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                        <button className="hover:underline text-left">View Details</button>
-                        <button className="hover:underline text-left">Refund Payment</button>
-                        <button className="hover:underline text-left">View Refund Payment</button>
-                        <button className="hover:underline text-left">Cancel</button>
+                        <button 
+                          className="hover:underline text-left"
+                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
+                        >
+                          View Details
+                        </button>
+                        <button className="hover:underline text-left">
+                          Refund Payment
+                        </button>
+                        <button 
+                          className="hover:underline text-left"
+                          onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}
+                        >
+                          View Refund Payment
+                        </button>
+                        <button className="hover:underline text-left">
+                          Cancel
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -194,6 +211,23 @@ export default function HotelDetails() {
           endIndex={endIndex}
         />
       </main>
+
+      <PaymentDialogs
+        showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
+        setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
+        showPaymentDialog={paymentDialog.showPaymentDialog}
+        setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
+        selectedBooking={paymentDialog.selectedBooking}
+        bookingPayments={paymentDialog.bookingPayments}
+        paymentAmount={paymentDialog.paymentAmount}
+        setPaymentAmount={paymentDialog.setPaymentAmount}
+        paymentMode={paymentDialog.paymentMode}
+        setPaymentMode={paymentDialog.setPaymentMode}
+        paymentReference={paymentDialog.paymentReference}
+        setPaymentReference={paymentDialog.setPaymentReference}
+        isSubmittingPayment={paymentDialog.isSubmittingPayment}
+        onSubmitPayment={paymentDialog.submitPayment}
+      />
     </div>
   );
 }
