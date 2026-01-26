@@ -73,8 +73,9 @@ export default function HotelDue() {
       .from("hotel_bookings")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, status, contact_no, address, booking_type, check_in_date, check_out_date, total_amount, paid_amount, due_amount, created_at, created_by, agents(name)),
-        another_hotels:hotel_id(name)
+        bookings(id, booking_number, customer_name, email, status, contact_no, address, booking_type, adults, children, check_in_date, check_out_date, notes, reference, total_amount, paid_amount, due_amount, created_at, created_by, agents(name)),
+        another_hotels:hotel_id(name),
+        own_hotels(name)
       `)
       .not("hotel_id", "is", null)
       .gt("due_amount", 0)
