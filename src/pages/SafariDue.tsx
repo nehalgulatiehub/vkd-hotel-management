@@ -63,7 +63,7 @@ export default function SafariDue() {
   const fetchSafariBookings = async () => {
     const { data, error } = await supabase
       .from("safari_bookings")
-      .select("*, bookings(id, booking_number, customer_name, status, contact_no, address, booking_type, created_at, agents(name))")
+      .select("*, bookings(id, booking_number, customer_name, email, status, contact_no, address, booking_type, adults, children, check_in_date, check_out_date, notes, reference, created_at, agents(name))")
       .gt("due_amount", 0)
       .order("safari_date", { ascending: true });
     
