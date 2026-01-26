@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Eye, Search } from "lucide-react";
+import { Edit, DollarSign, Eye, Search } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { format } from "date-fns";
+import { usePaymentDialog } from "@/hooks/usePaymentDialog";
+import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 
 interface HotelBookingWithDetails {
   id: string;
@@ -27,6 +29,9 @@ interface HotelBookingWithDetails {
     id: string;
     booking_number: string;
     customer_name: string | null;
+    total_amount: number | null;
+    paid_amount: number | null;
+    due_amount: number | null;
   } | null;
 }
 
@@ -39,6 +44,8 @@ export default function ViewHotelDue() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filterActive, setFilterActive] = useState(false);
+
+  const paymentDialog = usePaymentDialog(() => fetchHotels());
 
   const canManage = isAdmin() || isAccount();
 
@@ -63,11 +70,11 @@ export default function ViewHotelDue() {
 
   useEffect(() => {
     if (!authLoading && canManage) {
-      fetchHotelBookings();
+      fetchHotels();
     }
   }, [authLoading, canManage]);
 
-  const fetchHotelBookings = async () => {
+  const fetchHotels = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -76,7 +83,7 @@ export default function ViewHotelDue() {
           id, check_in_date, check_out_date, number_of_rooms, room_type,
           total_amount, paid_amount, due_amount,
           hotel:another_hotels(name),
-          booking:bookings(id, booking_number, customer_name)
+          booking:bookings(id, booking_number, customer_name, total_amount, paid_amount, due_amount)
         `)
         .gt("due_amount", 0)
         .order("check_in_date", { ascending: false });
@@ -84,7 +91,7 @@ export default function ViewHotelDue() {
       if (error) throw error;
       setHotelBookings(data || []);
     } catch (error) {
-      console.error("Error fetching hotel bookings:", error);
+      console.error("Error fetching hotels:", error);
     } finally {
       setLoading(false);
     }
@@ -144,7 +151,7 @@ export default function ViewHotelDue() {
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by booking, customer or hotel..."
+                  placeholder="Search by hotel, booking or customer..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
@@ -164,8 +171,8 @@ export default function ViewHotelDue() {
                       <TableHead>Booking #</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Hotel</TableHead>
-                      <TableHead>Check-in</TableHead>
-                      <TableHead>Check-out</TableHead>
+                      <TableHead>Check In</TableHead>
+                      <TableHead>Check Out</TableHead>
                       <TableHead>Rooms</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead className="text-right">Paid</TableHead>
@@ -186,13 +193,22 @@ export default function ViewHotelDue() {
                         <TableCell className="text-right">₹{(hotel.paid_amount || 0).toLocaleString()}</TableCell>
                         <TableCell className="text-right font-medium text-destructive">₹{(hotel.due_amount || 0).toLocaleString()}</TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => hotel.booking && navigate(`/admin/bookings/${hotel.booking.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => hotel.booking && navigate(`/bookings?edit=${hotel.booking.id}`)}
+                              title="Edit Booking"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => hotel.booking && paymentDialog.handleViewPayment(hotel.booking)} title="View Payment">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => hotel.booking && paymentDialog.handleAddPayment(hotel.booking)} title="Add Payment">
+                              <DollarSign className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -211,6 +227,23 @@ export default function ViewHotelDue() {
           </CardContent>
         </Card>
       </main>
+
+      <PaymentDialogs
+        showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
+        setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
+        showPaymentDialog={paymentDialog.showPaymentDialog}
+        setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
+        selectedBooking={paymentDialog.selectedBooking}
+        bookingPayments={paymentDialog.bookingPayments}
+        paymentAmount={paymentDialog.paymentAmount}
+        setPaymentAmount={paymentDialog.setPaymentAmount}
+        paymentMode={paymentDialog.paymentMode}
+        setPaymentMode={paymentDialog.setPaymentMode}
+        paymentReference={paymentDialog.paymentReference}
+        setPaymentReference={paymentDialog.setPaymentReference}
+        isSubmittingPayment={paymentDialog.isSubmittingPayment}
+        onSubmitPayment={paymentDialog.submitPayment}
+      />
     </div>
   );
 }
