@@ -48,9 +48,20 @@ export default function Bookings() {
       setShowForm(true);
       setEditingBookingId(null);
     } else if (editId) {
-      // Handle ?edit=bookingId query parameter
-      setEditingBookingId(editId);
-      setShowForm(true);
+      // Handle ?edit=bookingId query parameter - fetch booking and load for editing
+      const loadBookingForEdit = async () => {
+        const { data: booking, error } = await supabase
+          .from("bookings")
+          .select("*, agents(name)")
+          .eq("id", editId)
+          .maybeSingle();
+        
+        if (booking && !error) {
+          handleEditBooking(booking);
+          setShowForm(true);
+        }
+      };
+      loadBookingForEdit();
     } else if (location.pathname === "/bookings" || location.pathname === "/admin/bookings") {
       setShowForm(false);
       setEditingBookingId(null);
