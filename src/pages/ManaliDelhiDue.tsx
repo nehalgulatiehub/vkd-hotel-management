@@ -16,8 +16,13 @@ export default function ManaliDelhiDue() {
   // Dialog states
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
   const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
+  const [showAddPaymentDialog, setShowAddPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [bookingPayments, setBookingPayments] = useState<any[]>([]);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMode, setPaymentMode] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -116,6 +121,18 @@ export default function ManaliDelhiDue() {
     if (bookingId) {
       await fetchBookingPayments(bookingId);
     }
+  };
+
+  const handleAddPayment = (booking: any) => { setSelectedBooking(booking); setPaymentAmount(""); setPaymentMode(""); setPaymentReference(""); setShowAddPaymentDialog(true); };
+  const submitPayment = async () => {
+    if (!paymentAmount || !paymentMode) { toast.error("Please fill in required fields"); return; }
+    if (isSubmittingPayment) return;
+    setIsSubmittingPayment(true);
+    try {
+      const { error } = await supabase.from("payments").insert({ booking_id: getBookingId(selectedBooking), amount: parseFloat(paymentAmount), payment_mode: paymentMode, reference_number: paymentReference, payment_date: new Date().toISOString().split('T')[0] });
+      if (error) throw error;
+      toast.success("Payment added"); setShowAddPaymentDialog(false); fetchVolvoBookings();
+    } catch (error) { toast.error("Failed to add payment"); } finally { setIsSubmittingPayment(false); }
   };
 
   const getBookingId = (booking: any) => booking.bookings?.id || booking.booking_id;
@@ -261,8 +278,8 @@ export default function ManaliDelhiDue() {
                           <div className="flex flex-col gap-0.5">
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>View Details</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/bookings/${getBookingId(booking)}`)}>Print Booking</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/bookings`)}>Edit Booking</Button>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/payments/booking?id=${getBookingId(booking)}`)}>Add Payment</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/bookings?edit=${getBookingId(booking)}`)}>Edit Booking</Button>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>Refund Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}&view=true`)}>View Refund Payment</Button>

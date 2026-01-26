@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Eye, Search } from "lucide-react";
+import { Edit, DollarSign, Eye, Search } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { format } from "date-fns";
+import { usePaymentDialog } from "@/hooks/usePaymentDialog";
+import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 
 interface VolvoWithBooking {
   id: string;
@@ -26,6 +28,9 @@ interface VolvoWithBooking {
     id: string;
     booking_number: string;
     customer_name: string | null;
+    total_amount: number | null;
+    paid_amount: number | null;
+    due_amount: number | null;
   } | null;
 }
 
@@ -38,6 +43,8 @@ export default function ViewManaliDelhiDue() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filterActive, setFilterActive] = useState(false);
+
+  const paymentDialog = usePaymentDialog(() => fetchVolvos());
 
   const canManage = isAdmin() || isAccount();
 
@@ -73,7 +80,7 @@ export default function ViewManaliDelhiDue() {
         .select(`
           id, route, travel_date, number_of_seats, rate_per_seat,
           total_amount, paid_amount, due_amount,
-          booking:bookings(id, booking_number, customer_name)
+          booking:bookings(id, booking_number, customer_name, total_amount, paid_amount, due_amount)
         `)
         .eq("route", "manali_delhi")
         .gt("due_amount", 0)
@@ -180,13 +187,22 @@ export default function ViewManaliDelhiDue() {
                         <TableCell className="text-right">₹{(volvo.paid_amount || 0).toLocaleString()}</TableCell>
                         <TableCell className="text-right font-medium text-destructive">₹{(volvo.due_amount || 0).toLocaleString()}</TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => volvo.booking && navigate(`/admin/bookings/${volvo.booking.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => volvo.booking && navigate(`/bookings?edit=${volvo.booking.id}`)}
+                              title="Edit Booking"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => volvo.booking && paymentDialog.handleViewPayment(volvo.booking)} title="View Payment">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => volvo.booking && paymentDialog.handleAddPayment(volvo.booking)} title="Add Payment">
+                              <DollarSign className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -205,6 +221,23 @@ export default function ViewManaliDelhiDue() {
           </CardContent>
         </Card>
       </main>
+
+      <PaymentDialogs
+        showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
+        setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
+        showPaymentDialog={paymentDialog.showPaymentDialog}
+        setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
+        selectedBooking={paymentDialog.selectedBooking}
+        bookingPayments={paymentDialog.bookingPayments}
+        paymentAmount={paymentDialog.paymentAmount}
+        setPaymentAmount={paymentDialog.setPaymentAmount}
+        paymentMode={paymentDialog.paymentMode}
+        setPaymentMode={paymentDialog.setPaymentMode}
+        paymentReference={paymentDialog.paymentReference}
+        setPaymentReference={paymentDialog.setPaymentReference}
+        isSubmittingPayment={paymentDialog.isSubmittingPayment}
+        onSubmitPayment={paymentDialog.submitPayment}
+      />
     </div>
   );
 }

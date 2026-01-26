@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Eye, Search } from "lucide-react";
+import { Edit, DollarSign, Eye, Search } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { format } from "date-fns";
+import { usePaymentDialog } from "@/hooks/usePaymentDialog";
+import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 
 interface VehicleWithBooking {
   id: string;
@@ -27,6 +29,9 @@ interface VehicleWithBooking {
     id: string;
     booking_number: string;
     customer_name: string | null;
+    total_amount: number | null;
+    paid_amount: number | null;
+    due_amount: number | null;
   } | null;
 }
 
@@ -39,6 +44,8 @@ export default function ViewVehicleDue() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filterActive, setFilterActive] = useState(false);
+
+  const paymentDialog = usePaymentDialog(() => fetchVehicles());
 
   const canManage = isAdmin() || isAccount();
 
@@ -75,7 +82,7 @@ export default function ViewVehicleDue() {
         .select(`
           id, vehicle_type, vehicle_number, from_location, to_location, pickup_date,
           total_amount, paid_amount, due_amount,
-          booking:bookings(id, booking_number, customer_name)
+          booking:bookings(id, booking_number, customer_name, total_amount, paid_amount, due_amount)
         `)
         .gt("due_amount", 0)
         .order("pickup_date", { ascending: false });
@@ -143,7 +150,7 @@ export default function ViewVehicleDue() {
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by booking, customer or vehicle..."
+                  placeholder="Search by vehicle, booking or customer..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
@@ -162,7 +169,6 @@ export default function ViewVehicleDue() {
                     <TableRow>
                       <TableHead>Booking #</TableHead>
                       <TableHead>Customer</TableHead>
-                      <TableHead>Vehicle</TableHead>
                       <TableHead>Route</TableHead>
                       <TableHead>Pickup Date</TableHead>
                       <TableHead className="text-right">Total</TableHead>
@@ -176,20 +182,28 @@ export default function ViewVehicleDue() {
                       <TableRow key={vehicle.id}>
                         <TableCell className="font-medium">{vehicle.booking?.booking_number || "-"}</TableCell>
                         <TableCell>{vehicle.booking?.customer_name || "-"}</TableCell>
-                        <TableCell>{vehicle.vehicle_type} - {vehicle.vehicle_number || "N/A"}</TableCell>
                         <TableCell>{vehicle.from_location} → {vehicle.to_location}</TableCell>
                         <TableCell>{vehicle.pickup_date ? format(new Date(vehicle.pickup_date), "dd/MM/yyyy") : "-"}</TableCell>
                         <TableCell className="text-right">₹{(vehicle.total_amount || 0).toLocaleString()}</TableCell>
                         <TableCell className="text-right">₹{(vehicle.paid_amount || 0).toLocaleString()}</TableCell>
                         <TableCell className="text-right font-medium text-destructive">₹{(vehicle.due_amount || 0).toLocaleString()}</TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => vehicle.booking && navigate(`/admin/bookings/${vehicle.booking.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => vehicle.booking && navigate(`/bookings?edit=${vehicle.booking.id}`)}
+                              title="Edit Booking"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => vehicle.booking && paymentDialog.handleViewPayment(vehicle.booking)} title="View Payment">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => vehicle.booking && paymentDialog.handleAddPayment(vehicle.booking)} title="Add Payment">
+                              <DollarSign className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -208,6 +222,23 @@ export default function ViewVehicleDue() {
           </CardContent>
         </Card>
       </main>
+
+      <PaymentDialogs
+        showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
+        setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
+        showPaymentDialog={paymentDialog.showPaymentDialog}
+        setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
+        selectedBooking={paymentDialog.selectedBooking}
+        bookingPayments={paymentDialog.bookingPayments}
+        paymentAmount={paymentDialog.paymentAmount}
+        setPaymentAmount={paymentDialog.setPaymentAmount}
+        paymentMode={paymentDialog.paymentMode}
+        setPaymentMode={paymentDialog.setPaymentMode}
+        paymentReference={paymentDialog.paymentReference}
+        setPaymentReference={paymentDialog.setPaymentReference}
+        isSubmittingPayment={paymentDialog.isSubmittingPayment}
+        onSubmitPayment={paymentDialog.submitPayment}
+      />
     </div>
   );
 }
