@@ -97,7 +97,8 @@ export default function Bookings() {
   const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [bookingPayments, setBookingPayments] = useState<any[]>([]);
-  const [viewDetailHotelInfo, setViewDetailHotelInfo] = useState<any[]>([]);
+  const [viewDetailOwnHotelInfo, setViewDetailOwnHotelInfo] = useState<any[]>([]);
+  const [viewDetailAnotherHotelInfo, setViewDetailAnotherHotelInfo] = useState<any[]>([]);
   const [viewDetailSafariInfo, setViewDetailSafariInfo] = useState<any[]>([]);
   const [viewDetailVehicleInfo, setViewDetailVehicleInfo] = useState<any[]>([]);
   const [viewDetailVolvoDMInfo, setViewDetailVolvoDMInfo] = useState<any[]>([]);
@@ -812,7 +813,8 @@ export default function Bookings() {
   // Action handlers
   const handleViewDetails = async (booking: any) => {
     setSelectedBooking(booking);
-    setViewDetailHotelInfo([]);
+    setViewDetailOwnHotelInfo([]);
+    setViewDetailAnotherHotelInfo([]);
     setViewDetailSafariInfo([]);
     setViewDetailVehicleInfo([]);
     setViewDetailVolvoDMInfo([]);
@@ -822,13 +824,13 @@ export default function Bookings() {
     // Fetch all service bookings in parallel
     const [hotelRes, safariRes, vehicleRes, volvoDMRes, volvoMDRes] = await Promise.all([
       supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", booking.id),
-      supabase.from("safari_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
-      supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
-      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "delhi_manali"),
-      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "manali_delhi")
+      supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
+      supabase.from("vehicle_bookings").select("*").eq("booking_id", booking.id),
+      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "delhi_manali"),
+      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "manali_delhi")
     ]);
 
-    // Process hotel bookings with room resolution
+    // Process hotel bookings - separate Own Hotels from Another Hotels
     if (hotelRes.data && hotelRes.data.length > 0) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const roomIds = [...new Set(hotelRes.data.map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
@@ -839,8 +841,24 @@ export default function Bookings() {
         roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
       }
 
-      setViewDetailHotelInfo(hotelRes.data.map((hb: any) => ({
-        hotelName: hb.own_hotels?.name || hb.another_hotels?.name || "-",
+      // Separate Own Hotels from Another Hotels
+      const ownHotelBookings = hotelRes.data.filter((hb: any) => hb.own_hotel_id && hb.own_hotels?.name);
+      const anotherHotelBookings = hotelRes.data.filter((hb: any) => hb.hotel_id && hb.another_hotels?.name);
+
+      setViewDetailOwnHotelInfo(ownHotelBookings.map((hb: any) => ({
+        hotelName: hb.own_hotels?.name || "-",
+        roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"),
+        numberOfRooms: hb.number_of_rooms || 1,
+        notes: hb.notes || "",
+        checkIn: hb.check_in_date || "",
+        checkOut: hb.check_out_date || "",
+        totalAmount: hb.total_amount || 0,
+        roomRate: hb.room_rate || 0,
+        createdAt: booking.created_at
+      })));
+
+      setViewDetailAnotherHotelInfo(anotherHotelBookings.map((hb: any) => ({
+        hotelName: hb.another_hotels?.name || "-",
         roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"),
         numberOfRooms: hb.number_of_rooms || 1,
         notes: hb.notes || "",
@@ -2574,12 +2592,26 @@ export default function Bookings() {
                           </React.Fragment>
                         ))}
                         
+                        {/* Own Hotel Section (Hotel) */}
+                        {viewDetailOwnHotelInfo.length > 0 && viewDetailOwnHotelInfo.map((hotel, idx) => (
+                          <React.Fragment key={`own-hotel-${idx}`}>
+                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Hotel :</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Name :</td><td className="py-0.5">{hotel.roomName}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                          </React.Fragment>
+                        ))}
+                        
                         {/* Another Hotel Section */}
-                        {viewDetailHotelInfo.length > 0 && viewDetailHotelInfo.map((hotel, idx) => (
-                          <React.Fragment key={`hotel-${idx}`}>
+                        {viewDetailAnotherHotelInfo.length > 0 && viewDetailAnotherHotelInfo.map((hotel, idx) => (
+                          <React.Fragment key={`another-hotel-${idx}`}>
                             <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Hotel :</td></tr>
                             <tr><td className="pr-4 py-0.5">Another Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
                             <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Type :</td><td className="py-0.5">{hotel.roomName}</td></tr>
                             <tr><td className="pr-4 py-0.5">Hotel Booking Date :</td><td className="py-0.5">{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
