@@ -393,6 +393,40 @@ export default function DelhiManaliDue() {
             <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}></div>
           </DialogContent>
         </Dialog>
+
+        {/* Add Payment Dialog */}
+        <Dialog open={showAddPaymentDialog} onOpenChange={setShowAddPaymentDialog}>
+          <DialogContent className="max-w-md p-0 overflow-hidden">
+            <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+              <DialogTitle className="text-white text-sm font-semibold">Add Payment - {selectedBooking?.bookings?.booking_number}</DialogTitle>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="text-xs font-medium mb-1 block">Amount *</label>
+                <input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="Enter amount" className="w-full h-8 text-xs border border-input bg-background px-2 rounded-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block">Payment Mode *</label>
+                <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full h-8 text-xs border border-input bg-background px-2 rounded-sm">
+                  <option value="">Select mode</option>
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="upi">UPI</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block">Reference Number</label>
+                <input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="Transaction/Cheque number" className="w-full h-8 text-xs border border-input bg-background px-2 rounded-sm" />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => setShowAddPaymentDialog(false)}>Cancel</Button>
+                <Button size="sm" onClick={submitPayment} disabled={isSubmittingPayment}>{isSubmittingPayment ? "Adding..." : "Add Payment"}</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
