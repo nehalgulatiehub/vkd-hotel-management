@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 
 export default function HotelDue() {
   const navigate = useNavigate();
@@ -364,33 +365,14 @@ export default function HotelDue() {
           </CardContent>
         </Card>
 
-        {/* View Details Dialog */}
-        <Dialog open={showViewDetailDialog} onOpenChange={setShowViewDetailDialog}>
-          <DialogContent className="max-w-lg p-0 overflow-hidden">
-            <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
-              <DialogTitle className="text-white text-sm font-semibold">Hotel Booking Details</DialogTitle>
-            </div>
-            {selectedBooking && (
-              <div className="p-4" style={{ backgroundColor: "#FDE1E1" }}>
-                <table className="w-full text-xs border-collapse">
-                  <tbody>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold w-32">Booking No</td><td className="py-1.5">{selectedBooking.bookings?.booking_number || "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Customer</td><td className="py-1.5">{selectedBooking.bookings?.customer_name || "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Hotel</td><td className="py-1.5">{selectedBooking.another_hotels?.name || "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Room Type</td><td className="py-1.5">{selectedBooking.room_type || "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">No. of Rooms</td><td className="py-1.5">{selectedBooking.number_of_rooms || 1}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Check-in</td><td className="py-1.5">{selectedBooking.check_in_date ? new Date(selectedBooking.check_in_date).toLocaleDateString("en-GB") : "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Check-out</td><td className="py-1.5">{selectedBooking.check_out_date ? new Date(selectedBooking.check_out_date).toLocaleDateString("en-GB") : "-"}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Booking Price</td><td className="py-1.5">₹{selectedBooking.total_amount?.toLocaleString("en-IN") || 0}</td></tr>
-                    <tr className="border-b border-[#FFC1C1]"><td className="py-1.5 font-semibold">Received</td><td className="py-1.5">₹{selectedBooking.paid_amount?.toLocaleString("en-IN") || 0}</td></tr>
-                    <tr><td className="py-1.5 font-semibold">Due Amount</td><td className="py-1.5 text-destructive">₹{selectedBooking.due_amount?.toLocaleString("en-IN") || 0}</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-            <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}></div>
-          </DialogContent>
-        </Dialog>
+        {/* View Details Dialog - Using shared component */}
+        <BookingDetailsDialog
+          open={showViewDetailDialog}
+          onOpenChange={setShowViewDetailDialog}
+          booking={selectedBooking?.bookings}
+          serviceType="hotel"
+          serviceData={selectedBooking}
+        />
 
         {/* View Payment Dialog */}
         <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
