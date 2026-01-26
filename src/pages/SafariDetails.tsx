@@ -31,12 +31,12 @@ export default function SafariDetails() {
       .from("safari_bookings")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount),
-        transporters(name)
+        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name))
       `)
       .order("safari_date", { ascending: false });
     
     if (error) {
+      console.error("Safari fetch error:", error);
       toast.error("Failed to load safari bookings");
     } else {
       setSafariBookings(data || []);
@@ -126,8 +126,8 @@ export default function SafariDetails() {
                       <div className="text-[10px]">Contact No.: {booking.bookings?.contact_no || ""}</div>
                     </td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
-                      <div><strong>No of Safari :</strong> {booking.number_of_persons || 0}</div>
-                      <div><strong>Transporter :</strong> {booking.transporters?.name || "-"}</div>
+                      <div><strong>No of Persons :</strong> {booking.number_of_persons || 0}</div>
+                      <div><strong>Safari Name :</strong> {booking.safari_name || "-"}</div>
                       <div><strong>Booking Price :</strong> Rs. {(booking.rate_per_person || 0).toLocaleString('en-IN')} /-</div>
                       <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
                       <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')}/-</div>
