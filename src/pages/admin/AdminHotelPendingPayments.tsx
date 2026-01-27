@@ -16,6 +16,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { toast } from "sonner";
+import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 
 interface PaymentWithDetails {
   id: string;
@@ -60,6 +61,13 @@ export default function AdminHotelPendingPayments() {
   const [agents, setAgents] = useState<{ id: string; name: string }[]>([]);
   const [hotels, setHotels] = useState<{ id: string; name: string }[]>([]);
   const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+
+  const handleViewPayment = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setShowPaymentDialog(true);
+  };
 
   const canManage = isAdmin() || isAccount();
 
@@ -298,7 +306,7 @@ export default function AdminHotelPendingPayments() {
                           <TableCell>
                             <div className="flex flex-col gap-1 text-xs">
                               <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/admin/bookings/${payment.booking?.id}`)}>View Booking</Button>
-                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/admin/booking-payments?id=${payment.booking?.id}`)}>View Payment</Button>
+                              <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => payment.booking?.id && handleViewPayment(payment.booking.id)}>View Payment</Button>
                               <Button variant="link" size="sm" className="h-auto p-0 text-destructive hover:text-destructive/80" onClick={() => navigate(`/admin/refund-payments?id=${payment.booking?.id}`)}>View Refund Payment</Button>
                             </div>
                           </TableCell>
@@ -322,6 +330,12 @@ export default function AdminHotelPendingPayments() {
           </CardContent>
         </Card>
       </main>
+
+      <AdminViewPaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        bookingId={selectedBookingId}
+      />
     </div>
   );
 }

@@ -1,0 +1,382 @@
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface ServiceSummary {
+  type: string;
+  customerName: string;
+  totalPayment: number;
+  totalReceived: number;
+  date: string;
+  totalDue: number;
+}
+
+interface PaymentRecord {
+  id: string;
+  customer: string;
+  payment: number;
+  date: string;
+  mode: string;
+  paymentDetail: string;
+  place: string;
+  status: string;
+}
+
+interface AdminViewPaymentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  bookingId: string | null;
+}
+
+export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminViewPaymentDialogProps) {
+  const [loading, setLoading] = useState(false);
+  const [booking, setBooking] = useState<any>(null);
+  const [serviceSummaries, setServiceSummaries] = useState<ServiceSummary[]>([]);
+  const [paymentsByType, setPaymentsByType] = useState<Record<string, PaymentRecord[]>>({});
+  const [expandedType, setExpandedType] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && bookingId) {
+      fetchPaymentData();
+    }
+  }, [open, bookingId]);
+
+  const fetchPaymentData = async () => {
+    if (!bookingId) return;
+    setLoading(true);
+    
+    try {
+      // Fetch booking details
+      const { data: bookingData } = await supabase
+        .from("bookings")
+        .select(`
+          id, booking_number, customer_name, check_in_date, total_amount, paid_amount, due_amount,
+          agents(name)
+        `)
+        .eq("id", bookingId)
+        .single();
+
+      if (!bookingData) return;
+      setBooking(bookingData);
+
+      // Fetch all payments for this booking
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("id, amount, payment_mode, payment_date, reference_number, notes, approval_status, payment_type, cities(name)")
+        .eq("booking_id", bookingId)
+        .order("payment_date", { ascending: false });
+
+      // Fetch service-specific data
+      const [safariRes, hotelRes, vehicleRes, volvoDMRes, volvomDRes] = await Promise.all([
+        supabase.from("safari_bookings").select("id, booking_id, safari_date, total_amount, paid_amount, due_amount").eq("booking_id", bookingId),
+        supabase.from("hotel_bookings").select("id, booking_id, check_in_date, total_amount, paid_amount, due_amount, another_hotels(name), own_hotels(name)").eq("booking_id", bookingId),
+        supabase.from("vehicle_bookings").select("id, booking_id, pickup_date, total_amount, paid_amount, due_amount, transporters(name)").eq("booking_id", bookingId),
+        supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId).eq("route", "delhi_manali"),
+        supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId).eq("route", "manali_delhi"),
+      ]);
+
+      // Group payments by type
+      const groupedPayments: Record<string, PaymentRecord[]> = {};
+      const summaries: ServiceSummary[] = [];
+
+      // Process Booking payments (general)
+      const bookingPayments = (payments || []).filter(p => !p.payment_type || p.payment_type === "booking");
+      if (bookingPayments.length > 0 || bookingData.total_amount) {
+        const received = bookingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Booking",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: bookingData.total_amount || 0,
+          totalReceived: received,
+          date: bookingData.check_in_date,
+          totalDue: (bookingData.total_amount || 0) - received
+        });
+        groupedPayments["Booking"] = bookingPayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      // Process Safari payments
+      const safariPayments = (payments || []).filter(p => p.payment_type === "safari");
+      if (safariRes.data && safariRes.data.length > 0) {
+        const safariTotal = safariRes.data.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+        const received = safariPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Safari",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: safariTotal,
+          totalReceived: received,
+          date: safariRes.data[0]?.safari_date || bookingData.check_in_date,
+          totalDue: safariTotal - received
+        });
+        groupedPayments["Safari"] = safariPayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      // Process Delhi-Manali Volvo payments
+      const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
+      if (volvoDMRes.data && volvoDMRes.data.length > 0) {
+        const dmTotal = volvoDMRes.data.reduce((sum, v) => sum + (v.total_amount || 0), 0);
+        const received = dmPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Delhi - Manali",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: dmTotal,
+          totalReceived: received,
+          date: volvoDMRes.data[0]?.travel_date || bookingData.check_in_date,
+          totalDue: dmTotal - received
+        });
+        groupedPayments["Delhi - Manali"] = dmPayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      // Process Manali-Delhi Volvo payments
+      const mdPayments = (payments || []).filter(p => p.payment_type === "manali_delhi");
+      if (volvomDRes.data && volvomDRes.data.length > 0) {
+        const mdTotal = volvomDRes.data.reduce((sum, v) => sum + (v.total_amount || 0), 0);
+        const received = mdPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Manali - Delhi",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: mdTotal,
+          totalReceived: received,
+          date: volvomDRes.data[0]?.travel_date || bookingData.check_in_date,
+          totalDue: mdTotal - received
+        });
+        groupedPayments["Manali - Delhi"] = mdPayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      // Process Hotel payments
+      const hotelPayments = (payments || []).filter(p => p.payment_type === "hotel" || p.payment_type === "another_hotel");
+      if (hotelRes.data && hotelRes.data.length > 0) {
+        const hotelTotal = hotelRes.data.reduce((sum, h) => sum + (h.total_amount || 0), 0);
+        const received = hotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Hotel",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: hotelTotal,
+          totalReceived: received,
+          date: hotelRes.data[0]?.check_in_date || bookingData.check_in_date,
+          totalDue: hotelTotal - received
+        });
+        groupedPayments["Hotel"] = hotelPayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      // Process Vehicle payments
+      const vehiclePayments = (payments || []).filter(p => p.payment_type === "vehicle");
+      if (vehicleRes.data && vehicleRes.data.length > 0) {
+        const vehicleTotal = vehicleRes.data.reduce((sum, v) => sum + (v.total_amount || 0), 0);
+        const received = vehiclePayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Additional Vehicle",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: vehicleTotal,
+          totalReceived: received,
+          date: vehicleRes.data[0]?.pickup_date || bookingData.check_in_date,
+          totalDue: vehicleTotal - received
+        });
+        groupedPayments["Additional Vehicle"] = vehiclePayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      setServiceSummaries(summaries);
+      setPaymentsByType(groupedPayments);
+    } catch (error) {
+      console.error("Error fetching payment data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}/-`;
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    try {
+      return format(new Date(dateStr), "yyyy-MM-dd");
+    } catch {
+      return dateStr;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+        <DialogHeader className="p-4 border-b" style={{ backgroundColor: "#1e6e99" }}>
+          <DialogTitle className="text-white flex items-center gap-2">
+            📋 View Payment
+          </DialogTitle>
+        </DialogHeader>
+        
+        <ScrollArea className="max-h-[calc(90vh-80px)]">
+          <div className="p-4 space-y-4">
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading payment details...</div>
+            ) : (
+              <>
+                {/* Summary Table */}
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: "#D4A59A" }}>
+                        <TableHead className="text-foreground font-semibold"></TableHead>
+                        <TableHead className="text-foreground font-semibold">Customer Name</TableHead>
+                        <TableHead className="text-foreground font-semibold">Total Payment</TableHead>
+                        <TableHead className="text-foreground font-semibold">Total Recieved Payment</TableHead>
+                        <TableHead className="text-foreground font-semibold">Date</TableHead>
+                        <TableHead className="text-foreground font-semibold">Total Due Payment</TableHead>
+                        <TableHead className="text-foreground font-semibold">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {serviceSummaries.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-muted-foreground">
+                            No payment records found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        serviceSummaries.map((summary, index) => (
+                          <TableRow key={index} style={{ backgroundColor: "#F5E6E0" }}>
+                            <TableCell className="font-semibold">{summary.type}</TableCell>
+                            <TableCell>{summary.customerName}</TableCell>
+                            <TableCell>{formatCurrency(summary.totalPayment)}</TableCell>
+                            <TableCell>{formatCurrency(summary.totalReceived)}</TableCell>
+                            <TableCell>{formatDate(summary.date)}</TableCell>
+                            <TableCell>{formatCurrency(summary.totalDue)}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="link" 
+                                size="sm" 
+                                className="h-auto p-0 text-blue-600 hover:text-blue-800"
+                                onClick={() => setExpandedType(expandedType === summary.type ? null : summary.type)}
+                              >
+                                {expandedType === summary.type ? "Hide Details" : "View Details"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Payment Details Tables - Shown for each expanded type */}
+                {serviceSummaries.map((summary) => {
+                  const payments = paymentsByType[summary.type] || [];
+                  const isExpanded = expandedType === summary.type;
+                  
+                  if (!isExpanded) return null;
+                  
+                  return (
+                    <div key={summary.type} className="border rounded-md overflow-hidden">
+                      <div className="px-4 py-2 font-semibold border-b" style={{ backgroundColor: "#D4A59A" }}>
+                        {summary.type}
+                      </div>
+                      {payments.length === 0 ? (
+                        <div className="p-4 text-center text-destructive">
+                          There is no any recieved payment.
+                        </div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: "#D4A59A" }}>
+                              <TableHead className="text-foreground font-semibold">S.No.</TableHead>
+                              <TableHead className="text-foreground font-semibold">Customer</TableHead>
+                              <TableHead className="text-foreground font-semibold">Payment</TableHead>
+                              <TableHead className="text-foreground font-semibold">Date</TableHead>
+                              <TableHead className="text-foreground font-semibold">Mode</TableHead>
+                              <TableHead className="text-foreground font-semibold">Payment Detail</TableHead>
+                              <TableHead className="text-foreground font-semibold">Place</TableHead>
+                              <TableHead className="text-foreground font-semibold">Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {payments.map((payment, idx) => (
+                              <TableRow key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
+                                <TableCell>{idx + 1}</TableCell>
+                                <TableCell>{payment.customer}</TableCell>
+                                <TableCell>{formatCurrency(payment.payment)}</TableCell>
+                                <TableCell>{formatDate(payment.date)}</TableCell>
+                                <TableCell>{payment.mode}</TableCell>
+                                <TableCell className="max-w-[200px] truncate" title={payment.paymentDetail}>
+                                  {payment.paymentDetail || "-"}
+                                </TableCell>
+                                <TableCell>{payment.place || "-"}</TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant="secondary"
+                                    className={payment.status === "approved" ? "text-green-600 border-green-300" : "text-orange-600 border-orange-300"}
+                                  >
+                                    {payment.status === "approved" ? "Approved" : "Pending"}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
