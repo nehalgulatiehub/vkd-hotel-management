@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, parse, isValid, eachDayOfInterval } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 
 interface Hotel {
   id: string;
@@ -15,10 +15,14 @@ interface RoomData {
   count: number;
 }
 
-interface DateBooking {
-  date: string;
+interface HotelBookingData {
   hotelName: string;
   rooms: RoomData[];
+}
+
+interface UserBooking {
+  userName: string;
+  hotels: HotelBookingData[];
   totalRooms: number;
 }
 
@@ -31,7 +35,8 @@ export default function RoomBookings() {
   const [toMonth, setToMonth] = useState(String(new Date().getMonth() + 1));
   const [toDay, setToDay] = useState(String(new Date().getDate()));
   const [toYear, setToYear] = useState(String(new Date().getFullYear()));
-  const [dateBookings, setDateBookings] = useState<DateBooking[]>([]);
+  const [userBookings, setUserBookings] = useState<UserBooking[]>([]);
+  const [totalRooms, setTotalRooms] = useState(0);
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
 
@@ -70,11 +75,6 @@ export default function RoomBookings() {
   };
 
   const handleSearch = async () => {
-    if (!selectedHotel) {
-      toast.error("Please select a hotel");
-      return;
-    }
-
     const fromDate = parse(`${fromYear}-${fromMonth.padStart(2, "0")}-${fromDay.padStart(2, "0")}`, "yyyy-MM-dd", new Date());
     const toDate = parse(`${toYear}-${toMonth.padStart(2, "0")}-${toDay.padStart(2, "0")}`, "yyyy-MM-dd", new Date());
 
@@ -91,74 +91,95 @@ export default function RoomBookings() {
     setLoading(true);
 
     try {
-      // Fetch hotel bookings for the selected hotel within date range
-      const { data: bookingsData, error } = await supabase
+      // Fetch hotel bookings within date range with booking and hotel details
+      let query = supabase
         .from("hotel_bookings")
         .select(`
           *,
-          bookings!inner(status),
-          own_hotels(name)
+          bookings!inner(status, reference, customer_name, agents(name)),
+          own_hotels(id, name)
         `)
-        .eq("own_hotel_id", selectedHotel)
         .in("bookings.status", ["confirmed", "completed", "hold"])
         .gte("check_in_date", format(fromDate, "yyyy-MM-dd"))
         .lte("check_in_date", format(toDate, "yyyy-MM-dd"));
 
+      // Filter by selected hotel if specified
+      if (selectedHotel) {
+        query = query.eq("own_hotel_id", selectedHotel);
+      }
+
+      const { data: bookingsData, error } = await query;
+
       if (error) throw error;
-
-      // Get hotel name
-      const hotel = hotels.find(h => h.id === selectedHotel);
-      const hotelName = hotel?.name || "Unknown Hotel";
-
-      // Get all rooms for this hotel
-      const hotelRooms = rooms.filter(r => r.hotel_id === selectedHotel);
 
       // Create a map of room_id to room_name
       const roomMap: Record<string, string> = {};
-      hotelRooms.forEach(r => {
+      rooms.forEach(r => {
         roomMap[r.id] = r.room_type || r.room_number || "Unknown Room";
       });
 
-      // Get all dates in range
-      const allDates = eachDayOfInterval({ start: fromDate, end: toDate });
+      // Group bookings by user (reference or customer_name)
+      const userMap: Record<string, { hotels: Record<string, Record<string, number>> }> = {};
 
-      // Group bookings by date
-      const results: DateBooking[] = allDates.map(date => {
-        const dateStr = format(date, "yyyy-MM-dd");
-        
-        // Filter bookings where this date falls between check_in and check_out
-        const dateBookings = (bookingsData || []).filter((b: any) => {
-          return dateStr >= b.check_in_date && dateStr < b.check_out_date;
-        });
+      (bookingsData || []).forEach((booking: any) => {
+        // Determine user name: prefer reference, then agent name, then customer_name
+        const userName = booking.bookings?.reference || 
+                        booking.bookings?.agents?.name || 
+                        booking.bookings?.customer_name || 
+                        "Unknown User";
 
-        // Count rooms by type for this date
-        const roomCounts: Record<string, number> = {};
-        hotelRooms.forEach(r => {
-          const roomName = r.room_type || r.room_number || "Unknown Room";
-          roomCounts[roomName] = 0;
-        });
+        // Get hotel name
+        const hotelName = booking.own_hotels?.name || "Unknown Hotel";
 
-        dateBookings.forEach((b: any) => {
-          const roomName = roomMap[b.room_type] || b.room_type || "Unknown Room";
-          roomCounts[roomName] = (roomCounts[roomName] || 0) + (b.number_of_rooms || 1);
-        });
+        // Get room name
+        const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
+        const roomCount = booking.number_of_rooms || 1;
 
-        const roomsArray: RoomData[] = Object.entries(roomCounts).map(([name, count]) => ({
-          roomName: name,
-          count: count as number
+        // Initialize user if not exists
+        if (!userMap[userName]) {
+          userMap[userName] = { hotels: {} };
+        }
+
+        // Initialize hotel if not exists
+        if (!userMap[userName].hotels[hotelName]) {
+          userMap[userName].hotels[hotelName] = {};
+        }
+
+        // Add room count
+        userMap[userName].hotels[hotelName][roomName] = 
+          (userMap[userName].hotels[hotelName][roomName] || 0) + roomCount;
+      });
+
+      // Convert to array format
+      const results: UserBooking[] = Object.entries(userMap).map(([userName, data]) => {
+        const hotelsArray: HotelBookingData[] = Object.entries(data.hotels).map(([hotelName, roomCounts]) => ({
+          hotelName,
+          rooms: Object.entries(roomCounts).map(([roomName, count]) => ({
+            roomName,
+            count
+          }))
         }));
 
-        const totalRooms = roomsArray.reduce((sum, r) => sum + r.count, 0);
+        const userTotalRooms = hotelsArray.reduce(
+          (sum, h) => sum + h.rooms.reduce((rSum, r) => rSum + r.count, 0),
+          0
+        );
 
         return {
-          date: format(date, "dd/MM/yyyy"),
-          hotelName,
-          rooms: roomsArray,
-          totalRooms
+          userName,
+          hotels: hotelsArray,
+          totalRooms: userTotalRooms
         };
       });
 
-      setDateBookings(results);
+      // Sort by user name
+      results.sort((a, b) => a.userName.localeCompare(b.userName));
+
+      // Calculate grand total
+      const grandTotal = results.reduce((sum, u) => sum + u.totalRooms, 0);
+
+      setUserBookings(results);
+      setTotalRooms(grandTotal);
     } catch (error) {
       console.error("Search error:", error);
       toast.error("Failed to fetch bookings");
@@ -253,7 +274,7 @@ export default function RoomBookings() {
                   onChange={(e) => setSelectedHotel(e.target.value)}
                   className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white min-w-[140px]"
                 >
-                  <option value="">Select Hotel</option>
+                  <option value="">All Hotels</option>
                   {hotels.map((hotel) => (
                     <option key={hotel.id} value={hotel.id}>{hotel.name}</option>
                   ))}
@@ -273,32 +294,39 @@ export default function RoomBookings() {
             </div>
           </div>
 
+          {/* Total Rooms Summary */}
+          {userBookings.length > 0 && (
+            <div className="p-2 border-b border-gray-300" style={{ backgroundColor: "#F5E6E0" }}>
+              <span className="font-bold text-[12px]">
+                Total no. of Rooms : <span className="text-blue-700">{totalRooms}</span>
+              </span>
+            </div>
+          )}
+
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
-              <thead>
-                <tr style={{ backgroundColor: "#D4A59A" }}>
-                  <th className="text-left p-2 font-semibold border-r border-gray-400 w-[120px]">Date.</th>
-                  <th className="text-left p-2 font-semibold">Booking Detail</th>
-                </tr>
-              </thead>
               <tbody>
-                {dateBookings.length === 0 ? (
+                {userBookings.length === 0 ? (
                   <tr style={{ backgroundColor: "#F5E6E0" }}>
                     <td colSpan={2} className="text-center py-8 text-muted-foreground">
-                      {loading ? "Loading..." : "Select hotel and date range, then click Search"}
+                      {loading ? "Loading..." : "Select date range and click Search to view room bookings by user"}
                     </td>
                   </tr>
                 ) : (
-                  dateBookings.map((dateBooking, idx) => (
+                  userBookings.map((userBooking, idx) => (
                     <tr key={idx} style={{ backgroundColor: "#F5E6E0" }} className="border-b border-gray-300">
-                      <td className="p-2 border-r border-gray-300 align-top font-medium">
-                        {dateBooking.date}
+                      <td className="p-2 border-r border-gray-300 align-top font-medium w-[150px]">
+                        {userBooking.userName}
                       </td>
                       <td className="p-2">
-                        <div className="font-bold mb-1">{dateBooking.hotelName}</div>
-                        {dateBooking.rooms.map((room, roomIdx) => (
-                          <div key={roomIdx}>{room.roomName}:{room.count}</div>
+                        {userBooking.hotels.map((hotel, hotelIdx) => (
+                          <div key={hotelIdx} className="mb-2">
+                            <div className="font-bold">{hotel.hotelName}</div>
+                            {hotel.rooms.map((room, roomIdx) => (
+                              <div key={roomIdx}>{room.roomName}:{room.count}</div>
+                            ))}
+                          </div>
                         ))}
                       </td>
                     </tr>
@@ -307,15 +335,6 @@ export default function RoomBookings() {
               </tbody>
             </table>
           </div>
-
-          {/* Total Footer */}
-          {dateBookings.length > 0 && (
-            <div className="p-2 border-t border-gray-300" style={{ backgroundColor: "#F5E6E0" }}>
-              <span className="font-bold text-[12px]">
-                Total no. of Rooms : <span className="text-blue-700">{dateBookings.reduce((sum, d) => sum + d.totalRooms, 0)}</span>
-              </span>
-            </div>
-          )}
 
           {/* Blue Footer */}
           <div className="h-4" style={{ backgroundColor: "#1e6e99" }}></div>
