@@ -38,7 +38,6 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
   const [booking, setBooking] = useState<any>(null);
   const [serviceSummaries, setServiceSummaries] = useState<ServiceSummary[]>([]);
   const [paymentsByType, setPaymentsByType] = useState<Record<string, PaymentRecord[]>>({});
-  const [expandedType, setExpandedType] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && bookingId) {
@@ -84,54 +83,27 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       const groupedPayments: Record<string, PaymentRecord[]> = {};
       const summaries: ServiceSummary[] = [];
 
-      // Process Booking payments (general)
+      // Process Booking payments (general) - Always show
       const bookingPayments = (payments || []).filter(p => !p.payment_type || p.payment_type === "booking");
-      if (bookingPayments.length > 0 || bookingData.total_amount) {
-        const received = bookingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-        summaries.push({
-          type: "Booking",
-          customerName: bookingData.customer_name || "N/A",
-          totalPayment: bookingData.total_amount || 0,
-          totalReceived: received,
-          date: bookingData.check_in_date,
-          totalDue: (bookingData.total_amount || 0) - received
-        });
-        groupedPayments["Booking"] = bookingPayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
-      }
-
-      // Process Safari payments
-      const safariPayments = (payments || []).filter(p => p.payment_type === "safari");
-      if (safariRes.data && safariRes.data.length > 0) {
-        const safariTotal = safariRes.data.reduce((sum, s) => sum + (s.total_amount || 0), 0);
-        const received = safariPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-        summaries.push({
-          type: "Safari",
-          customerName: bookingData.customer_name || "N/A",
-          totalPayment: safariTotal,
-          totalReceived: received,
-          date: safariRes.data[0]?.safari_date || bookingData.check_in_date,
-          totalDue: safariTotal - received
-        });
-        groupedPayments["Safari"] = safariPayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
-      }
+      const bookingReceived = bookingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      summaries.push({
+        type: "Booking",
+        customerName: bookingData.customer_name || "N/A",
+        totalPayment: bookingData.total_amount || 0,
+        totalReceived: bookingReceived,
+        date: bookingData.check_in_date,
+        totalDue: (bookingData.total_amount || 0) - bookingReceived
+      });
+      groupedPayments["Booking"] = bookingPayments.map(p => ({
+        id: p.id,
+        customer: bookingData.customer_name || "N/A",
+        payment: p.amount,
+        date: p.payment_date || "",
+        mode: p.payment_mode || "",
+        paymentDetail: p.notes || p.reference_number || "",
+        place: p.cities?.name || "",
+        status: p.approval_status || "pending"
+      }));
 
       // Process Delhi-Manali Volvo payments
       const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
@@ -172,6 +144,31 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalDue: mdTotal - received
         });
         groupedPayments["Manali - Delhi"] = mdPayments.map(p => ({
+          id: p.id,
+          customer: bookingData.customer_name || "N/A",
+          payment: p.amount,
+          date: p.payment_date || "",
+          mode: p.payment_mode || "",
+          paymentDetail: p.notes || p.reference_number || "",
+          place: p.cities?.name || "",
+          status: p.approval_status || "pending"
+        }));
+      }
+
+      // Process Safari payments
+      const safariPayments = (payments || []).filter(p => p.payment_type === "safari");
+      if (safariRes.data && safariRes.data.length > 0) {
+        const safariTotal = safariRes.data.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+        const received = safariPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        summaries.push({
+          type: "Safari",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: safariTotal,
+          totalReceived: received,
+          date: safariRes.data[0]?.safari_date || bookingData.check_in_date,
+          totalDue: safariTotal - received
+        });
+        groupedPayments["Safari"] = safariPayments.map(p => ({
           id: p.id,
           customer: bookingData.customer_name || "N/A",
           payment: p.amount,
@@ -254,7 +251,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0">
         <DialogHeader className="p-4 border-b" style={{ backgroundColor: "#1e6e99" }}>
           <DialogTitle className="text-white flex items-center gap-2">
             📋 View Payment
@@ -262,7 +259,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         </DialogHeader>
         
         <ScrollArea className="max-h-[calc(90vh-80px)]">
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-6">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading payment details...</div>
             ) : (
@@ -271,14 +268,14 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
                 <div className="border rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow style={{ backgroundColor: "#D4A59A" }}>
-                        <TableHead className="text-foreground font-semibold"></TableHead>
-                        <TableHead className="text-foreground font-semibold">Customer Name</TableHead>
-                        <TableHead className="text-foreground font-semibold">Total Payment</TableHead>
-                        <TableHead className="text-foreground font-semibold">Total Recieved Payment</TableHead>
-                        <TableHead className="text-foreground font-semibold">Date</TableHead>
-                        <TableHead className="text-foreground font-semibold">Total Due Payment</TableHead>
-                        <TableHead className="text-foreground font-semibold">Action</TableHead>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="font-semibold border-r"></TableHead>
+                        <TableHead className="font-semibold border-r text-center">Customer Name</TableHead>
+                        <TableHead className="font-semibold border-r text-center">Total Payment</TableHead>
+                        <TableHead className="font-semibold border-r text-center">Total Recieved Payment</TableHead>
+                        <TableHead className="font-semibold border-r text-center">Date</TableHead>
+                        <TableHead className="font-semibold border-r text-center">Total Due Payment</TableHead>
+                        <TableHead className="font-semibold text-center">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -290,21 +287,24 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
                         </TableRow>
                       ) : (
                         serviceSummaries.map((summary, index) => (
-                          <TableRow key={index} style={{ backgroundColor: "#F5E6E0" }}>
-                            <TableCell className="font-semibold">{summary.type}</TableCell>
-                            <TableCell>{summary.customerName}</TableCell>
-                            <TableCell>{formatCurrency(summary.totalPayment)}</TableCell>
-                            <TableCell>{formatCurrency(summary.totalReceived)}</TableCell>
-                            <TableCell>{formatDate(summary.date)}</TableCell>
-                            <TableCell>{formatCurrency(summary.totalDue)}</TableCell>
-                            <TableCell>
+                          <TableRow key={index} className="border-b">
+                            <TableCell className="font-semibold border-r">{summary.type}</TableCell>
+                            <TableCell className="border-r text-center">{summary.customerName}</TableCell>
+                            <TableCell className="border-r text-center">{formatCurrency(summary.totalPayment)}</TableCell>
+                            <TableCell className="border-r text-center">{formatCurrency(summary.totalReceived)}</TableCell>
+                            <TableCell className="border-r text-center">{formatDate(summary.date)}</TableCell>
+                            <TableCell className="border-r text-center">{formatCurrency(summary.totalDue)}</TableCell>
+                            <TableCell className="text-center">
                               <Button 
                                 variant="link" 
                                 size="sm" 
                                 className="h-auto p-0 text-blue-600 hover:text-blue-800"
-                                onClick={() => setExpandedType(expandedType === summary.type ? null : summary.type)}
+                                onClick={() => {
+                                  const element = document.getElementById(`section-${summary.type.replace(/\s+/g, '-')}`);
+                                  element?.scrollIntoView({ behavior: 'smooth' });
+                                }}
                               >
-                                {expandedType === summary.type ? "Hide Details" : "View Details"}
+                                View Details
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -314,55 +314,49 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
                   </Table>
                 </div>
 
-                {/* Payment Details Tables - Shown for each expanded type */}
+                {/* Payment Details Tables - Show ALL sections */}
                 {serviceSummaries.map((summary) => {
                   const payments = paymentsByType[summary.type] || [];
-                  const isExpanded = expandedType === summary.type;
-                  
-                  if (!isExpanded) return null;
                   
                   return (
-                    <div key={summary.type} className="border rounded-md overflow-hidden">
-                      <div className="px-4 py-2 font-semibold border-b" style={{ backgroundColor: "#D4A59A" }}>
+                    <div key={summary.type} id={`section-${summary.type.replace(/\s+/g, '-')}`} className="border rounded-md overflow-hidden">
+                      <div className="px-4 py-2 font-semibold border-b bg-muted/30">
                         {summary.type}
                       </div>
                       {payments.length === 0 ? (
-                        <div className="p-4 text-center text-destructive">
+                        <div className="p-4 text-center text-red-500">
                           There is no any recieved payment.
                         </div>
                       ) : (
                         <Table>
                           <TableHeader>
-                            <TableRow style={{ backgroundColor: "#D4A59A" }}>
-                              <TableHead className="text-foreground font-semibold">S.No.</TableHead>
-                              <TableHead className="text-foreground font-semibold">Customer</TableHead>
-                              <TableHead className="text-foreground font-semibold">Payment</TableHead>
-                              <TableHead className="text-foreground font-semibold">Date</TableHead>
-                              <TableHead className="text-foreground font-semibold">Mode</TableHead>
-                              <TableHead className="text-foreground font-semibold">Payment Detail</TableHead>
-                              <TableHead className="text-foreground font-semibold">Place</TableHead>
-                              <TableHead className="text-foreground font-semibold">Status</TableHead>
+                            <TableRow className="bg-muted/50">
+                              <TableHead className="font-semibold border-r text-center">S.No.</TableHead>
+                              <TableHead className="font-semibold border-r text-center">Customer</TableHead>
+                              <TableHead className="font-semibold border-r text-center">Payment</TableHead>
+                              <TableHead className="font-semibold border-r text-center">Date</TableHead>
+                              <TableHead className="font-semibold border-r text-center">Mode</TableHead>
+                              <TableHead className="font-semibold border-r text-center">Payment Detail</TableHead>
+                              <TableHead className="font-semibold border-r text-center">Place</TableHead>
+                              <TableHead className="font-semibold text-center">Status</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {payments.map((payment, idx) => (
-                              <TableRow key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
-                                <TableCell>{idx + 1}</TableCell>
-                                <TableCell>{payment.customer}</TableCell>
-                                <TableCell>{formatCurrency(payment.payment)}</TableCell>
-                                <TableCell>{formatDate(payment.date)}</TableCell>
-                                <TableCell>{payment.mode}</TableCell>
-                                <TableCell className="max-w-[200px] truncate" title={payment.paymentDetail}>
+                              <TableRow key={payment.id} className="border-b">
+                                <TableCell className="border-r text-center">{idx + 1}</TableCell>
+                                <TableCell className="border-r">{payment.customer}</TableCell>
+                                <TableCell className="border-r text-center">{formatCurrency(payment.payment)}</TableCell>
+                                <TableCell className="border-r text-center">{formatDate(payment.date)}</TableCell>
+                                <TableCell className="border-r text-center">{payment.mode}</TableCell>
+                                <TableCell className="border-r max-w-[200px]" title={payment.paymentDetail}>
                                   {payment.paymentDetail || "-"}
                                 </TableCell>
-                                <TableCell>{payment.place || "-"}</TableCell>
-                                <TableCell>
-                                  <Badge 
-                                    variant="secondary"
-                                    className={payment.status === "approved" ? "text-green-600 border-green-300" : "text-orange-600 border-orange-300"}
-                                  >
+                                <TableCell className="border-r text-center">{payment.place || "-"}</TableCell>
+                                <TableCell className="text-center">
+                                  <span className={payment.status === "approved" ? "text-green-600" : "text-orange-600"}>
                                     {payment.status === "approved" ? "Approved" : "Pending"}
-                                  </Badge>
+                                  </span>
                                 </TableCell>
                               </TableRow>
                             ))}
