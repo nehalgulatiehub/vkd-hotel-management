@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Search, Trash2 } from "lucide-react";
+import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 
 // Type for another hotel entry
 interface AnotherHotelEntry {
@@ -95,6 +96,8 @@ export default function Bookings() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
   const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
+  const [showAdminViewPaymentDialog, setShowAdminViewPaymentDialog] = useState(false);
+  const [selectedAdminBookingId, setSelectedAdminBookingId] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [bookingPayments, setBookingPayments] = useState<any[]>([]);
   const [viewDetailOwnHotelInfo, setViewDetailOwnHotelInfo] = useState<any[]>([]);
@@ -937,10 +940,17 @@ export default function Bookings() {
   };
 
   const handleViewPayment = async (booking: any) => {
-    setSelectedBooking(booking);
-    setBookingPayments([]);
-    setShowViewPaymentDialog(true);
-    await fetchBookingPayments(booking.id);
+    if (isAdminRoute) {
+      // Use admin dialog with full service-wise payment breakdown
+      setSelectedAdminBookingId(booking.id);
+      setShowAdminViewPaymentDialog(true);
+    } else {
+      // Use standard dialog for user panel
+      setSelectedBooking(booking);
+      setBookingPayments([]);
+      setShowViewPaymentDialog(true);
+      await fetchBookingPayments(booking.id);
+    }
   };
 
   const handleRefundPayment = (booking: any) => {
@@ -2722,6 +2732,13 @@ export default function Bookings() {
             <div className="bg-[#1e6e99] h-3"></div>
           </DialogContent>
         </Dialog>
+
+        {/* Admin View Payment Dialog - Shows service-wise payment breakdown */}
+        <AdminViewPaymentDialog
+          open={showAdminViewPaymentDialog}
+          onOpenChange={setShowAdminViewPaymentDialog}
+          bookingId={selectedAdminBookingId}
+        />
 
         {/* Add Payment Dialog */}
         <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
