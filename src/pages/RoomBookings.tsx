@@ -129,6 +129,11 @@ export default function RoomBookings() {
       const userMap: Record<string, { hotels: Record<string, Record<string, number>> }> = {};
 
       (bookingsData || []).forEach((booking: any) => {
+        // Skip bookings without own_hotel_id (only show own hotels)
+        if (!booking.own_hotel_id || !booking.own_hotels?.name) {
+          return;
+        }
+
         // Get the login username from the profiles relationship
         const profile = booking.bookings?.profiles;
         let userName = "Unknown User";
@@ -142,8 +147,8 @@ export default function RoomBookings() {
           }
         }
 
-        // Get hotel name
-        const hotelName = booking.own_hotels?.name || "Unknown Hotel";
+        // Get hotel name (guaranteed to exist due to check above)
+        const hotelName = booking.own_hotels.name;
 
         // Get room name
         const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
