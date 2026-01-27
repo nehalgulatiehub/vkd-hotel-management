@@ -116,129 +116,96 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         status: p.approval_status || "pending"
       }));
 
-      // Process Delhi-Manali Volvo payments
+      // Helper function to map payments to records
+      const mapPaymentsToRecords = (paymentList: any[]) => paymentList.map(p => ({
+        id: p.id,
+        customer: bookingData.customer_name || "N/A",
+        payment: p.amount,
+        date: p.payment_date || "",
+        mode: p.payment_mode || "",
+        paymentDetail: p.notes || p.reference_number || "",
+        place: p.cities?.name || "",
+        status: p.approval_status || "pending"
+      }));
+
+      // Process Delhi-Manali Volvo payments - show if bookings exist OR payments exist
       const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
-      if (volvoDMRes.data && volvoDMRes.data.length > 0) {
-        const dmTotal = volvoDMRes.data.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-        const received = dmPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const dmBookingTotal = volvoDMRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const dmReceived = dmPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (volvoDMRes.data?.length > 0 || dmPayments.length > 0) {
         summaries.push({
           type: "Delhi - Manali",
           customerName: bookingData.customer_name || "N/A",
-          totalPayment: dmTotal,
-          totalReceived: received,
-          date: volvoDMRes.data[0]?.travel_date || bookingData.check_in_date,
-          totalDue: dmTotal - received
+          totalPayment: dmBookingTotal,
+          totalReceived: dmReceived,
+          date: volvoDMRes.data?.[0]?.travel_date || bookingData.check_in_date,
+          totalDue: Math.max(0, dmBookingTotal - dmReceived)
         });
-        groupedPayments["Delhi - Manali"] = dmPayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
+        groupedPayments["Delhi - Manali"] = mapPaymentsToRecords(dmPayments);
       }
 
-      // Process Manali-Delhi Volvo payments
+      // Process Manali-Delhi Volvo payments - show if bookings exist OR payments exist
       const mdPayments = (payments || []).filter(p => p.payment_type === "manali_delhi");
-      if (volvomDRes.data && volvomDRes.data.length > 0) {
-        const mdTotal = volvomDRes.data.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-        const received = mdPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const mdBookingTotal = volvomDRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const mdReceived = mdPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (volvomDRes.data?.length > 0 || mdPayments.length > 0) {
         summaries.push({
           type: "Manali - Delhi",
           customerName: bookingData.customer_name || "N/A",
-          totalPayment: mdTotal,
-          totalReceived: received,
-          date: volvomDRes.data[0]?.travel_date || bookingData.check_in_date,
-          totalDue: mdTotal - received
+          totalPayment: mdBookingTotal,
+          totalReceived: mdReceived,
+          date: volvomDRes.data?.[0]?.travel_date || bookingData.check_in_date,
+          totalDue: Math.max(0, mdBookingTotal - mdReceived)
         });
-        groupedPayments["Manali - Delhi"] = mdPayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
+        groupedPayments["Manali - Delhi"] = mapPaymentsToRecords(mdPayments);
       }
 
-      // Process Safari payments
+      // Process Safari payments - show if bookings exist OR payments exist
       const safariPayments = (payments || []).filter(p => p.payment_type === "safari");
-      if (safariRes.data && safariRes.data.length > 0) {
-        const safariTotal = safariRes.data.reduce((sum, s) => sum + (s.total_amount || 0), 0);
-        const received = safariPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const safariBookingTotal = safariRes.data?.reduce((sum, s) => sum + (s.total_amount || 0), 0) || 0;
+      const safariReceived = safariPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (safariRes.data?.length > 0 || safariPayments.length > 0) {
         summaries.push({
           type: "Safari",
           customerName: bookingData.customer_name || "N/A",
-          totalPayment: safariTotal,
-          totalReceived: received,
-          date: safariRes.data[0]?.safari_date || bookingData.check_in_date,
-          totalDue: safariTotal - received
+          totalPayment: safariBookingTotal,
+          totalReceived: safariReceived,
+          date: safariRes.data?.[0]?.safari_date || bookingData.check_in_date,
+          totalDue: Math.max(0, safariBookingTotal - safariReceived)
         });
-        groupedPayments["Safari"] = safariPayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
+        groupedPayments["Safari"] = mapPaymentsToRecords(safariPayments);
       }
 
-      // Process Hotel payments
+      // Process Hotel payments - show if bookings exist OR payments exist
       const hotelPayments = (payments || []).filter(p => p.payment_type === "hotel" || p.payment_type === "another_hotel");
-      if (hotelRes.data && hotelRes.data.length > 0) {
-        const hotelTotal = hotelRes.data.reduce((sum, h) => sum + (h.total_amount || 0), 0);
-        const received = hotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const hotelBookingTotal = hotelRes.data?.reduce((sum, h) => sum + (h.total_amount || 0), 0) || 0;
+      const hotelReceived = hotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (hotelRes.data?.length > 0 || hotelPayments.length > 0) {
         summaries.push({
           type: "Hotel",
           customerName: bookingData.customer_name || "N/A",
-          totalPayment: hotelTotal,
-          totalReceived: received,
-          date: hotelRes.data[0]?.check_in_date || bookingData.check_in_date,
-          totalDue: hotelTotal - received
+          totalPayment: hotelBookingTotal,
+          totalReceived: hotelReceived,
+          date: hotelRes.data?.[0]?.check_in_date || bookingData.check_in_date,
+          totalDue: Math.max(0, hotelBookingTotal - hotelReceived)
         });
-        groupedPayments["Hotel"] = hotelPayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
+        groupedPayments["Hotel"] = mapPaymentsToRecords(hotelPayments);
       }
 
-      // Process Vehicle payments
+      // Process Vehicle payments - show if bookings exist OR payments exist
       const vehiclePayments = (payments || []).filter(p => p.payment_type === "vehicle");
-      if (vehicleRes.data && vehicleRes.data.length > 0) {
-        const vehicleTotal = vehicleRes.data.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-        const received = vehiclePayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const vehicleBookingTotal = vehicleRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const vehicleReceived = vehiclePayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (vehicleRes.data?.length > 0 || vehiclePayments.length > 0) {
         summaries.push({
           type: "Additional Vehicle",
           customerName: bookingData.customer_name || "N/A",
-          totalPayment: vehicleTotal,
-          totalReceived: received,
-          date: vehicleRes.data[0]?.pickup_date || bookingData.check_in_date,
-          totalDue: vehicleTotal - received
+          totalPayment: vehicleBookingTotal,
+          totalReceived: vehicleReceived,
+          date: vehicleRes.data?.[0]?.pickup_date || bookingData.check_in_date,
+          totalDue: Math.max(0, vehicleBookingTotal - vehicleReceived)
         });
-        groupedPayments["Additional Vehicle"] = vehiclePayments.map(p => ({
-          id: p.id,
-          customer: bookingData.customer_name || "N/A",
-          payment: p.amount,
-          date: p.payment_date || "",
-          mode: p.payment_mode || "",
-          paymentDetail: p.notes || p.reference_number || "",
-          place: p.cities?.name || "",
-          status: p.approval_status || "pending"
-        }));
+        groupedPayments["Additional Vehicle"] = mapPaymentsToRecords(vehiclePayments);
       }
 
       setServiceSummaries(summaries);
