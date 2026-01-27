@@ -92,11 +92,18 @@ export default function RoomBookings() {
 
     try {
       // Fetch hotel bookings within date range with booking and hotel details
+      // Include created_by profile to get the login username
       let query = supabase
         .from("hotel_bookings")
         .select(`
           *,
-          bookings!inner(status, reference, customer_name, agents(name)),
+          bookings!inner(
+            status, 
+            reference, 
+            customer_name,
+            created_by,
+            profiles:created_by(username, first_name, last_name)
+          ),
           own_hotels(id, name)
         `)
         .in("bookings.status", ["confirmed", "completed", "hold"])
@@ -118,15 +125,22 @@ export default function RoomBookings() {
         roomMap[r.id] = r.room_type || r.room_number || "Unknown Room";
       });
 
-      // Group bookings by user (reference or customer_name)
+      // Group bookings by login username (created_by user)
       const userMap: Record<string, { hotels: Record<string, Record<string, number>> }> = {};
 
       (bookingsData || []).forEach((booking: any) => {
-        // Determine user name: prefer reference, then agent name, then customer_name
-        const userName = booking.bookings?.reference || 
-                        booking.bookings?.agents?.name || 
-                        booking.bookings?.customer_name || 
-                        "Unknown User";
+        // Get the login username from the profiles relationship
+        const profile = booking.bookings?.profiles;
+        let userName = "Unknown User";
+        
+        if (profile) {
+          // Prefer username, fallback to first_name + last_name
+          if (profile.username) {
+            userName = profile.username;
+          } else if (profile.first_name || profile.last_name) {
+            userName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+          }
+        }
 
         // Get hotel name
         const hotelName = booking.own_hotels?.name || "Unknown Hotel";
