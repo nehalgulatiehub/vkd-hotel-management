@@ -23,15 +23,19 @@ export default function BookingPayments() {
   const [viewPaymentDialogOpen, setViewPaymentDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
+  // For admin route with booking id, only show the popup dialog
+  const showOnlyDialog = isAdminRoute && bookingId;
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       if (bookingId) {
-        await Promise.all([fetchPayments(), fetchBooking(), fetchHotelInfo()]);
-        // Auto-open dialog if on admin route with booking id
+        // For admin, only open dialog, don't load the full page data
         if (isAdminRoute) {
           setSelectedBookingId(bookingId);
           setViewPaymentDialogOpen(true);
+        } else {
+          await Promise.all([fetchPayments(), fetchBooking(), fetchHotelInfo()]);
         }
       } else {
         await fetchAllPayments();
@@ -147,6 +151,22 @@ export default function BookingPayments() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  // If admin route with bookingId, only show the dialog (not the full page)
+  if (showOnlyDialog) {
+    return (
+      <AdminViewPaymentDialog
+        open={viewPaymentDialogOpen}
+        onOpenChange={(open) => {
+          setViewPaymentDialogOpen(open);
+          if (!open) {
+            navigate(-1); // Go back when dialog is closed
+          }
+        }}
+        bookingId={selectedBookingId}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
