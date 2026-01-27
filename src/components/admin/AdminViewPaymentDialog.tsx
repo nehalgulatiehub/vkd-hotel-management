@@ -83,16 +83,27 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       const groupedPayments: Record<string, PaymentRecord[]> = {};
       const summaries: ServiceSummary[] = [];
 
+      // Calculate service-specific totals first
+      const safariTotal = safariRes.data?.reduce((sum, s) => sum + (s.total_amount || 0), 0) || 0;
+      const hotelTotal = hotelRes.data?.reduce((sum, h) => sum + (h.total_amount || 0), 0) || 0;
+      const vehicleTotal = vehicleRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const dmTotal = volvoDMRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const mdTotal = volvomDRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const servicesTotal = safariTotal + hotelTotal + vehicleTotal + dmTotal + mdTotal;
+      
+      // Booking amount is total minus service-specific amounts
+      const bookingOnlyAmount = Math.max(0, (bookingData.total_amount || 0) - servicesTotal);
+
       // Process Booking payments (general) - Always show
       const bookingPayments = (payments || []).filter(p => !p.payment_type || p.payment_type === "booking");
       const bookingReceived = bookingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
       summaries.push({
         type: "Booking",
         customerName: bookingData.customer_name || "N/A",
-        totalPayment: bookingData.total_amount || 0,
+        totalPayment: bookingOnlyAmount,
         totalReceived: bookingReceived,
         date: bookingData.check_in_date,
-        totalDue: (bookingData.total_amount || 0) - bookingReceived
+        totalDue: Math.max(0, bookingOnlyAmount - bookingReceived)
       });
       groupedPayments["Booking"] = bookingPayments.map(p => ({
         id: p.id,
