@@ -614,9 +614,7 @@ const App = () => (
           {/* User Add Route */}
           <Route path="/admin/users/add" element={<AdminLayout><UserManagement /></AdminLayout>} />
           
-          {/* Admin Purchase Module Routes */}
-          <Route path="/admin/purchase/requests-pending" element={<AdminLayout><AdminPurchaseRequestApprovals statusFilter="pending" /></AdminLayout>} />
-          <Route path="/admin/purchase/requests-approved" element={<AdminLayout><AdminPurchaseRequestApprovals statusFilter="approved" /></AdminLayout>} />
+          {/* Admin Purchase Module Routes - Only PO Approval needed */}
           <Route path="/admin/purchase/po-pending" element={<AdminLayout><AdminPOApprovals status="pending" /></AdminLayout>} />
           <Route path="/admin/purchase/po-approved" element={<AdminLayout><AdminPOApprovals status="approved" /></AdminLayout>} />
           <Route path="/admin/purchase/orders" element={<AdminLayout><AdminPurchaseOrders /></AdminLayout>} />

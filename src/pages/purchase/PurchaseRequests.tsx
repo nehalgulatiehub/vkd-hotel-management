@@ -157,16 +157,21 @@ export default function PurchaseRequests() {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      // Auto-approve the purchase request (no admin approval needed for PRs)
       const { error } = await supabase.from("purchase_requests").insert([{
         ...data,
         pr_number: generatePRNumber(),
         created_by: user?.id,
+        status: "approved",
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
       }]);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-requests"] });
-      toast.success("Purchase request created successfully");
+      queryClient.invalidateQueries({ queryKey: ["purchase-requests-admin"] });
+      toast.success("Purchase request created and approved");
       resetForm();
     },
     onError: (error) => {
@@ -203,7 +208,7 @@ export default function PurchaseRequests() {
         <div>
           <h1 className="text-2xl font-bold">Purchase Requests</h1>
           <p className="text-muted-foreground text-sm">
-            Create and track purchase requests (Admin approval required)
+            Create and track purchase requests (Auto-approved)
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
