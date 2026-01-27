@@ -2,32 +2,44 @@ import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, ArrowLeft } from "lucide-react";
+import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 
 export default function BookingPayments() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const bookingId = searchParams.get("id");
   const [payments, setPayments] = useState<any[]>([]);
   const [booking, setBooking] = useState<any>(null);
   const [hotelInfo, setHotelInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // View Payment Dialog state
+  const [viewPaymentDialogOpen, setViewPaymentDialogOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       if (bookingId) {
         await Promise.all([fetchPayments(), fetchBooking(), fetchHotelInfo()]);
+        // Auto-open dialog if on admin route with booking id
+        if (isAdminRoute) {
+          setSelectedBookingId(bookingId);
+          setViewPaymentDialogOpen(true);
+        }
       } else {
         await fetchAllPayments();
       }
       setLoading(false);
     };
     loadData();
-  }, [bookingId]);
+  }, [bookingId, isAdminRoute]);
 
   const fetchBooking = async () => {
     const { data } = await supabase
@@ -92,6 +104,11 @@ export default function BookingPayments() {
     setPayments(data || []);
   };
 
+  const handleViewPayment = (id: string) => {
+    setSelectedBookingId(id);
+    setViewPaymentDialogOpen(true);
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -147,12 +164,23 @@ export default function BookingPayments() {
               {bookingId ? "Booking Payment History" : "All Payments"}
             </h2>
           </div>
-          {bookingId && (
-            <Button onClick={() => navigate(`/booking-details/${bookingId}`)}>
-              <Eye className="h-4 w-4 mr-2" />
-              View Booking
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {bookingId && (
+              <>
+                <Button 
+                  variant="outline"
+                  onClick={() => handleViewPayment(bookingId)}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Payment
+                </Button>
+                <Button onClick={() => navigate(isAdminRoute ? `/admin/bookings/${bookingId}` : `/booking-details/${bookingId}`)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Booking
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {booking && (
@@ -287,9 +315,10 @@ export default function BookingPayments() {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => navigate(`/payments/booking?id=${payment.booking_id}`)}
+                                onClick={() => handleViewPayment(payment.booking_id)}
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Payment
                               </Button>
                             </td>
                           )}
@@ -304,6 +333,13 @@ export default function BookingPayments() {
           </CardContent>
         </Card>
       </main>
+
+      {/* View Payment Dialog */}
+      <AdminViewPaymentDialog
+        open={viewPaymentDialogOpen}
+        onOpenChange={setViewPaymentDialogOpen}
+        bookingId={selectedBookingId}
+      />
     </div>
   );
 }
