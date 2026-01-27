@@ -4,38 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserPlus, Shield, Settings2, Pencil, Plus, Ban, CheckCircle } from "lucide-react";
+import { Shield, Settings2, Pencil, Plus, Ban, CheckCircle, Eye, EyeOff, Search } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-type AppRole = "admin" | "front_desk" | "housekeeping" | "manager" | "account";
-
-interface UserWithRoles {
+interface UserWithPermissions {
   id: string;
   first_name: string | null;
   last_name: string | null;
   username: string | null;
   is_active: boolean;
-  roles: AppRole[];
   menuPermissions: string[];
+  isAdmin: boolean;
 }
 
-const AVAILABLE_ROLES: { value: AppRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "account", label: "Account" },
-  { value: "manager", label: "Manager" },
-  { value: "front_desk", label: "Front Desk" },
-  { value: "housekeeping", label: "Housekeeping" },
-];
-
-// All menu items with their keys for permission assignment
+// All menu items grouped by category for permission assignment
 const MENU_ITEMS = [
   { category: "Dashboard", items: [{ key: "dashboard", label: "Dashboard" }] },
   {
@@ -82,6 +71,13 @@ const MENU_ITEMS = [
       { key: "bookings_hold_view", label: "View Hold Booking" },
       { key: "bookings_add", label: "Create Booking" },
       { key: "bookings_view", label: "View Booking" },
+    ],
+  },
+  {
+    category: "Room Manager",
+    items: [
+      { key: "room_manager_rooms", label: "Manage Rooms" },
+      { key: "room_manager_room_bookings", label: "View Room Bookings" },
     ],
   },
   {
@@ -163,27 +159,39 @@ const MENU_ITEMS = [
       { key: "billing_templates", label: "Invoice Templates" },
     ],
   },
+  {
+    category: "Purchase Management",
+    items: [
+      { key: "purchase_vendors", label: "Vendors" },
+      { key: "purchase_items", label: "Item Master" },
+      { key: "purchase_requests", label: "Purchase Requests" },
+      { key: "purchase_orders", label: "Purchase Orders" },
+      { key: "purchase_grn", label: "Goods Receipt" },
+      { key: "purchase_invoices", label: "Purchase Invoices" },
+      { key: "purchase_inventory", label: "Inventory" },
+      { key: "purchase_reports", label: "Reports" },
+    ],
+  },
 ];
 
 export default function UserManagement() {
   const { isAdmin, isAccount, loading: authLoading } = useAuthContext();
-  const [users, setUsers] = useState<UserWithRoles[]>([]);
+  const [users, setUsers] = useState<UserWithPermissions[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
-  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithPermissions | null>(null);
   const [isMenuDialogOpen, setIsMenuDialogOpen] = useState(false);
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
   const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<AppRole | "">("");
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<string[]>([]);
   const [newUsername, setNewUsername] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   
   // New user form state
-  const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserFirstName, setNewUserFirstName] = useState("");
   const [newUserLastName, setNewUserLastName] = useState("");
   const [newUserUsername, setNewUserUsername] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
 
   const canManage = isAdmin() || isAccount();
@@ -215,21 +223,22 @@ export default function UserManagement() {
 
       if (menuError) throw menuError;
 
-      const usersWithRoles: UserWithRoles[] = (profiles || []).map((profile) => ({
-        id: profile.id,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        username: profile.username,
-        is_active: profile.is_active !== false, // Default to true if null
-        roles: (rolesData || [])
-          .filter((r) => r.user_id === profile.id)
-          .map((r) => r.role as AppRole),
-        menuPermissions: (menuData || [])
-          .filter((m) => m.user_id === profile.id)
-          .map((m) => m.menu_key),
-      }));
+      const usersWithPermissions: UserWithPermissions[] = (profiles || []).map((profile) => {
+        const userRoles = (rolesData || []).filter((r) => r.user_id === profile.id).map((r) => r.role);
+        return {
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          username: profile.username,
+          is_active: profile.is_active !== false,
+          menuPermissions: (menuData || [])
+            .filter((m) => m.user_id === profile.id)
+            .map((m) => m.menu_key),
+          isAdmin: userRoles.includes('admin') || userRoles.includes('account'),
+        };
+      });
 
-      setUsers(usersWithRoles);
+      setUsers(usersWithPermissions);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to fetch users");
@@ -239,22 +248,30 @@ export default function UserManagement() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUserEmail || !newUserPassword || !newUserFirstName || !newUserLastName) {
-      toast.error("Please fill all required fields");
+    if (!newUserUsername || !newUserPassword) {
+      toast.error("Username and password are required");
       return;
     }
 
+    if (newUserPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    // Generate email from username for Supabase auth
+    const email = `${newUserUsername.toLowerCase()}@hotel.local`;
+
     setCreatingUser(true);
     try {
-      // Create user using Supabase auth
+      // Create user using Supabase auth with username as email prefix
       const { data, error } = await supabase.auth.signUp({
-        email: newUserEmail,
+        email,
         password: newUserPassword,
         options: {
           data: {
-            first_name: newUserFirstName,
-            last_name: newUserLastName,
-            username: newUserUsername || undefined,
+            first_name: newUserFirstName || newUserUsername,
+            last_name: newUserLastName || "",
+            username: newUserUsername.toLowerCase(),
           },
           emailRedirectTo: `${window.location.origin}/auth`,
         },
@@ -263,7 +280,7 @@ export default function UserManagement() {
       if (error) throw error;
 
       if (data.user) {
-        toast.success("User created successfully! They will need to verify their email.");
+        toast.success("User created successfully!");
         setIsCreateUserDialogOpen(false);
         resetCreateUserForm();
         
@@ -274,64 +291,22 @@ export default function UserManagement() {
       }
     } catch (error: any) {
       console.error("Error creating user:", error);
-      toast.error(error.message || "Failed to create user");
+      if (error.message?.includes("already registered")) {
+        toast.error("Username already exists");
+      } else {
+        toast.error(error.message || "Failed to create user");
+      }
     } finally {
       setCreatingUser(false);
     }
   };
 
   const resetCreateUserForm = () => {
-    setNewUserEmail("");
     setNewUserPassword("");
     setNewUserFirstName("");
     setNewUserLastName("");
     setNewUserUsername("");
-  };
-
-  const handleAddRole = async () => {
-    if (!selectedUser || !selectedRole) return;
-
-    try {
-      const { error } = await supabase.from("user_roles").insert({
-        user_id: selectedUser.id,
-        role: selectedRole,
-      });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.error("User already has this role");
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      toast.success("Role added successfully");
-      setIsRoleDialogOpen(false);
-      setSelectedRole("");
-      fetchUsers();
-    } catch (error) {
-      console.error("Error adding role:", error);
-      toast.error("Failed to add role");
-    }
-  };
-
-  const handleRemoveRole = async (userId: string, role: AppRole) => {
-    try {
-      const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId)
-        .eq("role", role);
-
-      if (error) throw error;
-
-      toast.success("Role removed successfully");
-      fetchUsers();
-    } catch (error) {
-      console.error("Error removing role:", error);
-      toast.error("Failed to remove role");
-    }
+    setShowPassword(false);
   };
 
   const handleSaveMenuPermissions = async () => {
@@ -356,12 +331,12 @@ export default function UserManagement() {
         if (error) throw error;
       }
 
-      toast.success("Menu permissions updated successfully");
+      toast.success("Permissions updated successfully");
       setIsMenuDialogOpen(false);
       fetchUsers();
     } catch (error) {
       console.error("Error updating menu permissions:", error);
-      toast.error("Failed to update menu permissions");
+      toast.error("Failed to update permissions");
     }
   };
 
@@ -393,7 +368,7 @@ export default function UserManagement() {
     }
   };
 
-  const handleToggleUserStatus = async (user: UserWithRoles) => {
+  const handleToggleUserStatus = async (user: UserWithPermissions) => {
     const newStatus = !user.is_active;
     try {
       const { error } = await supabase
@@ -403,7 +378,7 @@ export default function UserManagement() {
 
       if (error) throw error;
 
-      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      toast.success(`User ${newStatus ? 'activated' : 'blocked'} successfully`);
       fetchUsers();
     } catch (error) {
       console.error("Error updating user status:", error);
@@ -411,13 +386,13 @@ export default function UserManagement() {
     }
   };
 
-  const openMenuDialog = (user: UserWithRoles) => {
+  const openMenuDialog = (user: UserWithPermissions) => {
     setSelectedUser(user);
     setSelectedMenuKeys(user.menuPermissions);
     setIsMenuDialogOpen(true);
   };
 
-  const openUsernameDialog = (user: UserWithRoles) => {
+  const openUsernameDialog = (user: UserWithPermissions) => {
     setSelectedUser(user);
     setNewUsername(user.username || "");
     setIsUsernameDialogOpen(true);
@@ -439,6 +414,24 @@ export default function UserManagement() {
       setSelectedMenuKeys((prev) => [...new Set([...prev, ...categoryKeys])]);
     }
   };
+
+  const selectAllMenus = () => {
+    const allKeys = MENU_ITEMS.flatMap(cat => cat.items.map(i => i.key));
+    setSelectedMenuKeys(allKeys);
+  };
+
+  const clearAllMenus = () => {
+    setSelectedMenuKeys([]);
+  };
+
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.first_name?.toLowerCase().includes(searchLower) ||
+      user.last_name?.toLowerCase().includes(searchLower) ||
+      user.username?.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (authLoading) {
     return (
@@ -475,10 +468,10 @@ export default function UserManagement() {
       <Header title="User Management" />
       <main className="p-4 space-y-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Users & Permissions
+              Users & Module Access
             </CardTitle>
             <Button size="sm" onClick={() => setIsCreateUserDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-1" />
@@ -486,153 +479,115 @@ export default function UserManagement() {
             </Button>
           </CardHeader>
           <CardContent>
+            {/* Search */}
+            <div className="mb-4 relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or username..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Username</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Roles</TableHead>
-                    <TableHead>Menu Access</TableHead>
-                    <TableHead className="w-[160px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        {user.first_name || user.last_name
-                          ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
-                          : "Unknown User"}
-                      </TableCell>
-                      <TableCell>
-                        {user.username ? (
-                          <Badge variant="outline" className="text-xs font-mono">
-                            {user.username}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Not set</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={user.is_active ? "default" : "destructive"}
-                          className="text-xs"
-                        >
-                          {user.is_active ? "Active" : "Blocked"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.length === 0 ? (
-                            <span className="text-muted-foreground text-sm">No roles</span>
-                          ) : (
-                            user.roles.map((role) => (
-                              <Badge
-                                key={role}
-                                variant={role === "admin" ? "default" : role === "account" ? "secondary" : "outline"}
-                                className="text-xs cursor-pointer"
-                                onClick={() => handleRemoveRole(user.id, role)}
-                                title="Click to remove"
-                              >
-                                {role}
-                              </Badge>
-                            ))
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {user.roles.includes("admin") || user.roles.includes("account") ? (
-                          <Badge variant="outline" className="text-xs">Full Access</Badge>
-                        ) : user.menuPermissions.length === 0 ? (
-                          <span className="text-muted-foreground text-sm">No access</span>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            {user.menuPermissions.length} menu(s)
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => openUsernameDialog(user)}
-                            title="Edit username"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-
-                          <Dialog open={isRoleDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setIsRoleDialogOpen(open);
-                            if (open) setSelectedUser(user);
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="icon" className="h-7 w-7" title="Add role">
-                                <UserPlus className="h-3 w-3" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Add Role to {user.first_name || "User"}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <Label>Select Role</Label>
-                                  <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as AppRole)}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {AVAILABLE_ROLES.filter(
-                                        (r) => !user.roles.includes(r.value)
-                                      ).map((role) => (
-                                        <SelectItem key={role.value} value={role.value}>
-                                          {role.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <Button onClick={handleAddRole} disabled={!selectedRole}>
-                                  Add Role
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => openMenuDialog(user)}
-                            disabled={user.roles.includes("admin") || user.roles.includes("account")}
-                            title={user.roles.includes("admin") || user.roles.includes("account") ? "Admin/Account have full access" : "Manage menu access"}
-                          >
-                            <Settings2 className="h-3 w-3" />
-                          </Button>
-
-                          {isAdmin() && (
-                            <Button
-                              variant={user.is_active ? "destructive" : "default"}
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => handleToggleUserStatus(user)}
-                              title={user.is_active ? "Block user" : "Activate user"}
-                            >
-                              {user.is_active ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Name</TableHead>
+                      <TableHead>Username (Login)</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Module Access</TableHead>
+                      <TableHead className="w-[120px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No users found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.first_name || user.last_name
+                              ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {user.username ? (
+                              <Badge variant="outline" className="font-mono">
+                                {user.username}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">Not set</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={user.is_active ? "default" : "destructive"}
+                            >
+                              {user.is_active ? "Active" : "Blocked"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {user.isAdmin ? (
+                              <Badge className="bg-blue-600">Full Access (Admin)</Badge>
+                            ) : user.menuPermissions.length === 0 ? (
+                              <span className="text-muted-foreground text-sm">No access</span>
+                            ) : (
+                              <Badge variant="secondary">
+                                {user.menuPermissions.length} modules
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openUsernameDialog(user)}
+                                title="Edit username"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openMenuDialog(user)}
+                                disabled={user.isAdmin}
+                                title={user.isAdmin ? "Admins have full access" : "Manage module access"}
+                              >
+                                <Settings2 className="h-3.5 w-3.5" />
+                              </Button>
+
+                              {isAdmin() && (
+                                <Button
+                                  variant={user.is_active ? "destructive" : "default"}
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleToggleUserStatus(user)}
+                                  title={user.is_active ? "Block user" : "Activate user"}
+                                >
+                                  {user.is_active ? <Ban className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -644,85 +599,122 @@ export default function UserManagement() {
               <DialogTitle>Create New User</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={newUserFirstName}
-                    onChange={(e) => setNewUserFirstName(e.target.value)}
-                    placeholder="First name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={newUserLastName}
-                    onChange={(e) => setNewUserLastName(e.target.value)}
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
               <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="text-sm font-medium">
+                  Username (Login ID) <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="username"
                   value={newUserUsername}
                   onChange={(e) => setNewUserUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                  placeholder="username (optional)"
+                  placeholder="Enter username"
+                  className="mt-1"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Only lowercase letters, numbers, and underscores
+                </p>
               </div>
+              
               <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  placeholder="user@example.com"
-                />
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password <span className="text-destructive">*</span>
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="password">Password *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  placeholder="Minimum 6 characters"
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={newUserFirstName}
+                    onChange={(e) => setNewUserFirstName(e.target.value)}
+                    placeholder="Optional"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName" className="text-sm font-medium">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={newUserLastName}
+                    onChange={(e) => setNewUserLastName(e.target.value)}
+                    placeholder="Optional"
+                    className="mt-1"
+                  />
+                </div>
               </div>
-              <Button onClick={handleCreateUser} disabled={creatingUser} className="w-full">
-                {creatingUser ? "Creating..." : "Create User"}
-              </Button>
+
+              <div className="pt-2">
+                <Button 
+                  onClick={handleCreateUser} 
+                  disabled={creatingUser || !newUserUsername || !newUserPassword} 
+                  className="w-full"
+                >
+                  {creatingUser ? "Creating..." : "Create User"}
+                </Button>
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                After creating, click the settings icon to assign module access
+              </p>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Menu Permissions Dialog */}
+        {/* Module Access Dialog */}
         <Dialog open={isMenuDialogOpen} onOpenChange={setIsMenuDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogContent className="max-w-2xl max-h-[85vh]">
             <DialogHeader>
-              <DialogTitle>
-                Menu Access for {selectedUser?.first_name || "User"}
+              <DialogTitle className="flex items-center justify-between">
+                <span>Module Access for {selectedUser?.username || selectedUser?.first_name || "User"}</span>
               </DialogTitle>
             </DialogHeader>
-            <ScrollArea className="h-[60vh] pr-4">
-              <div className="space-y-6">
+            
+            {/* Quick actions */}
+            <div className="flex gap-2 mb-2">
+              <Button variant="outline" size="sm" onClick={selectAllMenus}>
+                Select All
+              </Button>
+              <Button variant="outline" size="sm" onClick={clearAllMenus}>
+                Clear All
+              </Button>
+              <span className="ml-auto text-sm text-muted-foreground">
+                {selectedMenuKeys.length} selected
+              </span>
+            </div>
+
+            <ScrollArea className="h-[55vh] pr-4 border rounded-md p-3">
+              <div className="space-y-4">
                 {MENU_ITEMS.map((category) => (
-                  <div key={category.category} className="space-y-2">
-                    <div className="flex items-center space-x-2">
+                  <div key={category.category} className="border-b pb-3 last:border-0">
+                    <div className="flex items-center space-x-2 mb-2">
                       <Checkbox
                         id={`cat-${category.category}`}
                         checked={category.items.every((i) => selectedMenuKeys.includes(i.key))}
                         onCheckedChange={() => toggleCategoryMenus(category.category, category.items)}
                       />
-                      <Label htmlFor={`cat-${category.category}`} className="font-semibold text-sm">
+                      <Label htmlFor={`cat-${category.category}`} className="font-semibold cursor-pointer">
                         {category.category}
                       </Label>
                     </div>
-                    <div className="ml-6 grid grid-cols-2 gap-2">
+                    <div className="ml-6 grid grid-cols-2 gap-x-4 gap-y-1">
                       {category.items.map((item) => (
                         <div key={item.key} className="flex items-center space-x-2">
                           <Checkbox
@@ -730,7 +722,7 @@ export default function UserManagement() {
                             checked={selectedMenuKeys.includes(item.key)}
                             onCheckedChange={() => toggleMenuKey(item.key)}
                           />
-                          <Label htmlFor={item.key} className="text-sm font-normal">
+                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">
                             {item.label}
                           </Label>
                         </div>
@@ -740,8 +732,9 @@ export default function UserManagement() {
                 ))}
               </div>
             </ScrollArea>
+            
             <Button onClick={handleSaveMenuPermissions} className="w-full">
-              Save Menu Permissions
+              Save Permissions
             </Button>
           </DialogContent>
         </Dialog>
@@ -750,21 +743,20 @@ export default function UserManagement() {
         <Dialog open={isUsernameDialogOpen} onOpenChange={setIsUsernameDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
-                Edit Username for {selectedUser?.first_name || "User"}
-              </DialogTitle>
+              <DialogTitle>Edit Username</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="editUsername">Username</Label>
+                <Label htmlFor="editUsername">Username (Login ID)</Label>
                 <Input
                   id="editUsername"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   placeholder="Enter username"
+                  className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Only lowercase letters, numbers, and underscores allowed
+                  Only lowercase letters, numbers, and underscores
                 </p>
               </div>
               <Button onClick={handleUpdateUsername} disabled={!newUsername.trim()} className="w-full">
