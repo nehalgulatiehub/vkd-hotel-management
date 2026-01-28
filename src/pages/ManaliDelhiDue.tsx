@@ -130,9 +130,29 @@ export default function ManaliDelhiDue() {
     if (isSubmittingPayment) return;
     setIsSubmittingPayment(true);
     try {
-      const { error } = await supabase.from("payments").insert({ booking_id: getBookingId(selectedBooking), amount: parseFloat(paymentAmount), payment_mode: paymentMode, reference_number: paymentReference, payment_date: new Date().toISOString().split('T')[0] });
+      const bookingId = getBookingId(selectedBooking);
+      const amount = parseFloat(paymentAmount);
+      const { error } = await supabase.from("payments").insert({ 
+        booking_id: bookingId, 
+        amount: amount, 
+        payment_mode: paymentMode, 
+        reference_number: paymentReference, 
+        payment_date: new Date().toISOString().split('T')[0] 
+      });
       if (error) throw error;
-      toast.success("Payment added"); setShowAddPaymentDialog(false); fetchVolvoBookings();
+      
+      // Update volvo_bookings paid_amount and due_amount
+      const newPaidAmount = (selectedBooking.paid_amount || 0) + amount;
+      const newDueAmount = (selectedBooking.total_amount || 0) - newPaidAmount;
+      
+      await supabase
+        .from("volvo_bookings" as any)
+        .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+        .eq("id", selectedBooking.id);
+      
+      toast.success("Payment added"); 
+      setShowAddPaymentDialog(false); 
+      fetchVolvoBookings();
     } catch (error) { toast.error("Failed to add payment"); } finally { setIsSubmittingPayment(false); }
   };
 

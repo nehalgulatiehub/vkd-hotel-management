@@ -199,7 +199,8 @@ export default function AdminSafariMoneyDetail() {
                     <td className="border border-[#c99] px-2 py-2">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
                         <button className="hover:underline text-left" onClick={() => handleViewDetails(booking)}>View Booking</button>
-                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Payment</button>
+                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings, { type: 'safari', id: booking.id })}>View Payment</button>
+                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleAddPayment(booking.bookings, { type: 'safari', id: booking.id })}>Add Payment</button>
                         <button className="hover:underline text-left">View Refund Payment</button>
                       </div>
                     </td>

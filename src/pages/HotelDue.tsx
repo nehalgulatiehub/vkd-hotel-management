@@ -165,6 +165,16 @@ export default function HotelDue() {
         payment_date: new Date().toISOString().split('T')[0]
       });
       if (error) throw error;
+      
+      // Update hotel_bookings paid_amount and due_amount
+      const newPaidAmount = (selectedBooking.paid_amount || 0) + amount;
+      const newDueAmount = (selectedBooking.total_amount || 0) - newPaidAmount;
+      
+      await supabase
+        .from("hotel_bookings")
+        .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+        .eq("id", selectedBooking.id);
+      
       toast.success("Payment added successfully");
       setShowAddPaymentDialog(false);
       fetchHotelBookings();
