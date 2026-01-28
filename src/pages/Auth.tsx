@@ -4,13 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Hotel } from "lucide-react";
+import { format } from "date-fns";
+
+// Import images
+import mukutLogo from "@/assets/mukut-logo.webp";
+import loginImage from "@/assets/login-image.webp";
+import ourHotelsImage from "@/assets/our-hotels.webp";
+import travelServicesImage from "@/assets/travel-services.webp";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [loginIdentifier, setLoginIdentifier] = useState(""); // Can be email or username
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -37,9 +42,7 @@ export default function Auth() {
       if (isLogin) {
         let emailToUse = loginIdentifier;
         
-        // Check if loginIdentifier is not an email (username login)
         if (!loginIdentifier.includes("@")) {
-          // Get email by username using the database function
           const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
             _username: loginIdentifier
           });
@@ -56,7 +59,6 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // Check if user is blocked
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_active')
@@ -64,7 +66,6 @@ export default function Auth() {
           .single();
 
         if (profile && profile.is_active === false) {
-          // Sign out the blocked user immediately
           await supabase.auth.signOut();
           throw new Error("Your account has been deactivated. Please contact the administrator.");
         }
@@ -72,12 +73,10 @@ export default function Auth() {
         toast.success("Welcome back!");
         navigate("/dashboard");
       } else {
-        // Validate username
         if (!username.trim()) {
           throw new Error("Username is required");
         }
         
-        // Check if username already exists
         const { data: existingUser } = await supabase
           .from('profiles')
           .select('username')
@@ -110,108 +109,208 @@ export default function Auth() {
     }
   };
 
+  const currentDate = format(new Date(), "dd MMMM, yyyy");
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center">
-              <Hotel className="h-8 w-8 text-primary-foreground" />
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header */}
+      <header className="relative bg-gradient-to-r from-pink-50 to-pink-100 py-4 px-6">
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-pink-200/50 to-transparent" 
+             style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
+        <img src={mukutLogo} alt="Mukut Hotels" className="h-20 relative z-10" />
+      </header>
+
+      {/* Date */}
+      <div className="px-6 py-3">
+        <span className="text-[#8B1538] font-medium text-lg italic">{currentDate}</span>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 px-6 py-4">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+          {/* Login Card */}
+          <div className="flex-1">
+            <div className="rounded-3xl overflow-hidden shadow-lg max-w-2xl">
+              {/* Blue Header */}
+              <div className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] px-6 py-3">
+                <h2 className="text-white font-semibold text-lg">
+                  {isLogin ? "Login" : "Sign Up"}
+                </h2>
+              </div>
+              
+              {/* Form Content */}
+              <div className="bg-white p-6 border-x border-gray-200">
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                  {/* Form */}
+                  <form onSubmit={handleAuth} className="flex-1 space-y-4 min-w-[280px]">
+                    {!isLogin && (
+                      <>
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="firstName" className="w-24 text-right text-gray-600 text-sm">
+                            First Name :
+                          </Label>
+                          <Input
+                            id="firstName"
+                            type="text"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required={!isLogin}
+                            className="flex-1 border-gray-300"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="lastName" className="w-24 text-right text-gray-600 text-sm">
+                            Last Name :
+                          </Label>
+                          <Input
+                            id="lastName"
+                            type="text"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required={!isLogin}
+                            className="flex-1 border-gray-300"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="username" className="w-24 text-right text-gray-600 text-sm">
+                            Username :
+                          </Label>
+                          <Input
+                            id="username"
+                            type="text"
+                            placeholder="Choose a username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                            required={!isLogin}
+                            className="flex-1 border-gray-300"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="email" className="w-24 text-right text-gray-600 text-sm">
+                            Email :
+                          </Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required={!isLogin}
+                            className="flex-1 border-gray-300"
+                          />
+                        </div>
+                      </>
+                    )}
+                    {isLogin && (
+                      <div className="flex items-center gap-4">
+                        <Label htmlFor="loginIdentifier" className="w-24 text-right text-gray-600 text-sm">
+                          Username :
+                        </Label>
+                        <Input
+                          id="loginIdentifier"
+                          type="text"
+                          placeholder="Enter username or email"
+                          value={loginIdentifier}
+                          onChange={(e) => setLoginIdentifier(e.target.value)}
+                          required
+                          className="flex-1 border-gray-300"
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4">
+                      <Label htmlFor="password" className="w-24 text-right text-gray-600 text-sm">
+                        Password :
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="flex-1 border-gray-300"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-24"></div>
+                      <Button 
+                        type="submit" 
+                        className="bg-[#28a745] hover:bg-[#218838] text-white px-6 text-sm h-8"
+                        disabled={loading}
+                      >
+                        {loading ? "Loading..." : isLogin ? "Sign in" : "Sign Up"}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-24"></div>
+                      <button
+                        type="button"
+                        onClick={() => setIsLogin(!isLogin)}
+                        className="text-[#8B1538] hover:underline text-sm"
+                      >
+                        {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                      </button>
+                    </div>
+                  </form>
+                  
+                  {/* Image */}
+                  <div className="hidden md:block">
+                    <img 
+                      src={loginImage} 
+                      alt="Login" 
+                      className="w-48 h-auto object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Blue Footer */}
+              <div className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] h-12"></div>
+            </div>
+
+            {/* Quote of the day */}
+            <div className="mt-8 max-w-2xl">
+              <div className="bg-gradient-to-r from-[#f4a261] to-[#e9c46a] text-white px-6 py-2 rounded-t-lg inline-block">
+                <span className="font-medium">Quote of the day</span>
+              </div>
+              <div className="bg-gradient-to-r from-[#f4a261]/30 to-[#e9c46a]/30 h-8 rounded-b-lg rounded-tr-lg"></div>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Hotel Management Software</CardTitle>
-          <CardDescription>
-            {isLogin ? "Sign in to your account" : "Create a new account"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required={!isLogin}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required={!isLogin}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Choose a username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    required={!isLogin}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required={!isLogin}
-                  />
-                </div>
-              </>
-            )}
-            {isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="loginIdentifier">Username or Email</Label>
-                <Input
-                  id="loginIdentifier"
-                  type="text"
-                  placeholder="Enter username or email"
-                  value={loginIdentifier}
-                  onChange={(e) => setLoginIdentifier(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+
+          {/* Right Sidebar */}
+          <aside className="w-full lg:w-64 space-y-6">
+            {/* Latest News */}
+            <div>
+              <h3 className="text-[#8B1538] font-bold text-lg mb-3">Latest News</h3>
+              <div className="bg-gradient-to-r from-[#f4a261]/30 to-[#e9c46a]/30 h-24 rounded-lg"></div>
+            </div>
+
+            {/* Our Hotels */}
+            <div className="overflow-hidden rounded-lg shadow-md">
+              <img 
+                src={ourHotelsImage} 
+                alt="Our Hotels" 
+                className="w-full h-32 object-cover"
               />
             </div>
-            <Button type="submit" className="w-full bg-gradient-primary" disabled={loading}>
-              {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+
+            {/* Travel Services */}
+            <div className="overflow-hidden rounded-lg shadow-md">
+              <img 
+                src={travelServicesImage} 
+                alt="Travel Services" 
+                className="w-full h-32 object-cover"
+              />
+            </div>
+          </aside>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] py-4 px-6 mt-8">
+        <div className="max-w-7xl mx-auto text-right">
+          <span className="text-white/90 text-sm">© Mukut Hotels & Resorts Pvt Ltd.</span>
+        </div>
+      </footer>
     </div>
   );
 }
