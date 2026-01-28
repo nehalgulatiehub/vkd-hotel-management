@@ -167,7 +167,7 @@ const adminMenuItems: MenuItem[] = [
     textColor: "#000",
     submenu: [
       { title: "View Safari Money Detail", url: "/admin/safari-money" },
-      { title: "Add Safari Payment", url: "/admin/safari-payments/add" },
+      { title: "Add Safari Payment", url: "/admin/add-safari-payment" },
       { title: "View Safari Payment", url: "/admin/safari-payments" },
       { title: "Due Safari Transporter Payment", url: "/admin/safari-transporter-due" },
     ] 
@@ -222,7 +222,7 @@ const adminMenuItems: MenuItem[] = [
     color: "#FF8A65", 
     submenu: [
       { title: "View Another Hotel Money Detail", url: "/admin/another-hotel-money" },
-      { title: "Add Another Hotel Payment", url: "/admin/another-hotel-payments/add" },
+      { title: "Add Another Hotel Payment", url: "/admin/add-hotel-payment" },
       { title: "View Another Hotel Payment", url: "/admin/another-hotel-payments" },
       { title: "Due Amount Another Hotel", url: "/admin/another-hotel-payment-due" },
     ] 
@@ -242,7 +242,7 @@ const adminMenuItems: MenuItem[] = [
     color: "#607D8B", 
     submenu: [
       { title: "View Another Vehicle Transporter Money Detail", url: "/admin/vehicle-transporter-money" },
-      { title: "Add Another Vehicle Transporter Payment", url: "/admin/vehicle-transporter-payments/add" },
+      { title: "Add Another Vehicle Transporter Payment", url: "/admin/add-transporter-payment" },
       { title: "View Payment of Another Vehicle Transporters", url: "/admin/vehicle-transporter-payments" },
       { title: "Due Amount Transporters", url: "/admin/vehicle-transporter-due" },
       { title: "View Group Expense", url: "/admin/group-expenses" },

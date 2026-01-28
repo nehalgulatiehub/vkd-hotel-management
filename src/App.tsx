@@ -120,6 +120,9 @@ import AdminPurchaseInvoices from "./pages/admin/AdminPurchaseInvoices";
 import AdminVendors from "./pages/admin/AdminVendors";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminPurchaseReports from "./pages/admin/AdminPurchaseReports";
+import AdminAddHotelPayment from "./pages/admin/AdminAddHotelPayment";
+import AdminAddSafariPayment from "./pages/admin/AdminAddSafariPayment";
+import AdminAddTransporterPayment from "./pages/admin/AdminAddTransporterPayment";
 
 const queryClient = new QueryClient();
 
@@ -602,6 +605,7 @@ const App = () => (
           <Route path="/admin/another-hotel-approved" element={<AdminLayout><AdminHotelApprovedPayments /></AdminLayout>} />
           <Route path="/admin/another-hotel-money" element={<AdminLayout><HotelDetails /></AdminLayout>} />
           <Route path="/admin/another-hotel-payment-due" element={<AdminLayout><ViewHotelDue /></AdminLayout>} />
+          <Route path="/admin/add-hotel-payment" element={<AdminLayout><AdminAddHotelPayment /></AdminLayout>} />
           
           {/* Additional Vehicle Manager Routes */}
           <Route path="/admin/vehicle-pending" element={<AdminLayout><AdminVehiclePendingPayments /></AdminLayout>} />
@@ -610,6 +614,10 @@ const App = () => (
           <Route path="/admin/vehicle-transporter-payments" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
           <Route path="/admin/vehicle-transporter-payments/add" element={<AdminLayout><VehiclePayments /></AdminLayout>} />
           <Route path="/admin/vehicle-transporter-due" element={<AdminLayout><ViewVehicleDue /></AdminLayout>} />
+          <Route path="/admin/add-transporter-payment" element={<AdminLayout><AdminAddTransporterPayment /></AdminLayout>} />
+          
+          {/* Safari Add Payment Route */}
+          <Route path="/admin/add-safari-payment" element={<AdminLayout><AdminAddSafariPayment /></AdminLayout>} />
           
           {/* User Add Route */}
           <Route path="/admin/users/add" element={<AdminLayout><UserManagement /></AdminLayout>} />
