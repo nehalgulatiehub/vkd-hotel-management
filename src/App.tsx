@@ -123,6 +123,9 @@ import AdminPurchaseReports from "./pages/admin/AdminPurchaseReports";
 import AdminAddHotelPayment from "./pages/admin/AdminAddHotelPayment";
 import AdminAddSafariPayment from "./pages/admin/AdminAddSafariPayment";
 import AdminAddTransporterPayment from "./pages/admin/AdminAddTransporterPayment";
+import AdminBilling from "./pages/admin/AdminBilling";
+import AdminInvoiceList from "./pages/admin/AdminInvoiceList";
+import AdminInvoiceTemplates from "./pages/admin/AdminInvoiceTemplates";
 
 const queryClient = new QueryClient();
 
@@ -631,6 +634,11 @@ const App = () => (
           <Route path="/admin/purchase/vendors" element={<AdminLayout><AdminVendors /></AdminLayout>} />
           <Route path="/admin/purchase/inventory" element={<AdminLayout><AdminInventory /></AdminLayout>} />
           <Route path="/admin/purchase/reports" element={<AdminLayout><AdminPurchaseReports /></AdminLayout>} />
+          
+          {/* Admin Billing Routes */}
+          <Route path="/admin/billing" element={<AdminLayout><AdminBilling /></AdminLayout>} />
+          <Route path="/admin/invoices" element={<AdminLayout><AdminInvoiceList /></AdminLayout>} />
+          <Route path="/admin/invoice-templates" element={<AdminLayout><AdminInvoiceTemplates /></AdminLayout>} />
           
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
