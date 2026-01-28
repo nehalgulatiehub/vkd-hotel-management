@@ -258,44 +258,46 @@ export default function UserManagement() {
       return;
     }
 
-    // Generate email from username for Supabase auth
-    const email = `${newUserUsername.toLowerCase()}@hotel.local`;
-
     setCreatingUser(true);
     try {
-      // Create user using Supabase auth with username as email prefix
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: newUserPassword,
-        options: {
-          data: {
-            first_name: newUserFirstName || newUserUsername,
-            last_name: newUserLastName || "",
-            username: newUserUsername.toLowerCase(),
+      // Use edge function to create user without affecting admin session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL || "https://zifegjopaxyelgboryua.supabase.co"}/functions/v1/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          emailRedirectTo: `${window.location.origin}/auth`,
-        },
-      });
+          body: JSON.stringify({
+            username: newUserUsername,
+            password: newUserPassword,
+            firstName: newUserFirstName || newUserUsername,
+            lastName: newUserLastName || "",
+          }),
+        }
+      );
 
-      if (error) throw error;
+      const result = await response.json();
 
-      if (data.user) {
-        toast.success("User created successfully!");
-        setIsCreateUserDialogOpen(false);
-        resetCreateUserForm();
-        
-        // Wait a moment for the profile to be created by trigger
-        setTimeout(() => {
-          fetchUsers();
-        }, 1000);
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create user");
       }
+
+      toast.success("User created successfully!");
+      setIsCreateUserDialogOpen(false);
+      resetCreateUserForm();
+      
+      // Wait a moment for the profile to be created by trigger
+      setTimeout(() => {
+        fetchUsers();
+      }, 1000);
     } catch (error: any) {
       console.error("Error creating user:", error);
-      if (error.message?.includes("already registered")) {
-        toast.error("Username already exists");
-      } else {
-        toast.error(error.message || "Failed to create user");
-      }
+      toast.error(error.message || "Failed to create user");
     } finally {
       setCreatingUser(false);
     }
