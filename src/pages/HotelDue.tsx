@@ -58,13 +58,13 @@ export default function HotelDue() {
     setAgents(data || []);
   };
 
-  const fetchHotels = async () => {
+const fetchHotels = async () => {
     const { data } = await supabase.from("another_hotels").select("*").order("name");
     setHotels(data || []);
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("*").order("first_name");
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
     setUsers(data || []);
   };
 
@@ -86,6 +86,14 @@ export default function HotelDue() {
     } else {
       setHotelBookings(data || []);
     }
+  };
+
+  // Helper to get username from users array
+  const getUserName = (userId: string | null | undefined) => {
+    if (!userId) return "Unknown User";
+    const user = users.find(u => u.id === userId);
+    if (!user) return "Unknown User";
+    return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User";
   };
 
   const filteredBookings = hotelBookings.filter(booking => {
@@ -326,7 +334,7 @@ export default function HotelDue() {
                           <div className="text-muted-foreground">{booking.bookings?.agents?.name || ""}</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          company
+                          {getUserName(booking.bookings?.created_by)}
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>

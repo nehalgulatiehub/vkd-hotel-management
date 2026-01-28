@@ -65,14 +65,14 @@ export default function VehicleDue() {
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("*").order("first_name");
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
     setUsers(data || []);
   };
 
   const fetchVehicleBookings = async () => {
     const { data, error } = await supabase
       .from("vehicle_bookings")
-      .select("*, bookings(id, booking_number, customer_name, email, status, contact_no, address, booking_type, adults, children, check_in_date, check_out_date, notes, reference, created_at, agents(name)), transporters(name)")
+      .select("*, bookings(id, booking_number, customer_name, email, status, contact_no, address, booking_type, adults, children, check_in_date, check_out_date, notes, reference, created_at, created_by, agents(name)), transporters(name)")
       .gt("due_amount", 0)
       .order("pickup_date", { ascending: true });
     
@@ -81,6 +81,14 @@ export default function VehicleDue() {
     } else {
       setVehicleBookings(data || []);
     }
+  };
+
+  // Helper to get username from users array
+  const getUserName = (userId: string | null | undefined) => {
+    if (!userId) return "Unknown User";
+    const user = users.find(u => u.id === userId);
+    if (!user) return "Unknown User";
+    return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User";
   };
 
   const filteredBookings = vehicleBookings.filter(booking => {
@@ -305,7 +313,7 @@ export default function VehicleDue() {
                           <div className="text-muted-foreground">{booking.bookings?.agents?.name || ""}</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          company
+                          {getUserName(booking.bookings?.created_by)}
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
