@@ -341,6 +341,22 @@ export default function Bookings() {
     } else {
       // Fetch hotel bookings to show hotel and room names
       const bookingIds = (data || []).map(b => b.id);
+      
+      // Fetch profiles for created_by users
+      const userIds = [...new Set((data || []).map(b => b.created_by).filter(Boolean))];
+      let profilesMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, first_name, last_name")
+          .in("id", userIds);
+        
+        (profiles || []).forEach((p: any) => {
+          profilesMap[p.id] = p.username || `${p.first_name || ''} ${p.last_name || ''}`.trim() || "Unknown User";
+        });
+      }
+      
       if (bookingIds.length > 0) {
         const { data: hotelData } = await supabase
           .from("hotel_bookings")
@@ -370,14 +386,20 @@ export default function Bookings() {
           };
         });
         
-        // Attach hotel info to bookings
+        // Attach hotel info and username to bookings
         const bookingsWithHotelInfo = (data || []).map(b => ({
           ...b,
-          hotel_info: hotelBookingsMap[b.id] || null
+          hotel_info: hotelBookingsMap[b.id] || null,
+          created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
         }));
         setBookings(bookingsWithHotelInfo);
       } else {
-        setBookings(data || []);
+        // Attach username even without hotel info
+        const bookingsWithUsernames = (data || []).map(b => ({
+          ...b,
+          created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
+        }));
+        setBookings(bookingsWithUsernames);
       }
     }
   };
@@ -2391,7 +2413,7 @@ export default function Bookings() {
                               </div>
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
-                              {booking.created_by || "-"}
+                              {booking.created_by_name || "-"}
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
                               <div className="font-medium">{booking.customer_name || "-"}</div>

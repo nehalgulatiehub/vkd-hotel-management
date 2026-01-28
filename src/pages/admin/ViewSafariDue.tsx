@@ -79,8 +79,16 @@ export default function ViewSafariDue() {
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("*").order("first_name");
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
     setUsers(data || []);
+  };
+
+  // Helper to get username from users array
+  const getUserName = (userId: string | null | undefined) => {
+    if (!userId) return "Unknown User";
+    const user = users.find(u => u.id === userId);
+    if (!user) return "Unknown User";
+    return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User";
   };
 
   const fetchSafaris = async () => {
@@ -91,7 +99,7 @@ export default function ViewSafariDue() {
         .select(`
           id, safari_name, safari_date, number_of_persons, rate_per_person,
           total_amount, paid_amount, due_amount,
-          booking:bookings(id, booking_number, customer_name, contact_no, address, booking_type, created_at, total_amount, paid_amount, due_amount, agents(name))
+          booking:bookings(id, booking_number, customer_name, contact_no, address, booking_type, created_at, created_by, total_amount, paid_amount, due_amount, agents(name))
         `)
         .gt("due_amount", 0)
         .order("safari_date", { ascending: false });
@@ -339,7 +347,7 @@ export default function ViewSafariDue() {
                             <div className="capitalize">{safari.booking?.booking_type || "Direct"}</div>
                             <div className="text-muted-foreground">{safari.booking?.agents?.name || ""}</div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">company</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{getUserName((safari.booking as any)?.created_by)}</td>
                           <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                             <div className="font-medium">{safari.booking?.customer_name || "-"}</div>
                             {safari.booking?.address && <div className="text-muted-foreground">{safari.booking.address}</div>}

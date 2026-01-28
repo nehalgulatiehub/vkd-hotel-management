@@ -48,8 +48,16 @@ export default function AdminMDTransporterMoneyDetail() {
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("id, first_name, last_name").order("first_name");
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
     setUsers(data || []);
+  };
+
+  // Helper to get username from users array
+  const getUserName = (userId: string | null | undefined) => {
+    if (!userId) return "Unknown User";
+    const user = users.find(u => u.id === userId);
+    if (!user) return "Unknown User";
+    return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User";
   };
 
   const fetchVolvoBookings = async () => {
@@ -190,7 +198,7 @@ export default function AdminMDTransporterMoneyDetail() {
                       M - D Booking Price : Rs {(booking.total_amount || 0).toLocaleString('en-IN')} /-
                     </td>
                     <td className="border border-[#c99] px-2 py-2">
-                      {users.find(u => u.id === booking.bookings?.created_by)?.first_name || "Company"}
+                      {getUserName(booking.bookings?.created_by)}
                     </td>
                     <td className="border border-[#c99] px-2 py-2">
                       <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
