@@ -17,6 +17,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { toast } from "sonner";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
+import { syncServiceTableOnApproval } from "@/utils/paymentSync";
 
 interface PaymentWithDetails {
   id: string;
@@ -175,8 +176,18 @@ export default function AdminDMVolvoPendingPayments() {
   const handleBulkApproval = async (status: "approved" | "rejected") => {
     if (selectedPayments.size === 0) { toast.error("Please select at least one payment"); return; }
     try {
+      const { data: paymentDetails } = await supabase
+        .from("payments")
+        .select("id, amount, booking_id, payment_type")
+        .in("id", Array.from(selectedPayments));
+
       const { error } = await supabase.from("payments").update({ approval_status: status, approved_by: user?.id, approved_at: new Date().toISOString() }).in("id", Array.from(selectedPayments));
       if (error) throw error;
+
+      if (status === "approved" && paymentDetails) {
+        await syncServiceTableOnApproval(paymentDetails as any);
+      }
+
       toast.success(`${selectedPayments.size} payment(s) ${status} successfully`);
       setSelectedPayments(new Set());
       fetchPendingPayments();
