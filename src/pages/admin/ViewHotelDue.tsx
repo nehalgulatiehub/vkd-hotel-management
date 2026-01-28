@@ -179,14 +179,25 @@ export default function ViewHotelDue() {
     if (isSubmittingPayment) return;
     setIsSubmittingPayment(true);
     try {
+      const amount = parseFloat(paymentAmount);
       const { error } = await supabase.from("payments").insert({
         booking_id: selectedBooking?.booking?.id,
-        amount: parseFloat(paymentAmount),
+        amount: amount,
         payment_mode: paymentMode,
         reference_number: paymentReference,
         payment_date: new Date().toISOString().split('T')[0]
       });
       if (error) throw error;
+      
+      // Update hotel_bookings paid_amount and due_amount
+      const newPaidAmount = (selectedBooking?.paid_amount || 0) + amount;
+      const newDueAmount = (selectedBooking?.total_amount || 0) - newPaidAmount;
+      
+      await supabase
+        .from("hotel_bookings")
+        .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+        .eq("id", selectedBooking?.id);
+      
       toast.success("Payment added");
       setShowAddPaymentDialog(false);
       fetchHotels();

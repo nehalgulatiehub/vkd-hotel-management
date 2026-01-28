@@ -2,10 +2,16 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface ServiceInfo {
+  type: 'safari' | 'hotel' | 'vehicle' | 'volvo_dm' | 'volvo_md';
+  id: string;
+}
+
 export function usePaymentDialog(onPaymentSuccess?: () => void) {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [selectedService, setSelectedService] = useState<ServiceInfo | null>(null);
   const [bookingPayments, setBookingPayments] = useState<any[]>([]);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
@@ -21,19 +27,94 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setBookingPayments(data || []);
   };
 
-  const handleViewPayment = async (booking: any) => {
+  const handleViewPayment = async (booking: any, serviceInfo?: ServiceInfo) => {
     setSelectedBooking(booking);
+    setSelectedService(serviceInfo || null);
     setBookingPayments([]);
     setShowViewPaymentDialog(true);
     await fetchBookingPayments(booking.id);
   };
 
-  const handleAddPayment = (booking: any) => {
+  const handleAddPayment = (booking: any, serviceInfo?: ServiceInfo) => {
     setSelectedBooking(booking);
+    setSelectedService(serviceInfo || null);
     setPaymentAmount("");
     setPaymentMode("");
     setPaymentReference("");
     setShowPaymentDialog(true);
+  };
+
+  const updateServiceTable = async (serviceInfo: ServiceInfo, amount: number) => {
+    const tableMap: Record<string, string> = {
+      'safari': 'safari_bookings',
+      'hotel': 'hotel_bookings',
+      'vehicle': 'vehicle_bookings',
+      'volvo_dm': 'volvo_bookings',
+      'volvo_md': 'volvo_bookings'
+    };
+
+    const tableName = tableMap[serviceInfo.type];
+    if (!tableName) return;
+
+    // Get current service record using raw query approach for dynamic table
+    let serviceRecord: { paid_amount: number | null; total_amount: number | null } | null = null;
+    
+    if (serviceInfo.type === 'safari') {
+      const { data } = await supabase
+        .from("safari_bookings")
+        .select("paid_amount, total_amount")
+        .eq("id", serviceInfo.id)
+        .maybeSingle();
+      serviceRecord = data;
+    } else if (serviceInfo.type === 'hotel') {
+      const { data } = await supabase
+        .from("hotel_bookings")
+        .select("paid_amount, total_amount")
+        .eq("id", serviceInfo.id)
+        .maybeSingle();
+      serviceRecord = data;
+    } else if (serviceInfo.type === 'vehicle') {
+      const { data } = await supabase
+        .from("vehicle_bookings" as any)
+        .select("paid_amount, total_amount")
+        .eq("id", serviceInfo.id)
+        .maybeSingle();
+      serviceRecord = data as any;
+    } else if (serviceInfo.type === 'volvo_dm' || serviceInfo.type === 'volvo_md') {
+      const { data } = await supabase
+        .from("volvo_bookings" as any)
+        .select("paid_amount, total_amount")
+        .eq("id", serviceInfo.id)
+        .maybeSingle();
+      serviceRecord = data as any;
+    }
+
+    if (serviceRecord) {
+      const newPaidAmount = (serviceRecord.paid_amount || 0) + amount;
+      const newDueAmount = (serviceRecord.total_amount || 0) - newPaidAmount;
+
+      if (serviceInfo.type === 'safari') {
+        await supabase
+          .from("safari_bookings")
+          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+          .eq("id", serviceInfo.id);
+      } else if (serviceInfo.type === 'hotel') {
+        await supabase
+          .from("hotel_bookings")
+          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+          .eq("id", serviceInfo.id);
+      } else if (serviceInfo.type === 'vehicle') {
+        await supabase
+          .from("vehicle_bookings" as any)
+          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+          .eq("id", serviceInfo.id);
+      } else if (serviceInfo.type === 'volvo_dm' || serviceInfo.type === 'volvo_md') {
+        await supabase
+          .from("volvo_bookings" as any)
+          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
+          .eq("id", serviceInfo.id);
+      }
+    }
   };
 
   const submitPayment = async () => {
@@ -73,6 +154,11 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
         })
         .eq("id", selectedBooking.id);
 
+      // Also update the service-specific table if provided
+      if (selectedService) {
+        await updateServiceTable(selectedService, amount);
+      }
+
       toast.success("Payment added successfully");
       setShowPaymentDialog(false);
       onPaymentSuccess?.();
@@ -90,6 +176,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     showViewPaymentDialog,
     setShowViewPaymentDialog,
     selectedBooking,
+    selectedService,
     bookingPayments,
     paymentAmount,
     setPaymentAmount,
