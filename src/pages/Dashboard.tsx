@@ -1,74 +1,52 @@
-import { Header } from "@/components/layout/Header";
-import { StatCard } from "@/components/dashboard/StatCard";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Users, DollarSign, Hotel } from "lucide-react";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    totalBookings: 0,
-    totalGuests: 0,
-    totalRevenue: 0,
-    totalHotels: 0,
-  });
+  const [companyName, setCompanyName] = useState("Company");
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const [bookingsRes, guestsRes, hotelsRes] = await Promise.all([
-        supabase.from("bookings").select("total_amount, paid_amount", { count: "exact" }),
-        supabase.from("guests").select("*", { count: "exact" }),
-        supabase.from("another_hotels").select("*", { count: "exact" }),
-      ]);
-
-      const totalRevenue = bookingsRes.data?.reduce((sum, booking) => 
-        sum + (Number(booking.paid_amount) || 0), 0
-      ) || 0;
-
-      setStats({
-        totalBookings: bookingsRes.count || 0,
-        totalGuests: guestsRes.count || 0,
-        totalRevenue,
-        totalHotels: hotelsRes.count || 0,
-      });
+    const fetchCompanyName = async () => {
+      const { data } = await supabase
+        .from("company_settings")
+        .select("company_name")
+        .limit(1)
+        .single();
+      
+      if (data?.company_name) {
+        setCompanyName(data.company_name);
+      }
     };
 
-    fetchStats();
+    fetchCompanyName();
   }, []);
 
   return (
-    <div className="min-h-screen">
-      <Header title="Dashboard" />
-      <main className="p-3">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
-          <StatCard
-            title="Total Bookings"
-            value={stats.totalBookings}
-            icon={Calendar}
-          />
-          <StatCard
-            title="Total Guests"
-            value={stats.totalGuests}
-            icon={Users}
-          />
-          <StatCard
-            title="Total Revenue"
-            value={`₹${stats.totalRevenue.toLocaleString("en-IN")}`}
-            icon={DollarSign}
-          />
-          <StatCard
-            title="Partner Hotels"
-            value={stats.totalHotels}
-            icon={Hotel}
-          />
-        </div>
-
-        <div className="bg-card rounded-md p-3 shadow-sm border">
-          <h2 className="text-sm font-semibold mb-1">Welcome to Hotel Management</h2>
-          <p className="text-[11px] text-muted-foreground">
-            Comprehensive system for booking management, payments & operations.
-          </p>
-        </div>
-      </main>
+    <div className="h-full">
+      {/* Blue Header Bar */}
+      <div 
+        className="rounded-t-[2rem] h-10"
+        style={{ 
+          background: 'linear-gradient(to right, #1e6e99, #2a8ab8)' 
+        }}
+      />
+      
+      {/* Content Area */}
+      <div className="bg-white border-x border-gray-300 p-6 min-h-[300px]">
+        <h2 className="text-[#333] font-medium text-base mb-3">
+          Welcome {companyName} !
+        </h2>
+        <p className="text-gray-600 text-sm">
+          Please use the navigation links on the left side to access different sections of the office management system.
+        </p>
+      </div>
+      
+      {/* Blue Footer Bar */}
+      <div 
+        className="rounded-b-[2rem] h-10"
+        style={{ 
+          background: 'linear-gradient(to right, #1e6e99, #2a8ab8)' 
+        }}
+      />
     </div>
   );
 }
