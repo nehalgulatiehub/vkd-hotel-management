@@ -106,7 +106,7 @@ export default function Auth() {
   const currentDate = format(new Date(), "dd MMMM, yyyy");
   return <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
-      <header className="relative bg-gradient-to-r from-pink-50 to-pink-100 py-4 px-6 bg-primary-foreground">
+      <header className="relative py-4 px-6" style={{ backgroundColor: '#f8d8da' }}>
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-pink-200/50 to-transparent" style={{
         clipPath: "polygon(100% 0, 0 0, 100% 100%)"
       }} />
