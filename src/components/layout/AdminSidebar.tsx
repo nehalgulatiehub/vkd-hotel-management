@@ -269,6 +269,15 @@ const adminMenuItems: MenuItem[] = [
     ] 
   },
   { 
+    title: "Billing Manager", 
+    color: "#9C27B0", 
+    submenu: [
+      { title: "Create Invoice", url: "/admin/billing" },
+      { title: "View Invoices", url: "/admin/invoices" },
+      { title: "Invoice Templates", url: "/admin/invoice-templates" },
+    ] 
+  },
+  { 
     title: "Purchase Manager", 
     color: "#26A69A", 
     submenu: [
