@@ -14,13 +14,8 @@ import ourHotelsImage from "@/assets/our-hotels.webp";
 import travelServicesImage from "@/assets/travel-services.webp";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [loginIdentifier, setLoginIdentifier] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -39,69 +34,38 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        let emailToUse = loginIdentifier;
-        
-        if (!loginIdentifier.includes("@")) {
-          const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
-            _username: loginIdentifier
-          });
-          
-          if (lookupError || !data) {
-            throw new Error("Username not found");
-          }
-          emailToUse = data;
-        }
-
-        const { data: authData, error } = await supabase.auth.signInWithPassword({
-          email: emailToUse,
-          password,
+      let emailToUse = loginIdentifier;
+      
+      if (!loginIdentifier.includes("@")) {
+        const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
+          _username: loginIdentifier
         });
-        if (error) throw error;
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_active')
-          .eq('id', authData.user?.id)
-          .single();
-
-        if (profile && profile.is_active === false) {
-          await supabase.auth.signOut();
-          throw new Error("Your account has been deactivated. Please contact the administrator.");
-        }
-
-        toast.success("Welcome back!");
-        navigate("/dashboard");
-      } else {
-        if (!username.trim()) {
-          throw new Error("Username is required");
-        }
         
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('username')
-          .ilike('username', username)
-          .maybeSingle();
-        
-        if (existingUser) {
-          throw new Error("Username already taken");
+        if (lookupError || !data) {
+          throw new Error("Username not found");
         }
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              first_name: firstName,
-              last_name: lastName,
-              username: username,
-            },
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created! Please check your email to confirm.");
+        emailToUse = data;
       }
+
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
+        password,
+      });
+      if (error) throw error;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_active')
+        .eq('id', authData.user?.id)
+        .single();
+
+      if (profile && profile.is_active === false) {
+        await supabase.auth.signOut();
+        throw new Error("Your account has been deactivated. Please contact the administrator.");
+      }
+
+      toast.success("Welcome back!");
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
     } finally {
@@ -134,7 +98,7 @@ export default function Auth() {
               {/* Blue Header */}
               <div className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] px-6 py-3">
                 <h2 className="text-white font-semibold text-lg">
-                  {isLogin ? "Login" : "Sign Up"}
+                  Login
                 </h2>
               </div>
               
@@ -143,80 +107,20 @@ export default function Auth() {
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                   {/* Form */}
                   <form onSubmit={handleAuth} className="flex-1 space-y-4 min-w-[280px]">
-                    {!isLogin && (
-                      <>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="firstName" className="w-24 text-right text-gray-600 text-sm">
-                            First Name :
-                          </Label>
-                          <Input
-                            id="firstName"
-                            type="text"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            required={!isLogin}
-                            className="flex-1 border-gray-300"
-                          />
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="lastName" className="w-24 text-right text-gray-600 text-sm">
-                            Last Name :
-                          </Label>
-                          <Input
-                            id="lastName"
-                            type="text"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            required={!isLogin}
-                            className="flex-1 border-gray-300"
-                          />
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="username" className="w-24 text-right text-gray-600 text-sm">
-                            Username :
-                          </Label>
-                          <Input
-                            id="username"
-                            type="text"
-                            placeholder="Choose a username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                            required={!isLogin}
-                            className="flex-1 border-gray-300"
-                          />
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="email" className="w-24 text-right text-gray-600 text-sm">
-                            Email :
-                          </Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required={!isLogin}
-                            className="flex-1 border-gray-300"
-                          />
-                        </div>
-                      </>
-                    )}
-                    {isLogin && (
-                      <div className="flex items-center gap-4">
-                        <Label htmlFor="loginIdentifier" className="w-24 text-right text-gray-600 text-sm">
-                          Username :
-                        </Label>
-                        <Input
-                          id="loginIdentifier"
-                          type="text"
-                          placeholder="Enter username or email"
-                          value={loginIdentifier}
-                          onChange={(e) => setLoginIdentifier(e.target.value)}
-                          required
-                          className="flex-1 border-gray-300"
-                        />
-                      </div>
-                    )}
+                    <div className="flex items-center gap-4">
+                      <Label htmlFor="loginIdentifier" className="w-24 text-right text-gray-600 text-sm">
+                        Username :
+                      </Label>
+                      <Input
+                        id="loginIdentifier"
+                        type="text"
+                        placeholder="Enter username or email"
+                        value={loginIdentifier}
+                        onChange={(e) => setLoginIdentifier(e.target.value)}
+                        required
+                        className="flex-1 border-gray-300"
+                      />
+                    </div>
                     <div className="flex items-center gap-4">
                       <Label htmlFor="password" className="w-24 text-right text-gray-600 text-sm">
                         Password :
@@ -237,18 +141,8 @@ export default function Auth() {
                         className="bg-red-600 hover:bg-red-700 text-white px-6 text-sm h-8"
                         disabled={loading}
                       >
-                        {loading ? "Loading..." : isLogin ? "Sign in" : "Sign Up"}
+                        {loading ? "Loading..." : "Sign in"}
                       </Button>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="w-24"></div>
-                      <button
-                        type="button"
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="text-[#8B1538] hover:underline text-sm"
-                      >
-                        {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-                      </button>
                     </div>
                   </form>
                   
