@@ -39,15 +39,26 @@ export default function SafariPayments() {
       .from("payments")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, contact_no)
+        bookings(id, booking_number, customer_name, contact_no),
+        transporter:transporters(id, name)
       `)
       .eq("payment_type", "safari")
+      .order("payment_date", { ascending: false });
+
+    // Also fetch direct safari payments
+    const { data: directPayments } = await supabase
+      .from("payments")
+      .select(`
+        *,
+        transporter:transporters(id, name)
+      `)
+      .eq("payment_type", "safari_direct")
       .order("payment_date", { ascending: false });
 
     if (error) {
       toast.error("Failed to load safari payments");
     } else {
-      // Get safari booking details for each payment
+      // Get safari booking details for each booking-based payment
       const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
         if (payment.bookings?.id) {
           const { data: safariData } = await supabase
@@ -59,7 +70,10 @@ export default function SafariPayments() {
         }
         return payment;
       }));
-      setPayments(paymentsWithDetails);
+      
+      // Combine both payment types
+      const allPayments = [...paymentsWithDetails, ...(directPayments || [])];
+      setPayments(allPayments);
     }
   };
 
@@ -186,7 +200,7 @@ export default function SafariPayments() {
                 <tr key={payment.id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-[#FDE1E1]"}>
                   <td className="border border-[#c99] px-3 py-2 align-top">{index + 1}</td>
                   <td className="border border-[#c99] px-3 py-2 align-top">
-                    {payment.safari_booking?.safari_name || "-"}
+                    {payment.transporter?.name || payment.safari_booking?.safari_name || "-"}
                   </td>
                   <td className="border border-[#c99] px-3 py-2 align-top">
                     Rs. {payment.amount?.toLocaleString("en-IN")} /-

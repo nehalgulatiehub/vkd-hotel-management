@@ -50,7 +50,8 @@ export default function AdminAddHotelPayment() {
         payment_type: "hotel_direct",
         payment_date: new Date().toISOString().split('T')[0],
         created_by: user?.id,
-        approval_status: "pending"
+        approval_status: "pending",
+        hotel_id: selectedHotel || null
       });
 
       if (error) throw error;
