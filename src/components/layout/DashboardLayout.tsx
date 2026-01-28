@@ -157,8 +157,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   className={({ isActive }) =>
                     `block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors ${
                       isActive
-                        ? "bg-[#8B1538] text-white border-[#8B1538]"
-                        : "bg-[#f8d8d9] text-[#8B1538] border-[#c9a0a5] hover:bg-[#e8c0c2]"
+                        ? "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)]"
+                        : "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)] hover:bg-[rgb(159,41,76)]"
                     }`
                   }
                 >
