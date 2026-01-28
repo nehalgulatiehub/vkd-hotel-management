@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -110,176 +108,171 @@ export default function Auth() {
 
   const currentDate = format(new Date(), "dd MMMM, yyyy");
 
+  // Exact colors from the screenshot
+  const colors = {
+    headerPink: "#FCE4EC",
+    headerStripe: "#F8BBD9",
+    maroon: "#8B1A1A",
+    cardBlue: "#1A5276",
+    signInGreen: "#2E7D32",
+    peach: "#FFDAB9",
+    peachDark: "#E9967A",
+    footerBlue: "#2874A6"
+  };
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#fff" }}>
-      {/* Header - Pink background matching logo */}
-      <header className="relative overflow-hidden" style={{ backgroundColor: "#fce4ec" }}>
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header - Light pink with diagonal stripe */}
+      <header 
+        className="relative overflow-hidden"
+        style={{ backgroundColor: colors.headerPink }}
+      >
         <div 
-          className="absolute top-0 right-0 h-full" 
+          className="absolute top-0 right-0 h-full w-2/5"
           style={{ 
-            width: "40%",
-            background: "linear-gradient(to bottom left, #f8bbd9 0%, transparent 100%)",
-            clipPath: "polygon(100% 0, 0 0, 100% 100%)"
+            background: `linear-gradient(to bottom left, ${colors.headerStripe}, transparent)`,
+            clipPath: "polygon(100% 0, 30% 0, 100% 100%)"
           }} 
         />
-        <div className="px-6 py-4">
+        <div className="px-8 py-3">
           <img src={mukutLogo} alt="Mukut Hotels" className="h-24 relative z-10" />
         </div>
       </header>
 
       {/* Date - Maroon italic */}
-      <div className="px-6 py-3">
+      <div className="px-8 py-4">
         <span 
-          className="font-medium text-lg italic"
-          style={{ color: "#8B1538" }}
+          className="text-xl italic"
+          style={{ color: colors.maroon }}
         >
           {currentDate}
         </span>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 py-4">
-        <div className="flex flex-col lg:flex-row gap-8 max-w-6xl">
-          {/* Login Card */}
-          <div className="flex-1">
+      <main className="flex-1 px-8">
+        <div className="flex gap-12">
+          {/* Left Section - Login Card */}
+          <div className="flex-1 max-w-2xl">
+            {/* Login Card with very rounded corners */}
             <div 
-              className="overflow-hidden shadow-lg max-w-xl"
-              style={{ borderRadius: "20px" }}
+              className="overflow-hidden"
+              style={{ 
+                borderRadius: "30px",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+              }}
             >
               {/* Blue Header */}
               <div 
                 className="px-6 py-3"
-                style={{ 
-                  background: "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #2196F3 100%)",
-                  borderTopLeftRadius: "20px",
-                  borderTopRightRadius: "20px"
-                }}
+                style={{ backgroundColor: colors.cardBlue }}
               >
-                <h2 className="text-white font-semibold text-lg">
+                <h2 className="text-white font-bold text-lg">
                   {isLogin ? "Login" : "Sign Up"}
                 </h2>
               </div>
               
-              {/* Form Content - White background */}
-              <div className="bg-white p-8">
-                <div className="flex flex-col md:flex-row gap-8 items-start">
+              {/* White Form Area */}
+              <div className="bg-white px-8 py-10">
+                <div className="flex gap-10">
                   {/* Form */}
-                  <form onSubmit={handleAuth} className="flex-1 space-y-5">
+                  <form onSubmit={handleAuth} className="space-y-6">
                     {!isLogin && (
                       <>
-                        <div className="flex items-center gap-3">
-                          <span className="w-24 text-right text-gray-700 text-sm">First Name :</span>
+                        <div className="flex items-center">
+                          <label className="w-28 text-right pr-4 text-gray-700">First Name :</label>
                           <input
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            required={!isLogin}
-                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
-                            style={{ maxWidth: "180px" }}
+                            required
+                            className="w-40 px-2 py-1 border border-gray-400 bg-gray-50"
                           />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="w-24 text-right text-gray-700 text-sm">Last Name :</span>
+                        <div className="flex items-center">
+                          <label className="w-28 text-right pr-4 text-gray-700">Last Name :</label>
                           <input
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            required={!isLogin}
-                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
-                            style={{ maxWidth: "180px" }}
+                            required
+                            className="w-40 px-2 py-1 border border-gray-400 bg-gray-50"
                           />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="w-24 text-right text-gray-700 text-sm">Username :</span>
+                        <div className="flex items-center">
+                          <label className="w-28 text-right pr-4 text-gray-700">Username :</label>
                           <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                            required={!isLogin}
-                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
-                            style={{ maxWidth: "180px" }}
+                            required
+                            className="w-40 px-2 py-1 border border-gray-400 bg-gray-50"
                           />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="w-24 text-right text-gray-700 text-sm">Email :</span>
+                        <div className="flex items-center">
+                          <label className="w-28 text-right pr-4 text-gray-700">Email :</label>
                           <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            required={!isLogin}
-                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
-                            style={{ maxWidth: "180px" }}
+                            required
+                            className="w-40 px-2 py-1 border border-gray-400 bg-gray-50"
                           />
                         </div>
                       </>
                     )}
                     {isLogin && (
-                      <div className="flex items-center gap-3">
-                        <span className="w-24 text-right text-gray-700 text-sm">Username :</span>
+                      <div className="flex items-center">
+                        <label className="w-28 text-right pr-4 text-gray-700">Username :</label>
                         <input
                           type="text"
                           value={loginIdentifier}
                           onChange={(e) => setLoginIdentifier(e.target.value)}
                           required
-                          className="flex-1 px-2 py-1 border border-gray-400 text-sm"
-                          style={{ maxWidth: "180px" }}
+                          className="w-40 px-2 py-1 border border-gray-400 bg-gray-50"
                         />
                       </div>
                     )}
-                    <div className="flex items-center gap-3">
-                      <span className="w-24 text-right text-gray-700 text-sm">Password :</span>
+                    <div className="flex items-center">
+                      <label className="w-28 text-right pr-4 text-gray-700">Password :</label>
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="flex-1 px-2 py-1 border border-gray-400 text-sm"
-                        style={{ maxWidth: "180px" }}
+                        className="w-40 px-2 py-1 border border-gray-400 bg-gray-50"
                       />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-24"></div>
+                    <div className="flex items-center">
+                      <div className="w-28"></div>
                       <button 
                         type="submit" 
                         disabled={loading}
                         className="px-4 py-1 text-white text-sm font-medium rounded"
-                        style={{ backgroundColor: "#4CAF50" }}
+                        style={{ backgroundColor: colors.signInGreen }}
                       >
                         {loading ? "..." : isLogin ? "Sign in" : "Sign Up"}
                       </button>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-24"></div>
+                    <div className="flex items-center">
+                      <div className="w-28"></div>
                       <button
                         type="button"
                         onClick={() => setIsLogin(!isLogin)}
                         className="text-sm hover:underline"
-                        style={{ color: "#8B1538" }}
+                        style={{ color: colors.maroon }}
                       >
-                        {isLogin ? "Forgot Password..?" : "Already have an account?"}
+                        {isLogin ? "Forgot Password..?" : "Back to Login"}
                       </button>
                     </div>
-                    {isLogin && (
-                      <div className="flex items-center gap-3">
-                        <div className="w-24"></div>
-                        <button
-                          type="button"
-                          onClick={() => setIsLogin(false)}
-                          className="text-sm hover:underline"
-                          style={{ color: "#1565C0" }}
-                        >
-                          Create new account
-                        </button>
-                      </div>
-                    )}
                   </form>
                   
-                  {/* Image */}
-                  <div className="hidden md:block">
+                  {/* Login Image */}
+                  <div className="hidden md:flex items-center">
                     <img 
                       src={loginImage} 
                       alt="Login" 
-                      className="w-52 h-auto object-contain"
+                      className="w-56 h-auto"
                     />
                   </div>
                 </div>
@@ -287,83 +280,76 @@ export default function Auth() {
               
               {/* Blue Footer */}
               <div 
-                className="h-14"
-                style={{ 
-                  background: "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #2196F3 100%)",
-                  borderBottomLeftRadius: "20px",
-                  borderBottomRightRadius: "20px"
-                }}
+                className="h-16"
+                style={{ backgroundColor: colors.cardBlue }}
               ></div>
             </div>
 
-            {/* Quote of the day - Peach/Orange color */}
-            <div className="mt-10 max-w-xl">
+            {/* Quote of the day */}
+            <div className="mt-12">
               <div 
-                className="text-white px-6 py-2 inline-block font-medium"
+                className="inline-block px-8 py-2 text-white font-medium"
                 style={{ 
-                  background: "linear-gradient(90deg, #E57373 0%, #F4A261 100%)",
-                  borderTopLeftRadius: "8px",
-                  borderTopRightRadius: "8px"
+                  backgroundColor: colors.peachDark,
+                  borderRadius: "6px 6px 0 0"
                 }}
               >
                 Quote of the day
               </div>
               <div 
-                className="h-10"
+                className="h-10 max-w-lg"
                 style={{ 
-                  background: "linear-gradient(90deg, #FFCCBC 0%, #FFE0B2 100%)",
-                  borderBottomLeftRadius: "8px",
-                  borderBottomRightRadius: "8px",
-                  borderTopRightRadius: "8px"
+                  backgroundColor: colors.peach,
+                  borderRadius: "0 6px 6px 6px"
                 }}
               ></div>
             </div>
           </div>
 
           {/* Right Sidebar */}
-          <aside className="w-full lg:w-56 space-y-5">
+          <aside className="w-52 space-y-6 pt-2">
             {/* Latest News */}
             <div>
               <h3 
                 className="font-bold text-lg mb-2"
-                style={{ color: "#8B1538" }}
+                style={{ color: colors.maroon }}
               >
                 Latest News
               </h3>
               <div 
-                className="h-20 rounded"
-                style={{ background: "linear-gradient(90deg, #FFCCBC 0%, #FFE0B2 100%)" }}
+                className="h-24"
+                style={{ backgroundColor: colors.peach }}
               ></div>
             </div>
 
             {/* Our Hotels */}
-            <div className="overflow-hidden rounded shadow-md">
+            <div className="overflow-hidden border-2 border-blue-900">
               <img 
                 src={ourHotelsImage} 
                 alt="Our Hotels" 
-                className="w-full h-28 object-cover"
+                className="w-full h-auto object-cover"
               />
             </div>
 
             {/* Travel Services */}
-            <div className="overflow-hidden rounded shadow-md">
+            <div className="overflow-hidden border-2 border-blue-900">
               <img 
                 src={travelServicesImage} 
                 alt="Travel Services" 
-                className="w-full h-28 object-cover"
+                className="w-full h-auto object-cover"
               />
             </div>
           </aside>
         </div>
       </main>
 
-      {/* Footer - Blue matching login card */}
+      {/* Footer */}
       <footer 
-        className="py-4 px-6 mt-auto"
-        style={{ background: "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #2196F3 100%)" }}
+        className="py-4 px-8 mt-12"
+        style={{ backgroundColor: colors.footerBlue }}
       >
-        <div className="max-w-6xl text-right">
-          <span className="text-white/90 text-sm">© Mukut Hotels & Resorts Pvt Ltd.</span>
+        <div className="text-right">
+          <span className="text-white text-sm">© Mukut Hotels & Resorts Pvt Ltd.</span>
         </div>
       </footer>
     </div>
