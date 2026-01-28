@@ -92,7 +92,6 @@ export default function RoomBookings() {
 
     try {
       // Fetch hotel bookings within date range with booking and hotel details
-      // Include created_by profile to get the login username
       let query = supabase
         .from("hotel_bookings")
         .select(`
@@ -101,8 +100,7 @@ export default function RoomBookings() {
             status, 
             reference, 
             customer_name,
-            created_by,
-            profiles:created_by(username, first_name, last_name)
+            created_by
           ),
           own_hotels(id, name)
         `)
@@ -119,6 +117,35 @@ export default function RoomBookings() {
 
       if (error) throw error;
 
+      // Get all unique created_by user IDs
+      const userIds = [...new Set(
+        (bookingsData || [])
+          .map((b: any) => b.bookings?.created_by)
+          .filter(Boolean)
+      )];
+
+      // Fetch profiles for these users
+      let profilesMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, first_name, last_name")
+          .in("id", userIds);
+
+        if (profiles) {
+          profiles.forEach((p: any) => {
+            // Prefer username, fallback to first_name + last_name
+            if (p.username) {
+              profilesMap[p.id] = p.username;
+            } else if (p.first_name || p.last_name) {
+              profilesMap[p.id] = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+            } else {
+              profilesMap[p.id] = "Unknown User";
+            }
+          });
+        }
+      }
+
       // Create a map of room_id to room_name
       const roomMap: Record<string, string> = {};
       rooms.forEach(r => {
@@ -134,18 +161,9 @@ export default function RoomBookings() {
           return;
         }
 
-        // Get the login username from the profiles relationship
-        const profile = booking.bookings?.profiles;
-        let userName = "Unknown User";
-        
-        if (profile) {
-          // Prefer username, fallback to first_name + last_name
-          if (profile.username) {
-            userName = profile.username;
-          } else if (profile.first_name || profile.last_name) {
-            userName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-          }
-        }
+        // Get the login username from the profiles map
+        const createdBy = booking.bookings?.created_by;
+        const userName = createdBy ? (profilesMap[createdBy] || "Unknown User") : "Unknown User";
 
         // Get hotel name (guaranteed to exist due to check above)
         const hotelName = booking.own_hotels.name;
