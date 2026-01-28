@@ -1215,12 +1215,14 @@ export type Database = {
           city_id: string | null
           created_at: string | null
           created_by: string | null
+          hotel_id: string | null
           id: string
           notes: string | null
           payment_date: string | null
           payment_mode: string | null
           payment_type: string | null
           reference_number: string | null
+          transporter_id: string | null
         }
         Insert: {
           amount: number
@@ -1231,12 +1233,14 @@ export type Database = {
           city_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          hotel_id?: string | null
           id?: string
           notes?: string | null
           payment_date?: string | null
           payment_mode?: string | null
           payment_type?: string | null
           reference_number?: string | null
+          transporter_id?: string | null
         }
         Update: {
           amount?: number
@@ -1247,12 +1251,14 @@ export type Database = {
           city_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          hotel_id?: string | null
           id?: string
           notes?: string | null
           payment_date?: string | null
           payment_mode?: string | null
           payment_type?: string | null
           reference_number?: string | null
+          transporter_id?: string | null
         }
         Relationships: [
           {
@@ -1274,6 +1280,20 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "another_hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_transporter_id_fkey"
+            columns: ["transporter_id"]
+            isOneToOne: false
+            referencedRelation: "transporters"
             referencedColumns: ["id"]
           },
         ]

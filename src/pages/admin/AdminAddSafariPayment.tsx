@@ -50,7 +50,8 @@ export default function AdminAddSafariPayment() {
         payment_type: "safari_direct",
         payment_date: new Date().toISOString().split('T')[0],
         created_by: user?.id,
-        approval_status: "pending"
+        approval_status: "pending",
+        transporter_id: selectedTransporter || null
       });
 
       if (error) throw error;
