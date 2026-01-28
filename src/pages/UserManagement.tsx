@@ -260,31 +260,22 @@ export default function UserManagement() {
 
     setCreatingUser(true);
     try {
-      // Use edge function to create user without affecting admin session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      // Use supabase.functions.invoke to call edge function without affecting admin session
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          username: newUserUsername,
+          password: newUserPassword,
+          firstName: newUserFirstName || newUserUsername,
+          lastName: newUserLastName || "",
+        },
+      });
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL || "https://zifegjopaxyelgboryua.supabase.co"}/functions/v1/create-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            username: newUserUsername,
-            password: newUserPassword,
-            firstName: newUserFirstName || newUserUsername,
-            lastName: newUserLastName || "",
-          }),
-        }
-      );
+      if (error) {
+        throw new Error(error.message || "Failed to create user");
+      }
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create user");
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast.success("User created successfully!");
