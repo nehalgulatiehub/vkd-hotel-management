@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -112,144 +111,167 @@ export default function Auth() {
   const currentDate = format(new Date(), "dd MMMM, yyyy");
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
-      <header className="relative bg-gradient-to-r from-pink-50 to-pink-100 py-4 px-6">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-pink-200/50 to-transparent" 
-             style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
-        <img src={mukutLogo} alt="Mukut Hotels" className="h-20 relative z-10" />
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#fff" }}>
+      {/* Header - Pink background matching logo */}
+      <header className="relative overflow-hidden" style={{ backgroundColor: "#fce4ec" }}>
+        <div 
+          className="absolute top-0 right-0 h-full" 
+          style={{ 
+            width: "40%",
+            background: "linear-gradient(to bottom left, #f8bbd9 0%, transparent 100%)",
+            clipPath: "polygon(100% 0, 0 0, 100% 100%)"
+          }} 
+        />
+        <div className="px-6 py-4">
+          <img src={mukutLogo} alt="Mukut Hotels" className="h-24 relative z-10" />
+        </div>
       </header>
 
-      {/* Date */}
+      {/* Date - Maroon italic */}
       <div className="px-6 py-3">
-        <span className="text-[#8B1538] font-medium text-lg italic">{currentDate}</span>
+        <span 
+          className="font-medium text-lg italic"
+          style={{ color: "#8B1538" }}
+        >
+          {currentDate}
+        </span>
       </div>
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-4">
-        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-6xl">
           {/* Login Card */}
           <div className="flex-1">
-            <div className="rounded-3xl overflow-hidden shadow-lg max-w-2xl">
+            <div 
+              className="overflow-hidden shadow-lg max-w-xl"
+              style={{ borderRadius: "20px" }}
+            >
               {/* Blue Header */}
-              <div className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] px-6 py-3">
+              <div 
+                className="px-6 py-3"
+                style={{ 
+                  background: "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #2196F3 100%)",
+                  borderTopLeftRadius: "20px",
+                  borderTopRightRadius: "20px"
+                }}
+              >
                 <h2 className="text-white font-semibold text-lg">
                   {isLogin ? "Login" : "Sign Up"}
                 </h2>
               </div>
               
-              {/* Form Content */}
-              <div className="bg-white p-6 border-x border-gray-200">
+              {/* Form Content - White background */}
+              <div className="bg-white p-8">
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                   {/* Form */}
-                  <form onSubmit={handleAuth} className="flex-1 space-y-4 min-w-[280px]">
+                  <form onSubmit={handleAuth} className="flex-1 space-y-5">
                     {!isLogin && (
                       <>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="firstName" className="w-24 text-right text-gray-600 text-sm">
-                            First Name :
-                          </Label>
-                          <Input
-                            id="firstName"
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 text-right text-gray-700 text-sm">First Name :</span>
+                          <input
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                             required={!isLogin}
-                            className="flex-1 border-gray-300"
+                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
+                            style={{ maxWidth: "180px" }}
                           />
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="lastName" className="w-24 text-right text-gray-600 text-sm">
-                            Last Name :
-                          </Label>
-                          <Input
-                            id="lastName"
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 text-right text-gray-700 text-sm">Last Name :</span>
+                          <input
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                             required={!isLogin}
-                            className="flex-1 border-gray-300"
+                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
+                            style={{ maxWidth: "180px" }}
                           />
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="username" className="w-24 text-right text-gray-600 text-sm">
-                            Username :
-                          </Label>
-                          <Input
-                            id="username"
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 text-right text-gray-700 text-sm">Username :</span>
+                          <input
                             type="text"
-                            placeholder="Choose a username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                             required={!isLogin}
-                            className="flex-1 border-gray-300"
+                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
+                            style={{ maxWidth: "180px" }}
                           />
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Label htmlFor="email" className="w-24 text-right text-gray-600 text-sm">
-                            Email :
-                          </Label>
-                          <Input
-                            id="email"
+                        <div className="flex items-center gap-3">
+                          <span className="w-24 text-right text-gray-700 text-sm">Email :</span>
+                          <input
                             type="email"
-                            placeholder="you@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required={!isLogin}
-                            className="flex-1 border-gray-300"
+                            className="flex-1 px-2 py-1 border border-gray-400 text-sm"
+                            style={{ maxWidth: "180px" }}
                           />
                         </div>
                       </>
                     )}
                     {isLogin && (
-                      <div className="flex items-center gap-4">
-                        <Label htmlFor="loginIdentifier" className="w-24 text-right text-gray-600 text-sm">
-                          Username :
-                        </Label>
-                        <Input
-                          id="loginIdentifier"
+                      <div className="flex items-center gap-3">
+                        <span className="w-24 text-right text-gray-700 text-sm">Username :</span>
+                        <input
                           type="text"
-                          placeholder="Enter username or email"
                           value={loginIdentifier}
                           onChange={(e) => setLoginIdentifier(e.target.value)}
                           required
-                          className="flex-1 border-gray-300"
+                          className="flex-1 px-2 py-1 border border-gray-400 text-sm"
+                          style={{ maxWidth: "180px" }}
                         />
                       </div>
                     )}
-                    <div className="flex items-center gap-4">
-                      <Label htmlFor="password" className="w-24 text-right text-gray-600 text-sm">
-                        Password :
-                      </Label>
-                      <Input
-                        id="password"
+                    <div className="flex items-center gap-3">
+                      <span className="w-24 text-right text-gray-700 text-sm">Password :</span>
+                      <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="flex-1 border-gray-300"
+                        className="flex-1 px-2 py-1 border border-gray-400 text-sm"
+                        style={{ maxWidth: "180px" }}
                       />
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div className="w-24"></div>
-                      <Button 
+                      <button 
                         type="submit" 
-                        className="bg-[#28a745] hover:bg-[#218838] text-white px-6 text-sm h-8"
                         disabled={loading}
+                        className="px-4 py-1 text-white text-sm font-medium rounded"
+                        style={{ backgroundColor: "#4CAF50" }}
                       >
-                        {loading ? "Loading..." : isLogin ? "Sign in" : "Sign Up"}
-                      </Button>
+                        {loading ? "..." : isLogin ? "Sign in" : "Sign Up"}
+                      </button>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div className="w-24"></div>
                       <button
                         type="button"
                         onClick={() => setIsLogin(!isLogin)}
-                        className="text-[#8B1538] hover:underline text-sm"
+                        className="text-sm hover:underline"
+                        style={{ color: "#8B1538" }}
                       >
-                        {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                        {isLogin ? "Forgot Password..?" : "Already have an account?"}
                       </button>
                     </div>
+                    {isLogin && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-24"></div>
+                        <button
+                          type="button"
+                          onClick={() => setIsLogin(false)}
+                          className="text-sm hover:underline"
+                          style={{ color: "#1565C0" }}
+                        >
+                          Create new account
+                        </button>
+                      </div>
+                    )}
                   </form>
                   
                   {/* Image */}
@@ -257,57 +279,90 @@ export default function Auth() {
                     <img 
                       src={loginImage} 
                       alt="Login" 
-                      className="w-48 h-auto object-contain"
+                      className="w-52 h-auto object-contain"
                     />
                   </div>
                 </div>
               </div>
               
               {/* Blue Footer */}
-              <div className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] h-12"></div>
+              <div 
+                className="h-14"
+                style={{ 
+                  background: "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #2196F3 100%)",
+                  borderBottomLeftRadius: "20px",
+                  borderBottomRightRadius: "20px"
+                }}
+              ></div>
             </div>
 
-            {/* Quote of the day */}
-            <div className="mt-8 max-w-2xl">
-              <div className="bg-gradient-to-r from-[#f4a261] to-[#e9c46a] text-white px-6 py-2 rounded-t-lg inline-block">
-                <span className="font-medium">Quote of the day</span>
+            {/* Quote of the day - Peach/Orange color */}
+            <div className="mt-10 max-w-xl">
+              <div 
+                className="text-white px-6 py-2 inline-block font-medium"
+                style={{ 
+                  background: "linear-gradient(90deg, #E57373 0%, #F4A261 100%)",
+                  borderTopLeftRadius: "8px",
+                  borderTopRightRadius: "8px"
+                }}
+              >
+                Quote of the day
               </div>
-              <div className="bg-gradient-to-r from-[#f4a261]/30 to-[#e9c46a]/30 h-8 rounded-b-lg rounded-tr-lg"></div>
+              <div 
+                className="h-10"
+                style={{ 
+                  background: "linear-gradient(90deg, #FFCCBC 0%, #FFE0B2 100%)",
+                  borderBottomLeftRadius: "8px",
+                  borderBottomRightRadius: "8px",
+                  borderTopRightRadius: "8px"
+                }}
+              ></div>
             </div>
           </div>
 
           {/* Right Sidebar */}
-          <aside className="w-full lg:w-64 space-y-6">
+          <aside className="w-full lg:w-56 space-y-5">
             {/* Latest News */}
             <div>
-              <h3 className="text-[#8B1538] font-bold text-lg mb-3">Latest News</h3>
-              <div className="bg-gradient-to-r from-[#f4a261]/30 to-[#e9c46a]/30 h-24 rounded-lg"></div>
+              <h3 
+                className="font-bold text-lg mb-2"
+                style={{ color: "#8B1538" }}
+              >
+                Latest News
+              </h3>
+              <div 
+                className="h-20 rounded"
+                style={{ background: "linear-gradient(90deg, #FFCCBC 0%, #FFE0B2 100%)" }}
+              ></div>
             </div>
 
             {/* Our Hotels */}
-            <div className="overflow-hidden rounded-lg shadow-md">
+            <div className="overflow-hidden rounded shadow-md">
               <img 
                 src={ourHotelsImage} 
                 alt="Our Hotels" 
-                className="w-full h-32 object-cover"
+                className="w-full h-28 object-cover"
               />
             </div>
 
             {/* Travel Services */}
-            <div className="overflow-hidden rounded-lg shadow-md">
+            <div className="overflow-hidden rounded shadow-md">
               <img 
                 src={travelServicesImage} 
                 alt="Travel Services" 
-                className="w-full h-32 object-cover"
+                className="w-full h-28 object-cover"
               />
             </div>
           </aside>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-[#1e6e99] to-[#2a8ab8] py-4 px-6 mt-8">
-        <div className="max-w-7xl mx-auto text-right">
+      {/* Footer - Blue matching login card */}
+      <footer 
+        className="py-4 px-6 mt-auto"
+        style={{ background: "linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #2196F3 100%)" }}
+      >
+        <div className="max-w-6xl text-right">
           <span className="text-white/90 text-sm">© Mukut Hotels & Resorts Pvt Ltd.</span>
         </div>
       </footer>
