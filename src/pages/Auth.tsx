@@ -234,7 +234,7 @@ export default function Auth() {
                       <div className="w-24"></div>
                       <Button 
                         type="submit" 
-                        className="bg-[#28a745] hover:bg-[#218838] text-white px-6 text-sm h-8"
+                        className="bg-red-600 hover:bg-red-700 text-white px-6 text-sm h-8"
                         disabled={loading}
                       >
                         {loading ? "Loading..." : isLogin ? "Sign in" : "Sign Up"}
