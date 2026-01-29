@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
@@ -9,6 +10,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Hotels() {
+  const navigate = useNavigate();
   const [hotels, setHotels] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [filters, setFilters] = useState({
@@ -37,6 +39,10 @@ export default function Hotels() {
   const fetchCities = async () => {
     const { data } = await supabase.from("cities").select("*").order("name");
     setCities(data || []);
+  };
+
+  const handleEdit = (hotel: any) => {
+    navigate(`/hotels/add?edit=${hotel.id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -202,7 +208,7 @@ export default function Hotels() {
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div className="flex gap-2">
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary">
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEdit(hotel)}>
                               Edit
                             </Button>
                             <span className="text-muted-foreground">/</span>

@@ -1,7 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function AddAnotherHotel() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditMode = !!editId;
+  
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -28,22 +32,55 @@ export default function AddAnotherHotel() {
 
   useEffect(() => {
     fetchCities();
-  }, []);
+    if (editId) {
+      fetchHotelData(editId);
+    }
+  }, [editId]);
 
   const fetchCities = async () => {
     const { data } = await supabase.from("cities").select("*").order("name");
     setCities(data || []);
   };
 
+  const fetchHotelData = async (id: string) => {
+    const { data, error } = await supabase.from("another_hotels").select("*").eq("id", id).single();
+    if (data && !error) {
+      setFormData({
+        name: data.name || "",
+        room_types: data.room_types || "",
+        contact_person: data.contact_person || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        website_url: data.website_url || "",
+        city_id: data.city_id || "",
+        state: data.state || "",
+        address: data.address || "",
+        packages: data.packages || "",
+      });
+    } else {
+      toast.error("Failed to load hotel data");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("another_hotels").insert([formData]);
-
-    if (error) {
-      toast.error("Error adding hotel");
+    
+    if (isEditMode && editId) {
+      const { error } = await supabase.from("another_hotels").update(formData).eq("id", editId);
+      if (error) {
+        toast.error("Error updating hotel");
+      } else {
+        toast.success("Hotel updated successfully");
+        navigate("/hotels");
+      }
     } else {
-      toast.success("Hotel added successfully");
-      navigate("/hotels");
+      const { error } = await supabase.from("another_hotels").insert([formData]);
+      if (error) {
+        toast.error("Error adding hotel");
+      } else {
+        toast.success("Hotel added successfully");
+        navigate("/hotels");
+      }
     }
   };
 
@@ -64,11 +101,11 @@ export default function AddAnotherHotel() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Add Another Hotel" />
+      <Header title={isEditMode ? "Edit Another Hotel" : "Add Another Hotel"} />
       <main className="p-4">
         {/* Blue Header Bar */}
         <div className="flex justify-between items-center px-4 py-2 mb-4" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Add Another Hotel</span>
+          <span className="text-white font-semibold text-sm">{isEditMode ? "Edit Another Hotel" : "Add Another Hotel"}</span>
           <span className="text-white/80 text-xs">* - Required fields</span>
         </div>
 
@@ -179,7 +216,7 @@ export default function AddAnotherHotel() {
                 />
               </div>
               <div className="flex justify-center gap-4 pt-4">
-                <Button type="submit" className="px-8">Add</Button>
+                <Button type="submit" className="px-8">{isEditMode ? "Update" : "Add"}</Button>
                 <Button type="button" variant="outline" onClick={handleReset} className="px-8">Reset</Button>
               </div>
             </form>
