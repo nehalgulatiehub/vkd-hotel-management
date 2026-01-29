@@ -81,6 +81,7 @@ export type Database = {
           phone: string | null
           rating: number | null
           room_types: string | null
+          state: string | null
           updated_at: string | null
           website_url: string | null
         }
@@ -97,6 +98,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           room_types?: string | null
+          state?: string | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -113,6 +115,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           room_types?: string | null
+          state?: string | null
           updated_at?: string | null
           website_url?: string | null
         }

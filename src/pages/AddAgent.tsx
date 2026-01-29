@@ -1,7 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function AddAgent() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditMode = !!editId;
+  
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -27,22 +31,54 @@ export default function AddAgent() {
 
   useEffect(() => {
     fetchCities();
-  }, []);
+    if (editId) {
+      fetchAgentData(editId);
+    }
+  }, [editId]);
 
   const fetchCities = async () => {
     const { data } = await supabase.from("cities").select("*").order("name");
     setCities(data || []);
   };
 
+  const fetchAgentData = async (id: string) => {
+    const { data, error } = await supabase.from("agents").select("*").eq("id", id).single();
+    if (data && !error) {
+      setFormData({
+        name: data.name || "",
+        company_name: data.company_name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        state: data.state || "",
+        city_id: data.city_id || "",
+        commission_rate: data.commission_rate || 0,
+        notes: data.notes || "",
+      });
+    } else {
+      toast.error("Failed to load agent data");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("agents").insert([formData]);
-
-    if (error) {
-      toast.error("Error adding agent");
+    
+    if (isEditMode && editId) {
+      const { error } = await supabase.from("agents").update(formData).eq("id", editId);
+      if (error) {
+        toast.error("Error updating agent");
+      } else {
+        toast.success("Agent updated successfully");
+        navigate("/agents");
+      }
     } else {
-      toast.success("Agent added successfully");
-      navigate("/agents");
+      const { error } = await supabase.from("agents").insert([formData]);
+      if (error) {
+        toast.error("Error adding agent");
+      } else {
+        toast.success("Agent added successfully");
+        navigate("/agents");
+      }
     }
   };
 
@@ -62,11 +98,11 @@ export default function AddAgent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Add Agent" />
+      <Header title={isEditMode ? "Edit Agent" : "Add Agent"} />
       <main className="p-4">
         {/* Blue Header Bar */}
         <div className="flex justify-between items-center px-4 py-2 mb-4" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Add Agent</span>
+          <span className="text-white font-semibold text-sm">{isEditMode ? "Edit Agent" : "Add Agent"}</span>
           <span className="text-white/80 text-xs">* - Required fields</span>
         </div>
 
@@ -169,7 +205,7 @@ export default function AddAgent() {
                 />
               </div>
               <div className="flex justify-center gap-4 pt-4">
-                <Button type="submit" className="px-8">Add</Button>
+                <Button type="submit" className="px-8">{isEditMode ? "Update" : "Add"}</Button>
                 <Button type="button" variant="outline" onClick={handleReset} className="px-8">Reset</Button>
               </div>
             </form>

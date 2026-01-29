@@ -1,7 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function AddTransporter() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditMode = !!editId;
+  
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -27,22 +31,54 @@ export default function AddTransporter() {
 
   useEffect(() => {
     fetchCities();
-  }, []);
+    if (editId) {
+      fetchTransporterData(editId);
+    }
+  }, [editId]);
 
   const fetchCities = async () => {
     const { data } = await supabase.from("cities").select("*").order("name");
     setCities(data || []);
   };
 
+  const fetchTransporterData = async (id: string) => {
+    const { data, error } = await supabase.from("transporters").select("*").eq("id", id).single();
+    if (data && !error) {
+      setFormData({
+        name: data.name || "",
+        company_name: data.company_name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        state: data.state || "",
+        city_id: data.city_id || "",
+        vehicle_types: data.vehicle_types || [],
+        notes: data.notes || "",
+      });
+    } else {
+      toast.error("Failed to load transporter data");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("transporters").insert([formData]);
-
-    if (error) {
-      toast.error("Error adding transporter");
+    
+    if (isEditMode && editId) {
+      const { error } = await supabase.from("transporters").update(formData).eq("id", editId);
+      if (error) {
+        toast.error("Error updating transporter");
+      } else {
+        toast.success("Transporter updated successfully");
+        navigate("/transporters");
+      }
     } else {
-      toast.success("Transporter added successfully");
-      navigate("/transporters");
+      const { error } = await supabase.from("transporters").insert([formData]);
+      if (error) {
+        toast.error("Error adding transporter");
+      } else {
+        toast.success("Transporter added successfully");
+        navigate("/transporters");
+      }
     }
   };
 
@@ -62,11 +98,11 @@ export default function AddTransporter() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Add Transporter" />
+      <Header title={isEditMode ? "Edit Transporter" : "Add Transporter"} />
       <main className="p-4">
         {/* Blue Header Bar */}
         <div className="flex justify-between items-center px-4 py-2 mb-4" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Add Transporter</span>
+          <span className="text-white font-semibold text-sm">{isEditMode ? "Edit Transporter" : "Add Transporter"}</span>
           <span className="text-white/80 text-xs">* - Required fields</span>
         </div>
 
@@ -158,7 +194,7 @@ export default function AddTransporter() {
                 />
               </div>
               <div className="flex justify-center gap-4 pt-4">
-                <Button type="submit" className="px-8">Add</Button>
+                <Button type="submit" className="px-8">{isEditMode ? "Update" : "Add"}</Button>
                 <Button type="button" variant="outline" onClick={handleReset} className="px-8">Reset</Button>
               </div>
             </form>
