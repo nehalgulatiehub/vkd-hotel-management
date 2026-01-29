@@ -1,48 +1,27 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Transporters() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [transporters, setTransporters] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
-  const [formData, setFormData] = useState({
+  const [filters, setFilters] = useState({
     name: "",
-    company_name: "",
     email: "",
-    phone: "",
-    address: "",
-    state: "",
-    city_id: "",
-    vehicle_types: [] as string[],
-    notes: "",
+    cityId: "",
+    contactNo: ""
   });
 
   useEffect(() => {
     fetchTransporters();
     fetchCities();
   }, []);
-
-  // React to URL changes for ?add=true
-  useEffect(() => {
-    if (searchParams.get("add") === "true") {
-      setIsAddDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const fetchTransporters = async () => {
     const { data, error } = await supabase
@@ -60,34 +39,39 @@ export default function Transporters() {
     setCities(data || []);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("transporters").insert([formData]);
-
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this transporter?")) return;
+    
+    const { error } = await supabase.from("transporters").delete().eq("id", id);
     if (error) {
-      toast.error("Error adding transporter");
+      toast.error("Error deleting transporter");
     } else {
-      toast.success("Transporter added successfully");
-      setIsAddDialogOpen(false);
-      setFormData({
-        name: "",
-        company_name: "",
-        email: "",
-        phone: "",
-        address: "",
-        state: "",
-        city_id: "",
-        vehicle_types: [],
-        notes: "",
-      });
+      toast.success("Transporter deleted successfully");
       fetchTransporters();
     }
   };
 
-  const filteredTransporters = transporters.filter(t =>
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const clearFilters = () => {
+    setFilters({
+      name: "",
+      email: "",
+      cityId: "",
+      contactNo: ""
+    });
+  };
+
+  const filteredTransporters = transporters.filter(t => {
+    const matchesName = !filters.name || 
+      t.name.toLowerCase().includes(filters.name.toLowerCase()) ||
+      t.company_name?.toLowerCase().includes(filters.name.toLowerCase());
+    const matchesEmail = !filters.email || 
+      t.email?.toLowerCase().includes(filters.email.toLowerCase());
+    const matchesCity = !filters.cityId || t.city_id === filters.cityId;
+    const matchesContact = !filters.contactNo || 
+      t.phone?.includes(filters.contactNo);
+    
+    return matchesName && matchesEmail && matchesCity && matchesContact;
+  });
 
   const {
     paginatedItems,
@@ -100,146 +84,151 @@ export default function Transporters() {
   } = usePagination(filteredTransporters, { itemsPerPage: 10 });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header title="Transporter Management" />
-      <main className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <Input
-            placeholder="Search transporters..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Transporter
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Add New Transporter</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="company_name">Company Name</Label>
-                      <Input
-                        id="company_name"
-                        value={formData.company_name}
-                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="city">City</Label>
-                      <Select value={formData.city_id} onValueChange={(value) => setFormData({ ...formData, city_id: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select city" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="state">State</Label>
-                      <Input
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        placeholder="Enter state"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="notes">Notes</Label>
-                    <Input
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">Add Transporter</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+      <main className="p-4">
+        {/* Blue Header Bar */}
+        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
+          <span className="text-white font-semibold text-sm">View Transporter</span>
+          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={clearFilters}>
+            View All Records
+          </Button>
+        </div>
+
+        {/* Compact Filter Section */}
+        <div className="mb-3 border border-border bg-muted/50">
+          {/* Row 1: Transporter Name, Email */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Transporter Name :</span>
+              <input 
+                value={filters.name} 
+                onChange={(e) => setFilters({...filters, name: e.target.value})} 
+                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Email :</span>
+              <input 
+                value={filters.email} 
+                onChange={(e) => setFilters({...filters, email: e.target.value})} 
+                className="h-5 w-48 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+          </div>
+
+          {/* Row 2: City Name, Contact No */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">City Name :</span>
+              <select 
+                value={filters.cityId} 
+                onChange={(e) => setFilters({...filters, cityId: e.target.value})} 
+                className="h-5 text-[11px] border border-input bg-background px-1 min-w-[150px] rounded-sm"
+              >
+                <option value="">-City-</option>
+                {cities.map(city => (
+                  <option key={city.id} value={city.id}>{city.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Contact No :</span>
+              <input 
+                value={filters.contactNo} 
+                onChange={(e) => setFilters({...filters, contactNo: e.target.value})} 
+                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+          </div>
+
+          {/* Row 3: Search Button */}
+          <div className="flex justify-end px-2 py-1.5">
+            <button className="h-6 px-4 text-[11px] bg-foreground text-background border border-foreground/80 hover:bg-foreground/90 rounded-sm">
+              Search
+            </button>
           </div>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>City</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedItems.map((transporter) => (
-                <TableRow key={transporter.id}>
-                  <TableCell className="font-medium">{transporter.name}</TableCell>
-                  <TableCell>{transporter.company_name || "-"}</TableCell>
-                  <TableCell>{transporter.email || "-"}</TableCell>
-                  <TableCell>{transporter.phone || "-"}</TableCell>
-                  <TableCell>{transporter.cities?.name || "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
-            totalItems={totalItems}
-            startIndex={startIndex}
-            endIndex={endIndex}
-          />
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 mb-3">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
+
+        {/* Main Table */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr style={{ backgroundColor: "#D4A59A" }}>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Transporter Name</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Email</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Address</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Contact Person</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">City</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                        No transporters found
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedItems.map((transporter) => (
+                      <tr key={transporter.id} style={{ backgroundColor: "#F5E6E0" }}>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div className="font-medium">{transporter.name}</div>
+                          {transporter.company_name && (
+                            <div className="text-muted-foreground">{transporter.company_name}</div>
+                          )}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {transporter.email || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {transporter.address || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div>{transporter.notes || "-"}</div>
+                          <div className="text-muted-foreground">C-No: {transporter.phone || "-"}</div>
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {transporter.cities?.name || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary">
+                              Edit
+                            </Button>
+                            <span className="text-muted-foreground">/</span>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(transporter.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={totalItems}
+              startIndex={startIndex}
+              endIndex={endIndex}
+            />
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

@@ -1,26 +1,18 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Cities() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [cities, setCities] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
-  const [formData, setFormData] = useState({
+  const [filters, setFilters] = useState({
     name: "",
-    state: "",
-    country: "India",
+    state: ""
   });
 
   const fetchCities = async () => {
@@ -40,32 +32,33 @@ export default function Cities() {
     fetchCities();
   }, []);
 
-  // React to URL changes for ?add=true
-  useEffect(() => {
-    if (searchParams.get("add") === "true") {
-      setIsAddDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("cities").insert([formData]);
-
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this city?")) return;
+    
+    const { error } = await supabase.from("cities").delete().eq("id", id);
     if (error) {
-      toast.error("Error adding city");
+      toast.error("Error deleting city");
     } else {
-      toast.success("City added successfully");
-      setIsAddDialogOpen(false);
-      setFormData({ name: "", state: "", country: "India" });
+      toast.success("City deleted successfully");
       fetchCities();
     }
   };
 
-  const filteredCities = cities.filter(city =>
-    city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    city.state?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const clearFilters = () => {
+    setFilters({
+      name: "",
+      state: ""
+    });
+  };
+
+  const filteredCities = cities.filter(city => {
+    const matchesName = !filters.name || 
+      city.name.toLowerCase().includes(filters.name.toLowerCase());
+    const matchesState = !filters.state || 
+      city.state?.toLowerCase().includes(filters.state.toLowerCase());
+    
+    return matchesName && matchesState;
+  });
 
   const {
     paginatedItems,
@@ -78,95 +71,118 @@ export default function Cities() {
   } = usePagination(filteredCities, { itemsPerPage: 10 });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header title="City Management" />
-      <main className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <Input
-            placeholder="Search cities..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add City
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New City</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">City Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={formData.country}
-                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">Add City</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+      <main className="p-4">
+        {/* Blue Header Bar */}
+        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
+          <span className="text-white font-semibold text-sm">View City</span>
+          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={clearFilters}>
+            View All Records
+          </Button>
+        </div>
+
+        {/* Compact Filter Section */}
+        <div className="mb-3 border border-border bg-muted/50">
+          {/* Row 1: City Name, State */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">City Name :</span>
+              <input 
+                value={filters.name} 
+                onChange={(e) => setFilters({...filters, name: e.target.value})} 
+                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">State :</span>
+              <input 
+                value={filters.state} 
+                onChange={(e) => setFilters({...filters, state: e.target.value})} 
+                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+          </div>
+
+          {/* Row 2: Search Button */}
+          <div className="flex justify-end px-2 py-1.5">
+            <button className="h-6 px-4 text-[11px] bg-foreground text-background border border-foreground/80 hover:bg-foreground/90 rounded-sm">
+              Search
+            </button>
           </div>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>City Name</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Created At</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedItems.map((city) => (
-                <TableRow key={city.id}>
-                  <TableCell className="font-medium">{city.name}</TableCell>
-                  <TableCell>{city.state || "-"}</TableCell>
-                  <TableCell>{city.country}</TableCell>
-                  <TableCell>{new Date(city.created_at).toLocaleDateString("en-IN")}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
-            totalItems={totalItems}
-            startIndex={startIndex}
-            endIndex={endIndex}
-          />
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 mb-3">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
+
+        {/* Main Table */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr style={{ backgroundColor: "#D4A59A" }}>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">City Name</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">State</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Country</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Created At</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                        No cities found
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedItems.map((city) => (
+                      <tr key={city.id} style={{ backgroundColor: "#F5E6E0" }}>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top font-medium">
+                          {city.name}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {city.state || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {city.country || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {new Date(city.created_at).toLocaleDateString("en-IN")}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary">
+                              Edit
+                            </Button>
+                            <span className="text-muted-foreground">/</span>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(city.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={totalItems}
+              startIndex={startIndex}
+              endIndex={endIndex}
+            />
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

@@ -26,6 +26,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          state: string | null
           updated_at: string | null
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -74,9 +77,12 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          packages: string | null
           phone: string | null
           rating: number | null
+          room_types: string | null
           updated_at: string | null
+          website_url: string | null
         }
         Insert: {
           address?: string | null
@@ -87,9 +93,12 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          packages?: string | null
           phone?: string | null
           rating?: number | null
+          room_types?: string | null
           updated_at?: string | null
+          website_url?: string | null
         }
         Update: {
           address?: string | null
@@ -100,9 +109,12 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          packages?: string | null
           phone?: string | null
           rating?: number | null
+          room_types?: string | null
           updated_at?: string | null
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -2315,6 +2327,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          state: string | null
           updated_at: string | null
           vehicle_types: string[] | null
         }
@@ -2328,6 +2341,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string | null
           vehicle_types?: string[] | null
         }
@@ -2341,6 +2355,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string | null
           vehicle_types?: string[] | null
         }

@@ -1,25 +1,19 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Agents() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [agents, setAgents] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
-  const [editingAgent, setEditingAgent] = useState<any>(null);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -30,33 +24,11 @@ export default function Agents() {
     contactNo: ""
   });
 
-  const initialFormData = {
-    name: "",
-    company_name: "",
-    email: "",
-    phone: "",
-    address: "",
-    state: "",
-    city_id: "",
-    commission_rate: 0,
-    notes: "",
-  };
-
-  const [formData, setFormData] = useState(initialFormData);
-
   useEffect(() => {
     fetchAgents();
     fetchCities();
     fetchUsers();
   }, []);
-
-  // React to URL changes for ?add=true
-  useEffect(() => {
-    if (searchParams.get("add") === "true") {
-      setIsAddDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
@@ -79,57 +51,9 @@ export default function Agents() {
     setUsers(data || []);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingAgent) {
-      // Update existing agent
-      const { error } = await supabase
-        .from("agents")
-        .update(formData)
-        .eq("id", editingAgent.id);
-
-      if (error) {
-        toast.error("Error updating agent");
-      } else {
-        toast.success("Agent updated successfully");
-        closeDialog();
-        fetchAgents();
-      }
-    } else {
-      // Insert new agent
-      const { error } = await supabase.from("agents").insert([formData]);
-
-      if (error) {
-        toast.error("Error adding agent");
-      } else {
-        toast.success("Agent added successfully");
-        closeDialog();
-        fetchAgents();
-      }
-    }
-  };
-
-  const closeDialog = () => {
-    setIsAddDialogOpen(false);
-    setEditingAgent(null);
-    setFormData(initialFormData);
-  };
-
   const handleEdit = (agent: any) => {
-    setEditingAgent(agent);
-    setFormData({
-      name: agent.name || "",
-      company_name: agent.company_name || "",
-      email: agent.email || "",
-      phone: agent.phone || "",
-      address: agent.address || "",
-      state: agent.state || "",
-      city_id: agent.city_id || "",
-      commission_rate: agent.commission_rate || 0,
-      notes: agent.notes || "",
-    });
-    setIsAddDialogOpen(true);
+    // Navigate to edit page (could be implemented later or use a query param)
+    navigate(`/agents/add?edit=${agent.id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -265,109 +189,6 @@ export default function Agents() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-            if (!open) closeDialog();
-            else setIsAddDialogOpen(true);
-          }}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="bg-gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Agent
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingAgent ? "Edit Agent" : "Add New Agent"}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="company_name">Company Name</Label>
-                    <Input
-                      id="company_name"
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Select value={formData.city_id} onValueChange={(value) => setFormData({ ...formData, city_id: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select city" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cities.map((city) => (
-                          <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="commission_rate">Commission Rate (%)</Label>
-                    <Input
-                      id="commission_rate"
-                      type="number"
-                      step="0.01"
-                      value={formData.commission_rate}
-                      onChange={(e) => setFormData({ ...formData, commission_rate: parseFloat(e.target.value) })}
-                    />
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      placeholder="Enter state"
-                    />
-                  </div>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  />
-                </div>
-                <Button type="submit" className="w-full">{editingAgent ? "Update Agent" : "Add Agent"}</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
 
         {/* Main Table */}
