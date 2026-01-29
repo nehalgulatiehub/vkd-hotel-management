@@ -19,6 +19,7 @@ export default function Agents() {
   const [cities, setCities] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
+  const [editingAgent, setEditingAgent] = useState<any>(null);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -29,7 +30,7 @@ export default function Agents() {
     contactNo: ""
   });
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     name: "",
     company_name: "",
     email: "",
@@ -39,7 +40,9 @@ export default function Agents() {
     city_id: "",
     commission_rate: 0,
     notes: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
 
   useEffect(() => {
     fetchAgents();
@@ -70,24 +73,65 @@ export default function Agents() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("agents").insert([formData]);
+    
+    if (editingAgent) {
+      // Update existing agent
+      const { error } = await supabase
+        .from("agents")
+        .update(formData)
+        .eq("id", editingAgent.id);
 
-    if (error) {
-      toast.error("Error adding agent");
+      if (error) {
+        toast.error("Error updating agent");
+      } else {
+        toast.success("Agent updated successfully");
+        closeDialog();
+        fetchAgents();
+      }
     } else {
-      toast.success("Agent added successfully");
-      setIsAddDialogOpen(false);
-      setFormData({
-        name: "",
-        company_name: "",
-        email: "",
-        phone: "",
-        address: "",
-        state: "",
-        city_id: "",
-        commission_rate: 0,
-        notes: "",
-      });
+      // Insert new agent
+      const { error } = await supabase.from("agents").insert([formData]);
+
+      if (error) {
+        toast.error("Error adding agent");
+      } else {
+        toast.success("Agent added successfully");
+        closeDialog();
+        fetchAgents();
+      }
+    }
+  };
+
+  const closeDialog = () => {
+    setIsAddDialogOpen(false);
+    setEditingAgent(null);
+    setFormData(initialFormData);
+  };
+
+  const handleEdit = (agent: any) => {
+    setEditingAgent(agent);
+    setFormData({
+      name: agent.name || "",
+      company_name: agent.company_name || "",
+      email: agent.email || "",
+      phone: agent.phone || "",
+      address: agent.address || "",
+      state: agent.state || "",
+      city_id: agent.city_id || "",
+      commission_rate: agent.commission_rate || 0,
+      notes: agent.notes || "",
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this agent?")) return;
+    
+    const { error } = await supabase.from("agents").delete().eq("id", id);
+    if (error) {
+      toast.error("Error deleting agent");
+    } else {
+      toast.success("Agent deleted successfully");
       fetchAgents();
     }
   };
@@ -213,7 +257,10 @@ export default function Agents() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            if (!open) closeDialog();
+            else setIsAddDialogOpen(true);
+          }}>
             <DialogTrigger asChild>
               <Button size="sm" className="bg-gradient-primary">
                 <Plus className="h-4 w-4 mr-2" />
@@ -222,7 +269,7 @@ export default function Agents() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Agent</DialogTitle>
+                <DialogTitle>{editingAgent ? "Edit Agent" : "Add New Agent"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -309,7 +356,7 @@ export default function Agents() {
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
-                <Button type="submit" className="w-full">Add Agent</Button>
+                <Button type="submit" className="w-full">{editingAgent ? "Update Agent" : "Add Agent"}</Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -367,11 +414,11 @@ export default function Agents() {
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div className="flex gap-2">
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary">
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEdit(agent)}>
                               Edit
                             </Button>
                             <span className="text-muted-foreground">/</span>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive">
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(agent.id)}>
                               Delete
                             </Button>
                           </div>
