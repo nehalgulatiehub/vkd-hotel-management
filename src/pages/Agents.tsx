@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,10 +14,11 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Agents() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [agents, setAgents] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -33,6 +35,7 @@ export default function Agents() {
     email: "",
     phone: "",
     address: "",
+    state: "",
     city_id: "",
     commission_rate: 0,
     notes: "",
@@ -80,6 +83,7 @@ export default function Agents() {
         email: "",
         phone: "",
         address: "",
+        state: "",
         city_id: "",
         commission_rate: 0,
         notes: "",
@@ -278,6 +282,15 @@ export default function Agents() {
                       value={formData.commission_rate}
                       onChange={(e) => setFormData({ ...formData, commission_rate: parseFloat(e.target.value) })}
                     />
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      placeholder="Enter state"
+                    />
+                  </div>
                   </div>
                 </div>
                 <div>
