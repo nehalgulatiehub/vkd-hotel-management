@@ -75,9 +75,9 @@ const menuItems: MenuItem[] = [
     title: "Hotel Management",
     icon: Hotel,
     submenu: [
-      { title: "Add Own Hotel", url: "/own-hotels", menuKey: "own_hotels" },
+      { title: "Add Own Hotel", url: "/own-hotels?add=true", menuKey: "own_hotels" },
       { title: "View Own Hotels", url: "/own-hotels", menuKey: "own_hotels" },
-      { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
+      { title: "Add Another Hotel", url: "/hotels?add=true", menuKey: "another_hotels_add" },
       { title: "View Another Hotel", url: "/hotels", menuKey: "another_hotels_view" },
       { title: "Export Another Hotel", url: "/hotels/export", menuKey: "another_hotels_export" },
     ]

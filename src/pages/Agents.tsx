@@ -50,6 +50,14 @@ export default function Agents() {
     fetchUsers();
   }, []);
 
+  // React to URL changes for ?add=true
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      setIsAddDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const fetchAgents = async () => {
     const { data, error } = await supabase
       .from("agents")
