@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -13,16 +14,18 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function Transporters() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [transporters, setTransporters] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
   const [formData, setFormData] = useState({
     name: "",
     company_name: "",
     email: "",
     phone: "",
     address: "",
+    state: "",
     city_id: "",
     vehicle_types: [] as string[],
     notes: "",
@@ -64,6 +67,7 @@ export default function Transporters() {
         email: "",
         phone: "",
         address: "",
+        state: "",
         city_id: "",
         vehicle_types: [],
         notes: "",
@@ -162,6 +166,15 @@ export default function Transporters() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                        placeholder="Enter state"
+                      />
                     </div>
                   </div>
                   <div>
