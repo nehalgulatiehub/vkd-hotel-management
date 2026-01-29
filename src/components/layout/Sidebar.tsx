@@ -48,7 +48,7 @@ const menuItems: MenuItem[] = [
     title: "City Management",
     icon: MapPin,
     submenu: [
-      { title: "Add City", url: "/cities?add=true", menuKey: "cities_add" },
+      { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
       { title: "View City", url: "/cities", menuKey: "cities_view" },
       { title: "Export City", url: "/cities/export", menuKey: "cities_export" },
     ]
@@ -57,7 +57,7 @@ const menuItems: MenuItem[] = [
     title: "Agent Management",
     icon: Users,
     submenu: [
-      { title: "Add Agent", url: "/agents?add=true", menuKey: "agents_add" },
+      { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
       { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
       { title: "View Agent", url: "/agents", menuKey: "agents_view" },
     ]
@@ -66,7 +66,7 @@ const menuItems: MenuItem[] = [
     title: "Transporter Management",
     icon: Plane,
     submenu: [
-      { title: "Add Transporter", url: "/transporters?add=true", menuKey: "transporters_add" },
+      { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
       { title: "View Transporter", url: "/transporters", menuKey: "transporters_view" },
       { title: "Export Transporter", url: "/transporters/export", menuKey: "transporters_export" },
     ]
@@ -75,9 +75,9 @@ const menuItems: MenuItem[] = [
     title: "Hotel Management",
     icon: Hotel,
     submenu: [
-      { title: "Add Own Hotel", url: "/own-hotels?add=true", menuKey: "own_hotels" },
+      { title: "Add Own Hotel", url: "/own-hotels/add", menuKey: "own_hotels" },
       { title: "View Own Hotels", url: "/own-hotels", menuKey: "own_hotels" },
-      { title: "Add Another Hotel", url: "/hotels?add=true", menuKey: "another_hotels_add" },
+      { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
       { title: "View Another Hotel", url: "/hotels", menuKey: "another_hotels_view" },
       { title: "Export Another Hotel", url: "/hotels/export", menuKey: "another_hotels_export" },
     ]

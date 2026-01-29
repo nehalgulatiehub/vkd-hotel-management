@@ -1,47 +1,27 @@
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Hotels() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [hotels, setHotels] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
-  const [formData, setFormData] = useState({
-    name: "",
-    city_id: "",
-    address: "",
-    phone: "",
-    email: "",
-    contact_person: "",
-    rating: 0,
-    notes: "",
+  const [filters, setFilters] = useState({
+    hotelName: "",
+    cityId: "",
+    contactNo: "",
+    email: ""
   });
 
   useEffect(() => {
     fetchHotels();
     fetchCities();
   }, []);
-
-  // React to URL changes for ?add=true
-  useEffect(() => {
-    if (searchParams.get("add") === "true") {
-      setIsAddDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const fetchHotels = async () => {
     const { data, error } = await supabase
@@ -59,33 +39,38 @@ export default function Hotels() {
     setCities(data || []);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("another_hotels").insert([formData]);
-
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this hotel?")) return;
+    
+    const { error } = await supabase.from("another_hotels").delete().eq("id", id);
     if (error) {
-      toast.error("Error adding hotel");
+      toast.error("Error deleting hotel");
     } else {
-      toast.success("Hotel added successfully");
-      setIsAddDialogOpen(false);
-      setFormData({
-        name: "",
-        city_id: "",
-        address: "",
-        phone: "",
-        email: "",
-        contact_person: "",
-        rating: 0,
-        notes: "",
-      });
+      toast.success("Hotel deleted successfully");
       fetchHotels();
     }
   };
 
-  const filteredHotels = hotels.filter(hotel =>
-    hotel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hotel.cities?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const clearFilters = () => {
+    setFilters({
+      hotelName: "",
+      cityId: "",
+      contactNo: "",
+      email: ""
+    });
+  };
+
+  const filteredHotels = hotels.filter(hotel => {
+    const matchesName = !filters.hotelName || 
+      hotel.name.toLowerCase().includes(filters.hotelName.toLowerCase());
+    const matchesCity = !filters.cityId || hotel.city_id === filters.cityId;
+    const matchesContact = !filters.contactNo || 
+      hotel.phone?.includes(filters.contactNo);
+    const matchesEmail = !filters.email || 
+      hotel.email?.toLowerCase().includes(filters.email.toLowerCase());
+    
+    return matchesName && matchesCity && matchesContact && matchesEmail;
+  });
 
   const {
     paginatedItems,
@@ -98,151 +83,150 @@ export default function Hotels() {
   } = usePagination(filteredHotels, { itemsPerPage: 10 });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header title="Partner Hotel Management" />
-      <main className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <Input
-            placeholder="Search hotels..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Hotel
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Add Partner Hotel</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Hotel Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Select value={formData.city_id} onValueChange={(value) => setFormData({ ...formData, city_id: value })} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select city" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="contact_person">Contact Person</Label>
-                      <Input
-                        id="contact_person"
-                        value={formData.contact_person}
-                        onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="rating">Rating (0-5)</Label>
-                      <Input
-                        id="rating"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="5"
-                        value={formData.rating}
-                        onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="notes">Notes</Label>
-                    <Input
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">Add Hotel</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+      <main className="p-4">
+        {/* Blue Header Bar */}
+        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
+          <span className="text-white font-semibold text-sm">View Another Hotel</span>
+          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={clearFilters}>
+            View All Records
+          </Button>
+        </div>
+
+        {/* Compact Filter Section */}
+        <div className="mb-3 border border-border bg-muted/50">
+          {/* Row 1: Hotel Name, City Name */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Hotel Name :</span>
+              <input 
+                value={filters.hotelName} 
+                onChange={(e) => setFilters({...filters, hotelName: e.target.value})} 
+                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">City Name :</span>
+              <select 
+                value={filters.cityId} 
+                onChange={(e) => setFilters({...filters, cityId: e.target.value})} 
+                className="h-5 text-[11px] border border-input bg-background px-1 min-w-[150px] rounded-sm"
+              >
+                <option value="">-City-</option>
+                {cities.map(city => (
+                  <option key={city.id} value={city.id}>{city.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Row 2: Contact No, Email-Id */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Contact No :</span>
+              <input 
+                value={filters.contactNo} 
+                onChange={(e) => setFilters({...filters, contactNo: e.target.value})} 
+                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Email-Id :</span>
+              <input 
+                value={filters.email} 
+                onChange={(e) => setFilters({...filters, email: e.target.value})} 
+                className="h-5 w-48 text-[11px] border border-input bg-background px-1 rounded-sm" 
+              />
+            </div>
+          </div>
+
+          {/* Row 3: Search Button */}
+          <div className="flex justify-end px-2 py-1.5">
+            <button className="h-6 px-4 text-[11px] bg-foreground text-background border border-foreground/80 hover:bg-foreground/90 rounded-sm">
+              Search
+            </button>
           </div>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Hotel Name</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>Contact Person</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rating</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedItems.map((hotel) => (
-                <TableRow key={hotel.id}>
-                  <TableCell className="font-medium">{hotel.name}</TableCell>
-                  <TableCell>{hotel.cities?.name || "-"}</TableCell>
-                  <TableCell>{hotel.contact_person || "-"}</TableCell>
-                  <TableCell>{hotel.phone || "-"}</TableCell>
-                  <TableCell>{hotel.email || "-"}</TableCell>
-                  <TableCell>{hotel.rating ? `${hotel.rating}/5` : "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
-            totalItems={totalItems}
-            startIndex={startIndex}
-            endIndex={endIndex}
-          />
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 mb-3">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
+
+        {/* Main Table */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr style={{ backgroundColor: "#D4A59A" }}>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Hotel Name</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Rooms</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Contact-Person</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Packages</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">City</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                        No hotels found
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedItems.map((hotel) => (
+                      <tr key={hotel.id} style={{ backgroundColor: "#F5E6E0" }}>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div className="font-medium">{hotel.name}</div>
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {hotel.room_types || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div>{hotel.contact_person || "-"}</div>
+                          {hotel.phone && <div>Contact: {hotel.phone}</div>}
+                          {hotel.address && <div>Address: {hotel.address}</div>}
+                          {hotel.email && <div>Email: {hotel.email}</div>}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {hotel.packages || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          {hotel.cities?.name || "-"}
+                        </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary">
+                              Edit
+                            </Button>
+                            <span className="text-muted-foreground">/</span>
+                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(hotel.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={totalItems}
+              startIndex={startIndex}
+              endIndex={endIndex}
+            />
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

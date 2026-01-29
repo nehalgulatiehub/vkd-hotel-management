@@ -10,11 +10,16 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Cities from "./pages/Cities";
+import AddCity from "./pages/AddCity";
 import Agents from "./pages/Agents";
+import AddAgent from "./pages/AddAgent";
 import Transporters from "./pages/Transporters";
+import AddTransporter from "./pages/AddTransporter";
 import OwnHotels from "./pages/OwnHotels";
+import AddOwnHotel from "./pages/AddOwnHotel";
 import Rooms from "./pages/Rooms";
 import Hotels from "./pages/Hotels";
+import AddAnotherHotel from "./pages/AddAnotherHotel";
 import Enquiries from "./pages/Enquiries";
 import Bookings from "./pages/Bookings";
 import Payments from "./pages/Payments";
@@ -153,7 +158,15 @@ const App = () => (
             }
           />
           <Route
-            path="/cities/*"
+            path="/cities/add"
+            element={
+              <DashboardLayout>
+                <AddCity />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/cities"
             element={
               <DashboardLayout>
                 <Cities />
@@ -169,7 +182,15 @@ const App = () => (
             }
           />
           <Route
-            path="/agents/*"
+            path="/agents/add"
+            element={
+              <DashboardLayout>
+                <AddAgent />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/agents"
             element={
               <DashboardLayout>
                 <Agents />
@@ -185,7 +206,15 @@ const App = () => (
             }
           />
           <Route
-            path="/transporters/*"
+            path="/transporters/add"
+            element={
+              <DashboardLayout>
+                <AddTransporter />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/transporters"
             element={
               <DashboardLayout>
                 <Transporters />
@@ -201,7 +230,15 @@ const App = () => (
             }
           />
           <Route
-            path="/hotels/*"
+            path="/hotels/add"
+            element={
+              <DashboardLayout>
+                <AddAnotherHotel />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/hotels"
             element={
               <DashboardLayout>
                 <Hotels />
@@ -213,6 +250,14 @@ const App = () => (
             element={
               <DashboardLayout>
                 <ExportHotels />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/own-hotels/add"
+            element={
+              <DashboardLayout>
+                <AddOwnHotel />
               </DashboardLayout>
             }
           />
