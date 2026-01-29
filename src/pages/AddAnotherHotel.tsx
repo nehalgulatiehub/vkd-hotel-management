@@ -21,6 +21,7 @@ export default function AddAnotherHotel() {
     phone: "",
     website_url: "",
     city_id: "",
+    state: "",
     address: "",
     packages: "",
   });
@@ -55,6 +56,7 @@ export default function AddAnotherHotel() {
       phone: "",
       website_url: "",
       city_id: "",
+      state: "",
       address: "",
       packages: "",
     });
@@ -145,6 +147,15 @@ export default function AddAnotherHotel() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    className="bg-white"
+                  />
                 </div>
               </div>
               <div>
