@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,11 @@ import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 
 export default function Hotels() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [hotels, setHotels] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(searchParams.get("add") === "true");
   const [formData, setFormData] = useState({
     name: "",
     city_id: "",
@@ -32,6 +34,14 @@ export default function Hotels() {
     fetchHotels();
     fetchCities();
   }, []);
+
+  // React to URL changes for ?add=true
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      setIsAddDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetchHotels = async () => {
     const { data, error } = await supabase

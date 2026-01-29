@@ -36,6 +36,14 @@ export default function Transporters() {
     fetchCities();
   }, []);
 
+  // React to URL changes for ?add=true
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      setIsAddDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const fetchTransporters = async () => {
     const { data, error } = await supabase
       .from("transporters")

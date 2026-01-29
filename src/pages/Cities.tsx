@@ -40,6 +40,14 @@ export default function Cities() {
     fetchCities();
   }, []);
 
+  // React to URL changes for ?add=true
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      setIsAddDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.from("cities").insert([formData]);
