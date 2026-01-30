@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Search, Download } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
 import * as XLSX from "xlsx";
 
 interface Agent {
@@ -23,6 +24,7 @@ interface Agent {
   commission_rate: number | null;
   city_id: string | null;
   notes: string | null;
+  created_by: string | null;
   city?: { name: string } | null;
 }
 
@@ -37,8 +39,10 @@ export default function AdminAgents() {
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [userFilter, setUserFilter] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const { profiles, profilesMap, getUserName } = useProfilesMap();
   
   // Form state
   const [name, setName] = useState("");
@@ -64,7 +68,7 @@ export default function AdminAgents() {
     try {
       const { data, error } = await supabase
         .from("agents")
-        .select("*, city:cities(name)")
+        .select("*, city:cities(name), created_by")
         .order("name");
 
       if (error) throw error;
@@ -185,11 +189,13 @@ export default function AdminAgents() {
     setIsDialogOpen(true);
   };
 
-  const filteredAgents = agents.filter(agent => 
-    agent.name.toLowerCase().includes(search.toLowerCase()) ||
-    (agent.company_name && agent.company_name.toLowerCase().includes(search.toLowerCase())) ||
-    (agent.phone && agent.phone.includes(search))
-  );
+  const filteredAgents = agents.filter(agent => {
+    const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase()) ||
+      (agent.company_name && agent.company_name.toLowerCase().includes(search.toLowerCase())) ||
+      (agent.phone && agent.phone.includes(search));
+    const matchesUser = !userFilter || userFilter === "all" || agent.created_by === userFilter;
+    return matchesSearch && matchesUser;
+  });
 
   if (authLoading || loading) {
     return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
@@ -217,14 +223,32 @@ export default function AdminAgents() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search agents..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-9"
-            />
+          <div className="flex gap-4 items-end flex-wrap">
+            <div className="relative max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search agents..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
+            <div className="w-48">
+              <Label className="text-xs mb-1 block">User</Label>
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select User" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  {profiles.map(profile => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.username || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -236,6 +260,7 @@ export default function AdminAgents() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>City</TableHead>
+                <TableHead>User</TableHead>
                 <TableHead>Commission %</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
@@ -248,6 +273,7 @@ export default function AdminAgents() {
                   <TableCell>{agent.phone || "-"}</TableCell>
                   <TableCell>{agent.email || "-"}</TableCell>
                   <TableCell>{agent.city?.name || "-"}</TableCell>
+                  <TableCell>{getUserName(agent.created_by)}</TableCell>
                   <TableCell>{agent.commission_rate ?? "-"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -263,7 +289,7 @@ export default function AdminAgents() {
               ))}
               {filteredAgents.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No agents found
                   </TableCell>
                 </TableRow>
