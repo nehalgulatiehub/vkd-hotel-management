@@ -182,14 +182,14 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       const hotelReceived = hotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
       if (hotelRes.data?.length > 0 || hotelPayments.length > 0) {
         summaries.push({
-          type: "Hotel",
+          type: "Another Hotel",
           customerName: bookingData.customer_name || "N/A",
           totalPayment: hotelBookingTotal,
           totalReceived: hotelReceived,
           date: hotelRes.data?.[0]?.check_in_date || bookingData.check_in_date,
           totalDue: Math.max(0, hotelBookingTotal - hotelReceived)
         });
-        groupedPayments["Hotel"] = mapPaymentsToRecords(hotelPayments);
+        groupedPayments["Another Hotel"] = mapPaymentsToRecords(hotelPayments);
       }
 
       // Process Vehicle payments - show if bookings exist OR payments exist
