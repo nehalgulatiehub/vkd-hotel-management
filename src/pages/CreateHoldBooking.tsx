@@ -10,10 +10,21 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function CreateHoldBooking() {
   const navigate = useNavigate();
+  const { hasMenuAccess, isAdmin, isAccount } = useAuthContext();
   const [agents, setAgents] = useState<any[]>([]);
+  
+  // Permission checks for booking sections
+  const canSeeBookingSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_booking");
+  const canSeeDelhiManaliSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_delhi_manali");
+  const canSeeManaliDelhiSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_manali_delhi");
+  const canSeeSafariSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_safari");
+  const canSeeAnotherHotelSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_another_hotel");
+  const canSeeVehicleSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_vehicle");
+  const canSeeGroupExpensesSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_group_expenses");
 
   const [formData, setFormData] = useState({
     booking_type: "agent",
@@ -275,137 +286,151 @@ export default function CreateHoldBooking() {
 
               {/* Toggle Options with Yes/No Radio Buttons */}
               {/* Booking */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">Booking :</Label>
-                <RadioGroup
-                  value={formData.include_booking ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="booking-yes" className="h-4 w-4" />
-                    <Label htmlFor="booking-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="booking-no" className="h-4 w-4" />
-                    <Label htmlFor="booking-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeBookingSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">Booking :</Label>
+                  <RadioGroup
+                    value={formData.include_booking ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="booking-yes" className="h-4 w-4" />
+                      <Label htmlFor="booking-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="booking-no" className="h-4 w-4" />
+                      <Label htmlFor="booking-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Delhi - Manali */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">DELHI - MANALI :</Label>
-                <RadioGroup
-                  value={formData.include_delhi_manali ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="dm-yes" className="h-4 w-4" />
-                    <Label htmlFor="dm-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="dm-no" className="h-4 w-4" />
-                    <Label htmlFor="dm-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeDelhiManaliSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">DELHI - MANALI :</Label>
+                  <RadioGroup
+                    value={formData.include_delhi_manali ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="dm-yes" className="h-4 w-4" />
+                      <Label htmlFor="dm-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="dm-no" className="h-4 w-4" />
+                      <Label htmlFor="dm-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Manali - Delhi */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">MANALI - DELHI :</Label>
-                <RadioGroup
-                  value={formData.include_manali_delhi ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="md-yes" className="h-4 w-4" />
-                    <Label htmlFor="md-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="md-no" className="h-4 w-4" />
-                    <Label htmlFor="md-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeManaliDelhiSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">MANALI - DELHI :</Label>
+                  <RadioGroup
+                    value={formData.include_manali_delhi ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="md-yes" className="h-4 w-4" />
+                      <Label htmlFor="md-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="md-no" className="h-4 w-4" />
+                      <Label htmlFor="md-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Safari */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">Safari :</Label>
-                <RadioGroup
-                  value={formData.include_safari ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="safari-yes" className="h-4 w-4" />
-                    <Label htmlFor="safari-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="safari-no" className="h-4 w-4" />
-                    <Label htmlFor="safari-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeSafariSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">Safari :</Label>
+                  <RadioGroup
+                    value={formData.include_safari ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="safari-yes" className="h-4 w-4" />
+                      <Label htmlFor="safari-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="safari-no" className="h-4 w-4" />
+                      <Label htmlFor="safari-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Another Hotel */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">Another Hotel :</Label>
-                <RadioGroup
-                  value={formData.include_another_hotel ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="hotel-yes" className="h-4 w-4" />
-                    <Label htmlFor="hotel-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="hotel-no" className="h-4 w-4" />
-                    <Label htmlFor="hotel-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeAnotherHotelSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">Another Hotel :</Label>
+                  <RadioGroup
+                    value={formData.include_another_hotel ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="hotel-yes" className="h-4 w-4" />
+                      <Label htmlFor="hotel-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="hotel-no" className="h-4 w-4" />
+                      <Label htmlFor="hotel-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Additional Vehicle */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">Additional Vehicle :</Label>
-                <RadioGroup
-                  value={formData.include_additional_vehicle ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="vehicle-yes" className="h-4 w-4" />
-                    <Label htmlFor="vehicle-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="vehicle-no" className="h-4 w-4" />
-                    <Label htmlFor="vehicle-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeVehicleSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">Additional Vehicle :</Label>
+                  <RadioGroup
+                    value={formData.include_additional_vehicle ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="vehicle-yes" className="h-4 w-4" />
+                      <Label htmlFor="vehicle-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="vehicle-no" className="h-4 w-4" />
+                      <Label htmlFor="vehicle-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Group Expenses */}
-              <div className="flex items-center gap-2">
-                <Label className="w-40 text-right text-xs shrink-0">Group Expences :</Label>
-                <RadioGroup
-                  value={formData.include_group_expenses ? "yes" : "no"}
-                  onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="yes" id="expenses-yes" className="h-4 w-4" />
-                    <Label htmlFor="expenses-yes" className="text-xs">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="no" id="expenses-no" className="h-4 w-4" />
-                    <Label htmlFor="expenses-no" className="text-xs">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {canSeeGroupExpensesSection && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-40 text-right text-xs shrink-0">Group Expences :</Label>
+                  <RadioGroup
+                    value={formData.include_group_expenses ? "yes" : "no"}
+                    onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="expenses-yes" className="h-4 w-4" />
+                      <Label htmlFor="expenses-yes" className="text-xs">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="expenses-no" className="h-4 w-4" />
+                      <Label htmlFor="expenses-no" className="text-xs">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Agent Commission */}
               <div className="flex items-center gap-2">
