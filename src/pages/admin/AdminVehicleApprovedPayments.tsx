@@ -15,6 +15,7 @@ import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { reversePaymentOnRejection } from "@/utils/paymentSync";
 
 interface PaymentWithBooking {
   id: string;
@@ -75,8 +76,21 @@ export default function AdminVehicleApprovedPayments() {
     if (!rejectingPaymentId) return;
     setRejectLoading(true);
     try {
+      // Fetch payment details for reversing amounts
+      const { data: paymentData } = await supabase
+        .from("payments")
+        .select("id, amount, booking_id, payment_type")
+        .eq("id", rejectingPaymentId)
+        .single();
+
       const { error } = await supabase.from("payments").update({ approval_status: "pending", approved_at: null, approved_by: null }).eq("id", rejectingPaymentId);
       if (error) throw error;
+
+      // Reverse the paid/due amounts since this was previously approved
+      if (paymentData) {
+        await reversePaymentOnRejection([paymentData]);
+      }
+
       toast.success("Payment reverted to pending status");
       fetchPayments();
     } catch (error) { console.error("Error rejecting payment:", error); toast.error("Failed to reject payment"); } finally { setRejectLoading(false); setRejectingPaymentId(null); }
