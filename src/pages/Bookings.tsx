@@ -31,12 +31,23 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Bookings() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasMenuAccess, isAdmin, isAccount } = useAuthContext();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isAddRoute = location.pathname === "/bookings/add";
+  
+  // Permission checks for booking sections
+  const canSeeBookingSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_booking");
+  const canSeeDelhiManaliSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_delhi_manali");
+  const canSeeManaliDelhiSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_manali_delhi");
+  const canSeeSafariSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_safari");
+  const canSeeAnotherHotelSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_another_hotel");
+  const canSeeVehicleSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_vehicle");
+  const canSeeGroupExpensesSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_group_expenses");
 
   const [showForm, setShowForm] = useState(isAddRoute);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
@@ -1355,25 +1366,27 @@ export default function Bookings() {
                 </CompactFormRow>
 
                 {/* Service Inclusions */}
-                <CompactFormRow label="Booking">
-                  <RadioGroup
-                    value={formData.include_booking ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="booking-yes" className="h-3 w-3" />
-                      <Label htmlFor="booking-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="booking-no" className="h-3 w-3" />
-                      <Label htmlFor="booking-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeBookingSection && (
+                  <CompactFormRow label="Booking">
+                    <RadioGroup
+                      value={formData.include_booking ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="booking-yes" className="h-3 w-3" />
+                        <Label htmlFor="booking-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="booking-no" className="h-3 w-3" />
+                        <Label htmlFor="booking-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
                 {/* Booking Details Section */}
-                {formData.include_booking && (
+                {canSeeBookingSection && formData.include_booking && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
                     <CompactFormRow label="Hotel" className="!w-auto">
                       <Select
@@ -1485,110 +1498,122 @@ export default function Bookings() {
                   </div>
                 )}
 
-                <CompactFormRow label="DELHI - MANALI">
-                  <RadioGroup
-                    value={formData.include_delhi_manali ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="dm-yes" className="h-3 w-3" />
-                      <Label htmlFor="dm-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="dm-no" className="h-3 w-3" />
-                      <Label htmlFor="dm-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeDelhiManaliSection && (
+                  <CompactFormRow label="DELHI - MANALI">
+                    <RadioGroup
+                      value={formData.include_delhi_manali ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="dm-yes" className="h-3 w-3" />
+                        <Label htmlFor="dm-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="dm-no" className="h-3 w-3" />
+                        <Label htmlFor="dm-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
-                <CompactFormRow label="MANALI - DELHI">
-                  <RadioGroup
-                    value={formData.include_manali_delhi ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="md-yes" className="h-3 w-3" />
-                      <Label htmlFor="md-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="md-no" className="h-3 w-3" />
-                      <Label htmlFor="md-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeManaliDelhiSection && (
+                  <CompactFormRow label="MANALI - DELHI">
+                    <RadioGroup
+                      value={formData.include_manali_delhi ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="md-yes" className="h-3 w-3" />
+                        <Label htmlFor="md-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="md-no" className="h-3 w-3" />
+                        <Label htmlFor="md-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
-                <CompactFormRow label="Safari">
-                  <RadioGroup
-                    value={formData.include_safari ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="safari-yes" className="h-3 w-3" />
-                      <Label htmlFor="safari-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="safari-no" className="h-3 w-3" />
-                      <Label htmlFor="safari-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeSafariSection && (
+                  <CompactFormRow label="Safari">
+                    <RadioGroup
+                      value={formData.include_safari ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="safari-yes" className="h-3 w-3" />
+                        <Label htmlFor="safari-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="safari-no" className="h-3 w-3" />
+                        <Label htmlFor="safari-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
-                <CompactFormRow label="Another Hotel">
-                  <RadioGroup
-                    value={formData.include_another_hotel ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="hotel-yes" className="h-3 w-3" />
-                      <Label htmlFor="hotel-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="hotel-no" className="h-3 w-3" />
-                      <Label htmlFor="hotel-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeAnotherHotelSection && (
+                  <CompactFormRow label="Another Hotel">
+                    <RadioGroup
+                      value={formData.include_another_hotel ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="hotel-yes" className="h-3 w-3" />
+                        <Label htmlFor="hotel-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="hotel-no" className="h-3 w-3" />
+                        <Label htmlFor="hotel-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
-                <CompactFormRow label="Add. Vehicle">
-                  <RadioGroup
-                    value={formData.include_additional_vehicle ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="vehicle-yes" className="h-3 w-3" />
-                      <Label htmlFor="vehicle-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="vehicle-no" className="h-3 w-3" />
-                      <Label htmlFor="vehicle-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeVehicleSection && (
+                  <CompactFormRow label="Add. Vehicle">
+                    <RadioGroup
+                      value={formData.include_additional_vehicle ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="vehicle-yes" className="h-3 w-3" />
+                        <Label htmlFor="vehicle-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="vehicle-no" className="h-3 w-3" />
+                        <Label htmlFor="vehicle-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
-                <CompactFormRow label="Group Expenses">
-                  <RadioGroup
-                    value={formData.include_group_expenses ? "yes" : "no"}
-                    onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
-                    className="flex gap-3"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="yes" id="expenses-yes" className="h-3 w-3" />
-                      <Label htmlFor="expenses-yes" className="text-[11px]">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="no" id="expenses-no" className="h-3 w-3" />
-                      <Label htmlFor="expenses-no" className="text-[11px]">No</Label>
-                    </div>
-                  </RadioGroup>
-                </CompactFormRow>
+                {canSeeGroupExpensesSection && (
+                  <CompactFormRow label="Group Expenses">
+                    <RadioGroup
+                      value={formData.include_group_expenses ? "yes" : "no"}
+                      onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
+                      className="flex gap-3"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="yes" id="expenses-yes" className="h-3 w-3" />
+                        <Label htmlFor="expenses-yes" className="text-[11px]">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="no" id="expenses-no" className="h-3 w-3" />
+                        <Label htmlFor="expenses-no" className="text-[11px]">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </CompactFormRow>
+                )}
 
                 {/* DELHI - MANALI Details Section */}
-                {formData.include_delhi_manali && (
+                {canSeeDelhiManaliSection && formData.include_delhi_manali && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
                     <p className="text-[10px] font-semibold text-primary mb-1">DELHI - MANALI Details</p>
                     <CompactFormRow label="No. Tickets" className="!w-auto">
@@ -1673,7 +1698,7 @@ export default function Bookings() {
                 )}
 
                 {/* MANALI - DELHI Details Section */}
-                {formData.include_manali_delhi && (
+                {canSeeManaliDelhiSection && formData.include_manali_delhi && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
                     <p className="text-[10px] font-semibold text-primary mb-1">MANALI - DELHI Details</p>
                     <CompactFormRow label="No. Tickets" className="!w-auto">
@@ -1758,7 +1783,7 @@ export default function Bookings() {
                 )}
 
                 {/* Safari Details Section */}
-                {formData.include_safari && (
+                {canSeeSafariSection && formData.include_safari && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
                     <p className="text-[10px] font-semibold text-primary mb-1">Safari Details</p>
                     <CompactFormRow label="Transporter" className="!w-auto">
@@ -1837,7 +1862,7 @@ export default function Bookings() {
                 )}
 
                 {/* Another Hotel Details Section - Supports Multiple Hotels */}
-                {formData.include_another_hotel && (
+                {canSeeAnotherHotelSection && formData.include_another_hotel && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] font-semibold text-primary">Another Hotel Details</p>
@@ -1986,7 +2011,7 @@ export default function Bookings() {
                 )}
 
                 {/* Additional Vehicle Details Section */}
-                {formData.include_additional_vehicle && (
+                {canSeeVehicleSection && formData.include_additional_vehicle && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
                     <p className="text-[10px] font-semibold text-primary mb-1">Vehicle Details</p>
                     <CompactFormRow label="Details" className="!w-auto">
@@ -2063,7 +2088,7 @@ export default function Bookings() {
                 )}
 
                 {/* Group Expenses Details Section */}
-                {formData.include_group_expenses && (
+                {canSeeGroupExpensesSection && formData.include_group_expenses && (
                   <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
                     <p className="text-[10px] font-semibold text-primary mb-1">Group Expenses</p>
                     <CompactFormRow label="Amount" className="!w-auto">

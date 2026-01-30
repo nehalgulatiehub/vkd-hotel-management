@@ -74,6 +74,18 @@ const MENU_ITEMS = [
     ],
   },
   {
+    category: "Booking Sections (Form Toggles)",
+    items: [
+      { key: "booking_section_booking", label: "Booking (Own Hotel)" },
+      { key: "booking_section_delhi_manali", label: "Delhi - Manali" },
+      { key: "booking_section_manali_delhi", label: "Manali - Delhi" },
+      { key: "booking_section_safari", label: "Safari" },
+      { key: "booking_section_another_hotel", label: "Another Hotel" },
+      { key: "booking_section_vehicle", label: "Additional Vehicle" },
+      { key: "booking_section_group_expenses", label: "Group Expenses" },
+    ],
+  },
+  {
     category: "Room Manager",
     items: [
       { key: "room_manager_rooms", label: "Manage Rooms" },
