@@ -24,74 +24,74 @@ interface MenuItem {
   menuKey?: string;
 }
 
-// Helper to determine button color based on action type
+// Helper to determine button color based on action type - using maroon color variants
 const getButtonStyles = (title: string, isActive: boolean): string => {
   const lowerTitle = title.toLowerCase();
   
-  // Add/Create/Generate actions - Green
+  // Add/Create/Generate actions - Dark Maroon
   if (lowerTitle.startsWith("add ") || lowerTitle.startsWith("create ") || lowerTitle.startsWith("generate ")) {
     return isActive
-      ? "bg-emerald-700 text-white border-emerald-700"
-      : "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700";
+      ? "bg-[#5c0a1f] text-white border-[#5c0a1f]"
+      : "bg-[#6b1530] text-white border-[#6b1530] hover:bg-[#5c0a1f]";
   }
   
-  // View/Saved actions - Blue
+  // View/Saved actions - Standard Maroon (original)
   if (lowerTitle.startsWith("view ") || lowerTitle.startsWith("saved ")) {
     return isActive
-      ? "bg-blue-700 text-white border-blue-700"
-      : "bg-blue-600 text-white border-blue-600 hover:bg-blue-700";
+      ? "bg-[#8B1538] text-white border-[#8B1538]"
+      : "bg-[#9a2545] text-white border-[#9a2545] hover:bg-[#8B1538]";
   }
   
-  // Export actions - Orange
+  // Export actions - Rose/Pink Maroon
   if (lowerTitle.startsWith("export ")) {
     return isActive
-      ? "bg-orange-700 text-white border-orange-700"
-      : "bg-orange-500 text-white border-orange-500 hover:bg-orange-600";
+      ? "bg-[#a83255] text-white border-[#a83255]"
+      : "bg-[#b84465] text-white border-[#b84465] hover:bg-[#a83255]";
   }
   
-  // Due Amount actions - Red
+  // Due Amount actions - Deep Red Maroon
   if (lowerTitle.includes("due")) {
     return isActive
-      ? "bg-red-700 text-white border-red-700"
-      : "bg-red-500 text-white border-red-500 hover:bg-red-600";
+      ? "bg-[#7a0020] text-white border-[#7a0020]"
+      : "bg-[#8a1030] text-white border-[#8a1030] hover:bg-[#7a0020]";
   }
   
-  // Payment actions - Amber
+  // Payment actions - Burgundy
   if (lowerTitle.includes("payment")) {
     return isActive
-      ? "bg-amber-700 text-white border-amber-700"
-      : "bg-amber-500 text-white border-amber-500 hover:bg-amber-600";
+      ? "bg-[#722040] text-white border-[#722040]"
+      : "bg-[#823050] text-white border-[#823050] hover:bg-[#722040]";
   }
   
-  // Booking actions (availability, hold) - Purple
+  // Booking actions (availability, hold) - Plum Maroon
   if (lowerTitle.includes("booking") || lowerTitle.includes("hold")) {
     return isActive
-      ? "bg-purple-700 text-white border-purple-700"
-      : "bg-purple-600 text-white border-purple-600 hover:bg-purple-700";
+      ? "bg-[#6d2048] text-white border-[#6d2048]"
+      : "bg-[#7d3058] text-white border-[#7d3058] hover:bg-[#6d2048]";
   }
   
-  // Restaurant actions - Teal
+  // Restaurant/Menu actions - Wine
   if (lowerTitle.includes("restaurant") || lowerTitle.includes("food") || lowerTitle.includes("pos") || lowerTitle.includes("menu") || lowerTitle.includes("table")) {
     return isActive
-      ? "bg-teal-700 text-white border-teal-700"
-      : "bg-teal-600 text-white border-teal-600 hover:bg-teal-700";
+      ? "bg-[#5e1835] text-white border-[#5e1835]"
+      : "bg-[#6e2845] text-white border-[#6e2845] hover:bg-[#5e1835]";
   }
   
-  // Invoice/Billing actions - Indigo
+  // Invoice/Billing actions - Cranberry
   if (lowerTitle.includes("invoice") || lowerTitle.includes("billing")) {
     return isActive
-      ? "bg-indigo-700 text-white border-indigo-700"
-      : "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700";
+      ? "bg-[#8a2050] text-white border-[#8a2050]"
+      : "bg-[#9a3060] text-white border-[#9a3060] hover:bg-[#8a2050]";
   }
   
-  // Volvo/Transport detail actions - Cyan
+  // Volvo/Transport detail actions - Dusty Rose
   if (lowerTitle.includes("volvo") || lowerTitle.includes("delhi") || lowerTitle.includes("manali")) {
     return isActive
-      ? "bg-cyan-700 text-white border-cyan-700"
-      : "bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700";
+      ? "bg-[#9c4060] text-white border-[#9c4060]"
+      : "bg-[#ac5070] text-white border-[#ac5070] hover:bg-[#9c4060]";
   }
   
-  // Default - Maroon (original color)
+  // Default - Original Maroon
   return isActive
     ? "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)]"
     : "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)] hover:bg-[rgb(159,41,76)]";
