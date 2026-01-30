@@ -42,6 +42,49 @@ interface MenuItem {
   adminOnly?: boolean;
 }
 
+// Helper to determine button color based on action type
+const getActionColor = (title: string): string => {
+  const lowerTitle = title.toLowerCase();
+  
+  // Add/Create actions - Green
+  if (lowerTitle.startsWith("add ") || lowerTitle.startsWith("create ") || lowerTitle.startsWith("generate ") || lowerTitle.startsWith("new ")) {
+    return "bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 border-l-2 border-emerald-500";
+  }
+  
+  // View actions - Blue
+  if (lowerTitle.startsWith("view ") || lowerTitle.startsWith("saved ")) {
+    return "bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-l-2 border-blue-500";
+  }
+  
+  // Export actions - Orange
+  if (lowerTitle.startsWith("export ")) {
+    return "bg-orange-500/20 text-orange-700 hover:bg-orange-500/30 border-l-2 border-orange-500";
+  }
+  
+  // Import actions - Purple
+  if (lowerTitle.startsWith("import ")) {
+    return "bg-purple-500/20 text-purple-700 hover:bg-purple-500/30 border-l-2 border-purple-500";
+  }
+  
+  // Due Amount actions - Red
+  if (lowerTitle.includes("due amount") || lowerTitle.includes("due ")) {
+    return "bg-red-500/20 text-red-700 hover:bg-red-500/30 border-l-2 border-red-500";
+  }
+  
+  // Payment actions - Amber
+  if (lowerTitle.includes("payment")) {
+    return "bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 border-l-2 border-amber-500";
+  }
+  
+  // Reports actions - Cyan
+  if (lowerTitle.startsWith("report")) {
+    return "bg-cyan-500/20 text-cyan-700 hover:bg-cyan-500/30 border-l-2 border-cyan-500";
+  }
+  
+  // Default - subtle gray
+  return "hover:bg-sidebar-accent/50";
+};
+
 const menuItems: MenuItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Home, menuKey: "dashboard" },
   {
@@ -284,13 +327,13 @@ export function AppSidebar() {
                             <SidebarMenuSub className="bg-sidebar border-l border-sidebar-border">
                               {item.submenu.map((subItem) => (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild className="text-[10px] h-5 bg-sidebar hover:bg-sidebar-accent/50">
+                                  <SidebarMenuSubButton asChild className={`text-[10px] h-5 ${getActionColor(subItem.title)}`}>
                                     <NavLink
                                       to={subItem.url}
                                       className={({ isActive }) =>
                                         isActive
-                                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                          : "hover:bg-sidebar-accent/50"
+                                          ? "!bg-sidebar-accent !text-sidebar-accent-foreground font-medium"
+                                          : ""
                                       }
                                     >
                                       {subItem.title}
