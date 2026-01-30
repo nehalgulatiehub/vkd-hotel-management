@@ -21,6 +21,7 @@ export type Database = {
           commission_rate: number | null
           company_name: string | null
           created_at: string | null
+          created_by: string | null
           email: string | null
           id: string
           name: string
@@ -35,6 +36,7 @@ export type Database = {
           commission_rate?: number | null
           company_name?: string | null
           created_at?: string | null
+          created_by?: string | null
           email?: string | null
           id?: string
           name: string
@@ -49,6 +51,7 @@ export type Database = {
           commission_rate?: number | null
           company_name?: string | null
           created_at?: string | null
+          created_by?: string | null
           email?: string | null
           id?: string
           name?: string
@@ -63,6 +66,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
