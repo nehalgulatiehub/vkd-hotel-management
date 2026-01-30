@@ -34,7 +34,7 @@ interface City {
 }
 
 export default function AdminAgents() {
-  const { isAdmin, isAccount, loading: authLoading } = useAuthContext();
+  const { user, isAdmin, isAccount, loading: authLoading } = useAuthContext();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function AdminAgents() {
   const [userFilter, setUserFilter] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
-  const { profiles, profilesMap, getUserName } = useProfilesMap();
+  const { profiles, getUserName } = useProfilesMap();
   
   // Form state
   const [name, setName] = useState("");
@@ -92,6 +92,11 @@ export default function AdminAgents() {
       return;
     }
 
+    if (!user) {
+      toast.error("You must be logged in to add an agent");
+      return;
+    }
+
     try {
       const agentData = {
         name,
@@ -112,7 +117,10 @@ export default function AdminAgents() {
         if (error) throw error;
         toast.success("Agent updated successfully");
       } else {
-        const { error } = await supabase.from("agents").insert(agentData);
+        const { error } = await supabase.from("agents").insert({
+          ...agentData,
+          created_by: user.id,
+        });
         if (error) throw error;
         toast.success("Agent added successfully");
       }
@@ -273,7 +281,7 @@ export default function AdminAgents() {
                   <TableCell>{agent.phone || "-"}</TableCell>
                   <TableCell>{agent.email || "-"}</TableCell>
                   <TableCell>{agent.city?.name || "-"}</TableCell>
-                  <TableCell>{getUserName(agent.created_by)}</TableCell>
+                  <TableCell>{agent.created_by ? getUserName(agent.created_by) : "-"}</TableCell>
                   <TableCell>{agent.commission_rate ?? "-"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
