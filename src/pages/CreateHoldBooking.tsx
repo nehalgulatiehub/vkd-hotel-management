@@ -10,43 +10,36 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Clock } from "lucide-react";
-import { CompactFormRow } from "@/components/booking/CompactFormRow";
 
 export default function CreateHoldBooking() {
   const navigate = useNavigate();
   const [agents, setAgents] = useState<any[]>([]);
-  const [ownHotels, setOwnHotels] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
-    booking_type: "direct",
+    booking_type: "agent",
     agent_id: "",
+    reference: "",
+    reference_email: "",
     customer_name: "",
     address: "",
     contact_no: "",
     email: "",
-    check_in_date: "",
-    check_out_date: "",
     adults: 1,
     children: 0,
-    hotel_id: "",
-    room_type: "",
-    number_of_rooms: 1,
     notes: "",
-    hold_until: ""
+    include_booking: false,
+    include_delhi_manali: false,
+    include_manali_delhi: false,
+    include_safari: false,
+    include_another_hotel: false,
+    include_additional_vehicle: false,
+    include_group_expenses: false,
+    agent_commission: ""
   });
 
   useEffect(() => {
     fetchAgents();
-    fetchOwnHotels();
   }, []);
-
-  useEffect(() => {
-    if (formData.hotel_id) {
-      fetchRooms();
-    }
-  }, [formData.hotel_id]);
 
   const fetchAgents = async () => {
     const { data } = await supabase
@@ -56,29 +49,35 @@ export default function CreateHoldBooking() {
     setAgents(data || []);
   };
 
-  const fetchOwnHotels = async () => {
-    const { data } = await supabase
-      .from("own_hotels")
-      .select("*")
-      .order("name");
-    setOwnHotels(data || []);
-  };
-
-  const fetchRooms = async () => {
-    const { data } = await supabase
-      .from("rooms")
-      .select("*")
-      .eq("hotel_id", formData.hotel_id)
-      .eq("is_available", true)
-      .order("room_number");
-    setRooms(data || []);
+  const handleReset = () => {
+    setFormData({
+      booking_type: "agent",
+      agent_id: "",
+      reference: "",
+      reference_email: "",
+      customer_name: "",
+      address: "",
+      contact_no: "",
+      email: "",
+      adults: 1,
+      children: 0,
+      notes: "",
+      include_booking: false,
+      include_delhi_manali: false,
+      include_manali_delhi: false,
+      include_safari: false,
+      include_another_hotel: false,
+      include_additional_vehicle: false,
+      include_group_expenses: false,
+      agent_commission: ""
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.hold_until) {
-      toast.error("Please set hold expiry date and time");
+    if (formData.booking_type === "agent" && !formData.agent_id) {
+      toast.error("Please select an agent");
       return;
     }
 
@@ -86,57 +85,39 @@ export default function CreateHoldBooking() {
       booking_number: `HOLD${Date.now().toString().slice(-8)}`,
       booking_type: formData.booking_type,
       agent_id: formData.agent_id || null,
+      reference: formData.reference || null,
+      reference_email: formData.reference_email || null,
       customer_name: formData.customer_name,
       address: formData.address,
       contact_no: formData.contact_no,
       email: formData.email,
-      check_in_date: formData.check_in_date,
-      check_out_date: formData.check_out_date,
+      check_in_date: new Date().toISOString().split('T')[0],
+      check_out_date: new Date().toISOString().split('T')[0],
       adults: formData.adults,
       children: formData.children,
       notes: formData.notes,
       status: "confirmed" as const,
       payment_status: "pending" as const,
       is_hold: true,
-      hold_until: formData.hold_until,
+      include_booking: formData.include_booking,
+      include_delhi_manali: formData.include_delhi_manali,
+      include_manali_delhi: formData.include_manali_delhi,
+      include_safari: formData.include_safari,
+      include_another_hotel: formData.include_another_hotel,
+      include_additional_vehicle: formData.include_additional_vehicle,
+      include_group_expenses: formData.include_group_expenses,
+      agent_commission: formData.agent_commission ? parseFloat(formData.agent_commission) : null,
       total_amount: 0,
       paid_amount: 0,
       due_amount: 0
     };
 
-    const { data: booking, error: bookingError } = await supabase
+    const { error: bookingError } = await supabase
       .from("bookings")
-      .insert([bookingData])
-      .select()
-      .single();
+      .insert([bookingData]);
 
     if (bookingError) {
       toast.error("Failed to create hold booking");
-      return;
-    }
-
-    const selectedRoom = rooms.find(r => r.id === formData.room_type);
-    const hotelBookingData = {
-      booking_id: booking.id,
-      own_hotel_id: formData.hotel_id,
-      hotel_id: null,
-      check_in_date: formData.check_in_date,
-      check_out_date: formData.check_out_date,
-      room_type: formData.room_type,
-      number_of_rooms: formData.number_of_rooms,
-      room_rate: selectedRoom?.base_price || 0,
-      total_amount: 0,
-      paid_amount: 0,
-      due_amount: 0,
-      notes: formData.notes
-    };
-
-    const { error: hotelError } = await supabase
-      .from("hotel_bookings")
-      .insert([hotelBookingData]);
-
-    if (hotelError) {
-      toast.error("Failed to create hotel booking entry");
       return;
     }
 
@@ -148,220 +129,313 @@ export default function CreateHoldBooking() {
     <div className="min-h-screen bg-background">
       <Header title="Create Hold Booking" />
       <main className="p-4 flex justify-center">
-        <Card className="w-full max-w-xl">
-          <CardContent className="p-4">
-            <div className="mb-3 text-center">
-              <h2 className="text-lg font-semibold">Create Hold Booking</h2>
-              <p className="text-xs text-muted-foreground">Reserve rooms temporarily</p>
+        <Card className="w-full max-w-xl" style={{ backgroundColor: '#F5E6E0' }}>
+          <CardContent className="p-6">
+            <div className="flex justify-end mb-2">
+              <span className="text-red-500 text-xs">* - Required fields</span>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-2">
-              {/* Booking Type */}
-              <CompactFormRow label="Booking Type">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {/* Type */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Type :</Label>
                 <RadioGroup
                   value={formData.booking_type}
                   onValueChange={(value) => setFormData({ ...formData, booking_type: value })}
-                  className="flex gap-4"
+                  className="flex gap-6"
                 >
                   <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="direct" id="direct" className="h-3 w-3" />
-                    <Label htmlFor="direct" className="text-xs">Direct</Label>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <RadioGroupItem value="agent" id="agent" className="h-3 w-3" />
+                    <RadioGroupItem value="agent" id="agent" className="h-4 w-4" />
                     <Label htmlFor="agent" className="text-xs">Agent</Label>
                   </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="direct" id="direct" className="h-4 w-4" />
+                    <Label htmlFor="direct" className="text-xs">Direct from customer</Label>
+                  </div>
                 </RadioGroup>
-              </CompactFormRow>
-
-              {/* Agent Selection */}
-              {formData.booking_type === "agent" && (
-                <CompactFormRow label="Agent" required>
-                  <Select
-                    value={formData.agent_id}
-                    onValueChange={(value) => setFormData({ ...formData, agent_id: value })}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue placeholder="Select agent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {agents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id} className="text-xs">
-                          {agent.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CompactFormRow>
-              )}
-
-              {/* Guest Details */}
-              <CompactFormRow label="Customer Name" required>
-                <Input
-                  required
-                  className="h-7 text-xs"
-                  value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                />
-              </CompactFormRow>
-
-              <CompactFormRow label="Contact No" required>
-                <Input
-                  required
-                  className="h-7 text-xs"
-                  value={formData.contact_no}
-                  onChange={(e) => setFormData({ ...formData, contact_no: e.target.value })}
-                />
-              </CompactFormRow>
-
-              <CompactFormRow label="Email">
-                <Input
-                  type="email"
-                  className="h-7 text-xs"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </CompactFormRow>
-
-              <CompactFormRow label="Address">
-                <Input
-                  className="h-7 text-xs"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                />
-              </CompactFormRow>
-
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-2">
-                <CompactFormRow label="Check-in" required>
-                  <Input
-                    type="date"
-                    required
-                    className="h-7 text-xs"
-                    value={formData.check_in_date}
-                    onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
-                  />
-                </CompactFormRow>
-
-                <CompactFormRow label="Check-out" required>
-                  <Input
-                    type="date"
-                    required
-                    className="h-7 text-xs"
-                    value={formData.check_out_date}
-                    onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
-                  />
-                </CompactFormRow>
+                <span className="text-red-500">*</span>
               </div>
 
-              {/* Occupancy */}
-              <div className="grid grid-cols-2 gap-2">
-                <CompactFormRow label="Adults">
-                  <Input
-                    type="number"
-                    min="1"
-                    className="h-7 text-xs"
-                    value={formData.adults}
-                    onChange={(e) => setFormData({ ...formData, adults: parseInt(e.target.value) })}
-                  />
-                </CompactFormRow>
-
-                <CompactFormRow label="Children">
-                  <Input
-                    type="number"
-                    min="0"
-                    className="h-7 text-xs"
-                    value={formData.children}
-                    onChange={(e) => setFormData({ ...formData, children: parseInt(e.target.value) })}
-                  />
-                </CompactFormRow>
-              </div>
-
-              {/* Hotel & Room */}
-              <CompactFormRow label="Hotel" required>
+              {/* Agent */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Agent :</Label>
                 <Select
-                  value={formData.hotel_id}
-                  onValueChange={(value) => setFormData({ ...formData, hotel_id: value, room_type: "" })}
+                  value={formData.agent_id}
+                  onValueChange={(value) => setFormData({ ...formData, agent_id: value })}
+                  disabled={formData.booking_type !== "agent"}
                 >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue placeholder="Select hotel" />
+                  <SelectTrigger className="bg-white flex-1 h-7 text-xs">
+                    <SelectValue placeholder="-----Select-----" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ownHotels.map((hotel) => (
-                      <SelectItem key={hotel.id} value={hotel.id} className="text-xs">
-                        {hotel.name}
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id} className="text-xs">
+                        {agent.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </CompactFormRow>
-
-              <div className="grid grid-cols-2 gap-2">
-                <CompactFormRow label="Room Type" required>
-                  <Select
-                    value={formData.room_type}
-                    onValueChange={(value) => setFormData({ ...formData, room_type: value })}
-                    disabled={!formData.hotel_id}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue placeholder="Select room" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rooms.map((room) => (
-                        <SelectItem key={room.id} value={room.id} className="text-xs">
-                          {room.room_number} - {room.room_type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CompactFormRow>
-
-                <CompactFormRow label="No. of Rooms">
-                  <Input
-                    type="number"
-                    min="1"
-                    className="h-7 text-xs"
-                    value={formData.number_of_rooms}
-                    onChange={(e) => setFormData({ ...formData, number_of_rooms: parseInt(e.target.value) })}
-                  />
-                </CompactFormRow>
+                <span className="text-red-500">*</span>
               </div>
 
-              {/* Hold Expiry */}
-              <div className="border border-orange-400 p-2 rounded bg-orange-50 dark:bg-orange-950/20">
-                <div className="flex items-center gap-1 mb-1">
-                  <Clock className="h-3 w-3 text-orange-600" />
-                  <Label className="text-xs text-orange-900 dark:text-orange-400 font-semibold">Hold Expiry *</Label>
-                </div>
+              {/* Reference */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Reference :</Label>
                 <Input
-                  type="datetime-local"
-                  required
-                  className="h-7 text-xs bg-background"
-                  value={formData.hold_until}
-                  onChange={(e) => setFormData({ ...formData, hold_until: e.target.value })}
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.reference}
+                  onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
                 />
-                <p className="text-[10px] text-orange-700 dark:text-orange-500 mt-1">
-                  Auto-cancels if not confirmed before this time
-                </p>
               </div>
 
-              {/* Notes */}
-              <CompactFormRow label="Notes">
+              {/* Reference Email */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Reference Email :</Label>
+                <Input
+                  type="email"
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.reference_email}
+                  onChange={(e) => setFormData({ ...formData, reference_email: e.target.value })}
+                />
+              </div>
+
+              {/* Customer Name */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Customer Name :</Label>
+                <Input
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.customer_name}
+                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                />
+              </div>
+
+              {/* Address */}
+              <div className="flex items-start gap-2">
+                <Label className="w-40 text-right text-xs shrink-0 pt-1">Address :</Label>
                 <Textarea
-                  placeholder="Special notes..."
-                  className="text-xs min-h-[50px]"
+                  className="bg-white flex-1 text-xs min-h-[60px]"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              {/* Contact No */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Contact No. :</Label>
+                <Input
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.contact_no}
+                  onChange={(e) => setFormData({ ...formData, contact_no: e.target.value })}
+                />
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Email :</Label>
+                <Input
+                  type="email"
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+
+              {/* No of People */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">No of People :</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  className="bg-white w-16 h-7 text-xs"
+                  value={formData.adults}
+                  onChange={(e) => setFormData({ ...formData, adults: parseInt(e.target.value) || 1 })}
+                />
+                <span className="text-xs">Adult</span>
+                <Input
+                  type="number"
+                  min="0"
+                  className="bg-white w-16 h-7 text-xs"
+                  value={formData.children}
+                  onChange={(e) => setFormData({ ...formData, children: parseInt(e.target.value) || 0 })}
+                />
+                <span className="text-xs">Children</span>
+              </div>
+
+              {/* Note */}
+              <div className="flex items-start gap-2">
+                <Label className="w-40 text-right text-xs shrink-0 pt-1">Note :</Label>
+                <Textarea
+                  className="bg-white flex-1 text-xs min-h-[60px]"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={2}
+                  rows={3}
                 />
-              </CompactFormRow>
+              </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => navigate("/bookings")}>
-                  Cancel
+              {/* Toggle Options with Yes/No Radio Buttons */}
+              {/* Booking */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Booking :</Label>
+                <RadioGroup
+                  value={formData.include_booking ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="booking-yes" className="h-4 w-4" />
+                    <Label htmlFor="booking-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="booking-no" className="h-4 w-4" />
+                    <Label htmlFor="booking-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Delhi - Manali */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">DELHI - MANALI :</Label>
+                <RadioGroup
+                  value={formData.include_delhi_manali ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_delhi_manali: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="dm-yes" className="h-4 w-4" />
+                    <Label htmlFor="dm-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="dm-no" className="h-4 w-4" />
+                    <Label htmlFor="dm-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Manali - Delhi */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">MANALI - DELHI :</Label>
+                <RadioGroup
+                  value={formData.include_manali_delhi ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_manali_delhi: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="md-yes" className="h-4 w-4" />
+                    <Label htmlFor="md-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="md-no" className="h-4 w-4" />
+                    <Label htmlFor="md-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Safari */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Safari :</Label>
+                <RadioGroup
+                  value={formData.include_safari ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_safari: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="safari-yes" className="h-4 w-4" />
+                    <Label htmlFor="safari-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="safari-no" className="h-4 w-4" />
+                    <Label htmlFor="safari-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Another Hotel */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Another Hotel :</Label>
+                <RadioGroup
+                  value={formData.include_another_hotel ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="hotel-yes" className="h-4 w-4" />
+                    <Label htmlFor="hotel-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="hotel-no" className="h-4 w-4" />
+                    <Label htmlFor="hotel-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Additional Vehicle */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Additional Vehicle :</Label>
+                <RadioGroup
+                  value={formData.include_additional_vehicle ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_additional_vehicle: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="vehicle-yes" className="h-4 w-4" />
+                    <Label htmlFor="vehicle-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="vehicle-no" className="h-4 w-4" />
+                    <Label htmlFor="vehicle-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Group Expenses */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Group Expences :</Label>
+                <RadioGroup
+                  value={formData.include_group_expenses ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, include_group_expenses: value === "yes" })}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="yes" id="expenses-yes" className="h-4 w-4" />
+                    <Label htmlFor="expenses-yes" className="text-xs">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="no" id="expenses-no" className="h-4 w-4" />
+                    <Label htmlFor="expenses-no" className="text-xs">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Agent Commission */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Agent Commission :</Label>
+                <Input
+                  type="number"
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.agent_commission}
+                  onChange={(e) => setFormData({ ...formData, agent_commission: e.target.value })}
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-center gap-4 pt-4">
+                <Button 
+                  type="submit" 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6"
+                >
+                  Create
                 </Button>
-                <Button type="submit" size="sm" className="bg-gradient-primary">
-                  Create Hold Booking
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleReset}
+                  className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6"
+                >
+                  Reset
                 </Button>
               </div>
             </form>
