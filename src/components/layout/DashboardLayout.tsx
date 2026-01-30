@@ -24,6 +24,79 @@ interface MenuItem {
   menuKey?: string;
 }
 
+// Helper to determine button color based on action type
+const getButtonStyles = (title: string, isActive: boolean): string => {
+  const lowerTitle = title.toLowerCase();
+  
+  // Add/Create/Generate actions - Green
+  if (lowerTitle.startsWith("add ") || lowerTitle.startsWith("create ") || lowerTitle.startsWith("generate ")) {
+    return isActive
+      ? "bg-emerald-700 text-white border-emerald-700"
+      : "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700";
+  }
+  
+  // View/Saved actions - Blue
+  if (lowerTitle.startsWith("view ") || lowerTitle.startsWith("saved ")) {
+    return isActive
+      ? "bg-blue-700 text-white border-blue-700"
+      : "bg-blue-600 text-white border-blue-600 hover:bg-blue-700";
+  }
+  
+  // Export actions - Orange
+  if (lowerTitle.startsWith("export ")) {
+    return isActive
+      ? "bg-orange-700 text-white border-orange-700"
+      : "bg-orange-500 text-white border-orange-500 hover:bg-orange-600";
+  }
+  
+  // Due Amount actions - Red
+  if (lowerTitle.includes("due")) {
+    return isActive
+      ? "bg-red-700 text-white border-red-700"
+      : "bg-red-500 text-white border-red-500 hover:bg-red-600";
+  }
+  
+  // Payment actions - Amber
+  if (lowerTitle.includes("payment")) {
+    return isActive
+      ? "bg-amber-700 text-white border-amber-700"
+      : "bg-amber-500 text-white border-amber-500 hover:bg-amber-600";
+  }
+  
+  // Booking actions (availability, hold) - Purple
+  if (lowerTitle.includes("booking") || lowerTitle.includes("hold")) {
+    return isActive
+      ? "bg-purple-700 text-white border-purple-700"
+      : "bg-purple-600 text-white border-purple-600 hover:bg-purple-700";
+  }
+  
+  // Restaurant actions - Teal
+  if (lowerTitle.includes("restaurant") || lowerTitle.includes("food") || lowerTitle.includes("pos") || lowerTitle.includes("menu") || lowerTitle.includes("table")) {
+    return isActive
+      ? "bg-teal-700 text-white border-teal-700"
+      : "bg-teal-600 text-white border-teal-600 hover:bg-teal-700";
+  }
+  
+  // Invoice/Billing actions - Indigo
+  if (lowerTitle.includes("invoice") || lowerTitle.includes("billing")) {
+    return isActive
+      ? "bg-indigo-700 text-white border-indigo-700"
+      : "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700";
+  }
+  
+  // Volvo/Transport detail actions - Cyan
+  if (lowerTitle.includes("volvo") || lowerTitle.includes("delhi") || lowerTitle.includes("manali")) {
+    return isActive
+      ? "bg-cyan-700 text-white border-cyan-700"
+      : "bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700";
+  }
+  
+  // Default - Maroon (original color)
+  return isActive
+    ? "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)]"
+    : "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)] hover:bg-[rgb(159,41,76)]";
+};
+
 const menuItems: MenuItem[] = [
   { title: "Home", url: "/dashboard", menuKey: "dashboard" },
   { title: "Change Password", url: "/settings", menuKey: "settings" },
@@ -155,11 +228,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.url + item.title}
                   to={item.url}
                   className={({ isActive }) =>
-                    `block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors ${
-                      isActive
-                        ? "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)]"
-                        : "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)] hover:bg-[rgb(159,41,76)]"
-                    }`
+                    `block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors ${getButtonStyles(item.title, isActive)}`
                   }
                 >
                   {item.title}
