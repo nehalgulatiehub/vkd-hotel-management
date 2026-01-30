@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { syncServiceTableOnApproval } from "@/utils/paymentSync";
 
 interface PendingPayment {
   id: string;
@@ -277,6 +278,20 @@ export default function PaymentApprovals() {
             .update(updateData)
             .eq("id", payment.id);
           error = bError;
+          
+          // Sync service tables when approving booking payments
+          if (!bError && status === "approved" && payment.booking_id) {
+            // Fetch full payment details for sync
+            const { data: paymentData } = await supabase
+              .from("payments")
+              .select("id, amount, booking_id, payment_type")
+              .eq("id", payment.id)
+              .single();
+            
+            if (paymentData) {
+              await syncServiceTableOnApproval([paymentData]);
+            }
+          }
           break;
         case "restaurant":
           const { error: rError } = await supabase

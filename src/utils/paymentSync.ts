@@ -87,7 +87,7 @@ export async function syncServiceTableOnApproval(payments: PaymentInfo[]) {
         .from("volvo_bookings" as any)
         .select("id, paid_amount, total_amount")
         .eq("booking_id", booking_id)
-        .eq("route_type", "delhi_manali")
+        .eq("route", "delhi_manali")
         .maybeSingle();
 
       if (volvoBooking) {
@@ -103,11 +103,122 @@ export async function syncServiceTableOnApproval(payments: PaymentInfo[]) {
         .from("volvo_bookings" as any)
         .select("id, paid_amount, total_amount")
         .eq("booking_id", booking_id)
-        .eq("route_type", "manali_delhi")
+        .eq("route", "manali_delhi")
         .maybeSingle();
 
       if (volvoBooking) {
         const newPaid = ((volvoBooking as any).paid_amount || 0) + amount;
+        const newDue = ((volvoBooking as any).total_amount || 0) - newPaid;
+        await supabase
+          .from("volvo_bookings" as any)
+          .update({ paid_amount: newPaid, due_amount: newDue })
+          .eq("id", (volvoBooking as any).id);
+      }
+    }
+  }
+}
+
+/**
+ * Reverses the paid_amount and due_amount when a payment is rejected/reverted from approved status.
+ * This ensures amounts stay in sync when admins reject previously approved payments.
+ */
+export async function reversePaymentOnRejection(payments: PaymentInfo[]) {
+  for (const payment of payments) {
+    const { booking_id, amount, payment_type } = payment;
+
+    // Update bookings table first - subtract the amount
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("paid_amount, total_amount")
+      .eq("id", booking_id)
+      .single();
+
+    if (booking) {
+      const newPaidAmount = Math.max(0, (booking.paid_amount || 0) - amount);
+      const newDueAmount = (booking.total_amount || 0) - newPaidAmount;
+
+      await supabase
+        .from("bookings")
+        .update({
+          paid_amount: newPaidAmount,
+          due_amount: newDueAmount,
+          payment_status: newPaidAmount <= 0 ? "pending" : newDueAmount <= 0 ? "paid" : "partial"
+        })
+        .eq("id", booking_id);
+    }
+
+    // Now update service-specific table based on payment_type
+    if (payment_type === "safari") {
+      const { data: safariBooking } = await supabase
+        .from("safari_bookings")
+        .select("id, paid_amount, total_amount")
+        .eq("booking_id", booking_id)
+        .maybeSingle();
+
+      if (safariBooking) {
+        const newPaid = Math.max(0, (safariBooking.paid_amount || 0) - amount);
+        const newDue = (safariBooking.total_amount || 0) - newPaid;
+        await supabase
+          .from("safari_bookings")
+          .update({ paid_amount: newPaid, due_amount: newDue })
+          .eq("id", safariBooking.id);
+      }
+    } else if (payment_type === "hotel" || payment_type === "another_hotel") {
+      const { data: hotelBooking } = await supabase
+        .from("hotel_bookings")
+        .select("id, paid_amount, total_amount")
+        .eq("booking_id", booking_id)
+        .maybeSingle();
+
+      if (hotelBooking) {
+        const newPaid = Math.max(0, (hotelBooking.paid_amount || 0) - amount);
+        const newDue = (hotelBooking.total_amount || 0) - newPaid;
+        await supabase
+          .from("hotel_bookings")
+          .update({ paid_amount: newPaid, due_amount: newDue })
+          .eq("id", hotelBooking.id);
+      }
+    } else if (payment_type === "vehicle") {
+      const { data: vehicleBooking } = await supabase
+        .from("vehicle_bookings" as any)
+        .select("id, paid_amount, total_amount")
+        .eq("booking_id", booking_id)
+        .maybeSingle();
+
+      if (vehicleBooking) {
+        const newPaid = Math.max(0, ((vehicleBooking as any).paid_amount || 0) - amount);
+        const newDue = ((vehicleBooking as any).total_amount || 0) - newPaid;
+        await supabase
+          .from("vehicle_bookings" as any)
+          .update({ paid_amount: newPaid, due_amount: newDue })
+          .eq("id", (vehicleBooking as any).id);
+      }
+    } else if (payment_type === "volvo_dm" || payment_type === "delhi_manali") {
+      const { data: volvoBooking } = await supabase
+        .from("volvo_bookings" as any)
+        .select("id, paid_amount, total_amount")
+        .eq("booking_id", booking_id)
+        .eq("route", "delhi_manali")
+        .maybeSingle();
+
+      if (volvoBooking) {
+        const newPaid = Math.max(0, ((volvoBooking as any).paid_amount || 0) - amount);
+        const newDue = ((volvoBooking as any).total_amount || 0) - newPaid;
+        await supabase
+          .from("volvo_bookings" as any)
+          .update({ paid_amount: newPaid, due_amount: newDue })
+          .eq("id", (volvoBooking as any).id);
+      }
+    } else if (payment_type === "volvo_md" || payment_type === "manali_delhi") {
+      const { data: volvoBooking } = await supabase
+        .from("volvo_bookings" as any)
+        .select("id, paid_amount, total_amount")
+        .eq("booking_id", booking_id)
+        .eq("route", "manali_delhi")
+        .maybeSingle();
+
+      if (volvoBooking) {
+        const newPaid = Math.max(0, ((volvoBooking as any).paid_amount || 0) - amount);
         const newDue = ((volvoBooking as any).total_amount || 0) - newPaid;
         await supabase
           .from("volvo_bookings" as any)

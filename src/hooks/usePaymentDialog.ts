@@ -44,79 +44,6 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setShowPaymentDialog(true);
   };
 
-  const updateServiceTable = async (serviceInfo: ServiceInfo, amount: number) => {
-    const tableMap: Record<string, string> = {
-      'safari': 'safari_bookings',
-      'hotel': 'hotel_bookings',
-      'vehicle': 'vehicle_bookings',
-      'volvo_dm': 'volvo_bookings',
-      'volvo_md': 'volvo_bookings'
-    };
-
-    const tableName = tableMap[serviceInfo.type];
-    if (!tableName) return;
-
-    // Get current service record using raw query approach for dynamic table
-    let serviceRecord: { paid_amount: number | null; total_amount: number | null } | null = null;
-    
-    if (serviceInfo.type === 'safari') {
-      const { data } = await supabase
-        .from("safari_bookings")
-        .select("paid_amount, total_amount")
-        .eq("id", serviceInfo.id)
-        .maybeSingle();
-      serviceRecord = data;
-    } else if (serviceInfo.type === 'hotel') {
-      const { data } = await supabase
-        .from("hotel_bookings")
-        .select("paid_amount, total_amount")
-        .eq("id", serviceInfo.id)
-        .maybeSingle();
-      serviceRecord = data;
-    } else if (serviceInfo.type === 'vehicle') {
-      const { data } = await supabase
-        .from("vehicle_bookings" as any)
-        .select("paid_amount, total_amount")
-        .eq("id", serviceInfo.id)
-        .maybeSingle();
-      serviceRecord = data as any;
-    } else if (serviceInfo.type === 'volvo_dm' || serviceInfo.type === 'volvo_md') {
-      const { data } = await supabase
-        .from("volvo_bookings" as any)
-        .select("paid_amount, total_amount")
-        .eq("id", serviceInfo.id)
-        .maybeSingle();
-      serviceRecord = data as any;
-    }
-
-    if (serviceRecord) {
-      const newPaidAmount = (serviceRecord.paid_amount || 0) + amount;
-      const newDueAmount = (serviceRecord.total_amount || 0) - newPaidAmount;
-
-      if (serviceInfo.type === 'safari') {
-        await supabase
-          .from("safari_bookings")
-          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
-          .eq("id", serviceInfo.id);
-      } else if (serviceInfo.type === 'hotel') {
-        await supabase
-          .from("hotel_bookings")
-          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
-          .eq("id", serviceInfo.id);
-      } else if (serviceInfo.type === 'vehicle') {
-        await supabase
-          .from("vehicle_bookings" as any)
-          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
-          .eq("id", serviceInfo.id);
-      } else if (serviceInfo.type === 'volvo_dm' || serviceInfo.type === 'volvo_md') {
-        await supabase
-          .from("volvo_bookings" as any)
-          .update({ paid_amount: newPaidAmount, due_amount: newDueAmount })
-          .eq("id", serviceInfo.id);
-      }
-    }
-  };
-
   const submitPayment = async () => {
     if (!paymentAmount || !paymentMode) {
       toast.error("Please fill in required fields");
@@ -129,6 +56,19 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     try {
       const amount = parseFloat(paymentAmount);
       
+      // Determine payment_type based on selectedService
+      let paymentType = "booking";
+      if (selectedService) {
+        const typeMap: Record<string, string> = {
+          'safari': 'safari',
+          'hotel': 'hotel',
+          'vehicle': 'vehicle',
+          'volvo_dm': 'delhi_manali',
+          'volvo_md': 'manali_delhi'
+        };
+        paymentType = typeMap[selectedService.type] || "booking";
+      }
+      
       const { error: paymentError } = await supabase
         .from("payments")
         .insert({
@@ -136,30 +76,17 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
           amount: amount,
           payment_mode: paymentMode,
           reference_number: paymentReference,
-          payment_date: new Date().toISOString().split('T')[0]
+          payment_date: new Date().toISOString().split('T')[0],
+          payment_type: paymentType,
+          approval_status: "pending" // Payments start as pending - amounts update only on approval
         });
 
       if (paymentError) throw paymentError;
 
-      // Update booking paid and due amounts
-      const newPaidAmount = (selectedBooking.paid_amount || 0) + amount;
-      const newDueAmount = (selectedBooking.total_amount || 0) - newPaidAmount;
+      // NOTE: We do NOT update booking.paid_amount or service table amounts here.
+      // This happens when the payment is APPROVED by an admin via syncServiceTableOnApproval.
 
-      await supabase
-        .from("bookings")
-        .update({
-          paid_amount: newPaidAmount,
-          due_amount: newDueAmount,
-          payment_status: newDueAmount <= 0 ? "paid" : "partial"
-        })
-        .eq("id", selectedBooking.id);
-
-      // Also update the service-specific table if provided
-      if (selectedService) {
-        await updateServiceTable(selectedService, amount);
-      }
-
-      toast.success("Payment added successfully");
+      toast.success("Payment added successfully (pending approval)");
       setShowPaymentDialog(false);
       onPaymentSuccess?.();
     } catch (error) {
