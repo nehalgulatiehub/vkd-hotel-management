@@ -79,10 +79,15 @@ import PaymentApprovals from "./pages/PaymentApprovals";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPlaceholder from "./pages/admin/AdminPlaceholder";
 import AdminCities from "./pages/admin/AdminCities";
+import AdminAddCity from "./pages/admin/AdminAddCity";
 import AdminAgents from "./pages/admin/AdminAgents";
+import AdminAddAgent from "./pages/admin/AdminAddAgent";
 import AdminTransporters from "./pages/admin/AdminTransporters";
+import AdminAddTransporter from "./pages/admin/AdminAddTransporter";
 import AdminAnotherHotels from "./pages/admin/AdminAnotherHotels";
+import AdminAddAnotherHotel from "./pages/admin/AdminAddAnotherHotel";
 import AdminOwnHotels from "./pages/admin/AdminOwnHotels";
+import AdminAddOwnHotel from "./pages/admin/AdminAddOwnHotel";
 import AdminUserList from "./pages/admin/AdminUserList";
 import ViewPendingPayment from "./pages/admin/ViewPendingPayment";
 import ViewApprovedPayment from "./pages/admin/ViewApprovedPayment";
@@ -566,17 +571,17 @@ const App = () => (
           <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
           <Route path="/admin/approvals" element={<AdminLayout><PaymentApprovals /></AdminLayout>} />
           <Route path="/admin/cities" element={<AdminLayout><AdminCities /></AdminLayout>} />
-          <Route path="/admin/cities/add" element={<AdminLayout><AdminCities /></AdminLayout>} />
+          <Route path="/admin/cities/add" element={<AdminLayout><AdminAddCity /></AdminLayout>} />
           <Route path="/admin/agents" element={<AdminLayout><AdminAgents /></AdminLayout>} />
-          <Route path="/admin/agents/add" element={<AdminLayout><AdminAgents /></AdminLayout>} />
+          <Route path="/admin/agents/add" element={<AdminLayout><AdminAddAgent /></AdminLayout>} />
           <Route path="/admin/agents/export" element={<AdminLayout><AdminAgents /></AdminLayout>} />
           <Route path="/admin/transporters" element={<AdminLayout><AdminTransporters /></AdminLayout>} />
-          <Route path="/admin/transporters/add" element={<AdminLayout><AdminTransporters /></AdminLayout>} />
+          <Route path="/admin/transporters/add" element={<AdminLayout><AdminAddTransporter /></AdminLayout>} />
           <Route path="/admin/transporters/export" element={<AdminLayout><AdminTransporters /></AdminLayout>} />
           <Route path="/admin/another-hotels" element={<AdminLayout><AdminAnotherHotels /></AdminLayout>} />
-          <Route path="/admin/another-hotels/add" element={<AdminLayout><AdminAnotherHotels /></AdminLayout>} />
-          <Route path="/admin/hotels" element={<AdminLayout><AdminOwnHotels /></AdminLayout>} />
-          <Route path="/admin/hotels/add" element={<AdminLayout><AdminOwnHotels /></AdminLayout>} />
+          <Route path="/admin/another-hotels/add" element={<AdminLayout><AdminAddAnotherHotel /></AdminLayout>} />
+          <Route path="/admin/own-hotels" element={<AdminLayout><AdminOwnHotels /></AdminLayout>} />
+          <Route path="/admin/own-hotels/add" element={<AdminLayout><AdminAddOwnHotel /></AdminLayout>} />
           <Route path="/admin/pending-payments" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
           <Route path="/admin/approved-payments" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
           <Route path="/admin/reference-list" element={<AdminLayout><ViewReferenceList /></AdminLayout>} />

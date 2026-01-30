@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Search, Download } from "lucide-react";
@@ -34,25 +33,14 @@ interface City {
 }
 
 export default function AdminAgents() {
+  const navigate = useNavigate();
   const { user, isAdmin, isAccount, loading: authLoading } = useAuthContext();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [userFilter, setUserFilter] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const { profiles, getUserName } = useProfilesMap();
-  
-  // Form state
-  const [name, setName] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [commissionRate, setCommissionRate] = useState("");
-  const [cityId, setCityId] = useState("");
-  const [notes, setNotes] = useState("");
 
   const canManage = isAdmin() || isAccount();
 
@@ -86,67 +74,6 @@ export default function AdminAgents() {
     setCities(data || []);
   };
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      toast.error("Agent name is required");
-      return;
-    }
-
-    if (!user) {
-      toast.error("You must be logged in to add an agent");
-      return;
-    }
-
-    try {
-      const agentData = {
-        name,
-        company_name: companyName || null,
-        phone: phone || null,
-        email: email || null,
-        address: address || null,
-        commission_rate: commissionRate ? parseFloat(commissionRate) : null,
-        city_id: cityId || null,
-        notes: notes || null,
-      };
-
-      if (editingAgent) {
-        const { error } = await supabase
-          .from("agents")
-          .update(agentData)
-          .eq("id", editingAgent.id);
-        if (error) throw error;
-        toast.success("Agent updated successfully");
-      } else {
-        const { error } = await supabase.from("agents").insert({
-          ...agentData,
-          created_by: user.id,
-        });
-        if (error) throw error;
-        toast.success("Agent added successfully");
-      }
-      
-      setIsDialogOpen(false);
-      resetForm();
-      fetchAgents();
-    } catch (error) {
-      console.error("Error saving agent:", error);
-      toast.error("Failed to save agent");
-    }
-  };
-
-  const handleEdit = (agent: Agent) => {
-    setEditingAgent(agent);
-    setName(agent.name);
-    setCompanyName(agent.company_name || "");
-    setPhone(agent.phone || "");
-    setEmail(agent.email || "");
-    setAddress(agent.address || "");
-    setCommissionRate(agent.commission_rate?.toString() || "");
-    setCityId(agent.city_id || "");
-    setNotes(agent.notes || "");
-    setIsDialogOpen(true);
-  };
-
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this agent?")) return;
     
@@ -170,6 +97,7 @@ export default function AdminAgents() {
       Address: agent.address || "",
       "Commission Rate": agent.commission_rate || 0,
       City: agent.city?.name || "",
+      User: agent.created_by ? getUserName(agent.created_by) : "",
       Notes: agent.notes || "",
     }));
 
@@ -178,23 +106,6 @@ export default function AdminAgents() {
     XLSX.utils.book_append_sheet(wb, ws, "Agents");
     XLSX.writeFile(wb, "agents_export.xlsx");
     toast.success("Agents exported successfully");
-  };
-
-  const resetForm = () => {
-    setEditingAgent(null);
-    setName("");
-    setCompanyName("");
-    setPhone("");
-    setEmail("");
-    setAddress("");
-    setCommissionRate("");
-    setCityId("");
-    setNotes("");
-  };
-
-  const openAddDialog = () => {
-    resetForm();
-    setIsDialogOpen(true);
   };
 
   const filteredAgents = agents.filter(agent => {
@@ -222,7 +133,7 @@ export default function AdminAgents() {
             <Download className="h-4 w-4 mr-1" />
             Export
           </Button>
-          <Button size="sm" onClick={openAddDialog}>
+          <Button size="sm" onClick={() => navigate("/admin/agents/add")}>
             <Plus className="h-4 w-4 mr-1" />
             Add Agent
           </Button>
@@ -285,7 +196,7 @@ export default function AdminAgents() {
                   <TableCell>{agent.commission_rate ?? "-"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(agent)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/admin/agents/add?edit=${agent.id}`)}>
                         <Pencil className="h-3 w-3" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(agent.id)}>
@@ -306,59 +217,6 @@ export default function AdminAgents() {
           </Table>
         </CardContent>
       </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingAgent ? "Edit Agent" : "Add Agent"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Name *</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Agent name" />
-            </div>
-            <div>
-              <Label>Company Name</Label>
-              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Company" />
-            </div>
-            <div>
-              <Label>Phone</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
-            </div>
-            <div>
-              <Label>City</Label>
-              <Select value={cityId} onValueChange={setCityId}>
-                <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
-                <SelectContent>
-                  {cities.map(city => (
-                    <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Commission Rate (%)</Label>
-              <Input value={commissionRate} onChange={(e) => setCommissionRate(e.target.value)} placeholder="0" type="number" />
-            </div>
-            <div className="col-span-2">
-              <Label>Address</Label>
-              <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
-            </div>
-            <div className="col-span-2">
-              <Label>Notes</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes" rows={2} />
-            </div>
-            <div className="col-span-2 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave}>{editingAgent ? "Update" : "Add"}</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
