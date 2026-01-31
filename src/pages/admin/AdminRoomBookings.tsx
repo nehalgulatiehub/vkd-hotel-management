@@ -313,9 +313,6 @@ export default function AdminRoomBookings() {
 
       {/* Search Filter Section */}
       <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3">
-        <div className="bg-[#8B0000] text-white px-3 py-1 text-sm font-medium mb-3 inline-block">
-          Search
-        </div>
         
         <div className="flex flex-wrap items-center gap-4 text-xs">
           {/* Booking From */}

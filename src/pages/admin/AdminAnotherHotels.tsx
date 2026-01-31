@@ -168,9 +168,6 @@ export default function AdminAnotherHotels() {
 
       {/* Search Filter Section */}
       <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3">
-        <div className="bg-[#8B0000] text-white px-3 py-1 text-sm font-medium mb-3 inline-block">
-          Search
-        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
           {/* Row 1 */}
