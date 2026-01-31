@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface City {
+  id: string;
+  name: string;
+}
 
 interface AnotherHotel {
   id: string;
@@ -19,6 +22,8 @@ interface AnotherHotel {
   rating: number | null;
   city_id: string | null;
   notes: string | null;
+  room_types: string | null;
+  packages: string | null;
   city?: { name: string } | null;
 }
 
@@ -26,16 +31,29 @@ export default function AdminAnotherHotels() {
   const navigate = useNavigate();
   const { isAdmin, isAccount, loading: authLoading } = useAuthContext();
   const [hotels, setHotels] = useState<AnotherHotel[]>([]);
+  const [filteredHotels, setFilteredHotels] = useState<AnotherHotel[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  
+  // Filter states
+  const [hotelNameFilter, setHotelNameFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+  const [emailFilter, setEmailFilter] = useState("");
+  const [contactNoFilter, setContactNoFilter] = useState("");
+  const [selectedHotels, setSelectedHotels] = useState<string[]>([]);
 
   const canManage = isAdmin() || isAccount();
 
   useEffect(() => {
     if (!authLoading && canManage) {
       fetchHotels();
+      fetchCities();
     }
   }, [authLoading, canManage]);
+
+  useEffect(() => {
+    setFilteredHotels(hotels);
+  }, [hotels]);
 
   const fetchHotels = async () => {
     setLoading(true);
@@ -55,6 +73,46 @@ export default function AdminAnotherHotels() {
     }
   };
 
+  const fetchCities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("cities")
+        .select("id, name")
+        .order("name");
+      if (error) throw error;
+      setCities(data || []);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    }
+  };
+
+  const handleSearch = () => {
+    let result = [...hotels];
+    
+    if (hotelNameFilter) {
+      result = result.filter(h => h.id === hotelNameFilter);
+    }
+    if (cityFilter) {
+      result = result.filter(h => h.city_id === cityFilter);
+    }
+    if (emailFilter) {
+      result = result.filter(h => h.email?.toLowerCase().includes(emailFilter.toLowerCase()));
+    }
+    if (contactNoFilter) {
+      result = result.filter(h => h.phone?.includes(contactNoFilter));
+    }
+    
+    setFilteredHotels(result);
+  };
+
+  const handleViewAll = () => {
+    setHotelNameFilter("");
+    setCityFilter("");
+    setEmailFilter("");
+    setContactNoFilter("");
+    setFilteredHotels(hotels);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this hotel?")) return;
     
@@ -69,77 +127,190 @@ export default function AdminAnotherHotels() {
     }
   };
 
-  const filteredHotels = hotels.filter(h => 
-    h.name.toLowerCase().includes(search.toLowerCase()) ||
-    (h.contact_person && h.contact_person.toLowerCase().includes(search.toLowerCase()))
-  );
+  const toggleHotelSelection = (id: string) => {
+    setSelectedHotels(prev => 
+      prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedHotels.length === filteredHotels.length) {
+      setSelectedHotels([]);
+    } else {
+      setSelectedHotels(filteredHotels.map(h => h.id));
+    }
+  };
 
   if (authLoading || loading) {
     return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
   }
 
   if (!canManage) {
-    return <div className="p-6"><Card><CardContent className="py-8 text-center">Access Denied</CardContent></Card></div>;
+    return <div className="p-6 text-center">Access Denied</div>;
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Manage Another Hotels</h1>
-        <Button size="sm" onClick={() => navigate("/admin/another-hotels/add")}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Hotel
+    <div className="p-4">
+      {/* Header */}
+      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium">Manage Another Hotel</span>
+        </div>
+        <Button 
+          size="sm" 
+          variant="outline"
+          className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs"
+          onClick={() => navigate("/admin/another-hotels/add")}
+        >
+          Add Another Hotel
         </Button>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search hotels..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-9" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact Person</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredHotels.map((h) => (
-                <TableRow key={h.id}>
-                  <TableCell className="font-medium">{h.name}</TableCell>
-                  <TableCell>{h.contact_person || "-"}</TableCell>
-                  <TableCell>{h.phone || "-"}</TableCell>
-                  <TableCell>{h.city?.name || "-"}</TableCell>
-                  <TableCell>{h.rating ?? "-"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/admin/another-hotels/add?edit=${h.id}`)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(h.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+      {/* Search Filter Section */}
+      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3">
+        <div className="bg-[#8B0000] text-white px-3 py-1 text-sm font-medium mb-3 inline-block">
+          Search
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
+          {/* Row 1 */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-700 w-20 text-right">Hotel Name :</label>
+            <select
+              value={hotelNameFilter}
+              onChange={(e) => setHotelNameFilter(e.target.value)}
+              className="flex-1 h-7 text-xs border border-gray-300 rounded px-2 bg-white"
+            >
+              <option value="">-- Select --</option>
+              {hotels.map(h => (
+                <option key={h.id} value={h.id}>{h.name}</option>
               ))}
-              {filteredHotels.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hotels found</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-700 w-16 text-right">Email :</label>
+            <Input
+              value={emailFilter}
+              onChange={(e) => setEmailFilter(e.target.value)}
+              className="flex-1 h-7 text-xs"
+              placeholder=""
+            />
+          </div>
+
+          {/* Row 2 */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-700 w-20 text-right">City Name :</label>
+            <select
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              className="flex-1 h-7 text-xs border border-gray-300 rounded px-2 bg-white"
+            >
+              <option value="">-- Select --</option>
+              {cities.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-700 w-16 text-right">Contact No :</label>
+            <Input
+              value={contactNoFilter}
+              onChange={(e) => setContactNoFilter(e.target.value)}
+              className="flex-1 h-7 text-xs"
+              placeholder=""
+            />
+            <Button 
+              size="sm" 
+              onClick={handleSearch}
+              className="h-7 text-xs px-4 bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-400"
+            >
+              Search
+            </Button>
+          </div>
+        </div>
+
+        {/* View All Records Button */}
+        <div className="flex justify-end mt-2">
+          <Button 
+            size="sm" 
+            onClick={handleViewAll}
+            className="h-7 text-xs px-3 bg-[#1e6e99] hover:bg-[#165a80] text-white"
+          >
+            View All Records
+          </Button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="border border-t-0 border-gray-300 overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-[#D4A59A] text-gray-800">
+              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Hotel Name</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Room</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Contact Person/Email</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Contact No/City</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Address</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Package</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-center font-medium">Action</th>
+              <th className="border border-gray-400 px-2 py-1.5 text-center font-medium w-8">
+                <Checkbox 
+                  checked={selectedHotels.length === filteredHotels.length && filteredHotels.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredHotels.map((hotel, index) => (
+              <tr key={hotel.id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-white"}>
+                <td className="border border-gray-300 px-2 py-1.5">{hotel.name}</td>
+                <td className="border border-gray-300 px-2 py-1.5">{hotel.room_types || ""}</td>
+                <td className="border border-gray-300 px-2 py-1.5">
+                  <div>{hotel.contact_person || ""}</div>
+                  <div className="text-gray-600">Email : {hotel.email || ""}</div>
+                </td>
+                <td className="border border-gray-300 px-2 py-1.5">
+                  <div>{hotel.phone || ""}</div>
+                  <div className="text-gray-600">City : {hotel.city?.name || ""}</div>
+                </td>
+                <td className="border border-gray-300 px-2 py-1.5">{hotel.address || ""}</td>
+                <td className="border border-gray-300 px-2 py-1.5">{hotel.packages || ""}</td>
+                <td className="border border-gray-300 px-2 py-1.5 text-center">
+                  <button
+                    onClick={() => navigate(`/admin/another-hotels/add?edit=${hotel.id}`)}
+                    className="text-blue-600 hover:underline text-xs"
+                  >
+                    Edit
+                  </button>
+                  <span className="text-gray-400">/</span>
+                  <button
+                    onClick={() => handleDelete(hotel.id)}
+                    className="text-blue-600 hover:underline text-xs"
+                  >
+                    Delete
+                  </button>
+                </td>
+                <td className="border border-gray-300 px-2 py-1.5 text-center">
+                  <Checkbox 
+                    checked={selectedHotels.includes(hotel.id)}
+                    onCheckedChange={() => toggleHotelSelection(hotel.id)}
+                  />
+                </td>
+              </tr>
+            ))}
+            {filteredHotels.length === 0 && (
+              <tr>
+                <td colSpan={8} className="border border-gray-300 px-2 py-8 text-center text-gray-500">
+                  No hotels found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
