@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useProfilesMap, getDisplayName } from "@/hooks/useProfilesMap";
 
 export default function AdminAddAgent() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function AdminAddAgent() {
   const isEditMode = !!editId;
   
   const [cities, setCities] = useState<any[]>([]);
+  const { profiles } = useProfilesMap();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,6 +28,7 @@ export default function AdminAddAgent() {
     city_id: "",
     commission_rate: 0,
     notes: "",
+    created_by: "",
   });
 
   useEffect(() => {
@@ -51,6 +54,7 @@ export default function AdminAddAgent() {
         city_id: data.city_id || "",
         commission_rate: data.commission_rate || 0,
         notes: data.notes || "",
+        created_by: data.created_by || "",
       });
     } else {
       toast.error("Failed to load agent data");
@@ -91,6 +95,7 @@ export default function AdminAddAgent() {
       city_id: "",
       commission_rate: 0,
       notes: "",
+      created_by: "",
     });
   };
 
@@ -200,6 +205,21 @@ export default function AdminAddAgent() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="bg-white flex-1"
               />
+            </div>
+
+            {/* User */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="user" className="w-56 text-right text-xs whitespace-nowrap">User :</Label>
+              <Select value={formData.created_by} onValueChange={(value) => setFormData({ ...formData, created_by: value })}>
+                <SelectTrigger className="bg-white flex-1">
+                  <SelectValue placeholder="--Select--" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>{getDisplayName(profile)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Buttons */}
