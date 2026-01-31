@@ -35,6 +35,7 @@ import ExportEnquiries from "./pages/ExportEnquiries";
 import BookingAvailability from "./pages/BookingAvailability";
 import ExportBookings from "./pages/ExportBookings";
 import RoomBookings from "./pages/RoomBookings";
+import AdminRoomBookings from "./pages/admin/AdminRoomBookings";
 import BookingDetails from "./pages/BookingDetails";
 import VolvoDelhiManali from "./pages/VolvoDelhiManali";
 import DelhiManaliDue from "./pages/DelhiManaliDue";
@@ -598,7 +599,7 @@ const App = () => (
           <Route path="/admin/refund-payments" element={<AdminLayout><Refunds /></AdminLayout>} />
           <Route path="/admin/group-expenses" element={<AdminLayout><Expenses /></AdminLayout>} />
           <Route path="/admin/booking-availability" element={<AdminLayout><BookingAvailability /></AdminLayout>} />
-          <Route path="/admin/room-bookings" element={<AdminLayout><RoomBookings /></AdminLayout>} />
+          <Route path="/admin/room-bookings" element={<AdminLayout><AdminRoomBookings /></AdminLayout>} />
           <Route path="/admin/enquiries" element={<AdminLayout><Enquiries /></AdminLayout>} />
           <Route path="/admin/user-list" element={<AdminLayout><AdminUserList /></AdminLayout>} />
           <Route path="/admin/safari-due" element={<AdminLayout><ViewSafariDue /></AdminLayout>} />
