@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, parse, isValid, eachDayOfInterval } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 interface Hotel {
@@ -18,18 +18,18 @@ interface RoomData {
 interface HotelBookingData {
   hotelName: string;
   rooms: RoomData[];
+  totalRooms: number;
+}
+
+interface DateBooking {
+  date: string;
+  hotels: HotelBookingData[];
 }
 
 interface UserBooking {
   userName: string;
   hotels: HotelBookingData[];
   totalRooms: number;
-}
-
-interface DateGroupedData {
-  date: string;
-  totalRooms: number;
-  users: UserBooking[];
 }
 
 export default function AdminRoomBookings() {
@@ -42,7 +42,8 @@ export default function AdminRoomBookings() {
   const [toMonth, setToMonth] = useState(String(new Date().getMonth() + 1));
   const [toDay, setToDay] = useState(String(new Date().getDate()));
   const [toYear, setToYear] = useState(String(new Date().getFullYear()));
-  const [dateGroupedData, setDateGroupedData] = useState<DateGroupedData[]>([]);
+  const [dateBookings, setDateBookings] = useState<DateBooking[]>([]);
+  const [userBookings, setUserBookings] = useState<UserBooking[]>([]);
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
@@ -162,8 +163,25 @@ export default function AdminRoomBookings() {
         roomMap[r.id] = r.room_type || r.room_number || "Unknown Room";
       });
 
-      // Group by date first, then by user
-      const dateMap: Record<string, Record<string, { hotels: Record<string, Record<string, number>> }>> = {};
+      // Get all rooms for each hotel to show all room types (even with 0 count)
+      const hotelRoomsMap: Record<string, string[]> = {};
+      rooms.forEach(r => {
+        const hotel = hotels.find(h => h.id === r.hotel_id);
+        if (hotel) {
+          if (!hotelRoomsMap[hotel.name]) {
+            hotelRoomsMap[hotel.name] = [];
+          }
+          const roomName = r.room_type || r.room_number || "Unknown Room";
+          if (!hotelRoomsMap[hotel.name].includes(roomName)) {
+            hotelRoomsMap[hotel.name].push(roomName);
+          }
+        }
+      });
+
+      // Group by DATE
+      const dateMap: Record<string, Record<string, Record<string, number>>> = {};
+      // Group by USER (across all dates)
+      const userMap: Record<string, Record<string, Record<string, number>>> = {};
 
       (bookingsData || []).forEach((booking: any) => {
         // Skip bookings without own_hotel_id (only show own hotels)
@@ -178,63 +196,98 @@ export default function AdminRoomBookings() {
         const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
         const roomCount = booking.number_of_rooms || 1;
 
-        // Initialize date group if not exists
+        // Group by date -> hotel -> room
         if (!dateMap[checkInDate]) {
           dateMap[checkInDate] = {};
         }
-
-        // Initialize user if not exists
-        if (!dateMap[checkInDate][userName]) {
-          dateMap[checkInDate][userName] = { hotels: {} };
+        if (!dateMap[checkInDate][hotelName]) {
+          dateMap[checkInDate][hotelName] = {};
         }
+        dateMap[checkInDate][hotelName][roomName] = 
+          (dateMap[checkInDate][hotelName][roomName] || 0) + roomCount;
 
-        // Initialize hotel if not exists
-        if (!dateMap[checkInDate][userName].hotels[hotelName]) {
-          dateMap[checkInDate][userName].hotels[hotelName] = {};
+        // Group by user -> hotel -> room (aggregate across all dates)
+        if (!userMap[userName]) {
+          userMap[userName] = {};
         }
-
-        // Add room count
-        dateMap[checkInDate][userName].hotels[hotelName][roomName] = 
-          (dateMap[checkInDate][userName].hotels[hotelName][roomName] || 0) + roomCount;
+        if (!userMap[userName][hotelName]) {
+          userMap[userName][hotelName] = {};
+        }
+        userMap[userName][hotelName][roomName] = 
+          (userMap[userName][hotelName][roomName] || 0) + roomCount;
       });
 
-      // Convert to array format grouped by date
-      const results: DateGroupedData[] = Object.entries(dateMap)
-        .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-        .map(([date, usersData]) => {
-          const users: UserBooking[] = Object.entries(usersData).map(([userName, data]) => {
-            const hotelsArray: HotelBookingData[] = Object.entries(data.hotels).map(([hotelName, roomCounts]) => ({
-              hotelName,
-              rooms: Object.entries(roomCounts).map(([roomName, count]) => ({
-                roomName,
-                count
-              }))
+      // Convert DATE map to array with all room types shown
+      const relevantHotels = selectedHotel 
+        ? hotels.filter(h => h.id === selectedHotel)
+        : hotels;
+
+      const dateResults: DateBooking[] = Object.entries(dateMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([dateStr, hotelData]) => {
+          const hotelsArray: HotelBookingData[] = relevantHotels.map(hotel => {
+            const hotelBookings = hotelData[hotel.name] || {};
+            const allRoomTypes = hotelRoomsMap[hotel.name] || [];
+            
+            const roomsWithCounts = allRoomTypes.map(roomName => ({
+              roomName,
+              count: hotelBookings[roomName] || 0
             }));
 
-            const userTotalRooms = hotelsArray.reduce(
-              (sum, h) => sum + h.rooms.reduce((rSum, r) => rSum + r.count, 0),
-              0
-            );
+            const totalRooms = roomsWithCounts.reduce((sum, r) => sum + r.count, 0);
 
             return {
-              userName,
-              hotels: hotelsArray,
-              totalRooms: userTotalRooms
+              hotelName: hotel.name,
+              rooms: roomsWithCounts,
+              totalRooms
             };
-          }).sort((a, b) => a.userName.localeCompare(b.userName));
-
-          const dateTotalRooms = users.reduce((sum, u) => sum + u.totalRooms, 0);
+          }).filter(h => h.rooms.length > 0);
 
           return {
-            date,
-            totalRooms: dateTotalRooms,
-            users
+            date: dateStr,
+            hotels: hotelsArray
           };
         });
 
-      const total = results.reduce((sum, d) => sum + d.totalRooms, 0);
+      // Convert USER map to array with all room types shown
+      const userResults: UserBooking[] = Object.entries(userMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([userName, hotelData]) => {
+          const hotelsArray: HotelBookingData[] = relevantHotels.map(hotel => {
+            const hotelBookings = hotelData[hotel.name] || {};
+            const allRoomTypes = hotelRoomsMap[hotel.name] || [];
+            
+            const roomsWithCounts = allRoomTypes.map(roomName => ({
+              roomName,
+              count: hotelBookings[roomName] || 0
+            }));
+
+            const totalRooms = roomsWithCounts.reduce((sum, r) => sum + r.count, 0);
+
+            return {
+              hotelName: hotel.name,
+              rooms: roomsWithCounts,
+              totalRooms
+            };
+          }).filter(h => h.totalRooms > 0); // Only show hotels with actual bookings for users
+
+          const userTotalRooms = hotelsArray.reduce((sum, h) => sum + h.totalRooms, 0);
+
+          return {
+            userName,
+            hotels: hotelsArray,
+            totalRooms: userTotalRooms
+          };
+        }).filter(u => u.totalRooms > 0);
+
+      // Calculate grand total from date bookings
+      const total = dateResults.reduce((sum, d) => 
+        sum + d.hotels.reduce((hSum, h) => hSum + h.totalRooms, 0), 0
+      );
+
       setGrandTotal(total);
-      setDateGroupedData(results);
+      setDateBookings(dateResults);
+      setUserBookings(userResults);
     } catch (error) {
       console.error("Search error:", error);
       toast.error("Failed to fetch bookings");
@@ -356,75 +409,65 @@ export default function AdminRoomBookings() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Date Bookings Table */}
       <div className="border border-t-0 border-gray-300 overflow-x-auto">
         <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-[#D4A59A] text-gray-800">
-              <th className="border border-gray-400 px-3 py-1.5 text-left font-medium w-32">Date</th>
-              <th className="border border-gray-400 px-3 py-1.5 text-left font-medium">Booking Details</th>
-            </tr>
-          </thead>
           <tbody>
-            {dateGroupedData.length === 0 ? (
+            {dateBookings.length === 0 ? (
               <tr className="bg-[#F5E6E0]">
                 <td colSpan={2} className="border border-gray-300 px-3 py-8 text-center text-gray-500">
                   {loading ? "Loading..." : "Select date range and click Search to view room bookings"}
                 </td>
               </tr>
             ) : (
-              dateGroupedData.map((dateGroup, dateIdx) => (
-                <>
-                  {/* Date row with booking details for that date */}
-                  <tr key={`date-${dateIdx}`} className="bg-[#F5E6E0] border-b border-gray-300">
-                    <td className="border border-gray-300 px-3 py-2 align-top font-medium">
-                      {dateGroup.date}
+              <>
+                {/* Date rows */}
+                {dateBookings.map((dateBooking, dateIdx) => (
+                  <tr key={`date-${dateIdx}`} className="bg-[#F5E6E0]">
+                    <td className="border border-gray-300 px-3 py-2 align-top font-medium w-32">
+                      {dateBooking.date}
                     </td>
                     <td className="border border-gray-300 px-3 py-2">
-                      {/* Show all users' booking details for this date */}
-                      {dateGroup.users.map((user, userIdx) => (
-                        <div key={userIdx} className="mb-1">
-                          {user.hotels.map((hotel, hotelIdx) => (
-                            <div key={hotelIdx}>
-                              <span className="font-bold">{hotel.hotelName}</span>
-                              {hotel.rooms.map((room, roomIdx) => (
-                                <div key={roomIdx} className="ml-0">{room.roomName}:{room.count}</div>
-                              ))}
-                            </div>
+                      {dateBooking.hotels.map((hotel, hotelIdx) => (
+                        <div key={hotelIdx} className="mb-2">
+                          <div className="font-bold">{hotel.hotelName}</div>
+                          {hotel.rooms.map((room, roomIdx) => (
+                            <div key={roomIdx}>{room.roomName}:{room.count}</div>
                           ))}
+                          <div>Rooms:{hotel.totalRooms}</div>
                         </div>
                       ))}
                     </td>
                   </tr>
-                  
-                  {/* Total no. of Rooms row after date */}
-                  <tr key={`total-${dateIdx}`} className="bg-white border-b border-gray-300">
-                    <td className="border border-gray-300 px-3 py-2"></td>
-                    <td className="border border-gray-300 px-3 py-2 font-bold">
-                      Total no. of Rooms : {dateGroup.totalRooms}
+                ))}
+
+                {/* Total no. of Rooms row - at the end after all dates */}
+                <tr className="bg-white">
+                  <td colSpan={2} className="border border-gray-300 px-3 py-2 font-bold text-sm">
+                    Total no. of Rooms : {grandTotal}
+                  </td>
+                </tr>
+
+                {/* User Bookings Section */}
+                {userBookings.map((userBooking, userIdx) => (
+                  <tr key={`user-${userIdx}`} className="bg-[#F5E6E0]">
+                    <td className="border border-gray-300 px-3 py-2 align-top font-medium w-32">
+                      {userBooking.userName}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {userBooking.hotels.map((hotel, hotelIdx) => (
+                        <div key={hotelIdx} className="mb-2">
+                          <div className="font-bold">{hotel.hotelName}</div>
+                          {hotel.rooms.map((room, roomIdx) => (
+                            <div key={roomIdx}>{room.roomName}:{room.count}</div>
+                          ))}
+                          <div>Rooms:{hotel.totalRooms}</div>
+                        </div>
+                      ))}
                     </td>
                   </tr>
-
-                  {/* Individual user rows */}
-                  {dateGroup.users.map((user, userIdx) => (
-                    <tr key={`user-${dateIdx}-${userIdx}`} className="bg-[#F5E6E0] border-b border-gray-300">
-                      <td className="border border-gray-300 px-3 py-2 align-top font-medium">
-                        {user.userName}
-                      </td>
-                      <td className="border border-gray-300 px-3 py-2">
-                        {user.hotels.map((hotel, hotelIdx) => (
-                          <div key={hotelIdx} className="mb-1">
-                            <span className="font-bold">{hotel.hotelName}</span>
-                            {hotel.rooms.map((room, roomIdx) => (
-                              <div key={roomIdx}>{room.roomName}:{room.count}</div>
-                            ))}
-                          </div>
-                        ))}
-                      </td>
-                    </tr>
-                  ))}
-                </>
-              ))
+                ))}
+              </>
             )}
           </tbody>
         </table>
