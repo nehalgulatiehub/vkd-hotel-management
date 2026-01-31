@@ -349,24 +349,34 @@ export default function RoomBookings() {
                     </td>
                   </tr>
                 ) : (
-                  dateBookings.map((dateBooking, idx) => (
-                    <tr key={idx} style={{ backgroundColor: "#F5E6E0" }}>
-                      <td className="p-2 border border-gray-400 align-top font-medium">
-                        {formatDisplayDate(dateBooking.date)}
-                      </td>
-                      <td className="p-2 border border-gray-400">
-                        {dateBooking.hotels.map((hotel, hotelIdx) => (
-                          <div key={hotelIdx} className="mb-2">
-                            <div className="font-bold">{hotel.hotelName}</div>
-                            {hotel.rooms.map((room, roomIdx) => (
-                              <div key={roomIdx}>{room.roomName}:{room.count}</div>
-                            ))}
-                            <div>Rooms:{hotel.totalRooms}</div>
-                          </div>
-                        ))}
+                  <>
+                    {dateBookings.map((dateBooking, idx) => (
+                      <tr key={idx} style={{ backgroundColor: "#F5E6E0" }}>
+                        <td className="p-2 border border-gray-400 align-top font-medium">
+                          {formatDisplayDate(dateBooking.date)}
+                        </td>
+                        <td className="p-2 border border-gray-400">
+                          {dateBooking.hotels.map((hotel, hotelIdx) => (
+                            <div key={hotelIdx} className="mb-2">
+                              <div className="font-bold">{hotel.hotelName}</div>
+                              {hotel.rooms.map((room, roomIdx) => (
+                                <div key={roomIdx}>{room.roomName}:{room.count}</div>
+                              ))}
+                              <div>Rooms:{hotel.totalRooms}</div>
+                            </div>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Total no. of Rooms row at the bottom */}
+                    <tr className="bg-white">
+                      <td colSpan={2} className="p-2 border border-gray-400 font-bold text-sm">
+                        Total no. of Rooms : {dateBookings.reduce((sum, d) => 
+                          sum + d.hotels.reduce((hSum, h) => hSum + h.totalRooms, 0), 0
+                        )}
                       </td>
                     </tr>
-                  ))
+                  </>
                 )}
               </tbody>
             </table>
