@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import mukutLogo from "@/assets/mukut-logo.webp";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,83 +25,33 @@ interface MenuItem {
   menuKey?: string;
 }
 
-// Helper to determine button color based on action type - using maroon color variants
-const getButtonStyles = (title: string, isActive: boolean): string => {
-  const lowerTitle = title.toLowerCase();
+// Module-based colors (actual HSL palette lives in src/index.css)
+const getSidebarModuleClass = (menuKey?: string): string => {
+  if (!menuKey) return "sidebar-pill--default";
 
-  // Add/Create/Generate actions - Dark Maroon
-  if (lowerTitle.startsWith("add ") || lowerTitle.startsWith("create ") || lowerTitle.startsWith("generate ")) {
-    return isActive
-      ? "bg-[#5c0a1f] text-white border-[#5c0a1f]"
-      : "bg-[#6b1530] text-white border-[#6b1530] hover:bg-[#5c0a1f]";
-  }
+  if (menuKey.startsWith("cities_")) return "sidebar-pill--city";
+  if (menuKey.startsWith("agents_")) return "sidebar-pill--agent";
+  if (menuKey.startsWith("transporters_")) return "sidebar-pill--transporter";
 
-  // View/Saved actions - Standard Maroon (original)
-  if (lowerTitle.startsWith("view ") || lowerTitle.startsWith("saved ")) {
-    return isActive
-      ? "bg-[#8B1538] text-white border-[#8B1538]"
-      : "bg-[#9a2545] text-white border-[#9a2545] hover:bg-[#8B1538]";
-  }
+  if (menuKey.startsWith("another_hotels_") || menuKey.startsWith("payments_hotel")) return "sidebar-pill--another-hotel";
+  if (menuKey.startsWith("enquiries_")) return "sidebar-pill--enquiry";
 
-  // Export actions - Rose/Pink Maroon
-  if (lowerTitle.startsWith("export ")) {
-    return isActive
-      ? "bg-[#a83255] text-white border-[#a83255]"
-      : "bg-[#b84465] text-white border-[#b84465] hover:bg-[#a83255]";
-  }
+  if (menuKey.startsWith("bookings_") || menuKey.startsWith("payments_booking") || menuKey === "payments_view") return "sidebar-pill--booking";
 
-  // Due Amount actions - Deep Red Maroon
-  if (lowerTitle.includes("due")) {
-    return isActive
-      ? "bg-[#7a0020] text-white border-[#7a0020]"
-      : "bg-[#8a1030] text-white border-[#8a1030] hover:bg-[#7a0020]";
-  }
-
-  // Payment actions - Burgundy
-  if (lowerTitle.includes("payment")) {
-    return isActive
-      ? "bg-[#722040] text-white border-[#722040]"
-      : "bg-[#823050] text-white border-[#823050] hover:bg-[#722040]";
-  }
-
-  // Booking actions (availability, hold) - Plum Maroon
-  if (lowerTitle.includes("booking") || lowerTitle.includes("hold")) {
-    return isActive
-      ? "bg-[#6d2048] text-white border-[#6d2048]"
-      : "bg-[#7d3058] text-white border-[#7d3058] hover:bg-[#6d2048]";
-  }
-
-  // Restaurant/Menu actions - Wine
+  if (menuKey.startsWith("payments_safari")) return "sidebar-pill--safari";
+  if (menuKey.startsWith("payments_vehicle")) return "sidebar-pill--vehicle";
   if (
-    lowerTitle.includes("restaurant") ||
-    lowerTitle.includes("food") ||
-    lowerTitle.includes("pos") ||
-    lowerTitle.includes("menu") ||
-    lowerTitle.includes("table")
-  ) {
-    return isActive
-      ? "bg-[#5e1835] text-white border-[#5e1835]"
-      : "bg-[#6e2845] text-white border-[#6e2845] hover:bg-[#5e1835]";
-  }
+    menuKey.startsWith("payments_volvo") ||
+    menuKey === "payments_dm_due" ||
+    menuKey === "payments_md_due" ||
+    menuKey === "payments_volvo"
+  )
+    return "sidebar-pill--volvo";
 
-  // Invoice/Billing actions - Cranberry
-  if (lowerTitle.includes("invoice") || lowerTitle.includes("billing")) {
-    return isActive
-      ? "bg-[#8a2050] text-white border-[#8a2050]"
-      : "bg-[#9a3060] text-white border-[#9a3060] hover:bg-[#8a2050]";
-  }
+  if (menuKey.startsWith("restaurant_")) return "sidebar-pill--restaurant";
+  if (menuKey.startsWith("billing_")) return "sidebar-pill--invoice";
 
-  // Volvo/Transport detail actions - Dusty Rose
-  if (lowerTitle.includes("volvo") || lowerTitle.includes("delhi") || lowerTitle.includes("manali")) {
-    return isActive
-      ? "bg-[#9c4060] text-white border-[#9c4060]"
-      : "bg-[#ac5070] text-white border-[#ac5070] hover:bg-[#9c4060]";
-  }
-
-  // Default - Original Maroon
-  return isActive
-    ? "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)]"
-    : "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)] hover:bg-[rgb(159,41,76)]";
+  return "sidebar-pill--default";
 };
 
 const menuItems: MenuItem[] = [
@@ -234,7 +185,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.url + item.title}
                   to={item.url}
                   className={({ isActive }) =>
-                    `block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors ${getButtonStyles(item.title, isActive)}`
+                    cn(
+                      "sidebar-pill",
+                      getSidebarModuleClass(item.menuKey),
+                      isActive && "sidebar-pill--active",
+                    )
                   }
                 >
                   {item.title}
