@@ -143,25 +143,30 @@ const menuItems: MenuItem[] = [
     title: "Payment & Financials",
     icon: DollarSign,
     submenu: [
+      // Booking related
       { title: "View Payment", url: "/payments", menuKey: "payments_view" },
       { title: "Booking Due Amount", url: "/payments/booking-due", menuKey: "payments_booking_due" },
       { title: "View Booking Payment", url: "/payments/booking", menuKey: "payments_booking_view" },
       { title: "Export Booking", url: "/payments/booking-export", menuKey: "payments_booking_export" },
       { title: "View Room Booking", url: "/payments/room-booking", menuKey: "payments_room_booking" },
+      // Safari related
       { title: "View Safari Detail", url: "/payments/safari", menuKey: "payments_safari" },
       { title: "Safari Due Amount", url: "/payments/safari-due", menuKey: "payments_safari_due" },
       { title: "View Safari Payment", url: "/payments/safari-payment", menuKey: "payments_safari_payment" },
+      // Another Hotel related
+      { title: "View Another Hotel Detail", url: "/payments/hotel", menuKey: "payments_hotel" },
+      { title: "Another Hotel Due Amount", url: "/payments/hotel-due", menuKey: "payments_hotel_due" },
+      { title: "Another Hotel Payment", url: "/payments/hotel-payment", menuKey: "payments_hotel_payment" },
+      // Vehicle related
+      { title: "View Vehicle Detail", url: "/payments/vehicle", menuKey: "payments_vehicle" },
+      { title: "Vehicle Due Amount", url: "/payments/vehicle-due", menuKey: "payments_vehicle_due" },
+      { title: "View Vehicle Payment", url: "/payments/vehicle-payment", menuKey: "payments_vehicle_payment" },
+      // Volvo related
       { title: "Volvo Delhi - Manali Detail", url: "/payments/volvo-delhi-manali", menuKey: "payments_volvo_dm" },
       { title: "Delhi - Manali Due Amount", url: "/payments/delhi-manali-due", menuKey: "payments_dm_due" },
       { title: "Volvo Manali - Delhi Detail", url: "/payments/volvo-manali-delhi", menuKey: "payments_volvo_md" },
       { title: "Manali - Delhi Due Amount", url: "/payments/manali-delhi-due", menuKey: "payments_md_due" },
       { title: "View Volvo Payment", url: "/payments/volvo", menuKey: "payments_volvo" },
-      { title: "View Another Hotel Detail", url: "/payments/hotel", menuKey: "payments_hotel" },
-      { title: "Another Hotel Due Amount", url: "/payments/hotel-due", menuKey: "payments_hotel_due" },
-      { title: "Another Hotel Payment", url: "/payments/hotel-payment", menuKey: "payments_hotel_payment" },
-      { title: "View Vehicle Detail", url: "/payments/vehicle", menuKey: "payments_vehicle" },
-      { title: "Vehicle Due Amount", url: "/payments/vehicle-due", menuKey: "payments_vehicle_due" },
-      { title: "Another Vehicle Payment", url: "/payments/vehicle-payment", menuKey: "payments_vehicle_payment" },
     ]
   },
   {
