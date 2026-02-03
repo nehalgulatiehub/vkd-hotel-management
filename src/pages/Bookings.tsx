@@ -859,12 +859,16 @@ export default function Bookings() {
     
     // Fetch all service bookings in parallel
     // Note: safari_bookings doesn't have transporter_id FK, uses safari_name field instead
-    const [hotelRes, safariRes, vehicleRes, volvoDMRes, volvoMDRes] = await Promise.all([
-      supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", booking.id),
+    const [hotelRes, safariRes, vehicleRes, volvoRes] = await Promise.all([
+      supabase
+        .from("hotel_bookings")
+        .select("*, own_hotels(name), another_hotels(name, cities(name))")
+        .eq("booking_id", booking.id),
       supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
       supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
-      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "delhi_manali"),
-      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "manali_delhi")
+      // Do not filter by route here because historical data uses multiple route formats
+      // (e.g. "Delhi-Manali" vs "delhi_manali"). We'll split in-memory.
+      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
     ]);
 
     // Process hotel bookings - separate Own Hotels from Another Hotels
@@ -929,31 +933,29 @@ export default function Bookings() {
       })));
     }
 
-    if (volvoDMRes.data) {
-      setViewDetailVolvoDMInfo(volvoDMRes.data.map((vb: any) => ({
-        numberOfSeats: vb.number_of_seats || 0,
-        ticketNumber: vb.ticket_number || "-",
-        seatNumbers: vb.seat_numbers || "-",
-        transporter: vb.transporters?.name || "-",
-        travelDate: vb.travel_date,
-        ratePerSeat: vb.rate_per_seat || 0,
-        totalAmount: vb.total_amount || 0,
-        createdAt: booking.created_at
-      })));
-    }
+    const normalizeRoute = (route: unknown) =>
+      String(route ?? "")
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/[-_]/g, "");
 
-    if (volvoMDRes.data) {
-      setViewDetailVolvoMDInfo(volvoMDRes.data.map((vb: any) => ({
-        numberOfSeats: vb.number_of_seats || 0,
-        ticketNumber: vb.ticket_number || "-",
-        seatNumbers: vb.seat_numbers || "-",
-        transporter: vb.transporters?.name || "-",
-        travelDate: vb.travel_date,
-        ratePerSeat: vb.rate_per_seat || 0,
-        totalAmount: vb.total_amount || 0,
-        createdAt: booking.created_at
-      })));
-    }
+    const volvoRows = volvoRes.data || [];
+    const dmRows = volvoRows.filter((v: any) => normalizeRoute(v.route) === "delhimanali");
+    const mdRows = volvoRows.filter((v: any) => normalizeRoute(v.route) === "manalidelhi");
+
+    const mapVolvoRow = (vb: any) => ({
+      numberOfSeats: vb.number_of_seats || 0,
+      ticketNumber: vb.ticket_number || "-",
+      seatNumbers: vb.seat_numbers || "-",
+      transporter: vb.transporters?.name || "-",
+      travelDate: vb.travel_date,
+      ratePerSeat: vb.rate_per_seat || 0,
+      totalAmount: vb.total_amount || 0,
+      createdAt: booking.created_at,
+    });
+
+    setViewDetailVolvoDMInfo(dmRows.map(mapVolvoRow));
+    setViewDetailVolvoMDInfo(mdRows.map(mapVolvoRow));
   };
 
   const handlePrintBooking = (booking: any) => {
@@ -2612,34 +2614,52 @@ export default function Bookings() {
                         ))}
                         
                         {/* Delhi-Manali Volvo Section */}
-                        {viewDetailVolvoDMInfo.length > 0 && viewDetailVolvoDMInfo.map((volvo, idx) => (
-                          <React.Fragment key={`dm-${idx}`}>
-                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Delhi - Manali :</td></tr>
-                            <tr><td className="pr-4 py-0.5">No. of Tickets :</td><td className="py-0.5">{volvo.numberOfSeats}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Ticket No. :</td><td className="py-0.5">{volvo.ticketNumber}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Seat No. :</td><td className="py-0.5">{volvo.seatNumbers}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{volvo.transporter}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Booking Date :</td><td className="py-0.5">{volvo.createdAt ? new Date(volvo.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
-                          </React.Fragment>
-                        ))}
+                        {(selectedBooking.include_delhi_manali || viewDetailVolvoDMInfo.length > 0) && (
+                          viewDetailVolvoDMInfo.length > 0 ? (
+                            viewDetailVolvoDMInfo.map((volvo, idx) => (
+                              <React.Fragment key={`dm-${idx}`}>
+                                <tr><td colSpan={2} className="font-bold pt-3 pb-1">Delhi - Manali :</td></tr>
+                                <tr><td className="pr-4 py-0.5">No. of Tickets :</td><td className="py-0.5">{volvo.numberOfSeats}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Ticket No. :</td><td className="py-0.5">{volvo.ticketNumber}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Seat No. :</td><td className="py-0.5">{volvo.seatNumbers}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{volvo.transporter}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Booking Date :</td><td className="py-0.5">{volvo.createdAt ? new Date(volvo.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                              </React.Fragment>
+                            ))
+                          ) : (
+                            <React.Fragment key="dm-empty">
+                              <tr><td colSpan={2} className="font-bold pt-3 pb-1">Delhi - Manali :</td></tr>
+                              <tr><td className="pr-4 py-0.5">Details :</td><td className="py-0.5">-</td></tr>
+                            </React.Fragment>
+                          )
+                        )}
                         
                         {/* Manali-Delhi Volvo Section */}
-                        {viewDetailVolvoMDInfo.length > 0 && viewDetailVolvoMDInfo.map((volvo, idx) => (
-                          <React.Fragment key={`md-${idx}`}>
-                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Manali - Delhi :</td></tr>
-                            <tr><td className="pr-4 py-0.5">No. of Tickets :</td><td className="py-0.5">{volvo.numberOfSeats}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Ticket No. :</td><td className="py-0.5">{volvo.ticketNumber}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Seat No. :</td><td className="py-0.5">{volvo.seatNumbers}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{volvo.transporter}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Booking Date :</td><td className="py-0.5">{volvo.createdAt ? new Date(volvo.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
-                            <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
-                          </React.Fragment>
-                        ))}
+                        {(selectedBooking.include_manali_delhi || viewDetailVolvoMDInfo.length > 0) && (
+                          viewDetailVolvoMDInfo.length > 0 ? (
+                            viewDetailVolvoMDInfo.map((volvo, idx) => (
+                              <React.Fragment key={`md-${idx}`}>
+                                <tr><td colSpan={2} className="font-bold pt-3 pb-1">Manali - Delhi :</td></tr>
+                                <tr><td className="pr-4 py-0.5">No. of Tickets :</td><td className="py-0.5">{volvo.numberOfSeats}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Ticket No. :</td><td className="py-0.5">{volvo.ticketNumber}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Seat No. :</td><td className="py-0.5">{volvo.seatNumbers}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{volvo.transporter}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Booking Date :</td><td className="py-0.5">{volvo.createdAt ? new Date(volvo.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
+                                <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                              </React.Fragment>
+                            ))
+                          ) : (
+                            <React.Fragment key="md-empty">
+                              <tr><td colSpan={2} className="font-bold pt-3 pb-1">Manali - Delhi :</td></tr>
+                              <tr><td className="pr-4 py-0.5">Details :</td><td className="py-0.5">-</td></tr>
+                            </React.Fragment>
+                          )
+                        )}
                         
                         {/* Another Vehicle Section */}
                         {viewDetailVehicleInfo.length > 0 && viewDetailVehicleInfo.map((vehicle, idx) => (
