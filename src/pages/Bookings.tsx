@@ -997,6 +997,7 @@ export default function Bookings() {
   const [editPaymentAmount, setEditPaymentAmount] = useState("");
   const [editPaymentMode, setEditPaymentMode] = useState("");
   const [editPaymentReference, setEditPaymentReference] = useState("");
+  const [editPaymentCityId, setEditPaymentCityId] = useState("");
   const [showEditPaymentDialog, setShowEditPaymentDialog] = useState(false);
 
   const handleEditPaymentClick = (payment: any) => {
@@ -1004,6 +1005,7 @@ export default function Bookings() {
     setEditPaymentAmount(payment.amount?.toString() || "");
     setEditPaymentMode(payment.payment_mode || "");
     setEditPaymentReference(payment.reference_number || "");
+    setEditPaymentCityId(payment.city_id || "");
     setShowEditPaymentDialog(true);
   };
 
@@ -1020,6 +1022,7 @@ export default function Bookings() {
           amount: parseFloat(editPaymentAmount),
           payment_mode: editPaymentMode,
           reference_number: editPaymentReference,
+          city_id: editPaymentCityId || null,
         })
         .eq("id", editingPayment.id);
 
@@ -3054,6 +3057,19 @@ export default function Bookings() {
                   value={editPaymentReference}
                   onChange={(e) => setEditPaymentReference(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Place</Label>
+                <Select value={editPaymentCityId} onValueChange={setEditPaymentCityId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select place" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    {cities.map((city) => (
+                      <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowEditPaymentDialog(false)}>Cancel</Button>
