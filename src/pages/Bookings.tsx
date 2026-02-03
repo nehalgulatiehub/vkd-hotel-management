@@ -868,7 +868,9 @@ export default function Bookings() {
       supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
       // Do not filter by route here because historical data uses multiple route formats
       // (e.g. "Delhi-Manali" vs "delhi_manali"). We'll split in-memory.
-      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
+      // NOTE: volvo_bookings has no FK relationship to transporters in this schema,
+      // so selecting transporters(name) triggers a PGRST200 error and returns no data.
+      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id),
     ]);
 
     // Process hotel bookings - separate Own Hotels from Another Hotels
@@ -943,16 +945,31 @@ export default function Bookings() {
     const dmRows = volvoRows.filter((v: any) => normalizeRoute(v.route) === "delhimanali");
     const mdRows = volvoRows.filter((v: any) => normalizeRoute(v.route) === "manalidelhi");
 
-    const mapVolvoRow = (vb: any) => ({
-      numberOfSeats: vb.number_of_seats || 0,
-      ticketNumber: vb.ticket_number || "-",
-      seatNumbers: vb.seat_numbers || "-",
-      transporter: vb.transporters?.name || "-",
-      travelDate: vb.travel_date,
-      ratePerSeat: vb.rate_per_seat || 0,
-      totalAmount: vb.total_amount || 0,
-      createdAt: booking.created_at,
-    });
+    const parseVolvoNotes = (notes: unknown) => {
+      const text = String(notes ?? "");
+      // Examples seen: "Ticket No: 2, Seat No: 1,2"
+      const ticketMatch = text.match(/ticket\s*no\.?\s*:\s*([^,\n]+)/i);
+      const seatMatch = text.match(/seat\s*no\.?\s*:\s*([^\n]+)/i);
+      return {
+        ticketNumber: ticketMatch?.[1]?.trim() || "",
+        seatNumbers: seatMatch?.[1]?.trim() || "",
+      };
+    };
+
+    const mapVolvoRow = (vb: any) => {
+      const parsed = parseVolvoNotes(vb.notes);
+      return {
+        numberOfSeats: vb.number_of_seats || 0,
+        ticketNumber: vb.ticket_number || parsed.ticketNumber || "-",
+        seatNumbers: vb.seat_numbers || parsed.seatNumbers || "-",
+        // transporter is currently not stored in volvo_bookings schema
+        transporter: "-",
+        travelDate: vb.travel_date,
+        ratePerSeat: vb.rate_per_seat || 0,
+        totalAmount: vb.total_amount || 0,
+        createdAt: booking.created_at,
+      };
+    };
 
     setViewDetailVolvoDMInfo(dmRows.map(mapVolvoRow));
     setViewDetailVolvoMDInfo(mdRows.map(mapVolvoRow));
