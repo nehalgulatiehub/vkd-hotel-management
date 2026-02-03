@@ -858,9 +858,10 @@ export default function Bookings() {
     setShowViewDetailDialog(true);
     
     // Fetch all service bookings in parallel
+    // Note: safari_bookings doesn't have transporter_id FK, uses safari_name field instead
     const [hotelRes, safariRes, vehicleRes, volvoDMRes, volvoMDRes] = await Promise.all([
       supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", booking.id),
-      supabase.from("safari_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
+      supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
       supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
       supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "delhi_manali"),
       supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "manali_delhi")
@@ -908,7 +909,7 @@ export default function Bookings() {
 
     if (safariRes.data) {
       setViewDetailSafariInfo(safariRes.data.map((sb: any) => ({
-        transporter: sb.transporters?.name || "-",
+        transporter: sb.safari_name || "-",
         safariDate: sb.safari_date,
         numberOfPersons: sb.number_of_persons || 0,
         ratePerPerson: sb.rate_per_person || 0,
