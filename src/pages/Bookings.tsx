@@ -2692,6 +2692,34 @@ export default function Bookings() {
                         <tr><td className="pr-4 py-0.5">Booking From :</td><td className="py-0.5">{selectedBooking.check_in_date ? new Date(selectedBooking.check_in_date).toLocaleDateString("en-GB") : "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Booking To :</td><td className="py-0.5">{selectedBooking.check_out_date ? new Date(selectedBooking.check_out_date).toLocaleDateString("en-GB") : "-"}</td></tr>
                         
+                        {/* Own Hotel Section (Hotel) */}
+                        {viewDetailOwnHotelInfo.length > 0 && viewDetailOwnHotelInfo.map((hotel, idx) => (
+                          <React.Fragment key={`own-hotel-${idx}`}>
+                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Hotel :</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Name :</td><td className="py-0.5">{hotel.roomName}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                          </React.Fragment>
+                        ))}
+                        
+                        {/* Another Hotel Section */}
+                        {viewDetailAnotherHotelInfo.length > 0 && viewDetailAnotherHotelInfo.map((hotel, idx) => (
+                          <React.Fragment key={`another-hotel-${idx}`}>
+                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Hotel :</td></tr>
+                            <tr><td className="pr-4 py-0.5">Another Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Type :</td><td className="py-0.5">{hotel.roomName}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Booking Date :</td><td className="py-0.5">{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Booking Price :</td><td className="py-0.5">Rs. {(hotel.roomRate || 0).toLocaleString('en-IN')}/-</td></tr>
+                            <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                          </React.Fragment>
+                        ))}
+                        
                         {/* Safari Section */}
                         {viewDetailSafariInfo.length > 0 && viewDetailSafariInfo.map((safari, idx) => (
                           <React.Fragment key={`safari-${idx}`}>
@@ -2763,34 +2791,6 @@ export default function Bookings() {
                             <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{vehicle.transporter}</td></tr>
                             <tr><td className="pr-4 py-0.5">Vehicle Booking Date :</td><td className="py-0.5">{vehicle.createdAt ? new Date(vehicle.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Vehicle Journey Date :</td><td className="py-0.5">{vehicle.pickupDate ? new Date(vehicle.pickupDate).toLocaleDateString("en-GB") : "-"}</td></tr>
-                          </React.Fragment>
-                        ))}
-                        
-                        {/* Own Hotel Section (Hotel) */}
-                        {viewDetailOwnHotelInfo.length > 0 && viewDetailOwnHotelInfo.map((hotel, idx) => (
-                          <React.Fragment key={`own-hotel-${idx}`}>
-                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Hotel :</td></tr>
-                            <tr><td className="pr-4 py-0.5">Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Room Name :</td><td className="py-0.5">{hotel.roomName}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
-                          </React.Fragment>
-                        ))}
-                        
-                        {/* Another Hotel Section */}
-                        {viewDetailAnotherHotelInfo.length > 0 && viewDetailAnotherHotelInfo.map((hotel, idx) => (
-                          <React.Fragment key={`another-hotel-${idx}`}>
-                            <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Hotel :</td></tr>
-                            <tr><td className="pr-4 py-0.5">Another Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Room Type :</td><td className="py-0.5">{hotel.roomName}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Hotel Booking Date :</td><td className="py-0.5">{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
-                            <tr><td className="pr-4 py-0.5">Room Booking Price :</td><td className="py-0.5">Rs. {(hotel.roomRate || 0).toLocaleString('en-IN')}/-</td></tr>
-                            <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
                           </React.Fragment>
                         ))}
                         
