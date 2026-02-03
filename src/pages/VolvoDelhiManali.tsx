@@ -12,6 +12,7 @@ import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog"
 
 export default function VolvoDelhiManali() {
   const [volvoBookings, setVolvoBookings] = useState<any[]>([]);
+  const [transporters, setTransporters] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
   const paymentDialog = usePaymentDialog(() => fetchVolvoBookings());
@@ -21,8 +22,20 @@ export default function VolvoDelhiManali() {
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
 
   useEffect(() => {
+    fetchTransporters();
     fetchVolvoBookings();
   }, []);
+
+  const fetchTransporters = async () => {
+    const { data } = await supabase.from("transporters").select("id, name").order("name");
+    setTransporters(data || []);
+  };
+
+  const getTransporterName = (transporterId: string | null) => {
+    if (!transporterId) return "-";
+    const transporter = transporters.find(t => t.id === transporterId);
+    return transporter?.name || "-";
+  };
 
   const fetchVolvoBookings = async () => {
     setLoading(true);
@@ -30,8 +43,7 @@ export default function VolvoDelhiManali() {
       .from("volvo_bookings")
       .select(`
         *,
-        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
-        transporters(name)
+        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name))
       `)
       .eq("route", "delhi_manali")
       .order("travel_date", { ascending: false });
@@ -132,7 +144,7 @@ export default function VolvoDelhiManali() {
                       <div><strong>No of tickets :</strong> {booking.number_of_seats || 0}</div>
                       <div><strong>Ticket no :</strong> {booking.ticket_number || "-"}</div>
                       <div><strong>Seat no :</strong> {booking.seat_numbers || "-"}</div>
-                      <div><strong>Transporter :</strong> {booking.transporters?.name || "-"}</div>
+                      <div><strong>Transporter :</strong> {getTransporterName(booking.transporter_id)}</div>
                       <div><strong>Booking Price :</strong> Rs. {(booking.rate_per_seat || 0).toLocaleString('en-IN')} /-</div>
                       <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
                       <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')} /-</div>
