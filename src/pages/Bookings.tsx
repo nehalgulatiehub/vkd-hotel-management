@@ -860,10 +860,10 @@ export default function Bookings() {
     // Fetch all service bookings in parallel
     const [hotelRes, safariRes, vehicleRes, volvoDMRes, volvoMDRes] = await Promise.all([
       supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", booking.id),
-      supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
-      supabase.from("vehicle_bookings").select("*").eq("booking_id", booking.id),
-      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "delhi_manali"),
-      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "manali_delhi")
+      supabase.from("safari_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
+      supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
+      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "delhi_manali"),
+      supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", booking.id).eq("route", "manali_delhi")
     ]);
 
     // Process hotel bookings - separate Own Hotels from Another Hotels
