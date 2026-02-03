@@ -98,13 +98,16 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         .order("payment_date", { ascending: false });
 
       // Fetch service-specific data
-      const [safariRes, hotelRes, vehicleRes, volvoDMRes, volvomDRes] = await Promise.all([
+      const [safariRes, hotelRes, vehicleRes, volvoRes] = await Promise.all([
         supabase.from("safari_bookings").select("id, booking_id, safari_date, total_amount, paid_amount, due_amount").eq("booking_id", bookingId),
         supabase.from("hotel_bookings").select("id, booking_id, check_in_date, total_amount, paid_amount, due_amount, another_hotels(name), own_hotels(name)").eq("booking_id", bookingId),
         supabase.from("vehicle_bookings").select("id, booking_id, pickup_date, total_amount, paid_amount, due_amount, transporters(name)").eq("booking_id", bookingId),
-        supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId).eq("route", "delhi_manali"),
-        supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId).eq("route", "manali_delhi"),
+        supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId),
       ]);
+
+      // Split volvo bookings by route
+      const volvoDMData = volvoRes.data?.filter(v => v.route?.toLowerCase().includes("delhi") && v.route?.toLowerCase().indexOf("delhi") < v.route?.toLowerCase().indexOf("manali")) || [];
+      const volvoMDData = volvoRes.data?.filter(v => v.route?.toLowerCase().includes("manali") && v.route?.toLowerCase().indexOf("manali") < v.route?.toLowerCase().indexOf("delhi")) || [];
 
       // Group payments by type
       const groupedPayments: Record<string, PaymentRecord[]> = {};
@@ -114,8 +117,8 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       const safariTotal = safariRes.data?.reduce((sum, s) => sum + (s.total_amount || 0), 0) || 0;
       const hotelTotal = hotelRes.data?.reduce((sum, h) => sum + (h.total_amount || 0), 0) || 0;
       const vehicleTotal = vehicleRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
-      const dmTotal = volvoDMRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
-      const mdTotal = volvomDRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const dmTotal = volvoDMData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
+      const mdTotal = volvoMDData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
       const servicesTotal = safariTotal + hotelTotal + vehicleTotal + dmTotal + mdTotal;
       
       // Booking amount is total minus service-specific amounts
@@ -150,15 +153,15 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
       // Process Delhi-Manali Volvo payments
       const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
-      const dmBookingTotal = volvoDMRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const dmBookingTotal = volvoDMData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
       const dmReceived = dmPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      if (volvoDMRes.data?.length > 0 || dmPayments.length > 0) {
+      if (volvoDMData.length > 0 || dmPayments.length > 0) {
         summaries.push({
           type: "Delhi - Manali",
           customerName: bookingData.customer_name || "N/A",
           totalPayment: dmBookingTotal,
           totalReceived: dmReceived,
-          date: volvoDMRes.data?.[0]?.travel_date || bookingData.check_in_date,
+          date: volvoDMData[0]?.travel_date || bookingData.check_in_date,
           totalDue: Math.max(0, dmBookingTotal - dmReceived)
         });
         groupedPayments["Delhi - Manali"] = mapPaymentsToRecords(dmPayments);
@@ -166,15 +169,15 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
       // Process Manali-Delhi Volvo payments
       const mdPayments = (payments || []).filter(p => p.payment_type === "manali_delhi");
-      const mdBookingTotal = volvomDRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
+      const mdBookingTotal = volvoMDData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
       const mdReceived = mdPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      if (volvomDRes.data?.length > 0 || mdPayments.length > 0) {
+      if (volvoMDData.length > 0 || mdPayments.length > 0) {
         summaries.push({
           type: "Manali - Delhi",
           customerName: bookingData.customer_name || "N/A",
           totalPayment: mdBookingTotal,
           totalReceived: mdReceived,
-          date: volvomDRes.data?.[0]?.travel_date || bookingData.check_in_date,
+          date: volvoMDData[0]?.travel_date || bookingData.check_in_date,
           totalDue: Math.max(0, mdBookingTotal - mdReceived)
         });
         groupedPayments["Manali - Delhi"] = mapPaymentsToRecords(mdPayments);
