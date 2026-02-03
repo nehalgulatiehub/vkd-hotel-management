@@ -2592,22 +2592,6 @@ export default function Bookings() {
                                   size="sm" 
                                   variant="link" 
                                   className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleViewPayment(booking)}
-                                >
-                                  View Payment
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleRefundPayment(booking)}
-                                >
-                                  Refund Payment
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
                                   onClick={() => handleEditBooking(booking)}
                                 >
                                   Edit Booking
@@ -2619,6 +2603,22 @@ export default function Bookings() {
                                   onClick={() => handleAddPayment(booking)}
                                 >
                                   Add Payment
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-primary"
+                                  onClick={() => handleViewPayment(booking)}
+                                >
+                                  View Payment
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-primary"
+                                  onClick={() => handleRefundPayment(booking)}
+                                >
+                                  Refund Payment
                                 </Button>
                                 <Button 
                                   size="sm" 
