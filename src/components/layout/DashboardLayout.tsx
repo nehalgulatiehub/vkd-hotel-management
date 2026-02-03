@@ -27,70 +27,76 @@ interface MenuItem {
 // Helper to determine button color based on action type - using maroon color variants
 const getButtonStyles = (title: string, isActive: boolean): string => {
   const lowerTitle = title.toLowerCase();
-  
+
   // Add/Create/Generate actions - Dark Maroon
   if (lowerTitle.startsWith("add ") || lowerTitle.startsWith("create ") || lowerTitle.startsWith("generate ")) {
     return isActive
       ? "bg-[#5c0a1f] text-white border-[#5c0a1f]"
       : "bg-[#6b1530] text-white border-[#6b1530] hover:bg-[#5c0a1f]";
   }
-  
+
   // View/Saved actions - Standard Maroon (original)
   if (lowerTitle.startsWith("view ") || lowerTitle.startsWith("saved ")) {
     return isActive
       ? "bg-[#8B1538] text-white border-[#8B1538]"
       : "bg-[#9a2545] text-white border-[#9a2545] hover:bg-[#8B1538]";
   }
-  
+
   // Export actions - Rose/Pink Maroon
   if (lowerTitle.startsWith("export ")) {
     return isActive
       ? "bg-[#a83255] text-white border-[#a83255]"
       : "bg-[#b84465] text-white border-[#b84465] hover:bg-[#a83255]";
   }
-  
+
   // Due Amount actions - Deep Red Maroon
   if (lowerTitle.includes("due")) {
     return isActive
       ? "bg-[#7a0020] text-white border-[#7a0020]"
       : "bg-[#8a1030] text-white border-[#8a1030] hover:bg-[#7a0020]";
   }
-  
+
   // Payment actions - Burgundy
   if (lowerTitle.includes("payment")) {
     return isActive
       ? "bg-[#722040] text-white border-[#722040]"
       : "bg-[#823050] text-white border-[#823050] hover:bg-[#722040]";
   }
-  
+
   // Booking actions (availability, hold) - Plum Maroon
   if (lowerTitle.includes("booking") || lowerTitle.includes("hold")) {
     return isActive
       ? "bg-[#6d2048] text-white border-[#6d2048]"
       : "bg-[#7d3058] text-white border-[#7d3058] hover:bg-[#6d2048]";
   }
-  
+
   // Restaurant/Menu actions - Wine
-  if (lowerTitle.includes("restaurant") || lowerTitle.includes("food") || lowerTitle.includes("pos") || lowerTitle.includes("menu") || lowerTitle.includes("table")) {
+  if (
+    lowerTitle.includes("restaurant") ||
+    lowerTitle.includes("food") ||
+    lowerTitle.includes("pos") ||
+    lowerTitle.includes("menu") ||
+    lowerTitle.includes("table")
+  ) {
     return isActive
       ? "bg-[#5e1835] text-white border-[#5e1835]"
       : "bg-[#6e2845] text-white border-[#6e2845] hover:bg-[#5e1835]";
   }
-  
+
   // Invoice/Billing actions - Cranberry
   if (lowerTitle.includes("invoice") || lowerTitle.includes("billing")) {
     return isActive
       ? "bg-[#8a2050] text-white border-[#8a2050]"
       : "bg-[#9a3060] text-white border-[#9a3060] hover:bg-[#8a2050]";
   }
-  
+
   // Volvo/Transport detail actions - Dusty Rose
   if (lowerTitle.includes("volvo") || lowerTitle.includes("delhi") || lowerTitle.includes("manali")) {
     return isActive
       ? "bg-[#9c4060] text-white border-[#9c4060]"
       : "bg-[#ac5070] text-white border-[#ac5070] hover:bg-[#9c4060]";
   }
-  
+
   // Default - Original Maroon
   return isActive
     ? "bg-[rgb(139,21,56)] text-white border-[rgb(139,21,56)]"
@@ -132,9 +138,9 @@ const menuItems: MenuItem[] = [
   { title: "Volvo Manali - Delhi", url: "/payments/volvo-manali-delhi", menuKey: "payments_volvo_md" },
   { title: "Manali - Delhi Due", url: "/payments/manali-delhi-due", menuKey: "payments_md_due" },
   { title: "View Volvo Payment", url: "/payments/volvo", menuKey: "payments_volvo" },
-  { title: "View Hotel Detail", url: "/payments/hotel", menuKey: "payments_hotel" },
-  { title: "Hotel Due Amount", url: "/payments/hotel-due", menuKey: "payments_hotel_due" },
-  { title: "Hotel Payment", url: "/payments/hotel-payment", menuKey: "payments_hotel_payment" },
+  { title: "View Another Hotel Detail", url: "/payments/hotel", menuKey: "payments_hotel" },
+  { title: "Another Hotel Due Amount", url: "/payments/hotel-due", menuKey: "payments_hotel_due" },
+  { title: "Another Hotel Payment", url: "/payments/hotel-payment", menuKey: "payments_hotel_payment" },
   { title: "View Vehicle Detail", url: "/payments/vehicle", menuKey: "payments_vehicle" },
   { title: "Vehicle Due Amount", url: "/payments/vehicle-due", menuKey: "payments_vehicle_due" },
   { title: "Vehicle Payment", url: "/payments/vehicle-payment", menuKey: "payments_vehicle_payment" },
@@ -188,14 +194,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const filteredMenuItems = menuItems.filter(item => {
+  const filteredMenuItems = menuItems.filter((item) => {
     if (!item.menuKey) return true;
     return hasMenuAccess(item.menuKey);
   });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(253, 246, 246)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "rgb(253, 246, 246)" }}>
         <div className="text-lg">Loading...</div>
       </div>
     );
@@ -206,9 +212,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'rgb(253, 246, 246)' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "rgb(253, 246, 246)" }}>
       {/* Pink Header */}
-      <header className="py-4 px-6 print:hidden" style={{ backgroundColor: 'rgb(248, 216, 217)' }}>
+      <header className="py-4 px-6 print:hidden" style={{ backgroundColor: "rgb(248, 216, 217)" }}>
         <img src={mukutLogo} alt="Mukut Hotels" className="h-16" />
       </header>
 
@@ -245,9 +251,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );
