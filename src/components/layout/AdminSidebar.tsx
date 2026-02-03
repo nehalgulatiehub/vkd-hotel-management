@@ -94,8 +94,8 @@ const adminMenuItems: MenuItem[] = [
     title: "Hotel Manager", 
     color: "#4CAF50", 
     submenu: [
-      { title: "Add Hotel", url: "/admin/hotels/add" },
-      { title: "Manage Hotel", url: "/admin/hotels" },
+      { title: "Add Hotel", url: "/admin/own-hotels/add" },
+      { title: "Manage Hotel", url: "/admin/manage-hotels" },
     ] 
   },
   { 
