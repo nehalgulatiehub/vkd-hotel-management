@@ -59,17 +59,25 @@ export default function AddAgent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prepare data, converting empty strings to null for UUID fields
+    const submitData = {
+      ...formData,
+      city_id: formData.city_id || null,
+    };
+    
     if (isEditMode && editId) {
-      const { error } = await supabase.from("agents").update(formData).eq("id", editId);
+      const { error } = await supabase.from("agents").update(submitData).eq("id", editId);
       if (error) {
+        console.error("Update error:", error);
         toast.error("Error updating agent");
       } else {
         toast.success("Agent updated successfully");
         navigate("/agents");
       }
     } else {
-      const { error } = await supabase.from("agents").insert([formData]);
+      const { error } = await supabase.from("agents").insert([submitData]);
       if (error) {
+        console.error("Insert error:", error);
         toast.error("Error adding agent");
       } else {
         toast.success("Agent added successfully");
