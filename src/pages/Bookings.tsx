@@ -992,6 +992,78 @@ export default function Bookings() {
     setBookingPayments(data || []);
   };
 
+  // Edit Payment states
+  const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [editPaymentAmount, setEditPaymentAmount] = useState("");
+  const [editPaymentMode, setEditPaymentMode] = useState("");
+  const [editPaymentReference, setEditPaymentReference] = useState("");
+  const [showEditPaymentDialog, setShowEditPaymentDialog] = useState(false);
+
+  const handleEditPaymentClick = (payment: any) => {
+    setEditingPayment(payment);
+    setEditPaymentAmount(payment.amount?.toString() || "");
+    setEditPaymentMode(payment.payment_mode || "");
+    setEditPaymentReference(payment.reference_number || "");
+    setShowEditPaymentDialog(true);
+  };
+
+  const handleEditPaymentSave = async () => {
+    if (!editingPayment || !editPaymentAmount || !editPaymentMode) {
+      toast.error("Please fill in required fields");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("payments")
+        .update({
+          amount: parseFloat(editPaymentAmount),
+          payment_mode: editPaymentMode,
+          reference_number: editPaymentReference,
+        })
+        .eq("id", editingPayment.id);
+
+      if (error) throw error;
+
+      toast.success("Payment updated successfully");
+      setShowEditPaymentDialog(false);
+      setEditingPayment(null);
+      
+      // Refresh payments
+      if (selectedBooking?.id) {
+        await fetchBookingPayments(selectedBooking.id);
+      }
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      toast.error("Failed to update payment");
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!window.confirm("Are you sure you want to delete this payment?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("payments")
+        .delete()
+        .eq("id", paymentId);
+
+      if (error) throw error;
+
+      toast.success("Payment deleted successfully");
+      
+      // Refresh payments
+      if (selectedBooking?.id) {
+        await fetchBookingPayments(selectedBooking.id);
+      }
+    } catch (error) {
+      console.error("Error deleting payment:", error);
+      toast.error("Failed to delete payment");
+    }
+  };
+
   const handleViewPayment = async (booking: any) => {
     if (isAdminRoute) {
       // Use admin dialog with full service-wise payment breakdown
@@ -2810,7 +2882,26 @@ export default function Bookings() {
                           </td>
                           <td className="border border-border px-2 py-1.5">{payment.notes || "-"}</td>
                           <td className="border border-border px-2 py-1.5 text-center">{payment.cities?.name || "-"}</td>
-                          <td className="border border-border px-2 py-1.5 text-center capitalize">{payment.approval_status || "Pending"}</td>
+                          <td className="border border-border px-2 py-1.5">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="capitalize">{payment.approval_status || "Pending"}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => handleEditPaymentClick(payment)}
+                                  className="text-[#dc2626] hover:text-[#dc2626]/80 underline text-xs"
+                                >
+                                  Edit
+                                </button>
+                                <span className="text-gray-400">|</span>
+                                <button
+                                  onClick={() => handleDeletePayment(payment.id)}
+                                  className="text-[#dc2626] hover:text-[#dc2626]/80 underline text-xs"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -2920,6 +3011,53 @@ export default function Bookings() {
                 <Button onClick={submitPayment} disabled={isSubmittingPayment}>
                   {isSubmittingPayment ? "Adding..." : "Add Payment"}
                 </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Payment Dialog */}
+        <Dialog open={showEditPaymentDialog} onOpenChange={setShowEditPaymentDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Payment</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Amount *</Label>
+                <Input 
+                  type="number"
+                  placeholder="Enter amount"
+                  value={editPaymentAmount}
+                  onChange={(e) => setEditPaymentAmount(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Mode *</Label>
+                <Select value={editPaymentMode} onValueChange={setEditPaymentMode}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Reference Number</Label>
+                <Input 
+                  placeholder="Transaction/Cheque number"
+                  value={editPaymentReference}
+                  onChange={(e) => setEditPaymentReference(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowEditPaymentDialog(false)}>Cancel</Button>
+                <Button onClick={handleEditPaymentSave}>Save Changes</Button>
               </div>
             </div>
           </DialogContent>

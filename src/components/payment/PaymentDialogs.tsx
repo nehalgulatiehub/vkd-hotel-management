@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import { useState } from "react";
 
 interface PaymentDialogsProps {
   showViewPaymentDialog: boolean;
@@ -21,6 +22,8 @@ interface PaymentDialogsProps {
   setPaymentReference: (ref: string) => void;
   isSubmittingPayment: boolean;
   onSubmitPayment: () => void;
+  onEditPayment?: (payment: any) => void;
+  onDeletePayment?: (paymentId: string) => void;
 }
 
 export function PaymentDialogs({
@@ -38,7 +41,42 @@ export function PaymentDialogs({
   setPaymentReference,
   isSubmittingPayment,
   onSubmitPayment,
+  onEditPayment,
+  onDeletePayment,
 }: PaymentDialogsProps) {
+  const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editMode, setEditMode] = useState("");
+  const [editReference, setEditReference] = useState("");
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const handleEditClick = (payment: any) => {
+    setEditingPayment(payment);
+    setEditAmount(payment.amount?.toString() || "");
+    setEditMode(payment.payment_mode || "");
+    setEditReference(payment.reference_number || "");
+    setShowEditDialog(true);
+  };
+
+  const handleEditSave = () => {
+    if (onEditPayment && editingPayment) {
+      onEditPayment({
+        ...editingPayment,
+        amount: parseFloat(editAmount),
+        payment_mode: editMode,
+        reference_number: editReference,
+      });
+    }
+    setShowEditDialog(false);
+    setEditingPayment(null);
+  };
+
+  const handleDeleteClick = (paymentId: string) => {
+    if (window.confirm("Are you sure you want to delete this payment?")) {
+      onDeletePayment?.(paymentId);
+    }
+  };
+
   return (
     <>
       <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
@@ -51,6 +89,7 @@ export function PaymentDialogs({
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr style={{ backgroundColor: "#D4A59A" }}>
+                  <th className="border border-[#c99] px-3 py-2 text-left font-semibold"></th>
                   <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Total Payment</th>
                   <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Total Received Payment</th>
                   <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Total Due Payment</th>
@@ -59,6 +98,7 @@ export function PaymentDialogs({
               </thead>
               <tbody>
                 <tr style={{ backgroundColor: "#F5E6E0" }}>
+                  <td className="border border-[#c99] px-3 py-2 font-medium underline">Booking</td>
                   <td className="border border-[#c99] px-3 py-2">Rs. {(selectedBooking?.total_amount || 0).toLocaleString('en-IN')}/-</td>
                   <td className="border border-[#c99] px-3 py-2">Rs. {(selectedBooking?.paid_amount || 0).toLocaleString('en-IN')}/-</td>
                   <td className="border border-[#c99] px-3 py-2">Rs. {(selectedBooking?.due_amount || 0).toLocaleString('en-IN')}/-</td>
@@ -106,7 +146,26 @@ export function PaymentDialogs({
                       <td className="border border-[#c99] px-2 py-2 capitalize">{payment.payment_mode?.replace(/_/g, " ") || "-"}</td>
                       <td className="border border-[#c99] px-2 py-2">{payment.reference_number || "-"}</td>
                       <td className="border border-[#c99] px-2 py-2">{(payment as any).cities?.name || "-"}</td>
-                      <td className="border border-[#c99] px-2 py-2 capitalize">{payment.approval_status || "Pending"}</td>
+                      <td className="border border-[#c99] px-2 py-2">
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="capitalize">{payment.approval_status || "Pending"}</span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleEditClick(payment)}
+                              className="text-[#dc2626] hover:text-[#dc2626]/80 underline text-xs"
+                            >
+                              Edit
+                            </button>
+                            <span className="text-gray-400">|</span>
+                            <button
+                              onClick={() => handleDeleteClick(payment.id)}
+                              className="text-[#dc2626] hover:text-[#dc2626]/80 underline text-xs"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -115,6 +174,42 @@ export function PaymentDialogs({
           </div>
           <div className="bg-[#1e6e99] text-white px-4 py-2 text-xs">
             Booking: {selectedBooking?.booking_number} | Customer: {selectedBooking?.customer_name}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Amount *</Label>
+              <Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} placeholder="Enter amount" />
+            </div>
+            <div>
+              <Label>Payment Mode *</Label>
+              <Select value={editMode} onValueChange={setEditMode}>
+                <SelectTrigger><SelectValue placeholder="Select mode" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="upi">UPI</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Reference Number</Label>
+              <Input value={editReference} onChange={(e) => setEditReference(e.target.value)} placeholder="Transaction/Cheque number" />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+              <Button onClick={handleEditSave}>Save Changes</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
