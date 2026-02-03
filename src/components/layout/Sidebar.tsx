@@ -42,47 +42,48 @@ interface MenuItem {
   adminOnly?: boolean;
 }
 
-// Helper to determine button color based on action type
-const getActionColor = (title: string): string => {
-  const lowerTitle = title.toLowerCase();
+// Module-based color coding for visual distinction
+const moduleColors = {
+  booking: "bg-slate-500/20 text-slate-700 hover:bg-slate-500/30 border-l-2 border-slate-500",
+  safari: "bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 border-l-2 border-emerald-500",
+  anotherHotel: "bg-orange-500/20 text-orange-700 hover:bg-orange-500/30 border-l-2 border-orange-500",
+  vehicle: "bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-l-2 border-blue-500",
+  volvo: "bg-purple-500/20 text-purple-700 hover:bg-purple-500/30 border-l-2 border-purple-500",
+  restaurant: "bg-pink-500/20 text-pink-700 hover:bg-pink-500/30 border-l-2 border-pink-500",
+  invoice: "bg-cyan-500/20 text-cyan-700 hover:bg-cyan-500/30 border-l-2 border-cyan-500",
+  purchase: "bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 border-l-2 border-amber-500",
+  default: "hover:bg-sidebar-accent/50",
+};
+
+// Helper to determine button color based on module type
+const getModuleColor = (menuKey?: string): string => {
+  if (!menuKey) return moduleColors.default;
   
-  // Add/Create actions - Green
-  if (lowerTitle.startsWith("add ") || lowerTitle.startsWith("create ") || lowerTitle.startsWith("generate ") || lowerTitle.startsWith("new ")) {
-    return "bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 border-l-2 border-emerald-500";
-  }
+  // Safari module
+  if (menuKey.includes("safari")) return moduleColors.safari;
   
-  // View actions - Blue
-  if (lowerTitle.startsWith("view ") || lowerTitle.startsWith("saved ")) {
-    return "bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-l-2 border-blue-500";
-  }
+  // Another Hotel module
+  if (menuKey.includes("hotel") && !menuKey.includes("own_hotel")) return moduleColors.anotherHotel;
   
-  // Export actions - Orange
-  if (lowerTitle.startsWith("export ")) {
-    return "bg-orange-500/20 text-orange-700 hover:bg-orange-500/30 border-l-2 border-orange-500";
-  }
+  // Vehicle module
+  if (menuKey.includes("vehicle")) return moduleColors.vehicle;
   
-  // Import actions - Purple
-  if (lowerTitle.startsWith("import ")) {
-    return "bg-purple-500/20 text-purple-700 hover:bg-purple-500/30 border-l-2 border-purple-500";
-  }
+  // Volvo module
+  if (menuKey.includes("volvo") || menuKey.includes("dm_due") || menuKey.includes("md_due")) return moduleColors.volvo;
   
-  // Due Amount actions - Red
-  if (lowerTitle.includes("due amount") || lowerTitle.includes("due ")) {
-    return "bg-red-500/20 text-red-700 hover:bg-red-500/30 border-l-2 border-red-500";
-  }
+  // Restaurant module
+  if (menuKey.includes("restaurant")) return moduleColors.restaurant;
   
-  // Payment actions - Amber
-  if (lowerTitle.includes("payment")) {
-    return "bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 border-l-2 border-amber-500";
-  }
+  // Invoice/Billing module
+  if (menuKey.includes("billing")) return moduleColors.invoice;
   
-  // Reports actions - Cyan
-  if (lowerTitle.startsWith("report")) {
-    return "bg-cyan-500/20 text-cyan-700 hover:bg-cyan-500/30 border-l-2 border-cyan-500";
-  }
+  // Purchase module
+  if (menuKey.includes("purchase")) return moduleColors.purchase;
   
-  // Default - subtle gray
-  return "hover:bg-sidebar-accent/50";
+  // Booking module (general payments, room booking, booking due)
+  if (menuKey.includes("booking") || menuKey.includes("payments_view")) return moduleColors.booking;
+  
+  return moduleColors.default;
 };
 
 const menuItems: MenuItem[] = [
@@ -140,32 +141,53 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
-    title: "Payment & Financials",
+    title: "Booking Payments",
     icon: DollarSign,
     submenu: [
-      // Booking related
       { title: "View Payment", url: "/payments", menuKey: "payments_view" },
       { title: "Booking Due Amount", url: "/payments/booking-due", menuKey: "payments_booking_due" },
       { title: "View Booking Payment", url: "/payments/booking", menuKey: "payments_booking_view" },
       { title: "Export Booking", url: "/payments/booking-export", menuKey: "payments_booking_export" },
       { title: "View Room Booking", url: "/payments/room-booking", menuKey: "payments_room_booking" },
-      // Safari related
+    ]
+  },
+  {
+    title: "Safari",
+    icon: Plane,
+    submenu: [
       { title: "View Safari Detail", url: "/payments/safari", menuKey: "payments_safari" },
       { title: "Safari Due Amount", url: "/payments/safari-due", menuKey: "payments_safari_due" },
       { title: "View Safari Payment", url: "/payments/safari-payment", menuKey: "payments_safari_payment" },
-      // Another Hotel related
-      { title: "View Another Hotel Detail", url: "/payments/hotel", menuKey: "payments_hotel" },
+    ]
+  },
+  {
+    title: "Another Hotel",
+    icon: Hotel,
+    submenu: [
+      { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
+      { title: "View Another Hotel", url: "/hotels", menuKey: "another_hotels_view" },
+      { title: "View Booking Detail", url: "/payments/hotel", menuKey: "payments_hotel" },
       { title: "Another Hotel Due Amount", url: "/payments/hotel-due", menuKey: "payments_hotel_due" },
       { title: "Another Hotel Payment", url: "/payments/hotel-payment", menuKey: "payments_hotel_payment" },
-      // Vehicle related
+    ]
+  },
+  {
+    title: "Vehicle",
+    icon: Plane,
+    submenu: [
       { title: "View Vehicle Detail", url: "/payments/vehicle", menuKey: "payments_vehicle" },
       { title: "Vehicle Due Amount", url: "/payments/vehicle-due", menuKey: "payments_vehicle_due" },
       { title: "View Vehicle Payment", url: "/payments/vehicle-payment", menuKey: "payments_vehicle_payment" },
-      // Volvo related
-      { title: "Volvo Delhi - Manali Detail", url: "/payments/volvo-delhi-manali", menuKey: "payments_volvo_dm" },
-      { title: "Delhi - Manali Due Amount", url: "/payments/delhi-manali-due", menuKey: "payments_dm_due" },
-      { title: "Volvo Manali - Delhi Detail", url: "/payments/volvo-manali-delhi", menuKey: "payments_volvo_md" },
-      { title: "Manali - Delhi Due Amount", url: "/payments/manali-delhi-due", menuKey: "payments_md_due" },
+    ]
+  },
+  {
+    title: "Volvo",
+    icon: Plane,
+    submenu: [
+      { title: "Delhi-Manali Detail", url: "/payments/volvo-delhi-manali", menuKey: "payments_volvo_dm" },
+      { title: "Delhi-Manali Due Amount", url: "/payments/delhi-manali-due", menuKey: "payments_dm_due" },
+      { title: "Manali-Delhi Detail", url: "/payments/volvo-manali-delhi", menuKey: "payments_volvo_md" },
+      { title: "Manali-Delhi Due Amount", url: "/payments/manali-delhi-due", menuKey: "payments_md_due" },
       { title: "View Volvo Payment", url: "/payments/volvo", menuKey: "payments_volvo" },
     ]
   },
@@ -192,7 +214,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
-    title: "Billing",
+    title: "Billing / Invoice",
     icon: Receipt,
     submenu: [
       { title: "Create Invoice", url: "/billing", menuKey: "billing_create" },
@@ -332,7 +354,7 @@ export function AppSidebar() {
                             <SidebarMenuSub className="bg-sidebar border-l border-sidebar-border">
                               {item.submenu.map((subItem) => (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild className={`text-[10px] h-5 ${getActionColor(subItem.title)}`}>
+                                  <SidebarMenuSubButton asChild className={`text-[10px] h-5 ${getModuleColor(subItem.menuKey)}`}>
                                     <NavLink
                                       to={subItem.url}
                                       className={({ isActive }) =>
