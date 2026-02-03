@@ -89,6 +89,8 @@ import AdminAnotherHotels from "./pages/admin/AdminAnotherHotels";
 import AdminAddAnotherHotel from "./pages/admin/AdminAddAnotherHotel";
 import AdminOwnHotels from "./pages/admin/AdminOwnHotels";
 import AdminAddOwnHotel from "./pages/admin/AdminAddOwnHotel";
+import AdminManageHotels from "./pages/admin/AdminManageHotels";
+import AdminManageRooms from "./pages/admin/AdminManageRooms";
 import AdminUserList from "./pages/admin/AdminUserList";
 import ViewPendingPayment from "./pages/admin/ViewPendingPayment";
 import ViewApprovedPayment from "./pages/admin/ViewApprovedPayment";
@@ -583,6 +585,8 @@ const App = () => (
           <Route path="/admin/another-hotels/add" element={<AdminLayout><AdminAddAnotherHotel /></AdminLayout>} />
           <Route path="/admin/own-hotels" element={<AdminLayout><AdminOwnHotels /></AdminLayout>} />
           <Route path="/admin/own-hotels/add" element={<AdminLayout><AdminAddOwnHotel /></AdminLayout>} />
+          <Route path="/admin/manage-hotels" element={<AdminLayout><AdminManageHotels /></AdminLayout>} />
+          <Route path="/admin/hotels/:hotelId/rooms" element={<AdminLayout><AdminManageRooms /></AdminLayout>} />
           <Route path="/admin/pending-payments" element={<AdminLayout><ViewPendingPayment /></AdminLayout>} />
           <Route path="/admin/approved-payments" element={<AdminLayout><ViewApprovedPayment /></AdminLayout>} />
           <Route path="/admin/reference-list" element={<AdminLayout><ViewReferenceList /></AdminLayout>} />
