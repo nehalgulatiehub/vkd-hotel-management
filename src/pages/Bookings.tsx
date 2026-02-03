@@ -125,6 +125,9 @@ export default function Bookings() {
   const [paymentType, setPaymentType] = useState("");
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
+  const [cancellationCharge, setCancellationCharge] = useState("");
+  const [cancellationPaymentMode, setCancellationPaymentMode] = useState("");
+  const [cancellationChequeNo, setCancellationChequeNo] = useState("");
   const [printBookingId, setPrintBookingId] = useState<string | null>(null);
   const [cities, setCities] = useState<any[]>([]);
   
@@ -1197,6 +1200,9 @@ export default function Bookings() {
   const handleCancelBooking = (booking: any) => {
     setSelectedBooking(booking);
     setCancellationReason("");
+    setCancellationCharge("0");
+    setCancellationPaymentMode("");
+    setCancellationChequeNo("");
     setShowCancelDialog(true);
   };
 
@@ -1254,20 +1260,29 @@ export default function Bookings() {
   };
 
   const submitCancellation = async () => {
-    if (!cancellationReason) {
-      toast.error("Please provide a cancellation reason");
+    if (!cancellationPaymentMode) {
+      toast.error("Please select a payment mode");
+      return;
+    }
+
+    if (cancellationPaymentMode === "cheque" && !cancellationChequeNo) {
+      toast.error("Please provide cheque number");
       return;
     }
 
     try {
+      const charges = parseFloat(cancellationCharge) || 0;
+      const bookingTotal = selectedBooking?.total_amount || 0;
+      const refundAmount = Math.max(0, (selectedBooking?.paid_amount || 0) - charges);
+
       // Create cancellation record
       const { error: cancellationError } = await supabase
         .from("cancellations")
         .insert({
           booking_id: selectedBooking.id,
-          cancellation_reason: cancellationReason,
-          refund_amount: selectedBooking.paid_amount || 0,
-          cancellation_charges: 0
+          cancellation_reason: cancellationReason || `Payment Mode: ${cancellationPaymentMode}${cancellationChequeNo ? `, Cheque No: ${cancellationChequeNo}` : ''}`,
+          refund_amount: refundAmount,
+          cancellation_charges: charges
         });
 
       if (cancellationError) throw cancellationError;
@@ -3084,26 +3099,81 @@ export default function Bookings() {
 
         {/* Cancel Booking Dialog */}
         <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to cancel booking {selectedBooking?.booking_number}? This action cannot be undone.
-              </AlertDialogDescription>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader className="bg-primary text-primary-foreground px-4 py-2 -m-6 mb-4 rounded-t-lg">
+              <AlertDialogTitle className="text-base font-semibold">Cancel Booking</AlertDialogTitle>
             </AlertDialogHeader>
-            <div className="space-y-2 my-4">
-              <Label>Cancellation Reason <span className="text-destructive">*</span></Label>
-              <Textarea 
-                placeholder="Please provide reason for cancellation"
-                value={cancellationReason}
-                onChange={(e) => setCancellationReason(e.target.value)}
-                rows={4}
-              />
+            <div className="bg-destructive/10 border border-destructive/30 rounded p-4">
+              <p className="text-xs text-right text-destructive mb-3">* - Required Fields</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Label className="w-36 text-right text-xs">Customer Name :</Label>
+                  <Input 
+                    value={selectedBooking?.customer_name || ""}
+                    disabled
+                    className="flex-1 bg-background"
+                  />
+                  <span className="text-destructive">*</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="w-36 text-right text-xs">Booking Price :</Label>
+                  <Input 
+                    value={selectedBooking?.total_amount || 0}
+                    disabled
+                    className="flex-1 bg-background"
+                  />
+                  <span className="text-destructive">*</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="w-36 text-right text-xs">Cancellation Charge :</Label>
+                  <Input 
+                    type="number"
+                    value={cancellationCharge}
+                    onChange={(e) => setCancellationCharge(e.target.value)}
+                    className="flex-1"
+                    placeholder="0"
+                  />
+                  <span className="text-destructive">*</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="w-36 text-right text-xs">Payment Mode :</Label>
+                  <Select value={cancellationPaymentMode} onValueChange={setCancellationPaymentMode}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="upi">UPI</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-destructive">*</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="w-36 text-right text-xs">Cheque No :</Label>
+                  <Input 
+                    value={cancellationChequeNo}
+                    onChange={(e) => setCancellationChequeNo(e.target.value)}
+                    className="flex-1"
+                    disabled={cancellationPaymentMode !== "cheque"}
+                  />
+                  <span className="text-destructive">*</span>
+                </div>
+                <p className="text-xs text-center text-muted-foreground">If Payment by cheque Then cheque No.</p>
+              </div>
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={submitCancellation} className="bg-destructive hover:bg-destructive/90">
-                Confirm Cancellation
+            <AlertDialogFooter className="mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCancelDialog(false)}
+                className="border-2"
+              >
+                Reset
+              </Button>
+              <AlertDialogAction onClick={submitCancellation} className="bg-primary hover:bg-primary/90">
+                Submit
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
