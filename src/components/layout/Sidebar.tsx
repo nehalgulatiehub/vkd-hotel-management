@@ -42,28 +42,46 @@ interface MenuItem {
   adminOnly?: boolean;
 }
 
-// Module-based color coding for visual distinction
-const moduleColors = {
-  booking: "bg-slate-500/20 text-slate-700 hover:bg-slate-500/30 border-l-2 border-slate-500",
-  safari: "bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 border-l-2 border-emerald-500",
-  anotherHotel: "bg-orange-500/20 text-orange-700 hover:bg-orange-500/30 border-l-2 border-orange-500",
-  vehicle: "bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border-l-2 border-blue-500",
-  volvo: "bg-purple-500/20 text-purple-700 hover:bg-purple-500/30 border-l-2 border-purple-500",
-  restaurant: "bg-pink-500/20 text-pink-700 hover:bg-pink-500/30 border-l-2 border-pink-500",
-  invoice: "bg-cyan-500/20 text-cyan-700 hover:bg-cyan-500/30 border-l-2 border-cyan-500",
-  purchase: "bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 border-l-2 border-amber-500",
-  default: "hover:bg-sidebar-accent/50",
+// Module-based color coding for visual distinction - using strong background colors
+const moduleColors: Record<string, string> = {
+  booking: "!bg-slate-600 !text-white hover:!bg-slate-700",
+  safari: "!bg-emerald-600 !text-white hover:!bg-emerald-700",
+  anotherHotel: "!bg-orange-500 !text-white hover:!bg-orange-600",
+  vehicle: "!bg-blue-600 !text-white hover:!bg-blue-700",
+  volvo: "!bg-purple-600 !text-white hover:!bg-purple-700",
+  restaurant: "!bg-pink-600 !text-white hover:!bg-pink-700",
+  invoice: "!bg-cyan-600 !text-white hover:!bg-cyan-700",
+  purchase: "!bg-amber-600 !text-white hover:!bg-amber-700",
+  city: "!bg-teal-600 !text-white hover:!bg-teal-700",
+  agent: "!bg-indigo-600 !text-white hover:!bg-indigo-700",
+  transporter: "!bg-rose-600 !text-white hover:!bg-rose-700",
+  ownHotel: "!bg-lime-600 !text-white hover:!bg-lime-700",
+  enquiry: "!bg-fuchsia-600 !text-white hover:!bg-fuchsia-700",
+  other: "!bg-gray-600 !text-white hover:!bg-gray-700",
+  default: "!bg-[#8b1538] !text-white hover:!bg-[#6b1530]",
 };
 
 // Helper to determine button color based on module type
 const getModuleColor = (menuKey?: string): string => {
   if (!menuKey) return moduleColors.default;
   
-  // Safari module
-  if (menuKey.includes("safari")) return moduleColors.safari;
+  // City module
+  if (menuKey.includes("cities")) return moduleColors.city;
+  
+  // Agent module
+  if (menuKey.includes("agents")) return moduleColors.agent;
+  
+  // Transporter module
+  if (menuKey.includes("transporters")) return moduleColors.transporter;
+  
+  // Own Hotel module
+  if (menuKey.includes("own_hotel")) return moduleColors.ownHotel;
   
   // Another Hotel module
-  if (menuKey.includes("hotel") && !menuKey.includes("own_hotel")) return moduleColors.anotherHotel;
+  if (menuKey.includes("another_hotel") || (menuKey.includes("hotel") && !menuKey.includes("own_hotel"))) return moduleColors.anotherHotel;
+  
+  // Safari module
+  if (menuKey.includes("safari")) return moduleColors.safari;
   
   // Vehicle module
   if (menuKey.includes("vehicle")) return moduleColors.vehicle;
@@ -80,8 +98,14 @@ const getModuleColor = (menuKey?: string): string => {
   // Purchase module
   if (menuKey.includes("purchase")) return moduleColors.purchase;
   
+  // Enquiry module
+  if (menuKey.includes("enquir")) return moduleColors.enquiry;
+  
   // Booking module (general payments, room booking, booking due)
-  if (menuKey.includes("booking") || menuKey.includes("payments_view")) return moduleColors.booking;
+  if (menuKey.includes("booking") || menuKey.includes("payments")) return moduleColors.booking;
+  
+  // Other functions
+  if (menuKey.includes("expenses") || menuKey.includes("refund") || menuKey.includes("data_import")) return moduleColors.other;
   
   return moduleColors.default;
 };
@@ -354,12 +378,12 @@ export function AppSidebar() {
                             <SidebarMenuSub className="bg-sidebar border-l border-sidebar-border">
                               {item.submenu.map((subItem) => (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild className={`text-[10px] h-5 ${getModuleColor(subItem.menuKey)}`}>
+                                  <SidebarMenuSubButton asChild className={`text-[10px] h-6 rounded-sm ${getModuleColor(subItem.menuKey)}`}>
                                     <NavLink
                                       to={subItem.url}
                                       className={({ isActive }) =>
                                         isActive
-                                          ? "!bg-sidebar-accent !text-sidebar-accent-foreground font-medium"
+                                          ? "ring-2 ring-white/50 font-bold"
                                           : ""
                                       }
                                     >
