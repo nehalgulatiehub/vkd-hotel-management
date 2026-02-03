@@ -64,6 +64,59 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 340 10% 98%;
     --sidebar-border: 340 20% 25%;
     --sidebar-ring: 340 75% 55%;
+
+    /* Sidebar module button palette (HSL only) */
+    --module-default: 340 65% 28%;
+    --module-default-hover: 340 65% 24%;
+    --module-default-foreground: 0 0% 100%;
+
+    --module-booking: 340 70% 30%;
+    --module-booking-hover: 340 70% 26%;
+    --module-booking-foreground: 0 0% 100%;
+
+    --module-city: 190 75% 28%;
+    --module-city-hover: 190 75% 24%;
+    --module-city-foreground: 0 0% 100%;
+
+    --module-agent: 248 55% 38%;
+    --module-agent-hover: 248 55% 33%;
+    --module-agent-foreground: 0 0% 100%;
+
+    --module-transporter: 336 60% 36%;
+    --module-transporter-hover: 336 60% 31%;
+    --module-transporter-foreground: 0 0% 100%;
+
+    --module-another-hotel: 24 90% 38%;
+    --module-another-hotel-hover: 24 90% 33%;
+    --module-another-hotel-foreground: 0 0% 100%;
+
+    --module-enquiry: 292 55% 38%;
+    --module-enquiry-hover: 292 55% 33%;
+    --module-enquiry-foreground: 0 0% 100%;
+
+    --module-safari: 145 65% 30%;
+    --module-safari-hover: 145 65% 26%;
+    --module-safari-foreground: 0 0% 100%;
+
+    --module-vehicle: 210 75% 34%;
+    --module-vehicle-hover: 210 75% 29%;
+    --module-vehicle-foreground: 0 0% 100%;
+
+    --module-volvo: 270 60% 40%;
+    --module-volvo-hover: 270 60% 35%;
+    --module-volvo-foreground: 0 0% 100%;
+
+    --module-restaurant: 330 70% 40%;
+    --module-restaurant-hover: 330 70% 35%;
+    --module-restaurant-foreground: 0 0% 100%;
+
+    --module-invoice: 195 80% 30%;
+    --module-invoice-hover: 195 80% 26%;
+    --module-invoice-foreground: 0 0% 100%;
+
+    --module-purchase: 45 90% 34%;
+    --module-purchase-hover: 45 90% 29%;
+    --module-purchase-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -112,6 +165,175 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 340 10% 98%;
     --sidebar-border: 340 15% 18%;
     --sidebar-ring: 340 75% 55%;
+
+    /* Sidebar module button palette (dark) */
+    --module-default: 340 55% 30%;
+    --module-default-hover: 340 55% 26%;
+    --module-default-foreground: 0 0% 100%;
+
+    --module-booking: 340 60% 32%;
+    --module-booking-hover: 340 60% 28%;
+    --module-booking-foreground: 0 0% 100%;
+
+    --module-city: 190 70% 30%;
+    --module-city-hover: 190 70% 26%;
+    --module-city-foreground: 0 0% 100%;
+
+    --module-agent: 248 55% 42%;
+    --module-agent-hover: 248 55% 37%;
+    --module-agent-foreground: 0 0% 100%;
+
+    --module-transporter: 336 60% 40%;
+    --module-transporter-hover: 336 60% 35%;
+    --module-transporter-foreground: 0 0% 100%;
+
+    --module-another-hotel: 24 85% 42%;
+    --module-another-hotel-hover: 24 85% 37%;
+    --module-another-hotel-foreground: 0 0% 100%;
+
+    --module-enquiry: 292 55% 42%;
+    --module-enquiry-hover: 292 55% 37%;
+    --module-enquiry-foreground: 0 0% 100%;
+
+    --module-safari: 145 60% 34%;
+    --module-safari-hover: 145 60% 29%;
+    --module-safari-foreground: 0 0% 100%;
+
+    --module-vehicle: 210 70% 38%;
+    --module-vehicle-hover: 210 70% 33%;
+    --module-vehicle-foreground: 0 0% 100%;
+
+    --module-volvo: 270 60% 44%;
+    --module-volvo-hover: 270 60% 39%;
+    --module-volvo-foreground: 0 0% 100%;
+
+    --module-restaurant: 330 65% 44%;
+    --module-restaurant-hover: 330 65% 39%;
+    --module-restaurant-foreground: 0 0% 100%;
+
+    --module-invoice: 195 75% 34%;
+    --module-invoice-hover: 195 75% 29%;
+    --module-invoice-foreground: 0 0% 100%;
+
+    --module-purchase: 45 85% 38%;
+    --module-purchase-hover: 45 85% 33%;
+    --module-purchase-foreground: 0 0% 100%;
+  }
+}
+
+@layer components {
+  .sidebar-pill {
+    --sidebar-pill-bg: var(--module-default);
+    --sidebar-pill-bg-hover: var(--module-default-hover);
+    --sidebar-pill-border: var(--module-default);
+    --sidebar-pill-fg: var(--module-default-foreground);
+
+    @apply block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors;
+    background-color: hsl(var(--sidebar-pill-bg));
+    color: hsl(var(--sidebar-pill-fg));
+    border-color: hsl(var(--sidebar-pill-border));
+  }
+
+  .sidebar-pill:hover {
+    background-color: hsl(var(--sidebar-pill-bg-hover));
+  }
+
+  .sidebar-pill--active {
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--sidebar-pill-bg) / 0.55);
+    font-weight: 700;
+  }
+
+  .sidebar-pill--default {
+    --sidebar-pill-bg: var(--module-default);
+    --sidebar-pill-bg-hover: var(--module-default-hover);
+    --sidebar-pill-border: var(--module-default);
+    --sidebar-pill-fg: var(--module-default-foreground);
+  }
+
+  .sidebar-pill--booking {
+    --sidebar-pill-bg: var(--module-booking);
+    --sidebar-pill-bg-hover: var(--module-booking-hover);
+    --sidebar-pill-border: var(--module-booking);
+    --sidebar-pill-fg: var(--module-booking-foreground);
+  }
+
+  .sidebar-pill--city {
+    --sidebar-pill-bg: var(--module-city);
+    --sidebar-pill-bg-hover: var(--module-city-hover);
+    --sidebar-pill-border: var(--module-city);
+    --sidebar-pill-fg: var(--module-city-foreground);
+  }
+
+  .sidebar-pill--agent {
+    --sidebar-pill-bg: var(--module-agent);
+    --sidebar-pill-bg-hover: var(--module-agent-hover);
+    --sidebar-pill-border: var(--module-agent);
+    --sidebar-pill-fg: var(--module-agent-foreground);
+  }
+
+  .sidebar-pill--transporter {
+    --sidebar-pill-bg: var(--module-transporter);
+    --sidebar-pill-bg-hover: var(--module-transporter-hover);
+    --sidebar-pill-border: var(--module-transporter);
+    --sidebar-pill-fg: var(--module-transporter-foreground);
+  }
+
+  .sidebar-pill--another-hotel {
+    --sidebar-pill-bg: var(--module-another-hotel);
+    --sidebar-pill-bg-hover: var(--module-another-hotel-hover);
+    --sidebar-pill-border: var(--module-another-hotel);
+    --sidebar-pill-fg: var(--module-another-hotel-foreground);
+  }
+
+  .sidebar-pill--enquiry {
+    --sidebar-pill-bg: var(--module-enquiry);
+    --sidebar-pill-bg-hover: var(--module-enquiry-hover);
+    --sidebar-pill-border: var(--module-enquiry);
+    --sidebar-pill-fg: var(--module-enquiry-foreground);
+  }
+
+  .sidebar-pill--safari {
+    --sidebar-pill-bg: var(--module-safari);
+    --sidebar-pill-bg-hover: var(--module-safari-hover);
+    --sidebar-pill-border: var(--module-safari);
+    --sidebar-pill-fg: var(--module-safari-foreground);
+  }
+
+  .sidebar-pill--vehicle {
+    --sidebar-pill-bg: var(--module-vehicle);
+    --sidebar-pill-bg-hover: var(--module-vehicle-hover);
+    --sidebar-pill-border: var(--module-vehicle);
+    --sidebar-pill-fg: var(--module-vehicle-foreground);
+  }
+
+  .sidebar-pill--volvo {
+    --sidebar-pill-bg: var(--module-volvo);
+    --sidebar-pill-bg-hover: var(--module-volvo-hover);
+    --sidebar-pill-border: var(--module-volvo);
+    --sidebar-pill-fg: var(--module-volvo-foreground);
+  }
+
+  .sidebar-pill--restaurant {
+    --sidebar-pill-bg: var(--module-restaurant);
+    --sidebar-pill-bg-hover: var(--module-restaurant-hover);
+    --sidebar-pill-border: var(--module-restaurant);
+    --sidebar-pill-fg: var(--module-restaurant-foreground);
+  }
+
+  .sidebar-pill--invoice {
+    --sidebar-pill-bg: var(--module-invoice);
+    --sidebar-pill-bg-hover: var(--module-invoice-hover);
+    --sidebar-pill-border: var(--module-invoice);
+    --sidebar-pill-fg: var(--module-invoice-foreground);
+  }
+
+  .sidebar-pill--purchase {
+    --sidebar-pill-bg: var(--module-purchase);
+    --sidebar-pill-bg-hover: var(--module-purchase-hover);
+    --sidebar-pill-border: var(--module-purchase);
+    --sidebar-pill-fg: var(--module-purchase-foreground);
   }
 }
 
