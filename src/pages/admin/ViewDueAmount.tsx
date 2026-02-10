@@ -31,6 +31,16 @@ export default function ViewDueAmount() {
 
   const paymentDialog = usePaymentDialog(() => fetchBookingsWithDue());
 
+  // View Details Dialog states
+  const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [viewDetailOwnHotelInfo, setViewDetailOwnHotelInfo] = useState<any[]>([]);
+  const [viewDetailAnotherHotelInfo, setViewDetailAnotherHotelInfo] = useState<any[]>([]);
+  const [viewDetailSafariInfo, setViewDetailSafariInfo] = useState<any[]>([]);
+  const [viewDetailVehicleInfo, setViewDetailVehicleInfo] = useState<any[]>([]);
+  const [viewDetailVolvoDMInfo, setViewDetailVolvoDMInfo] = useState<any[]>([]);
+  const [viewDetailVolvoMDInfo, setViewDetailVolvoMDInfo] = useState<any[]>([]);
+
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
@@ -109,6 +119,83 @@ export default function ViewDueAmount() {
     }
   };
 
+  const handleViewDetails = async (booking: any) => {
+    setSelectedBooking(booking);
+    setViewDetailOwnHotelInfo([]);
+    setViewDetailAnotherHotelInfo([]);
+    setViewDetailSafariInfo([]);
+    setViewDetailVehicleInfo([]);
+    setViewDetailVolvoDMInfo([]);
+    setViewDetailVolvoMDInfo([]);
+    setShowViewDetailDialog(true);
+
+    const [hotelRes, safariRes, vehicleRes, volvoDMRes, volvoMDRes] = await Promise.all([
+      supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", booking.id),
+      supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
+      supabase.from("vehicle_bookings").select("*").eq("booking_id", booking.id),
+      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "delhi_manali"),
+      supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "manali_delhi")
+    ]);
+
+    if (hotelRes.data && hotelRes.data.length > 0) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const roomIds = [...new Set(hotelRes.data.map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
+      let roomsMap: Record<string, string> = {};
+      if (roomIds.length > 0) {
+        const { data: roomsData } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
+        roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
+      }
+      const ownHotelBookings = hotelRes.data.filter((hb: any) => hb.own_hotel_id && hb.own_hotels?.name);
+      const anotherHotelBookings = hotelRes.data.filter((hb: any) => hb.hotel_id && hb.another_hotels?.name);
+
+      setViewDetailOwnHotelInfo(ownHotelBookings.map((hb: any) => ({
+        hotelName: hb.own_hotels?.name || "-",
+        roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"),
+        numberOfRooms: hb.number_of_rooms || 1, notes: hb.notes || "",
+        checkIn: hb.check_in_date || "", checkOut: hb.check_out_date || "",
+        totalAmount: hb.total_amount || 0, roomRate: hb.room_rate || 0, createdAt: booking.created_at
+      })));
+      setViewDetailAnotherHotelInfo(anotherHotelBookings.map((hb: any) => ({
+        hotelName: hb.another_hotels?.name || "-",
+        roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"),
+        numberOfRooms: hb.number_of_rooms || 1, notes: hb.notes || "",
+        checkIn: hb.check_in_date || "", checkOut: hb.check_out_date || "",
+        totalAmount: hb.total_amount || 0, roomRate: hb.room_rate || 0, createdAt: booking.created_at
+      })));
+    }
+
+    if (safariRes.data) {
+      setViewDetailSafariInfo(safariRes.data.map((sb: any) => ({
+        transporter: sb.transporters?.name || "-", safariDate: sb.safari_date,
+        numberOfPersons: sb.number_of_persons || 0, ratePerPerson: sb.rate_per_person || 0,
+        totalAmount: sb.total_amount || 0, createdAt: booking.created_at
+      })));
+    }
+    if (vehicleRes.data) {
+      setViewDetailVehicleInfo(vehicleRes.data.map((vb: any) => ({
+        vehicleType: vb.vehicle_type || "-", transporter: vb.transporters?.name || "-",
+        pickupDate: vb.pickup_date, rate: vb.rate || 0,
+        totalAmount: vb.total_amount || 0, createdAt: booking.created_at
+      })));
+    }
+    if (volvoDMRes.data) {
+      setViewDetailVolvoDMInfo(volvoDMRes.data.map((vb: any) => ({
+        numberOfSeats: vb.number_of_seats || 0, ticketNumber: vb.ticket_number || "-",
+        seatNumbers: vb.seat_numbers || "-", transporter: vb.transporters?.name || "-",
+        travelDate: vb.travel_date, ratePerSeat: vb.rate_per_seat || 0,
+        totalAmount: vb.total_amount || 0, createdAt: booking.created_at
+      })));
+    }
+    if (volvoMDRes.data) {
+      setViewDetailVolvoMDInfo(volvoMDRes.data.map((vb: any) => ({
+        numberOfSeats: vb.number_of_seats || 0, ticketNumber: vb.ticket_number || "-",
+        seatNumbers: vb.seat_numbers || "-", transporter: vb.transporters?.name || "-",
+        travelDate: vb.travel_date, ratePerSeat: vb.rate_per_seat || 0,
+        totalAmount: vb.total_amount || 0, createdAt: booking.created_at
+      })));
+    }
+  };
+
   const filteredBookings = bookings.filter(booking => {
     const matchesType = !filters.type || booking.booking_type === filters.type;
     const matchesAgent = !filters.agentName || booking.agent_id === filters.agentName;
@@ -142,12 +229,10 @@ export default function ViewDueAmount() {
   return (
     <div className="min-h-screen bg-background">
       <div className="p-4">
-        {/* Title */}
         <h1 className="text-sm font-medium mb-3 flex items-center gap-1">
           <span>📋</span> Due Amount Booking
         </h1>
 
-        {/* Blue Header Bar */}
         <div className="flex justify-between items-center px-4 py-2 mb-0" style={{ backgroundColor: "#1e6e99" }}>
           <span className="text-white font-semibold text-sm">Search</span>
           <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/admin/dashboard")}>
@@ -157,7 +242,6 @@ export default function ViewDueAmount() {
 
         {/* Compact Filter Section */}
         <div className="mb-3 border border-border bg-muted/50">
-          {/* Row 1: Dates and Search with Date */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-muted-foreground">From :</span>
@@ -198,7 +282,6 @@ export default function ViewDueAmount() {
             </div>
           </div>
 
-          {/* Row 2: Type, Agent, Hotel, Room */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-muted-foreground">Type :</span>
@@ -238,7 +321,6 @@ export default function ViewDueAmount() {
             </div>
           </div>
 
-          {/* Row 3: Package, Customer, Search */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
               <div className="flex items-center gap-1">
@@ -319,7 +401,7 @@ export default function ViewDueAmount() {
                           </td>
                           <td className="border border-[#c99] px-3 py-2 align-top">
                             <div className="flex flex-col gap-0.5">
-                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/admin/bookings/${booking.id}`)}>
+                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>
                                 View Booking
                               </Button>
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => window.print()}>
@@ -359,6 +441,124 @@ export default function ViewDueAmount() {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Booking Details Dialog */}
+      <Dialog open={showViewDetailDialog} onOpenChange={setShowViewDetailDialog}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-auto p-0 rounded-lg">
+          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+            <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
+          </div>
+          {selectedBooking && (
+            <div className="p-4">
+              <div className="border border-gray-400 rounded" style={{ backgroundColor: "#F5E6E0" }}>
+                <div className="p-4 text-[12px]">
+                  <table className="w-full">
+                    <tbody>
+                      <tr><td className="pr-4 py-0.5" style={{ width: '45%' }}>Type :</td><td className="py-0.5 capitalize">{selectedBooking.booking_type === "agent" ? "Agent" : "Direct"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Reference :</td><td className="py-0.5">{selectedBooking.reference || selectedBooking.notes || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Email-Id :</td><td className="py-0.5">{selectedBooking.email || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Customer Name :</td><td className="py-0.5">{selectedBooking.customer_name || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Contact No :</td><td className="py-0.5">{selectedBooking.contact_no || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">No. of People :</td><td className="py-0.5">{selectedBooking.adults || 0} Adult {selectedBooking.children || 0} Children</td></tr>
+                      <tr><td className="pr-4 py-0.5">Booking From :</td><td className="py-0.5">{selectedBooking.check_in_date ? new Date(selectedBooking.check_in_date).toLocaleDateString("en-GB") : "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Booking To :</td><td className="py-0.5">{selectedBooking.check_out_date ? new Date(selectedBooking.check_out_date).toLocaleDateString("en-GB") : "-"}</td></tr>
+
+                      {/* Own Hotel Section */}
+                      {viewDetailOwnHotelInfo.length > 0 && viewDetailOwnHotelInfo.map((hotel, idx) => (
+                        <React.Fragment key={`own-hotel-${idx}`}>
+                          <tr><td colSpan={2} className="font-bold pt-3 pb-1">Hotel :</td></tr>
+                          <tr><td className="pr-4 py-0.5">Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Room Name :</td><td className="py-0.5">{hotel.roomName}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Another Hotel Section */}
+                      {viewDetailAnotherHotelInfo.length > 0 && viewDetailAnotherHotelInfo.map((hotel, idx) => (
+                        <React.Fragment key={`another-hotel-${idx}`}>
+                          <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Hotel :</td></tr>
+                          <tr><td className="pr-4 py-0.5">Another Hotel Name :</td><td className="py-0.5">{hotel.hotelName}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Number of Rooms :</td><td className="py-0.5">{hotel.numberOfRooms}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Room Type :</td><td className="py-0.5">{hotel.roomName}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Hotel Booking Date :</td><td className="py-0.5">{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Room Booking Price :</td><td className="py-0.5">Rs. {(hotel.roomRate || 0).toLocaleString('en-IN')}/-</td></tr>
+                          <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Safari Section */}
+                      {viewDetailSafariInfo.length > 0 && viewDetailSafariInfo.map((safari, idx) => (
+                        <React.Fragment key={`safari-${idx}`}>
+                          <tr><td colSpan={2} className="font-bold pt-3 pb-1">Safari :</td></tr>
+                          <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{safari.transporter}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Safari Booking Date :</td><td className="py-0.5">{safari.createdAt ? new Date(safari.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Safari Date :</td><td className="py-0.5">{safari.safariDate ? new Date(safari.safariDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">No of Safari :</td><td className="py-0.5">{safari.numberOfPersons}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Safari Booking Price :</td><td className="py-0.5">Rs. {(safari.ratePerPerson || 0).toLocaleString('en-IN')}/-</td></tr>
+                          <tr><td className="pr-4 py-0.5">Safari Selling Price :</td><td className="py-0.5">Rs. {(safari.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Delhi-Manali Volvo Section */}
+                      {viewDetailVolvoDMInfo.length > 0 && viewDetailVolvoDMInfo.map((volvo, idx) => (
+                        <React.Fragment key={`dm-${idx}`}>
+                          <tr><td colSpan={2} className="font-bold pt-3 pb-1">Delhi - Manali :</td></tr>
+                          <tr><td className="pr-4 py-0.5">No. of Tickets :</td><td className="py-0.5">{volvo.numberOfSeats}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Ticket No. :</td><td className="py-0.5">{volvo.ticketNumber}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Seat No. :</td><td className="py-0.5">{volvo.seatNumbers}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{volvo.transporter}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Booking Date :</td><td className="py-0.5">{volvo.createdAt ? new Date(volvo.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Manali-Delhi Volvo Section */}
+                      {viewDetailVolvoMDInfo.length > 0 && viewDetailVolvoMDInfo.map((volvo, idx) => (
+                        <React.Fragment key={`md-${idx}`}>
+                          <tr><td colSpan={2} className="font-bold pt-3 pb-1">Manali - Delhi :</td></tr>
+                          <tr><td className="pr-4 py-0.5">No. of Tickets :</td><td className="py-0.5">{volvo.numberOfSeats}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Ticket No. :</td><td className="py-0.5">{volvo.ticketNumber}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Seat No. :</td><td className="py-0.5">{volvo.seatNumbers}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{volvo.transporter}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Booking Date :</td><td className="py-0.5">{volvo.createdAt ? new Date(volvo.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
+                          <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Vehicle Section */}
+                      {viewDetailVehicleInfo.length > 0 && viewDetailVehicleInfo.map((vehicle, idx) => (
+                        <React.Fragment key={`vehicle-${idx}`}>
+                          <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Vehicle :</td></tr>
+                          <tr><td className="pr-4 py-0.5">Vehicle Details :</td><td className="py-0.5">{vehicle.vehicleType}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Vehicle Selling Price :</td><td className="py-0.5">Rs. {(vehicle.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                          <tr><td className="pr-4 py-0.5">Vehicle Booking Price :</td><td className="py-0.5">Rs. {(vehicle.rate || 0).toLocaleString('en-IN')}/-</td></tr>
+                          <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{vehicle.transporter}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Vehicle Booking Date :</td><td className="py-0.5">{vehicle.createdAt ? new Date(vehicle.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
+                          <tr><td className="pr-4 py-0.5">Vehicle Journey Date :</td><td className="py-0.5">{vehicle.pickupDate ? new Date(vehicle.pickupDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                        </React.Fragment>
+                      ))}
+
+                      <tr><td className="pr-4 py-0.5 pt-3">Date :</td><td className="py-0.5 pt-3">{selectedBooking.created_at ? new Date(selectedBooking.created_at).toLocaleDateString("en-GB") : "-"}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+            <span className="text-white text-xs">&nbsp;</span>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Payment Dialogs */}
       <PaymentDialogs
