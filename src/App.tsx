@@ -107,6 +107,7 @@ import ViewManaliDelhiDue from "./pages/admin/ViewManaliDelhiDue";
 import ViewVehicleDue from "./pages/admin/ViewVehicleDue";
 import ViewHotelDue from "./pages/admin/ViewHotelDue";
 import AdminChangePassword from "./pages/admin/AdminChangePassword";
+import AdminAuth from "./pages/admin/AdminAuth";
 import AdminEmail from "./pages/admin/AdminEmail";
 import AdminFollowups from "./pages/admin/AdminFollowups";
 import AdminGuestUsers from "./pages/admin/AdminGuestUsers";
@@ -570,6 +571,7 @@ const App = () => (
           <Route path="/purchase/reports" element={<DashboardLayout><PurchaseReports /></DashboardLayout>} />
           
           {/* Admin Panel Routes */}
+          <Route path="/admin/login" element={<AdminAuth />} />
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
           <Route path="/admin/approvals" element={<AdminLayout><PaymentApprovals /></AdminLayout>} />
