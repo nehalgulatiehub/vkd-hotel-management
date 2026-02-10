@@ -149,7 +149,10 @@ export default function AdminDMVolvoApprovedPayments() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
+                <div className="flex items-center justify-between p-4 border-t">
+                  <div className="text-sm font-bold">Total Payment: ₹{totalAmount.toLocaleString()}/-</div>
+                  <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
+                </div>
               </>
             )}
           </CardContent>

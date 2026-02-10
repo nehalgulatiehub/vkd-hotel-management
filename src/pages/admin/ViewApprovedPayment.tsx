@@ -77,6 +77,7 @@ export default function ViewApprovedPayment() {
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments, { itemsPerPage: 10 });
+  const totalAmount = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
   useEffect(() => {
     if (!authLoading && isAdmin()) {
@@ -308,7 +309,10 @@ export default function ViewApprovedPayment() {
                     ))}
                   </TableBody>
                 </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
+                <div className="flex items-center justify-between p-4 border-t">
+                  <div className="text-sm font-bold">Total Payment: ₹{totalAmount.toLocaleString()}/-</div>
+                  <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
+                </div>
               </>
             )}
           </CardContent>
