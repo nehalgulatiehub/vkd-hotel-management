@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { DetailPageFilters, getDefaultFilters, FilterValues } from "@/components/ui/DetailPageFilters";
@@ -14,6 +15,7 @@ export default function SafariDetails() {
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
+  const { getUserName } = useProfilesMap();
   const paymentDialog = usePaymentDialog(() => fetchSafariBookings());
   
   // View Details Dialog State
@@ -79,6 +81,12 @@ export default function SafariDetails() {
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
 
+  const totalBookingPrice = filteredBookings.reduce((sum, b) => sum + (b.rate_per_person || 0), 0);
+  const totalSellingPrice = filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+  const netProfit = totalSellingPrice - totalBookingPrice;
+  const totalReceivedPayment = filteredBookings.reduce((sum, b) => sum + (b.paid_amount || 0), 0);
+  const totalDuePayment = filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0);
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="Safari Details" />
@@ -120,7 +128,7 @@ export default function SafariDetails() {
                         <div><div>Agent</div><div className="text-[10px]">{booking.bookings?.agent?.name || ""}</div></div>
                       ) : "Direct"}
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 align-top">{booking.bookings?.created_by ? "User" : "-"}</td>
+                    <td className="border border-[#c99] px-2 py-2 align-top">{getUserName(booking.bookings?.created_by)}</td>
                     <td className="border border-[#c99] px-2 py-2 align-top">
                       <div className="font-medium">{booking.bookings?.customer_name || "-"}</div>
                       <div className="text-[10px]">Contact No.: {booking.bookings?.contact_no || ""}</div>
@@ -154,6 +162,19 @@ export default function SafariDetails() {
           {!loading && filteredBookings.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">No safari bookings found</div>
           )}
+        </div>
+
+        {/* Summary Footer */}
+        <div className="p-3 border-t space-y-1" style={{ backgroundColor: "#FDE1E1", borderColor: "#FFC1C1" }}>
+          <div className="flex flex-wrap gap-x-8 text-xs">
+            <span><strong>Total Booking Price :</strong> Rs. {totalBookingPrice.toLocaleString("en-IN")} /-</span>
+            <span><strong>Total Selling Price :</strong> Rs. {totalSellingPrice.toLocaleString("en-IN")} /-</span>
+            <span><strong>Net Profit :</strong> Rs. {netProfit.toLocaleString("en-IN")} /-</span>
+          </div>
+          <div className="flex flex-wrap gap-x-8 text-xs">
+            <span><strong>Total Received Payment :</strong> Rs. {totalReceivedPayment.toLocaleString("en-IN")} /-</span>
+            <span><strong>Total Due Payment :</strong> Rs. {totalDuePayment.toLocaleString("en-IN")} /-</span>
+          </div>
         </div>
 
         <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
