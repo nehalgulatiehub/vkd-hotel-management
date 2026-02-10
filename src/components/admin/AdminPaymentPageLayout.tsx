@@ -9,8 +9,10 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { toast } from "sonner";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { syncServiceTableOnApproval } from "@/utils/paymentSync";
 import { reversePaymentOnRejection } from "@/utils/paymentSync";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export interface PaymentWithDetails {
@@ -85,11 +87,53 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
   const [rejectLoading, setRejectLoading] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState(false);
 
+  // View Booking Details dialog state
+  const [showBookingDetailsDialog, setShowBookingDetailsDialog] = useState(false);
+  const [detailBooking, setDetailBooking] = useState<any>(null);
+  const [detailServiceType, setDetailServiceType] = useState<"safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md">("safari");
+  const [detailServiceData, setDetailServiceData] = useState<any>(null);
+  const [showFullDetailsDialog, setShowFullDetailsDialog] = useState(false);
+  const [fullDetailsData, setFullDetailsData] = useState<{ ownHotels: any[]; anotherHotels: any[]; safaris: any[]; vehicles: any[]; volvoDM: any[]; volvoMD: any[] }>({ ownHotels: [], anotherHotels: [], safaris: [], vehicles: [], volvoDM: [], volvoMD: [] });
+
   const canManage = isAdmin() || isAccount();
 
   const handleViewPayment = (bookingId: string) => {
     setSelectedBookingId(bookingId);
     setShowPaymentDialog(true);
+  };
+
+  const handleViewBooking = async (bookingId: string) => {
+    if (!bookingId) return;
+    try {
+      const { data: bookingData } = await supabase
+        .from("bookings")
+        .select("*, agents(name, company_name)")
+        .eq("id", bookingId)
+        .maybeSingle();
+      if (!bookingData) { toast.error("Booking not found"); return; }
+
+      const [hotelRes, safariRes, vehicleRes, volvoRes] = await Promise.all([
+        supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", bookingId),
+        supabase.from("safari_bookings").select("*").eq("booking_id", bookingId),
+        supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", bookingId),
+        supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", bookingId),
+      ]);
+
+      const ownHotels = (hotelRes.data || []).filter((h: any) => h.own_hotel_id);
+      const anotherHotels = (hotelRes.data || []).filter((h: any) => h.hotel_id);
+      const safaris = safariRes.data || [];
+      const vehicles = vehicleRes.data || [];
+      const normalize = (s: string) => s?.replace(/[-_ ]/g, "").toLowerCase() || "";
+      const volvoDM = (volvoRes.data || []).filter((v: any) => normalize(v.route).includes("delhimanali"));
+      const volvoMD = (volvoRes.data || []).filter((v: any) => normalize(v.route).includes("manalidelhi"));
+
+      setDetailBooking(bookingData);
+      setFullDetailsData({ ownHotels, anotherHotels, safaris, vehicles, volvoDM, volvoMD });
+      setShowFullDetailsDialog(true);
+    } catch (error) {
+      console.error("Error fetching booking details:", error);
+      toast.error("Failed to load booking details");
+    }
   };
 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -493,7 +537,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
                     </td>
                     <td className="border border-[#c99] px-2 py-2 text-xs align-top">
                       <div className="flex flex-col gap-0.5">
-                        <button className="text-[#1e6e99] hover:underline text-left" onClick={() => navigate(`/admin/bookings/${payment.booking?.id}`)}>View Booking</button>
+                        <button className="text-[#1e6e99] hover:underline text-left" onClick={() => payment.booking?.id && handleViewBooking(payment.booking.id)}>View Booking</button>
                         {approvalStatus === "pending" && (
                           <button className="text-[#1e6e99] hover:underline text-left" onClick={async () => {
                             if (payment.id) {
@@ -539,6 +583,102 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         bookingId={selectedBookingId}
       />
 
+      {/* Full Booking Details Dialog */}
+      <Dialog open={showFullDetailsDialog} onOpenChange={setShowFullDetailsDialog}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-auto p-0 rounded-lg">
+          <DialogHeader className="px-4 py-3" style={{ backgroundColor: "#1e6e99" }}>
+            <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
+          </DialogHeader>
+          {detailBooking && (
+            <div className="p-4">
+              <div className="border border-gray-400 rounded" style={{ backgroundColor: "#F5E6E0" }}>
+                <div className="p-4 text-[12px]">
+                  <table className="w-full">
+                    <tbody>
+                      <tr><td className="pr-4 py-0.5" style={{ width: "45%" }}>Type :</td><td className="py-0.5">{detailBooking.booking_type === "agent" ? "Agent" : "Direct"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Reference :</td><td className="py-0.5">{detailBooking.reference || detailBooking.notes || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Email-Id :</td><td className="py-0.5">{detailBooking.email || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Customer Name :</td><td className="py-0.5">{detailBooking.customer_name || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Contact No :</td><td className="py-0.5">{detailBooking.contact_no || "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">No. of People :</td><td className="py-0.5">{detailBooking.adults || 0} Adult {detailBooking.children || 0} Children</td></tr>
+                      <tr><td className="pr-4 py-0.5">Booking From :</td><td className="py-0.5">{detailBooking.check_in_date ? format(new Date(detailBooking.check_in_date), "dd/MM/yyyy") : "-"}</td></tr>
+                      <tr><td className="pr-4 py-0.5">Booking To :</td><td className="py-0.5">{detailBooking.check_out_date ? format(new Date(detailBooking.check_out_date), "dd/MM/yyyy") : "-"}</td></tr>
+
+                      {fullDetailsData.ownHotels.map((h: any, i: number) => (
+                        <BookingServiceRows key={`own-${i}`} label="Hotel" data={[
+                          ["Hotel Name :", h.own_hotels?.name],
+                          ["Number of Rooms :", h.number_of_rooms],
+                          ["Room Name :", h.room_type],
+                          ["Hotel Check In :", h.check_in_date ? format(new Date(h.check_in_date), "dd/MM/yyyy") : "-"],
+                          ["Hotel Check Out :", h.check_out_date ? format(new Date(h.check_out_date), "dd/MM/yyyy") : "-"],
+                          ["Room Selling Price :", `Rs. ${(h.total_amount || 0).toLocaleString("en-IN")}/-`],
+                        ]} />
+                      ))}
+                      {fullDetailsData.anotherHotels.map((h: any, i: number) => (
+                        <BookingServiceRows key={`another-${i}`} label="Another Hotel" data={[
+                          ["Another Hotel Name :", h.another_hotels?.name],
+                          ["Number of Rooms :", h.number_of_rooms],
+                          ["Room Type :", h.room_type],
+                          ["Hotel Check In :", h.check_in_date ? format(new Date(h.check_in_date), "dd/MM/yyyy") : "-"],
+                          ["Hotel Check Out :", h.check_out_date ? format(new Date(h.check_out_date), "dd/MM/yyyy") : "-"],
+                          ["Room Booking Price :", `Rs. ${(h.room_rate || 0).toLocaleString("en-IN")}/-`],
+                          ["Room Selling Price :", `Rs. ${(h.total_amount || 0).toLocaleString("en-IN")}/-`],
+                        ]} />
+                      ))}
+                      {fullDetailsData.safaris.map((s: any, i: number) => (
+                        <BookingServiceRows key={`safari-${i}`} label="Safari" data={[
+                          ["Safari Name :", s.safari_name],
+                          ["Safari Date :", s.safari_date ? format(new Date(s.safari_date), "dd/MM/yyyy") : "-"],
+                          ["No of Persons :", s.number_of_persons],
+                          ["Safari Booking Price :", `Rs. ${(s.rate_per_person || 0).toLocaleString("en-IN")}/-`],
+                          ["Safari Selling Price :", `Rs. ${(s.total_amount || 0).toLocaleString("en-IN")}/-`],
+                        ]} />
+                      ))}
+                      {fullDetailsData.vehicles.map((v: any, i: number) => (
+                        <BookingServiceRows key={`vehicle-${i}`} label="Another Vehicle" data={[
+                          ["Vehicle Details :", v.vehicle_type],
+                          ["Vehicle Selling Price :", `Rs. ${(v.total_amount || 0).toLocaleString("en-IN")}/-`],
+                          ["Vehicle Booking Price :", `Rs. ${(v.rate || 0).toLocaleString("en-IN")}/-`],
+                          ["Transporter :", v.transporters?.name],
+                          ["Vehicle Journey Date :", v.pickup_date ? format(new Date(v.pickup_date), "dd/MM/yyyy") : "-"],
+                        ]} />
+                      ))}
+                      {fullDetailsData.volvoDM.map((v: any, i: number) => (
+                        <BookingServiceRows key={`dm-${i}`} label="Delhi - Manali" data={[
+                          ["No. of Tickets :", v.number_of_seats],
+                          ["Ticket No. :", v.ticket_number],
+                          ["Seat No. :", v.seat_numbers],
+                          ["Transporter :", v.transporters?.name],
+                          ["Volvo Journey Date :", v.travel_date ? format(new Date(v.travel_date), "dd/MM/yyyy") : "-"],
+                          ["Volvo Booking Price :", `Rs. ${(v.rate_per_seat || 0).toLocaleString("en-IN")}/-`],
+                          ["Volvo Selling Price :", `Rs. ${(v.total_amount || 0).toLocaleString("en-IN")}/-`],
+                        ]} />
+                      ))}
+                      {fullDetailsData.volvoMD.map((v: any, i: number) => (
+                        <BookingServiceRows key={`md-${i}`} label="Manali - Delhi" data={[
+                          ["No. of Tickets :", v.number_of_seats],
+                          ["Ticket No. :", v.ticket_number],
+                          ["Seat No. :", v.seat_numbers],
+                          ["Transporter :", v.transporters?.name],
+                          ["Volvo Journey Date :", v.travel_date ? format(new Date(v.travel_date), "dd/MM/yyyy") : "-"],
+                          ["Volvo Booking Price :", `Rs. ${(v.rate_per_seat || 0).toLocaleString("en-IN")}/-`],
+                          ["Volvo Selling Price :", `Rs. ${(v.total_amount || 0).toLocaleString("en-IN")}/-`],
+                        ]} />
+                      ))}
+
+                      <tr><td className="pr-4 py-0.5">Date :</td><td className="py-0.5">{detailBooking.created_at ? format(new Date(detailBooking.created_at), "dd/MM/yyyy") : "-"}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+            <span className="text-white text-[11px]">&nbsp;</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {approvalStatus === "approved" && (
         <AlertDialog open={!!rejectingPaymentId} onOpenChange={() => setRejectingPaymentId(null)}>
           <AlertDialogContent>
@@ -548,5 +688,16 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         </AlertDialog>
       )}
     </div>
+  );
+}
+
+function BookingServiceRows({ label, data }: { label: string; data: [string, any][] }) {
+  return (
+    <>
+      <tr><td colSpan={2} className="font-bold pt-2 pb-1">{label} :</td></tr>
+      {data.map(([k, v], i) => (
+        <tr key={i}><td className="pr-4 py-0.5" style={{ width: "45%" }}>{k}</td><td className="py-0.5">{v || "-"}</td></tr>
+      ))}
+    </>
   );
 }
