@@ -145,6 +145,7 @@ import AdminAnotherHotelMoneyDetail from "./pages/admin/AdminAnotherHotelMoneyDe
 import AdminDMTransporterMoneyDetail from "./pages/admin/AdminDMTransporterMoneyDetail";
 import AdminMDTransporterMoneyDetail from "./pages/admin/AdminMDTransporterMoneyDetail";
 import AdminVehicleTransporterMoneyDetail from "./pages/admin/AdminVehicleTransporterMoneyDetail";
+import AdminSafariTransporterDue from "./pages/admin/AdminSafariTransporterDue";
 
 const queryClient = new QueryClient();
 
@@ -647,9 +648,7 @@ const App = () => (
           <Route path="/admin/safari-pending" element={<AdminLayout><AdminSafariPendingPayments /></AdminLayout>} />
           <Route path="/admin/safari-approved" element={<AdminLayout><AdminSafariApprovedPayments /></AdminLayout>} />
           <Route path="/admin/safari-money" element={<AdminLayout><AdminSafariMoneyDetail /></AdminLayout>} />
-          <Route path="/admin/safari-transporter-due" element={<AdminLayout><ViewSafariDue /></AdminLayout>} />
-          <Route path="/admin/safari-money" element={<AdminLayout><SafariPayments /></AdminLayout>} />
-          <Route path="/admin/safari-transporter-due" element={<AdminLayout><ViewSafariDue /></AdminLayout>} />
+          <Route path="/admin/safari-transporter-due" element={<AdminLayout><AdminSafariTransporterDue /></AdminLayout>} />
           
           {/* D-M Volvo Manager Routes */}
           <Route path="/admin/dm-volvo-pending" element={<AdminLayout><AdminDMVolvoPendingPayments /></AdminLayout>} />
