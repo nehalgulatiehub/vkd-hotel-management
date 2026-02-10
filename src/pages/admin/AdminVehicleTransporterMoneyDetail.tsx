@@ -69,7 +69,7 @@ export default function AdminVehicleTransporterMoneyDetail() {
         bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)),
         transporter:transporters(id, name)
       `)
-      .order("vehicle_date", { ascending: false });
+      .order("pickup_date", { ascending: false });
 
     if (error) {
       toast.error("Failed to load vehicle bookings");
@@ -89,7 +89,7 @@ export default function AdminVehicleTransporterMoneyDetail() {
 
   const filteredBookings = vehicleBookings.filter(booking => {
     if (searchWithDate) {
-      const vehicleDate = new Date(booking.vehicle_date);
+      const vehicleDate = new Date(booking.pickup_date);
       const fromDate = new Date(`${fromYear}-${String(getMonthIndex(fromMonth)).padStart(2, "0")}-${fromDay}`);
       const toDate = new Date(`${toYear}-${String(getMonthIndex(toMonth)).padStart(2, "0")}-${toDay}`);
       if (vehicleDate < fromDate || vehicleDate > toDate) return false;
@@ -192,7 +192,7 @@ export default function AdminVehicleTransporterMoneyDetail() {
                     </td>
                     <td className="border border-[#c99] px-2 py-2">{booking.bookings?.customer_name || "-"}</td>
                     <td className="border border-[#c99] px-2 py-2">
-                      {booking.vehicle_date ? format(new Date(booking.vehicle_date), "dd/MM/yyyy") : "-"}
+                      {booking.pickup_date ? format(new Date(booking.pickup_date), "dd/MM/yyyy") : "-"}
                     </td>
                     <td className="border border-[#c99] px-2 py-2">
                       Another Vehicle Booking Price : Rs {(booking.total_amount || 0).toLocaleString('en-IN')} /-
