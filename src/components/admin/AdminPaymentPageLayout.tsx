@@ -309,6 +309,27 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
     } catch (error) { toast.error("Failed to update payments"); }
   };
 
+  const handleBulkReject = async () => {
+    if (selectedPayments.size === 0) { toast.error("Please select at least one payment"); return; }
+    try {
+      const { data: paymentDetails } = await supabase
+        .from("payments")
+        .select("id, amount, booking_id, payment_type")
+        .in("id", Array.from(selectedPayments));
+
+      const { error } = await supabase.from("payments").update({ approval_status: "pending", approved_at: null, approved_by: null }).in("id", Array.from(selectedPayments));
+      if (error) throw error;
+
+      if (paymentDetails) {
+        await reversePaymentOnRejection(paymentDetails);
+      }
+
+      toast.success(`${selectedPayments.size} payment(s) rejected and reverted to pending`);
+      setSelectedPayments(new Set());
+      fetchPayments();
+    } catch (error) { toast.error("Failed to reject payments"); }
+  };
+
   const handleRejectPayment = async () => {
     if (!rejectingPaymentId) return;
     setRejectLoading(true);
@@ -569,6 +590,11 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
                   <div className="flex gap-2">
                     <button onClick={() => handleBulkApproval("approved")} disabled={selectedPayments.size === 0} className="border rounded px-3 py-1 text-xs bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Approved ({selectedPayments.size})</button>
                     <button onClick={() => handleBulkApproval("rejected")} disabled={selectedPayments.size === 0} className="border rounded px-3 py-1 text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject ({selectedPayments.size})</button>
+                  </div>
+                )}
+                {approvalStatus === "approved" && (
+                  <div className="flex gap-2">
+                    <button onClick={handleBulkReject} disabled={selectedPayments.size === 0} className="border rounded px-3 py-1 text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject ({selectedPayments.size})</button>
                   </div>
                 )}
               </div>
