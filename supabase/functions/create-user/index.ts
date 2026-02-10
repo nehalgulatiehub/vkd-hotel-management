@@ -7,13 +7,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify the caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -22,7 +20,6 @@ serve(async (req) => {
       });
     }
 
-    // Create a client with the caller's token to verify they're admin
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -31,7 +28,6 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Get the caller's user info
     const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
     if (callerError || !caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -40,7 +36,6 @@ serve(async (req) => {
       });
     }
 
-    // Check if caller has admin or account role
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: roles } = await adminClient
       .from("user_roles")
@@ -55,8 +50,52 @@ serve(async (req) => {
       });
     }
 
-    // Parse request body
-    const { username, password, firstName, lastName } = await req.json();
+    const body = await req.json();
+    const { action } = body;
+
+    // Handle reset-password action
+    if (action === "reset-password") {
+      const { userId, newPassword } = body;
+
+      if (!userId || !newPassword) {
+        return new Response(JSON.stringify({ error: "User ID and new password are required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, {
+        password: newPassword,
+      });
+
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Store plain password in profiles
+      await adminClient
+        .from("profiles")
+        .update({ plain_password: newPassword })
+        .eq("id", userId);
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Password reset successfully" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Default: create-user action
+    const { username, password, firstName, lastName } = body;
 
     if (!username || !password) {
       return new Response(JSON.stringify({ error: "Username and password are required" }), {
@@ -72,10 +111,8 @@ serve(async (req) => {
       });
     }
 
-    // Generate email from username
     const email = `${username.toLowerCase()}@hotel.local`;
 
-    // Check if username already exists
     const { data: existingProfile } = await adminClient
       .from("profiles")
       .select("id")
@@ -89,11 +126,10 @@ serve(async (req) => {
       });
     }
 
-    // Create user using admin API (doesn't affect caller's session)
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email since it's internal
+      email_confirm: true,
       user_metadata: {
         first_name: firstName || username,
         last_name: lastName || "",
@@ -115,15 +151,22 @@ serve(async (req) => {
       });
     }
 
+    // Store plain password in profiles
+    if (newUser?.user?.id) {
+      // Wait briefly for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await adminClient
+        .from("profiles")
+        .update({ plain_password: password })
+        .eq("id", newUser.user.id);
+    }
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        user: { id: newUser.user.id, email: newUser.user.email } 
+      JSON.stringify({
+        success: true,
+        user: { id: newUser.user.id, email: newUser.user.email },
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Unexpected error:", error);
