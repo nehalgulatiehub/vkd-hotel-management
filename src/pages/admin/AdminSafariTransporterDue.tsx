@@ -128,16 +128,12 @@ export default function AdminSafariTransporterDue() {
                   <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Total Amount</th>
                   <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Paid Amount</th>
                   <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Due Amount</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Action</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-center font-bold text-xs">
-                    <input type="checkbox" disabled />
-                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSummaries.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-muted-foreground border border-[#c99]">
+                    <td colSpan={6} className="text-center py-8 text-muted-foreground border border-[#c99]">
                       No safari transporter data found
                     </td>
                   </tr>
@@ -157,24 +153,6 @@ export default function AdminSafariTransporterDue() {
                       </td>
                       <td className="border border-[#c99] px-2 py-2 text-xs font-medium">
                         Rs {summary.due_amount.toLocaleString("en-IN")}
-                      </td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs">
-                        <div className="flex flex-col gap-0.5">
-                          {summary.booking_ids.length > 0 && (
-                            <button
-                              className="text-[#1e6e99] hover:underline text-left"
-                              onClick={() => {
-                                setSelectedBookingId(summary.booking_ids[0]);
-                                setShowPaymentDialog(true);
-                              }}
-                            >
-                              View Payment
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs text-center">
-                        <input type="checkbox" />
                       </td>
                     </tr>
                   ))
