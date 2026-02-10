@@ -14,9 +14,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/auth");
+      navigate("/admin/login");
     } else if (!loading && user && !isAdmin() && !isAccount()) {
-      navigate("/dashboard");
+      navigate("/admin/login");
     }
   }, [loading, user, isAdmin, isAccount, navigate]);
 
