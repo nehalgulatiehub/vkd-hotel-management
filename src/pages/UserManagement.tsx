@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Settings2, Pencil, Plus, Ban, CheckCircle, Eye, EyeOff, Search } from "lucide-react";
+import { Shield, Settings2, Pencil, Plus, Ban, CheckCircle, Eye, EyeOff, Search, KeyRound } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -22,6 +22,7 @@ interface UserWithPermissions {
   is_active: boolean;
   menuPermissions: string[];
   isAdmin: boolean;
+  plain_password: string | null;
 }
 
 // All menu items grouped by category for permission assignment
@@ -205,6 +206,11 @@ export default function UserManagement() {
   const [newUserUsername, setNewUserUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [resetPasswordValue, setResetPasswordValue] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
   const canManage = isAdmin() || isAccount();
 
@@ -219,7 +225,7 @@ export default function UserManagement() {
     try {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, username, is_active");
+        .select("id, first_name, last_name, username, is_active, plain_password");
 
       if (profilesError) throw profilesError;
 
@@ -247,6 +253,7 @@ export default function UserManagement() {
             .filter((m) => m.user_id === profile.id)
             .map((m) => m.menu_key),
           isAdmin: userRoles.includes('admin') || userRoles.includes('account'),
+          plain_password: (profile as any).plain_password || null,
         };
       });
 
@@ -403,6 +410,44 @@ export default function UserManagement() {
     setIsUsernameDialogOpen(true);
   };
 
+  const openResetPasswordDialog = (user: UserWithPermissions) => {
+    setSelectedUser(user);
+    setResetPasswordValue("");
+    setShowResetPassword(false);
+    setIsResetPasswordDialogOpen(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUser || !resetPasswordValue) return;
+    if (resetPasswordValue.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    setResettingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          action: 'reset-password',
+          userId: selectedUser.id,
+          newPassword: resetPasswordValue,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast.success("Password reset successfully");
+      setIsResetPasswordDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const togglePasswordVisibility = (userId: string) => {
+    setVisiblePasswords(prev => ({ ...prev, [userId]: !prev[userId] }));
+  };
+
   const toggleMenuKey = (key: string) => {
     setSelectedMenuKeys((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
@@ -506,7 +551,8 @@ export default function UserManagement() {
                       <TableHead>Username (Login)</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Module Access</TableHead>
-                      <TableHead className="w-[120px]">Actions</TableHead>
+                      <TableHead>Actions</TableHead>
+                      <TableHead>Password</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -574,6 +620,16 @@ export default function UserManagement() {
                                 <Settings2 className="h-3.5 w-3.5" />
                               </Button>
 
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openResetPasswordDialog(user)}
+                                title="Reset password"
+                              >
+                                <KeyRound className="h-3.5 w-3.5" />
+                              </Button>
+
                               {isAdmin() && (
                                 <Button
                                   variant={user.is_active ? "destructive" : "default"}
@@ -586,6 +642,25 @@ export default function UserManagement() {
                                 </Button>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {user.plain_password ? (
+                              <div className="flex items-center gap-1">
+                                <span className="font-mono text-xs">
+                                  {visiblePasswords[user.id] ? user.plain_password : "••••••"}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => togglePasswordVisibility(user.id)}
+                                >
+                                  {visiblePasswords[user.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">Not set</span>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))
@@ -766,6 +841,44 @@ export default function UserManagement() {
               </div>
               <Button onClick={handleUpdateUsername} disabled={!newUsername.trim()} className="w-full">
                 Save Username
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Password Dialog */}
+        <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Reset Password for {selectedUser?.username || selectedUser?.first_name || "User"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="resetPassword">New Password</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="resetPassword"
+                    type={showResetPassword ? "text" : "password"}
+                    value={resetPasswordValue}
+                    onChange={(e) => setResetPasswordValue(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowResetPassword(!showResetPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <Button
+                onClick={handleResetPassword}
+                disabled={resettingPassword || !resetPasswordValue || resetPasswordValue.length < 6}
+                className="w-full"
+              >
+                {resettingPassword ? "Resetting..." : "Reset Password"}
               </Button>
             </div>
           </DialogContent>

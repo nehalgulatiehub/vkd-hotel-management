@@ -1332,6 +1332,7 @@ export type Database = {
           is_active: boolean | null
           last_name: string | null
           phone: string | null
+          plain_password: string | null
           updated_at: string | null
           username: string | null
         }
@@ -1343,6 +1344,7 @@ export type Database = {
           is_active?: boolean | null
           last_name?: string | null
           phone?: string | null
+          plain_password?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -1354,6 +1356,7 @@ export type Database = {
           is_active?: boolean | null
           last_name?: string | null
           phone?: string | null
+          plain_password?: string | null
           updated_at?: string | null
           username?: string | null
         }
