@@ -628,7 +628,7 @@ const App = () => (
           
           {/* New Admin Module Routes */}
           <Route path="/admin/email" element={<AdminLayout><AdminEmail /></AdminLayout>} />
-          <Route path="/admin/change-password" element={<AdminLayout><AdminChangePassword /></AdminLayout>} />
+          <Route path="/admin/settings" element={<AdminLayout><AdminChangePassword /></AdminLayout>} />
           <Route path="/admin/followups" element={<AdminLayout><AdminFollowups /></AdminLayout>} />
           <Route path="/admin/guest-users" element={<AdminLayout><AdminGuestUsers /></AdminLayout>} />
           <Route path="/admin/guest-users/add" element={<AdminLayout><AdminGuestUsers /></AdminLayout>} />

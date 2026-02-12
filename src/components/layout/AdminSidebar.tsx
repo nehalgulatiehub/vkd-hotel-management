@@ -26,7 +26,7 @@ const adminMenuItems: MenuItem[] = [
     textColor: "#000",
     submenu: [
       { title: "Admin Email", url: "/admin/email" },
-      { title: "Change Password", url: "/admin/change-password" },
+      { title: "Settings", url: "/admin/settings" },
     ] 
   },
   { title: "Followup Manager", color: "#4CAF50", submenu: [{ title: "View Followup", url: "/admin/followups" }] },
