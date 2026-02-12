@@ -360,16 +360,12 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                                   size="sm" 
                                   className="h-auto p-0 text-blue-600 hover:text-blue-800"
                                   onClick={() => {
-                                    const element = document.getElementById(`section-${summary.type.replace(/\s+/g, '-')}`);
-                                    if (element) {
-                                      const viewport = element.closest('[data-radix-scroll-area-viewport]');
-                                      if (viewport) {
-                                        const offsetTop = element.offsetTop - viewport.getBoundingClientRect().top;
-                                        viewport.scrollTo({ top: element.offsetTop - 10, behavior: 'smooth' });
-                                      } else {
-                                        element.scrollIntoView({ behavior: 'smooth' });
+                                    setTimeout(() => {
+                                      const element = document.getElementById(`section-${summary.type.replace(/\s+/g, '-')}`);
+                                      if (element) {
+                                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                       }
-                                    }
+                                    }, 100);
                                   }}
                                 >
                                   View Details
