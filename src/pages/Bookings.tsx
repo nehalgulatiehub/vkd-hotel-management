@@ -2619,15 +2619,7 @@ export default function Bookings() {
                                 >
                                   Add Payment
                                 </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleViewPayment(booking)}
-                                >
-                                  View Payment
-                                </Button>
-                                <Button 
+                                <Button
                                   size="sm" 
                                   variant="link" 
                                   className="h-auto p-0 text-xs text-primary"
