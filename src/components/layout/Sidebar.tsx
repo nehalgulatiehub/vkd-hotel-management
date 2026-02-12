@@ -428,14 +428,6 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
-              <NavLink to="/change-password" className="hover:bg-sidebar-accent/50">
-                <Settings className="h-3 w-3" />
-                {!collapsed && <span>Change Password</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm" className="h-6 text-[11px]">
               <NavLink to="/settings" className="hover:bg-sidebar-accent/50">
                 <Settings className="h-3 w-3" />
                 {!collapsed && <span>Settings</span>}
