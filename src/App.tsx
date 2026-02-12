@@ -26,6 +26,7 @@ import Payments from "./pages/Payments";
 import Expenses from "./pages/Expenses";
 import Refunds from "./pages/Refunds";
 import Settings from "./pages/Settings";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 import ExportCities from "./pages/ExportCities";
 import ExportAgents from "./pages/ExportAgents";
@@ -540,6 +541,14 @@ const App = () => (
             element={
               <DashboardLayout>
                 <Settings />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <DashboardLayout>
+                <ChangePassword />
               </DashboardLayout>
             }
           />
