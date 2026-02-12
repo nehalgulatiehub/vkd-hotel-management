@@ -56,7 +56,6 @@ const getSidebarModuleClass = (menuKey?: string): string => {
 
 const menuItems: MenuItem[] = [
   { title: "Home", url: "/dashboard", menuKey: "dashboard" },
-  { title: "Change Password", url: "/settings", menuKey: "settings" },
   { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
   { title: "View City", url: "/cities", menuKey: "cities_view" },
   { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
