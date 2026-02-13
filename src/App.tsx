@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -714,6 +714,10 @@ const App = () => (
           
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
+          
+          {/* Redirects for old URLs */}
+          <Route path="/hold-booking/create" element={<Navigate to="/bookings/hold" replace />} />
+          <Route path="/hold-bookings" element={<Navigate to="/bookings/hold-list" replace />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
