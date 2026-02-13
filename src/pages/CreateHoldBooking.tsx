@@ -133,7 +133,7 @@ export default function CreateHoldBooking() {
     }
 
     toast.success("Hold booking created successfully");
-    navigate("/hold-bookings");
+    navigate("/bookings/hold-list");
   };
 
   return (
