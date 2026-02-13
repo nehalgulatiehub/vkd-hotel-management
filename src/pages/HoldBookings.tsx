@@ -143,7 +143,7 @@ export default function HoldBookings() {
           </div>
           <Button 
             className="bg-gradient-primary"
-            onClick={() => navigate("/hold-booking/create")}
+            onClick={() => navigate("/bookings/hold")}
           >
             <Clock className="h-4 w-4 mr-2" />
             Create Hold Booking
