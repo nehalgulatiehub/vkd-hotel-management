@@ -37,7 +37,20 @@ export default function BookingDetails() {
         .single();
 
       if (bookingError) throw bookingError;
-      setBooking(bookingData);
+
+      // Resolve created_by username
+      let createdByName = "-";
+      if (bookingData?.created_by) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username, first_name, last_name")
+          .eq("id", bookingData.created_by)
+          .maybeSingle();
+        if (profile) {
+          createdByName = profile.username || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "-";
+        }
+      }
+      setBooking({ ...bookingData, created_by_name: createdByName });
 
       // Fetch hotel bookings
       const { data: hotelData } = await supabase
@@ -191,6 +204,10 @@ export default function BookingDetails() {
               <div>
                 <p className="text-sm text-muted-foreground">Cheque No</p>
                 <p className="font-semibold">{booking.cheque_no || "-"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Created By</p>
+                <p className="font-semibold">{booking.created_by_name || "-"}</p>
               </div>
             </div>
             {booking.address && (

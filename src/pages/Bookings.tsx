@@ -37,7 +37,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 export default function Bookings() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasMenuAccess, isAdmin, isAccount } = useAuthContext();
+  const { hasMenuAccess, isAdmin, isAccount, user } = useAuthContext();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isAddRoute = location.pathname === "/bookings/add";
   
@@ -2603,38 +2603,42 @@ export default function Bookings() {
                                 >
                                   Print Booking
                                 </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleEditBooking(booking)}
-                                >
-                                  Edit Booking
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleAddPayment(booking)}
-                                >
-                                  Add Payment
-                                </Button>
-                                <Button
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleRefundPayment(booking)}
-                                >
-                                  Refund Payment
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-destructive"
-                                  onClick={() => handleCancelBooking(booking)}
-                                >
-                                  Cancel
-                                </Button>
+                                {(booking.created_by === user?.id || isAdmin()) && (
+                                  <>
+                                    <Button 
+                                      size="sm" 
+                                      variant="link" 
+                                      className="h-auto p-0 text-xs text-primary"
+                                      onClick={() => handleEditBooking(booking)}
+                                    >
+                                      Edit Booking
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="link" 
+                                      className="h-auto p-0 text-xs text-primary"
+                                      onClick={() => handleAddPayment(booking)}
+                                    >
+                                      Add Payment
+                                    </Button>
+                                    <Button
+                                      size="sm" 
+                                      variant="link" 
+                                      className="h-auto p-0 text-xs text-primary"
+                                      onClick={() => handleRefundPayment(booking)}
+                                    >
+                                      Refund Payment
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="link" 
+                                      className="h-auto p-0 text-xs text-destructive"
+                                      onClick={() => handleCancelBooking(booking)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           </tr>
