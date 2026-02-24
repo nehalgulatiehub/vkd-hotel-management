@@ -50,6 +50,7 @@ const getSidebarModuleClass = (menuKey?: string): string => {
 
   if (menuKey.startsWith("restaurant_")) return "sidebar-pill--restaurant";
   if (menuKey.startsWith("billing_")) return "sidebar-pill--invoice";
+  if (menuKey.startsWith("purchase_")) return "sidebar-pill--purchase";
 
   return "sidebar-pill--default";
 };
@@ -104,6 +105,12 @@ const menuItems: MenuItem[] = [
   { title: "Create Invoice", url: "/billing", menuKey: "billing_create" },
   { title: "Saved Invoices", url: "/invoices", menuKey: "billing_invoices" },
   { title: "Invoice Templates", url: "/invoice-templates", menuKey: "billing_templates" },
+  { title: "Vendors", url: "/purchase/vendors", menuKey: "purchase_vendors" },
+  { title: "Item Master", url: "/purchase/items", menuKey: "purchase_items" },
+  { title: "Purchase Orders", url: "/purchase/orders", menuKey: "purchase_orders" },
+  { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
+  { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
+  { title: "Reports", url: "/purchase/reports", menuKey: "purchase_reports" },
 ];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {

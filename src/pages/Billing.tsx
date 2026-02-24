@@ -122,6 +122,7 @@ interface BillingItem {
 const GST_OPTIONS = [
   { value: "0", label: "0% (No GST)" },
   { value: "5", label: "5% (2.5% + 2.5%)" },
+  { value: "6", label: "6% (3% + 3%)" },
   { value: "12", label: "12% (6% + 6%)" },
   { value: "18", label: "18% (9% + 9%)" },
   { value: "28", label: "28% (14% + 14%)" },
@@ -1317,7 +1318,7 @@ export default function Billing() {
                                 className="w-14 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary print:ring-0 text-xs text-right p-1 print:hidden"
                               >
                                 {GST_OPTIONS.map(opt => (
-                                  <option key={opt.value} value={opt.value}>{opt.value}%</option>
+                                  <option key={opt.value} value={opt.value}>{parseFloat(opt.value) / 2}%</option>
                                 ))}
                               </select>
                               <span className="hidden print:inline">{item.cgstRate}</span>
