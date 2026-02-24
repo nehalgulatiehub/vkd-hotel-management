@@ -97,7 +97,7 @@ export default function PurchaseOrders() {
   const [editPricePO, setEditPricePO] = useState<PurchaseOrder | null>(null);
   const [editPriceItems, setEditPriceItems] = useState<any[]>([]);
   const [selectedVendor, setSelectedVendor] = useState("");
-  const [selectedPRs, setSelectedPRs] = useState<string[]>([]);
+  
   const [poItems, setPoItems] = useState<POItem[]>([]);
   const [expectedDate, setExpectedDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -117,19 +117,14 @@ export default function PurchaseOrders() {
     },
   });
 
-  const { data: approvedPRs = [] } = useQuery({
-    queryKey: ["approved-prs"],
+  const { data: allItems = [] } = useQuery({
+    queryKey: ["purchase-items-active"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("purchase_requests")
-        .select(`
-          id,
-          pr_number,
-          quantity,
-          purchase_items (id, item_name, unit, gst_percentage)
-        `)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false });
+        .from("purchase_items")
+        .select("id, item_name, unit, gst_percentage")
+        .eq("is_active", true)
+        .order("item_name");
       if (error) throw error;
       return data;
     },
@@ -245,7 +240,6 @@ export default function PurchaseOrders() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["approved-prs"] });
       toast.success("Purchase order created successfully");
       resetForm();
     },
@@ -415,7 +409,6 @@ export default function PurchaseOrders() {
 
   const resetForm = () => {
     setSelectedVendor("");
-    setSelectedPRs([]);
     setPoItems([]);
     setExpectedDate("");
     setNotes("");
@@ -448,7 +441,6 @@ export default function PurchaseOrders() {
         rate: item.rate,
         gst_percentage: item.gst_percentage || 18,
       })));
-      setSelectedPRs(items.filter((i: any) => i.pr_id).map((i: any) => i.pr_id));
     }
 
     setIsDialogOpen(true);
@@ -460,31 +452,23 @@ export default function PurchaseOrders() {
     }
   };
 
-  const handleAddPR = (prId: string) => {
-    const pr = approvedPRs.find((p) => p.id === prId);
-    if (!pr || !pr.purchase_items) return;
-
-    if (poItems.some((item) => item.pr_id === prId)) {
-      toast.error("This PR is already added");
-      return;
-    }
+  const handleAddItem = (itemId: string) => {
+    const item = allItems.find((i) => i.id === itemId);
+    if (!item) return;
 
     setPoItems([...poItems, {
-      pr_id: prId,
-      item_id: pr.purchase_items.id,
-      item_name: pr.purchase_items.item_name,
-      unit: pr.purchase_items.unit,
-      quantity: pr.quantity,
+      pr_id: "",
+      item_id: item.id,
+      item_name: item.item_name,
+      unit: item.unit,
+      quantity: 1,
       rate: 0,
-      gst_percentage: pr.purchase_items.gst_percentage || 18,
+      gst_percentage: item.gst_percentage || 18,
     }]);
-    setSelectedPRs([...selectedPRs, prId]);
   };
 
   const handleRemoveItem = (index: number) => {
-    const item = poItems[index];
     setPoItems(poItems.filter((_, i) => i !== index));
-    setSelectedPRs(selectedPRs.filter((id) => id !== item.pr_id));
   };
 
   const handleUpdateItemRate = (index: number, rate: number) => {
@@ -608,19 +592,17 @@ export default function PurchaseOrders() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Add from Approved PRs</Label>
-                  <Select onValueChange={handleAddPR}>
+                  <Label>Add Item</Label>
+                  <Select onValueChange={handleAddItem}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select PR to add" />
+                      <SelectValue placeholder="Select item to add" />
                     </SelectTrigger>
                     <SelectContent>
-                      {approvedPRs
-                        .filter((pr) => !selectedPRs.includes(pr.id))
-                        .map((pr) => (
-                          <SelectItem key={pr.id} value={pr.id}>
-                            {pr.pr_number} - {pr.purchase_items?.item_name} ({pr.quantity} {pr.purchase_items?.unit})
-                          </SelectItem>
-                        ))}
+                      {allItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.item_name} ({item.unit})
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

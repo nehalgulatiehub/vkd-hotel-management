@@ -252,7 +252,6 @@ const menuItems: MenuItem[] = [
     submenu: [
       { title: "Vendors", url: "/purchase/vendors", menuKey: "purchase_vendors" },
       { title: "Item Master", url: "/purchase/items", menuKey: "purchase_items" },
-      { title: "Purchase Requests", url: "/purchase/requests", menuKey: "purchase_requests" },
       { title: "Purchase Orders", url: "/purchase/orders", menuKey: "purchase_orders" },
       { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
       { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
