@@ -2620,7 +2620,15 @@ export default function Bookings() {
                                   className="h-auto p-0 text-xs text-primary"
                                   onClick={() => handlePrintBooking(booking)}
                                 >
-                                  Print Booking
+                                 Print Booking
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-primary"
+                                  onClick={() => handleViewPayment(booking)}
+                                >
+                                  View Payment
                                 </Button>
                                 {(booking.created_by === user?.id || isAdmin()) && (
                                   <>
