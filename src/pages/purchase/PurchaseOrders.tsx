@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Eye, Trash2, Pencil, DollarSign } from "lucide-react";
+import { Plus, Search, Eye, Trash2, Pencil, DollarSign, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
@@ -103,13 +103,25 @@ export default function PurchaseOrders() {
   const [notes, setNotes] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [printPO, setPrintPO] = useState<PurchaseOrder | null>(null);
+  const [printItems, setPrintItems] = useState<any[]>([]);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const { data: companySettings } = useQuery({
+    queryKey: ["company-settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("company_settings").select("*").limit(1).single();
+      return data;
+    },
+  });
 
   const { data: vendors = [] } = useQuery({
     queryKey: ["vendors-active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vendors")
-        .select("id, vendor_name")
+        .select("id, vendor_name, address, mobile_number, email, gst_number")
         .eq("is_active", true)
         .order("vendor_name");
       if (error) throw error;
@@ -497,6 +509,19 @@ export default function PurchaseOrders() {
     setIsViewDialogOpen(true);
   };
 
+  const handlePrintPO = async (po: PurchaseOrder) => {
+    setPrintPO(po);
+    const { data: items } = await supabase
+      .from("purchase_order_items")
+      .select(`*, purchase_items (item_name, unit)`)
+      .eq("po_id", po.id);
+    setPrintItems(items || []);
+    setIsPrintDialogOpen(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
   // Handler for editing prices (for approved or other POs)
   const handleEditPrices = async (po: PurchaseOrder) => {
     setEditPricePO(po);
@@ -788,6 +813,14 @@ export default function PurchaseOrders() {
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handlePrintPO(po)}
+                                  title="Print PDF"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
                                 {/* Edit Prices button - available for approved, sent_to_vendor, partially_received POs */}
                                 {(po.status === "approved" || po.status === "sent_to_vendor" || po.status === "partially_received") && (
                                   <Button
@@ -1007,6 +1040,160 @@ export default function PurchaseOrders() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Print PO Dialog - Hidden on screen, visible on print */}
+        {isPrintDialogOpen && printPO && (
+          <>
+            <style>{`
+              @media print {
+                body * { visibility: hidden !important; }
+                .po-print-area, .po-print-area * { visibility: visible !important; }
+                .po-print-area {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  padding: 20px !important;
+                }
+                .no-print { display: none !important; }
+              }
+            `}</style>
+            <div className="fixed inset-0 bg-background/80 z-50 overflow-auto no-print">
+              <div className="max-w-3xl mx-auto my-8 bg-background border rounded-lg shadow-lg">
+                <div className="flex justify-between items-center p-4 border-b no-print">
+                  <h3 className="font-semibold">Purchase Order Preview</h3>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => window.print()}>
+                      <Printer className="h-4 w-4 mr-2" /> Print / Save PDF
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsPrintDialogOpen(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+                <div ref={printRef} className="po-print-area p-8" style={{ fontFamily: "Arial, sans-serif" }}>
+                  {/* Company Header */}
+                  <div style={{ textAlign: "center", marginBottom: "20px", borderBottom: "2px solid #333", paddingBottom: "15px" }}>
+                    <h1 style={{ fontSize: "22px", fontWeight: "bold", margin: 0 }}>
+                      {companySettings?.company_name || "Company Name"}
+                    </h1>
+                    {companySettings?.sub_title && (
+                      <p style={{ fontSize: "12px", margin: "2px 0", color: "#666" }}>{companySettings.sub_title}</p>
+                    )}
+                    {companySettings?.address && (
+                      <p style={{ fontSize: "11px", margin: "2px 0", color: "#666" }}>{companySettings.address}</p>
+                    )}
+                    {companySettings?.contact_no && (
+                      <p style={{ fontSize: "11px", margin: "2px 0", color: "#666" }}>Phone: {companySettings.contact_no}</p>
+                    )}
+                    {companySettings?.gstin && (
+                      <p style={{ fontSize: "11px", margin: "2px 0", color: "#666" }}>GSTIN: {companySettings.gstin}</p>
+                    )}
+                  </div>
+
+                  <h2 style={{ textAlign: "center", fontSize: "16px", fontWeight: "bold", margin: "10px 0 20px" }}>
+                    PURCHASE ORDER
+                  </h2>
+
+                  {/* PO Info & Vendor Info */}
+                  {(() => {
+                    const vendor = vendors.find(v => v.id === printPO.vendor_id);
+                    return (
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", fontSize: "12px" }}>
+                        <div>
+                          <p style={{ fontWeight: "bold", marginBottom: "4px" }}>To:</p>
+                          <p style={{ fontWeight: "bold" }}>{vendor?.vendor_name || printPO.vendors?.vendor_name}</p>
+                          {vendor?.address && <p>{vendor.address}</p>}
+                          {vendor?.mobile_number && <p>Phone: {vendor.mobile_number}</p>}
+                          {vendor?.email && <p>Email: {vendor.email}</p>}
+                          {vendor?.gst_number && <p>GSTIN: {vendor.gst_number}</p>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <p><strong>PO Number:</strong> {printPO.po_number}</p>
+                          <p><strong>Date:</strong> {printPO.created_at ? format(new Date(printPO.created_at), "dd/MM/yyyy") : "-"}</p>
+                          {printPO.expected_delivery_date && (
+                            <p><strong>Expected Delivery:</strong> {format(new Date(printPO.expected_delivery_date), "dd/MM/yyyy")}</p>
+                          )}
+                          <p><strong>Status:</strong> {statusLabels[printPO.status]}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Items Table */}
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "20px" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f0f0f0" }}>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>#</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>Item Name</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>Unit</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "right" }}>Qty</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "right" }}>Rate (₹)</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "right" }}>Amount (₹)</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "right" }}>GST %</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "right" }}>GST (₹)</th>
+                        <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "right" }}>Total (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {printItems.map((item: any, idx: number) => {
+                        const amount = item.quantity * item.rate;
+                        const gst = item.gst_amount || (amount * (item.gst_percentage || 0) / 100);
+                        const total = item.total_amount || (amount + gst);
+                        return (
+                          <tr key={item.id}>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{idx + 1}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.item_name}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.unit}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.quantity}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.rate?.toFixed(2)}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{amount.toFixed(2)}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.gst_percentage || 0}%</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{gst.toFixed(2)}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{total.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Totals */}
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+                    <div style={{ fontSize: "12px", textAlign: "right" }}>
+                      <p>Subtotal: ₹{(printPO.subtotal || 0).toFixed(2)}</p>
+                      <p>GST: ₹{(printPO.total_gst || 0).toFixed(2)}</p>
+                      <p style={{ fontWeight: "bold", fontSize: "14px", borderTop: "1px solid #333", paddingTop: "4px" }}>
+                        Total: ₹{(printPO.total_amount || 0).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {printPO.notes && (
+                    <div style={{ fontSize: "12px", marginBottom: "20px" }}>
+                      <p style={{ fontWeight: "bold" }}>Notes:</p>
+                      <p>{printPO.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Signature */}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "60px", fontSize: "12px" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ borderTop: "1px solid #333", width: "200px", marginTop: "40px", paddingTop: "4px" }}>
+                        Vendor Signature
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ borderTop: "1px solid #333", width: "200px", marginTop: "40px", paddingTop: "4px" }}>
+                        Authorized Signatory
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
   );
 }
