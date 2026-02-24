@@ -64,6 +64,7 @@ interface HotelBooking {
   number_of_rooms: number;
   room_rate: number;
   total_amount: number;
+  notes: string | null;
 }
 
 interface VolvoBooking {
@@ -831,6 +832,10 @@ export default function Billing() {
 
     // Check In - Check Out
     wsData.push([`Check In - ${formatDate(selectedBooking.check_in_date)} - ${formatDate(selectedBooking.check_out_date)}`, '', '', '', '', '', '', '', '', '']);
+    const roomNo = hotelBookings?.[0]?.notes?.match(/Room No:\s*(.+?)(?:\s*\||$)/)?.[1]?.trim();
+    if (roomNo) {
+      wsData.push([`Room No : ${roomNo}`, '', '', '', '', '', '', '', '', '']);
+    }
     wsData.push(['Accommodation', '', '', '', '', '', '', '', '', '']);
 
     // Table Header
@@ -1242,9 +1247,26 @@ export default function Billing() {
                     </div>
 
                     {/* Check In/Out */}
-                    <div className="text-center font-medium py-2 border border-black mb-0">
-                      Check In - {formatDate(selectedBooking.check_in_date)} -{' '}
-                      {formatDate(selectedBooking.check_out_date)}
+                    <div className="border border-black mb-0">
+                      <table className="w-full text-sm">
+                        <tbody>
+                          <tr>
+                            <td className="p-2 text-center font-medium">
+                              Check In - {formatDate(selectedBooking.check_in_date)} - {formatDate(selectedBooking.check_out_date)}
+                            </td>
+                          </tr>
+                          {(() => {
+                            const roomNo = hotelBookings?.[0]?.notes?.match(/Room No:\s*(.+?)(?:\s*\||$)/)?.[1]?.trim();
+                            return roomNo ? (
+                              <tr className="border-t border-black">
+                                <td className="p-2">
+                                  <span className="font-bold">Room No :</span> {roomNo}
+                                </td>
+                              </tr>
+                            ) : null;
+                          })()}
+                        </tbody>
+                      </table>
                     </div>
                     <div className="text-center font-medium py-1 bg-gray-100 border-x border-black">
                       Accommodation
