@@ -179,6 +179,7 @@ export default function Bookings() {
     booking_hotel_id: "",
     booking_room: "",
     booking_num_rooms: "",
+    booking_room_number: "",
     booking_package_type: "select",
     booking_custom_package: "",
     booking_price: "",
@@ -381,22 +382,24 @@ export default function Bookings() {
         // Get room names for UUIDs
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const roomIds = [...new Set((hotelData || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
-        let roomsMap: Record<string, string> = {};
+        let roomsMap: Record<string, any> = {};
         
         if (roomIds.length > 0) {
           const { data: roomsData } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
-          roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
+          roomsMap = (roomsData || []).reduce((acc: Record<string, any>, r: any) => ({ ...acc, [r.id]: { name: r.room_type || r.room_number, room_number: r.room_number } }), {});
         }
         
         // Map hotel bookings to their booking_id with resolved room names
         const hotelBookingsMap: Record<string, any> = {};
         hotelData?.forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
+          const roomInfo = isUuid ? roomsMap[hb.room_type] : null;
           hotelBookingsMap[hb.booking_id] = {
             hotel_id: hb.own_hotel_id || hb.hotel_id,
             room_id: isUuid ? hb.room_type : null,
             hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
-            room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
+            room_type: isUuid ? (roomInfo?.name || hb.room_type) : hb.room_type,
+            room_number: roomInfo?.room_number || hb.notes?.match(/Room No: (.+?)(?:\s*\||$)/)?.[1] || null,
             number_of_rooms: hb.number_of_rooms
           };
         });
@@ -524,7 +527,7 @@ export default function Bookings() {
           total_amount: hotelAmount,
           paid_amount: 0,
           due_amount: hotelAmount,
-          notes: formData.booking_custom_package
+          notes: [formData.booking_custom_package, formData.booking_room_number ? `Room No: ${formData.booking_room_number}` : ''].filter(Boolean).join(' | ') || null
         };
         
         const { error: hotelError } = await supabase
@@ -724,6 +727,7 @@ export default function Bookings() {
         booking_hotel_id: "",
         booking_room: "",
         booking_num_rooms: "",
+        booking_room_number: "",
         booking_package_type: "select",
         booking_custom_package: "",
         booking_price: "",
@@ -1129,6 +1133,7 @@ export default function Bookings() {
         booking_hotel_id: hotelBooking?.own_hotel_id || hotelBooking?.hotel_id || "",
         booking_room: hotelBooking?.room_type || "",
         booking_num_rooms: hotelBooking?.number_of_rooms?.toString() || "",
+        booking_room_number: hotelBooking?.notes?.match(/Room No: (.+)/)?.[1] || "",
         booking_package_type: "select",
         booking_custom_package: hotelBooking?.notes || "",
         booking_price: hotelBooking?.total_amount?.toString() || "",
@@ -1538,6 +1543,15 @@ export default function Bookings() {
                         value={formData.booking_num_rooms}
                         onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
                         className="w-20"
+                      />
+                    </CompactFormRow>
+
+                    <CompactFormRow label="Room Number" className="!w-auto">
+                      <Input
+                        placeholder="Optional"
+                        value={formData.booking_room_number || ""}
+                        onChange={(e) => setFormData({ ...formData, booking_room_number: e.target.value })}
+                        className="w-24"
                       />
                     </CompactFormRow>
 
@@ -2272,6 +2286,7 @@ export default function Bookings() {
                         booking_hotel_id: "",
                         booking_room: "",
                         booking_num_rooms: "",
+                        booking_room_number: "",
                         booking_package_type: "select",
                         booking_custom_package: "",
                         booking_price: "",
@@ -2515,6 +2530,7 @@ export default function Bookings() {
                     <thead className="bg-muted">
                       <tr>
                         <th className="border border-border px-3 py-2 text-left text-sm font-semibold">S.No.</th>
+                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Booking ID</th>
                         <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Type</th>
                         <th className="border border-border px-3 py-2 text-left text-sm font-semibold">User</th>
                         <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Customer Details</th>
@@ -2527,7 +2543,7 @@ export default function Bookings() {
                     <tbody>
                       {filteredBookings.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="border border-border px-4 py-8 text-center text-muted-foreground">
+                          <td colSpan={9} className="border border-border px-4 py-8 text-center text-muted-foreground">
                             No bookings found
                           </td>
                         </tr>
@@ -2535,6 +2551,7 @@ export default function Bookings() {
                         pagination.paginatedItems.map((booking, index) => (
                           <tr key={booking.id} className="hover:bg-muted/50">
                             <td className="border border-border px-3 py-2 text-sm">{pagination.startIndex + index}</td>
+                            <td className="border border-border px-3 py-2 text-sm font-medium">{booking.booking_number || "-"}</td>
                             <td className="border border-border px-3 py-2 text-sm">
                               {booking.booking_type === "agent" ? (
                                 <>
@@ -2558,6 +2575,7 @@ export default function Bookings() {
                                   <>
                                     <div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div>
                                     <div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>
+                                    {booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}
                                     {booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}
                                   </>
                                 )}
@@ -2568,6 +2586,7 @@ export default function Bookings() {
                                 {booking.include_another_hotel && <div>✓ Another Hotel</div>}
                                 {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
+                                {booking.notes && <div><strong>Note :</strong> {booking.notes}</div>}
                               </div>
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
@@ -2580,7 +2599,7 @@ export default function Bookings() {
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
                               <div className="space-y-1 text-xs">
-                                <div><strong>Date:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</div>
+                                <div><strong>Date:</strong> {booking.created_at ? new Date(booking.created_at).toLocaleDateString() : "-"}</div>
                                 <div><strong>Booking From:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</div>
                                 <div><strong>Booking to:</strong> {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}</div>
                               </div>
