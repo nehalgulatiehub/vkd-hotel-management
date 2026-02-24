@@ -831,7 +831,7 @@ export default function Billing() {
     wsData.push([]); // Empty row
 
     // Check In - Check Out
-    wsData.push([`Check In - ${formatDate(selectedBooking.check_in_date)} - ${formatDate(selectedBooking.check_out_date)}`, '', '', '', '', '', '', '', '', '']);
+    wsData.push([`Check In - ${formatDate(selectedBooking.check_in_date)} - Check Out ${formatDate(selectedBooking.check_out_date)}`, '', '', '', '', '', '', '', '', '']);
     const roomNo = hotelBookings?.[0]?.notes?.match(/Room No:\s*(.+?)(?:\s*\||$)/)?.[1]?.trim();
     if (roomNo) {
       wsData.push([`Room No : ${roomNo}`, '', '', '', '', '', '', '', '', '']);
@@ -1252,7 +1252,7 @@ export default function Billing() {
                         <tbody>
                           <tr>
                             <td className="p-2 text-center font-medium">
-                              Check In - {formatDate(selectedBooking.check_in_date)} - {formatDate(selectedBooking.check_out_date)}
+                              Check In - {formatDate(selectedBooking.check_in_date)} - Check Out {formatDate(selectedBooking.check_out_date)}
                             </td>
                           </tr>
                           {(() => {
