@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
 import { useAuthContext } from "@/contexts/AuthContext";
 
