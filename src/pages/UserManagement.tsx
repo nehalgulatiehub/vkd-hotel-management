@@ -279,13 +279,22 @@ export default function UserManagement() {
 
     setCreatingUser(true);
     try {
-      // Use supabase.functions.invoke to call edge function without affecting admin session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("No active session. Please sign in again.");
+      }
+
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           username: newUserUsername,
           password: newUserPassword,
           firstName: newUserFirstName || newUserUsername,
           lastName: newUserLastName || "",
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -301,7 +310,6 @@ export default function UserManagement() {
       setIsCreateUserDialogOpen(false);
       resetCreateUserForm();
       
-      // Wait a moment for the profile to be created by trigger
       setTimeout(() => {
         fetchUsers();
       }, 1000);
