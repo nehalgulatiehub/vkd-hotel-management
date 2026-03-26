@@ -1,7 +1,7 @@
 import { 
   Home, MapPin, Users, Plane, Hotel, FileText, 
   CreditCard, Calendar, DollarSign, Settings, LogOut,
-  ChevronDown, Upload, UtensilsCrossed, Receipt, ShoppingCart
+  ChevronDown, Upload, UtensilsCrossed, Receipt, ShoppingCart, Lock
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -263,6 +263,12 @@ const menuItems: MenuItem[] = [
     url: "/quotes",
     icon: FileText,
     menuKey: "quotes",
+  },
+  {
+    title: "Change Password",
+    url: "/change-password",
+    icon: Lock,
+    menuKey: "change_password",
   },
 ];
 
