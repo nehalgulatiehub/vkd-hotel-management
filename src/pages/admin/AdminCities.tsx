@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { usePagination } from "@/hooks/usePagination";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface City {
   id: string;
@@ -27,19 +26,13 @@ export default function AdminCities() {
   const canManage = isAdmin() || isAccount();
 
   useEffect(() => {
-    if (!authLoading && canManage) {
-      fetchCities();
-    }
+    if (!authLoading && canManage) fetchCities();
   }, [authLoading, canManage]);
 
   const fetchCities = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("cities")
-        .select("*")
-        .order("name");
-
+      const { data, error } = await supabase.from("cities").select("*").order("name");
       if (error) throw error;
       setCities(data || []);
     } catch (error) {
@@ -52,7 +45,6 @@ export default function AdminCities() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this city?")) return;
-    
     try {
       const { error } = await supabase.from("cities").delete().eq("id", id);
       if (error) throw error;
@@ -64,92 +56,70 @@ export default function AdminCities() {
     }
   };
 
-  const filteredCities = cities.filter(city => 
+  const filteredCities = cities.filter(city =>
     city.name.toLowerCase().includes(search.toLowerCase()) ||
     (city.state && city.state.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const pagination = usePagination(filteredCities);
+
   if (authLoading || loading) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-8 text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
   }
 
   if (!canManage) {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            Access Denied
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Manage Cities</h1>
-        <Button size="sm" onClick={() => navigate("/admin/cities/add")}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add City
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search cities..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-9"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCities.map((city) => (
-                <TableRow key={city.id}>
-                  <TableCell className="font-medium">{city.name}</TableCell>
-                  <TableCell>{city.state || "-"}</TableCell>
-                  <TableCell>{city.country || "India"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/admin/cities/add?edit=${city.id}`)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(city.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredCities.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    No cities found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+    <AdminPageShell
+      title="Manage Cities"
+      actions={[{ label: "Add City", onClick: () => navigate("/admin/cities/add") }]}
+      filterSection={
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-gray-700 w-20 text-right">Search :</label>
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 max-w-sm h-7 text-xs"
+            placeholder="Search by name or state..."
+          />
+        </div>
+      }
+      pagination={{
+        currentPage: pagination.currentPage,
+        totalPages: pagination.totalPages,
+        onPageChange: pagination.goToPage,
+        totalItems: pagination.totalItems,
+        startIndex: pagination.startIndex,
+        endIndex: pagination.endIndex,
+      }}
+    >
+      <ThemedTable>
+        <ThemedTHead>
+          <ThemedTH className="w-12 text-center">S.No</ThemedTH>
+          <ThemedTH>Name</ThemedTH>
+          <ThemedTH>State</ThemedTH>
+          <ThemedTH>Country</ThemedTH>
+          <ThemedTH className="text-center w-24">Action</ThemedTH>
+        </ThemedTHead>
+        <tbody>
+          {pagination.paginatedItems.map((city, index) => (
+            <ThemedTR key={city.id} index={index}>
+              <ThemedTD className="text-center">{pagination.startIndex + index}</ThemedTD>
+              <ThemedTD>{city.name}</ThemedTD>
+              <ThemedTD>{city.state || "-"}</ThemedTD>
+              <ThemedTD>{city.country || "India"}</ThemedTD>
+              <ThemedTD className="text-center">
+                <button onClick={() => navigate(`/admin/cities/add?edit=${city.id}`)} className="text-blue-600 hover:underline text-xs">Edit</button>
+                <span className="text-gray-400 mx-1">/</span>
+                <button onClick={() => handleDelete(city.id)} className="text-blue-600 hover:underline text-xs">Delete</button>
+              </ThemedTD>
+            </ThemedTR>
+          ))}
+          {filteredCities.length === 0 && <ThemedEmptyRow colSpan={5} message="No cities found" />}
+        </tbody>
+      </ThemedTable>
+    </AdminPageShell>
   );
 }
