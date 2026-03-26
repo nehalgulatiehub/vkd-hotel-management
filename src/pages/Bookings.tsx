@@ -3229,6 +3229,11 @@ export default function Bookings() {
 
       {/* Print Receipt - Hidden on screen, visible when printing */}
       {printBookingId && <BookingReceipt bookingId={printBookingId} />}
+
+      {/* Booking Confirmation Voucher */}
+      {voucherBookingId && (
+        <BookingConfirmationVoucher bookingId={voucherBookingId} onClose={() => setVoucherBookingId(null)} />
+      )}
     </div>
   );
 }
