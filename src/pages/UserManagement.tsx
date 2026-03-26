@@ -432,10 +432,28 @@ export default function UserManagement() {
           newPassword: resetPasswordValue,
         },
       });
+
       if (error) {
-        const errorBody = error instanceof Error ? error.message : JSON.stringify(error);
-        throw new Error(errorBody || "Edge function error");
+        let errorMessage = error.message || "Failed to reset password";
+        const errorContext = (error as Error & { context?: Response }).context;
+
+        if (errorContext) {
+          try {
+            const errorData = await errorContext.json();
+            errorMessage = errorData?.error || errorMessage;
+          } catch {
+            try {
+              const errorText = await errorContext.text();
+              errorMessage = errorText || errorMessage;
+            } catch {
+              // Ignore parsing errors and keep the original message
+            }
+          }
+        }
+
+        throw new Error(errorMessage);
       }
+
       if (data?.error) throw new Error(data.error);
       if (!data?.success) throw new Error("Failed to reset password");
       toast.success("Password reset successfully");
