@@ -2463,7 +2463,11 @@ export default function Bookings() {
                     className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
                   >
                     <option value="">--Select--</option>
-                    <option value="all">All Users</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown'}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
