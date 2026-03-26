@@ -403,6 +403,11 @@ export default function BookingDetails() {
       
       {/* Print Receipt */}
       {showPrint && id && <BookingReceipt bookingId={id} />}
+      
+      {/* Booking Confirmation Voucher */}
+      {showVoucher && id && (
+        <BookingConfirmationVoucher bookingId={id} onClose={() => setShowVoucher(false)} />
+      )}
     </div>
   );
 }
