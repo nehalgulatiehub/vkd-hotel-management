@@ -56,6 +56,7 @@ export default function BookingDue() {
     fetchBookingsWithDue();
     fetchAgents();
     fetchOwnHotels();
+    fetchUsers();
   }, []);
 
   const fetchAgents = async () => {

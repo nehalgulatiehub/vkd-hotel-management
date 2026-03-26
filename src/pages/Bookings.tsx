@@ -234,6 +234,7 @@ export default function Bookings() {
     fetchTransporters();
     fetchBookings();
     fetchCities();
+    fetchUsers();
   }, []);
 
   const fetchCities = async () => {
