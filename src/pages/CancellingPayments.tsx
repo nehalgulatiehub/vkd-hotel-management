@@ -181,7 +181,7 @@ export default function CancellingPayments() {
               <span>User :</span>
               <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)} className="border px-1 py-0.5 text-[11px]">
                 <option value="">--Select--</option>
-                {profiles.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+                {profiles.map(p => <option key={p.id} value={p.id}>{p.username || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown'}</option>)}
               </select>
             </div>
           </div>
