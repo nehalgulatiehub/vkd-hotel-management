@@ -243,7 +243,7 @@ export default function ManaliDelhiDue() {
                 <span className="text-[11px] text-muted-foreground">User :</span>
                 <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] rounded-sm">
                   <option value="">--Select--</option>
-                  {users.map(user => (<option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>))}
+                  {users.map(user => (<option key={user.id} value={user.id}>{user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown'}</option>))}
                 </select>
               </div>
               <div className="flex items-center gap-1">
