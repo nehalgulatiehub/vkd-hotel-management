@@ -1,203 +1,69 @@
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { RotateCcw } from "lucide-react";
-import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
-import { DateRangeFilter } from "@/components/ui/DateRangeFilter";
-
-interface RefundWithDetails {
-  id: string;
-  refund_date: string | null;
-  refund_amount: number;
-  refund_mode: string | null;
-  reference_number: string | null;
-  approval_status: string | null;
-  booking: {
-    id: string;
-    booking_number: string;
-    customer_name: string | null;
-    total_amount: number | null;
-  } | null;
-}
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
 
 export default function ViewBookReturnPayment() {
   const { isAdmin, loading: authLoading } = useAuthContext();
   const navigate = useNavigate();
-  const [refunds, setRefunds] = useState<RefundWithDetails[]>([]);
+  const [refunds, setRefunds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchBooking, setSearchBooking] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [appliedFromDate, setAppliedFromDate] = useState("");
-  const [appliedToDate, setAppliedToDate] = useState("");
 
-  const filteredRefunds = refunds.filter(r => {
-    const matchesSearch = !searchBooking || 
-      r.booking?.booking_number?.toLowerCase().includes(searchBooking.toLowerCase()) ||
-      r.booking?.customer_name?.toLowerCase().includes(searchBooking.toLowerCase());
-    
-    let matchesDate = true;
-    if (appliedFromDate || appliedToDate) {
-      const refundDate = r.refund_date ? new Date(r.refund_date) : null;
-      if (refundDate) {
-        if (appliedFromDate) matchesDate = matchesDate && refundDate >= new Date(appliedFromDate);
-        if (appliedToDate) matchesDate = matchesDate && refundDate <= new Date(appliedToDate);
-      } else {
-        matchesDate = false;
-      }
-    }
-    
-    return matchesSearch && matchesDate;
-  });
-
-  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredRefunds, { itemsPerPage: 10 });
-
-  const totalRefunds = filteredRefunds.reduce((sum, r) => sum + (r.refund_amount || 0), 0);
-
-  useEffect(() => {
-    if (!authLoading && isAdmin()) {
-      fetchRefunds();
-    }
-  }, [authLoading]);
+  useEffect(() => { if (!authLoading && isAdmin()) fetchRefunds(); }, [authLoading]);
 
   const fetchRefunds = async () => {
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("refunds")
-        .select(`
-          id, refund_date, refund_amount, refund_mode, reference_number, approval_status,
-          booking:bookings(id, booking_number, customer_name, total_amount)
-        `)
-        .order("refund_date", { ascending: false });
-
-      if (error) throw error;
-      setRefunds((data || []) as RefundWithDetails[]);
-    } catch (error) {
-      console.error("Error fetching refunds:", error);
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await supabase.from("refunds").select(`id, refund_date, refund_amount, refund_mode, reference_number, approval_status, booking:bookings(id, booking_number, customer_name, total_amount)`).order("refund_date", { ascending: false });
+    setRefunds(data || []);
+    setLoading(false);
   };
 
-  const handleDateSearch = () => {
-    setAppliedFromDate(fromDate);
-    setAppliedToDate(toDate);
-  };
+  const filteredRefunds = refunds.filter(r => !searchBooking || r.booking?.booking_number?.toLowerCase().includes(searchBooking.toLowerCase()) || r.booking?.customer_name?.toLowerCase().includes(searchBooking.toLowerCase()));
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredRefunds);
+  const totalRefunds = filteredRefunds.reduce((sum, r) => sum + (r.refund_amount || 0), 0);
 
-  const handleDateClear = () => {
-    setFromDate("");
-    setToDate("");
-    setAppliedFromDate("");
-    setAppliedToDate("");
-  };
+  if (authLoading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+  if (!isAdmin()) return <div className="p-6 text-center">Admin access required.</div>;
 
-  if (authLoading) {
-    return <div className="min-h-screen"><Header title="View Book Return Payment" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card></main></div>;
-  }
-
-  if (!isAdmin()) {
-    return <div className="min-h-screen"><Header title="Access Denied" /><main className="p-4"><Card><CardContent className="py-8 text-center text-muted-foreground">Admin access required.</CardContent></Card></main></div>;
-  }
+  const filterSection = (
+    <div className="flex flex-wrap items-center gap-4 text-xs">
+      <div className="flex items-center gap-1"><span>Search :</span><input value={searchBooking} onChange={(e) => setSearchBooking(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]" placeholder="Search booking or customer..." /></div>
+      <div className="ml-auto text-xs font-medium">Total Refunds: Rs. {totalRefunds.toLocaleString()}/-</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen">
-      <Header title="View Book Return Payment" />
-      <main className="p-4 space-y-4">
-        <DateRangeFilter
-          fromDate={fromDate}
-          toDate={toDate}
-          onFromDateChange={setFromDate}
-          onToDateChange={setToDate}
-          onSearch={handleDateSearch}
-          onClear={handleDateClear}
-        />
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <RotateCcw className="h-4 w-4" />
-              Book Return Payments
-            </CardTitle>
-            <Badge variant="secondary" className="text-lg">
-              Total Refunds: Rs. {totalRefunds.toLocaleString()}/-
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <Input
-                placeholder="Search by booking or customer..."
-                value={searchBooking}
-                onChange={(e) => setSearchBooking(e.target.value)}
-              />
-            </div>
-
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : paginatedItems.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No refunds found.</div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>S.No</TableHead>
-                      <TableHead>Booking</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Refund Date</TableHead>
-                      <TableHead>Booking Amount</TableHead>
-                      <TableHead>Refund Amount</TableHead>
-                      <TableHead>Mode</TableHead>
-                      <TableHead>Reference</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedItems.map((refund, index) => (
-                      <TableRow key={refund.id}>
-                        <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
-                        <TableCell className="font-medium">{refund.booking?.booking_number || "N/A"}</TableCell>
-                        <TableCell>{refund.booking?.customer_name || "N/A"}</TableCell>
-                        <TableCell>{refund.refund_date ? format(new Date(refund.refund_date), "dd-MMM-yyyy") : "N/A"}</TableCell>
-                        <TableCell>Rs. {refund.booking?.total_amount?.toLocaleString() || 0}/-</TableCell>
-                        <TableCell className="text-green-600 font-medium">Rs. {refund.refund_amount?.toLocaleString() || 0}/-</TableCell>
-                        <TableCell>{refund.refund_mode || "N/A"}</TableCell>
-                        <TableCell>{refund.reference_number || "N/A"}</TableCell>
-                        <TableCell>
-                          <Badge variant={refund.approval_status === "approved" ? "default" : refund.approval_status === "rejected" ? "destructive" : "secondary"}>
-                            {refund.approval_status || "Pending"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/admin/bookings/${refund.booking?.id}`)}>
-                              View Booking
-                            </Button>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-blue-600" onClick={() => navigate(`/admin/booking-payments?id=${refund.booking?.id}`)}>
-                              View Payments
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+    <AdminPageShell title="View Book Return Payment" filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+      {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+        <ThemedTable>
+          <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Booking</ThemedTH><ThemedTH>Customer</ThemedTH><ThemedTH>Refund Date</ThemedTH><ThemedTH>Booking Amount</ThemedTH><ThemedTH>Refund Amount</ThemedTH><ThemedTH>Mode</ThemedTH><ThemedTH>Reference</ThemedTH><ThemedTH>Status</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
+          <tbody>
+            {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={10} message="No refunds found" /> : paginatedItems.map((refund, index) => (
+              <ThemedTR key={refund.id} index={index}>
+                <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{refund.booking?.booking_number || "N/A"}</ThemedTD>
+                <ThemedTD>{refund.booking?.customer_name || "N/A"}</ThemedTD>
+                <ThemedTD>{refund.refund_date ? format(new Date(refund.refund_date), "dd-MMM-yyyy") : "N/A"}</ThemedTD>
+                <ThemedTD>Rs. {refund.booking?.total_amount?.toLocaleString() || 0}/-</ThemedTD>
+                <ThemedTD>Rs. {refund.refund_amount?.toLocaleString() || 0}/-</ThemedTD>
+                <ThemedTD>{refund.refund_mode || "N/A"}</ThemedTD>
+                <ThemedTD>{refund.reference_number || "N/A"}</ThemedTD>
+                <ThemedTD>{refund.approval_status || "Pending"}</ThemedTD>
+                <ThemedTD>
+                  <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
+                    <button className="hover:underline text-left" onClick={() => navigate(`/admin/bookings/${refund.booking?.id}`)}>View Booking</button>
+                    <button className="hover:underline text-left" onClick={() => navigate(`/admin/booking-payments?id=${refund.booking?.id}`)}>View Payments</button>
+                  </div>
+                </ThemedTD>
+              </ThemedTR>
+            ))}
+          </tbody>
+        </ThemedTable>
+      )}
+    </AdminPageShell>
   );
 }
