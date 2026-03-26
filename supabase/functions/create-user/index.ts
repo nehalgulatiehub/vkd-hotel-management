@@ -3,33 +3,53 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+      console.error("Missing required environment variables", {
+        hasSupabaseUrl: !!supabaseUrl,
+        hasSupabaseAnonKey: !!supabaseAnonKey,
+        hasSupabaseServiceRoleKey: !!supabaseServiceKey,
+      });
+
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
-    if (callerError || !caller) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+    const callerId = claimsData?.claims?.sub;
+
+    if (claimsError || !callerId) {
+      console.error("Unauthorized claims validation failed", {
+        message: claimsError?.message,
+      });
+
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -37,13 +57,27 @@ serve(async (req) => {
     }
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: roles } = await adminClient
+    const { data: roles, error: rolesError } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", caller.id);
+      .eq("user_id", callerId);
+
+    if (rolesError) {
+      console.error("Failed to load caller roles", {
+        callerId,
+        message: rolesError.message,
+      });
+
+      return new Response(JSON.stringify({ error: "Unable to verify user access" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const userRoles = roles?.map((r) => r.role) || [];
     if (!userRoles.includes("admin") && !userRoles.includes("account")) {
+      console.warn("Forbidden create-user access", { callerId, userRoles });
+
       return new Response(JSON.stringify({ error: "Forbidden: Admin access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -53,7 +87,6 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    // Handle reset-password action
     if (action === "reset-password") {
       const { userId, newPassword } = body;
 
@@ -76,17 +109,28 @@ serve(async (req) => {
       });
 
       if (updateError) {
+        console.error("Password reset failed", {
+          userId,
+          message: updateError.message,
+        });
+
         return new Response(JSON.stringify({ error: updateError.message }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Store plain password in profiles
-      await adminClient
+      const { error: profileUpdateError } = await adminClient
         .from("profiles")
         .update({ plain_password: newPassword })
         .eq("id", userId);
+
+      if (profileUpdateError) {
+        console.error("Password reset succeeded but profile update failed", {
+          userId,
+          message: profileUpdateError.message,
+        });
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: "Password reset successfully" }),
