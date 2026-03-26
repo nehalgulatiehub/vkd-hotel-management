@@ -73,7 +73,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
   const hotelName = hotelBookings[0]?.own_hotels?.name || hotelBookings[0]?.another_hotels?.name || companyName;
   const numberOfRooms = hotelBookings.reduce((sum, hb) => sum + (hb.number_of_rooms || 0), 0);
-  const roomType = hotelBookings.map(hb => hb.room_type).filter(Boolean).join(", ") || "-";
+  const roomType = hotelBookings.map(hb => hb.room_type ? (roomNamesMap[hb.room_type] || hb.room_type) : null).filter(Boolean).join(", ") || "-";
 
   return (
     <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:block" id="voucher-container">
