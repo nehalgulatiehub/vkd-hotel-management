@@ -290,6 +290,18 @@ const adminMenuItems: MenuItem[] = [
       { title: "Reports", url: "/admin/purchase/reports" },
     ] 
   },
+  { 
+    title: "Restaurant Manager", 
+    color: "#FF7043", 
+    submenu: [
+      { title: "Tables", url: "/admin/restaurant/tables" },
+      { title: "Food Menu", url: "/admin/restaurant/menu" },
+      { title: "POS", url: "/admin/restaurant/pos" },
+      { title: "Orders", url: "/admin/restaurant/orders" },
+      { title: "Invoices", url: "/admin/restaurant/invoices" },
+      { title: "Reports", url: "/admin/restaurant/reports" },
+    ] 
+  },
 ];
 
 export function AdminSidebar() {
