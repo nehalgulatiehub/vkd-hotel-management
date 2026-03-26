@@ -258,6 +258,12 @@ const menuItems: MenuItem[] = [
       { title: "Reports", url: "/purchase/reports", menuKey: "purchase_reports" },
     ]
   },
+  {
+    title: "Quotes",
+    url: "/quotes",
+    icon: FileText,
+    menuKey: "quotes",
+  },
 ];
 
 export function AppSidebar() {

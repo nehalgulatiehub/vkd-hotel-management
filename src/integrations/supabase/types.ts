@@ -1777,6 +1777,33 @@ export type Database = {
           },
         ]
       }
+      quotes: {
+        Row: {
+          author: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       refunds: {
         Row: {
           approval_status: string | null
