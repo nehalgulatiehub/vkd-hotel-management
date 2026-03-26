@@ -198,7 +198,9 @@ export default function VehicleDue() {
         </div>
 
         {/* Compact Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
+        <div className="mb-3 border border-border">
+              <div className="bg-[#8B1538] text-white px-3 py-1.5 text-xs font-semibold">Search</div>
+              <div className="bg-muted/50">
           {/* Row 1: Dates and Search with Date */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
             <div className="flex items-center gap-1">
@@ -284,6 +286,7 @@ export default function VehicleDue() {
             <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
           </div>
         </div>
+              </div>
 
         {/* Main Table */}
         <Card>
