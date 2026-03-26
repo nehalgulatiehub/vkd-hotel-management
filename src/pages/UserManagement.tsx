@@ -432,8 +432,12 @@ export default function UserManagement() {
           newPassword: resetPasswordValue,
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        const errorBody = error instanceof Error ? error.message : JSON.stringify(error);
+        throw new Error(errorBody || "Edge function error");
+      }
       if (data?.error) throw new Error(data.error);
+      if (!data?.success) throw new Error("Failed to reset password");
       toast.success("Password reset successfully");
       setIsResetPasswordDialogOpen(false);
       fetchUsers();
