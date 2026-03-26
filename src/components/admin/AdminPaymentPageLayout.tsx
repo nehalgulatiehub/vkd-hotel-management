@@ -604,7 +604,6 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
             </div>
           </div>
         )}
-      </main>
 
       <AdminViewPaymentDialog
         open={showPaymentDialog}
