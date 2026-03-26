@@ -5,8 +5,9 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, FileText } from "lucide-react";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 
 export default function BookingDetails() {
   const { id } = useParams();
