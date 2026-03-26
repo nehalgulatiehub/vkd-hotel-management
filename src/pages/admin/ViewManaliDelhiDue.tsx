@@ -101,125 +101,57 @@ export default function ViewManaliDelhiDue() {
     return s.transporter_id === selectedTransporter;
   });
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen">
-        <AdminHeader title="Due MD Transporter Payment" />
-        <main className="p-4">
-          <Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card>
-        </main>
-      </div>
-    );
-  }
-
-  if (!canManage) {
-    return (
-      <div className="min-h-screen">
-        <AdminHeader title="Access Denied" />
-        <main className="p-4">
-          <Card><CardContent className="py-8 text-center text-muted-foreground">Access denied.</CardContent></Card>
-        </main>
-      </div>
-    );
-  }
+  if (authLoading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+  if (!canManage) return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
 
   return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader title="Due MD Transporter Payment" />
-      <main className="p-4">
-        {/* Blue Header Bar */}
-        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">View MD Transporter Payment</span>
-          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => setSelectedTransporter("")}>
-            View All Records
-          </Button>
+    <div className="p-4">
+      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+        <span className="text-sm font-medium">Due MD Transporter Payment</span>
+        <Button variant="outline" className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs" onClick={() => setSelectedTransporter("")}>View All Records</Button>
+      </div>
+      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3 mb-0">
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-gray-700">Transporter :</label>
+          <select value={selectedTransporter} onChange={(e) => setSelectedTransporter(e.target.value)} className="h-7 text-xs border border-gray-300 rounded px-2 bg-white min-w-[200px]">
+            <option value="">--Select--</option>
+            {transporters.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+          </select>
         </div>
-
-        {/* Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Transporter :</span>
-              <select
-                value={selectedTransporter}
-                onChange={(e) => setSelectedTransporter(e.target.value)}
-                className="h-5 text-[11px] border border-input bg-background px-1 min-w-[200px] rounded-sm"
-              >
-                <option value="">--Select--</option>
-                {transporters.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-            <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm ml-auto">
-              Search
-            </button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <Card>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr style={{ backgroundColor: "#D4A59A" }}>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Outstanding</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Total Transport Amount</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Transporter</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold"></th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold"></th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Action</th>
-                      <th className="border border-[#c99] px-3 py-2 text-center text-xs font-semibold">
-                        <input type="checkbox" className="w-3 h-3" disabled />
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSummaries.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="text-center py-4 text-xs text-muted-foreground">
-                          No records found.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredSummaries.map((summary, index) => (
-                        <tr key={summary.transporter_id} style={{ backgroundColor: "#F5E6E0" }}>
-                          <td className="border border-[#c99] px-3 py-2 text-xs">{index + 1}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs">{summary.transporter_name}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs">Rs {summary.total_paid.toLocaleString("en-IN")}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs">Rs {summary.total_transport_amount.toLocaleString("en-IN")}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs">Rs {summary.outstanding.toLocaleString("en-IN")}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs"></td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs"></td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-5 text-[10px] px-2"
-                              onClick={() => navigate(`/admin/md-transporter-money?transporter=${summary.transporter_id}`)}
-                            >
-                              View
-                            </Button>
-                          </td>
-                          <td className="border border-[#c99] px-3 py-2 text-center">
-                            <input type="checkbox" className="w-3 h-3" />
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+      </div>
+      <div className="border border-t-0 border-gray-300 overflow-x-auto">
+        {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-[#D4A59A] text-gray-800">
+                <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">S.No.</th>
+                <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Transporter</th>
+                <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Total Paid</th>
+                <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Total Transport Amount</th>
+                <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Outstanding</th>
+                <th className="border border-gray-400 px-2 py-1.5 text-center font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSummaries.length === 0 ? (
+                <tr><td colSpan={6} className="border border-gray-300 text-center py-8 text-gray-500">No records found.</td></tr>
+              ) : filteredSummaries.map((summary, index) => (
+                <tr key={summary.transporter_id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-white"}>
+                  <td className="border border-gray-300 px-2 py-1.5">{index + 1}</td>
+                  <td className="border border-gray-300 px-2 py-1.5">{summary.transporter_name}</td>
+                  <td className="border border-gray-300 px-2 py-1.5">Rs {summary.total_paid.toLocaleString("en-IN")}</td>
+                  <td className="border border-gray-300 px-2 py-1.5">Rs {summary.total_transport_amount.toLocaleString("en-IN")}</td>
+                  <td className="border border-gray-300 px-2 py-1.5">Rs {summary.outstanding.toLocaleString("en-IN")}</td>
+                  <td className="border border-gray-300 px-2 py-1.5 text-center">
+                    <button onClick={() => navigate(`/admin/md-transporter-money?transporter=${summary.transporter_id}`)} className="text-blue-600 hover:underline text-xs">View</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

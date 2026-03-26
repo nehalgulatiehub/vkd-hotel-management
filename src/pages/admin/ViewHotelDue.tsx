@@ -79,91 +79,48 @@ export default function ViewHotelDue() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader title="View Another Hotel Payment" />
-      <main className="p-3 space-y-3">
-        {/* Search Section */}
-        <div className="border border-[#c99] rounded">
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ backgroundColor: "#1e6e99" }}>
-            <span className="text-white text-xs font-bold">Search</span>
-            <button onClick={() => setHotelFilter("")} className="text-white text-xs underline hover:no-underline">View All Records</button>
-          </div>
-          <div className="p-3" style={{ fontSize: "11px" }}>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-1">
-                <span>Another Hotel :</span>
-                <select
-                  value={hotelFilter}
-                  onChange={e => setHotelFilter(e.target.value)}
-                  className="border rounded px-1 py-0.5 text-xs min-w-[200px]"
-                >
-                  <option value="">--Select--</option>
-                  {hotelNames.map(h => (
-                    <option key={h.id} value={h.id}>{h.name}</option>
-                  ))}
-                </select>
-              </div>
-              <button className="border rounded px-4 py-1 text-xs font-bold bg-background hover:bg-muted">
-                Search
-              </button>
-            </div>
-          </div>
+    <div className="p-4">
+      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+        <span className="text-sm font-medium">View Another Hotel Payment</span>
+        <button onClick={() => setHotelFilter("")} className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs px-3 rounded border-0">View All Records</button>
+      </div>
+      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3 mb-0">
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-gray-700">Another Hotel :</label>
+          <select value={hotelFilter} onChange={e => setHotelFilter(e.target.value)} className="h-7 text-xs border border-gray-300 rounded px-2 bg-white min-w-[200px]">
+            <option value="">--Select--</option>
+            {hotelNames.map(h => (<option key={h.id} value={h.id}>{h.name}</option>))}
+          </select>
         </div>
-
-        {/* Table */}
-        {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
-        ) : (
-          <div className="border border-[#c99] rounded overflow-x-auto">
-            <table className="w-full border-collapse" style={{ fontSize: "11px" }}>
+      </div>
+      <div className="border border-t-0 border-gray-300 overflow-x-auto">
+        {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+          <>
+            <table className="w-full text-xs">
               <thead>
-                <tr style={{ backgroundColor: "#D4A59A" }}>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">S.No.</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Date</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Hotel</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Payment</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Payment Mode</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Cheque No</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Payment detail</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Action</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-center font-bold text-xs">
-                    <input type="checkbox" disabled />
-                  </th>
+                <tr className="bg-[#D4A59A] text-gray-800">
+                  <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">S.No.</th>
+                  <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Date</th>
+                  <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Hotel</th>
+                  <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Due Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSummaries.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="text-center py-8 text-muted-foreground border border-[#c99]">
-                      No another hotel data found
-                    </td>
+                  <tr><td colSpan={4} className="border border-gray-300 text-center py-8 text-gray-500">No another hotel data found</td></tr>
+                ) : filteredSummaries.map((summary, idx) => (
+                  <tr key={summary.hotel_id} className={idx % 2 === 0 ? "bg-[#F5E6E0]" : "bg-white"}>
+                    <td className="border border-gray-300 px-2 py-1.5">{idx + 1}</td>
+                    <td className="border border-gray-300 px-2 py-1.5">{summary.latest_date ? new Date(summary.latest_date).toLocaleDateString("en-GB") : "-"}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 font-medium">{summary.hotel_name}</td>
+                    <td className="border border-gray-300 px-2 py-1.5">Rs {summary.due_amount.toLocaleString("en-IN")}</td>
                   </tr>
-                ) : (
-                  filteredSummaries.map((summary, idx) => (
-                    <tr key={summary.hotel_id} style={{ backgroundColor: "#F5E6E0" }}>
-                      <td className="border border-[#c99] px-2 py-2 text-xs">{idx + 1}</td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs">
-                        {summary.latest_date ? new Date(summary.latest_date).toLocaleDateString("en-GB") : "-"}
-                      </td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs font-medium">{summary.hotel_name}</td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs">
-                        Rs {summary.due_amount.toLocaleString("en-IN")}
-                      </td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs"></td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs"></td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs"></td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs"></td>
-                      <td className="border border-[#c99] px-2 py-2 text-xs text-center">
-                        <input type="checkbox" />
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
-
             {filteredSummaries.length > 0 && (
-              <div className="flex items-center justify-between p-3 border-t border-[#c99]">
+              <div className="flex items-center justify-between p-3 border-t border-gray-300 bg-[#F5E6E0]">
                 <div className="text-xs font-medium">
                   Total: Rs. {filteredSummaries.reduce((s, r) => s + r.total_amount, 0).toLocaleString("en-IN")}/-
                   &nbsp;|&nbsp; Paid: Rs. {filteredSummaries.reduce((s, r) => s + r.total_paid, 0).toLocaleString("en-IN")}/-
@@ -171,9 +128,9 @@ export default function ViewHotelDue() {
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
-      </main>
+      </div>
     </div>
   );
 }
