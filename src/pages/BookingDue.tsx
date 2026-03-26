@@ -162,6 +162,9 @@ export default function BookingDue() {
     
     // Room filter
     const matchesRoom = !filters.room || booking.hotel_info?.room_id === filters.room;
+
+    // User filter
+    const matchesUser = !filters.user || booking.created_by === filters.user;
     
     // Date filter
     let matchesDate = true;
@@ -177,7 +180,7 @@ export default function BookingDue() {
     }
     
     return matchesType && matchesAgent && matchesCustomer && 
-           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom;
+           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser;
   });
 
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
