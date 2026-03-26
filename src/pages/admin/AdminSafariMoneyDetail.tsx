@@ -3,10 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
-import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
@@ -19,7 +19,6 @@ export default function AdminSafariMoneyDetail() {
   const [loading, setLoading] = useState(true);
   const paymentDialog = usePaymentDialog(() => fetchSafariBookings());
 
-  // Filters
   const today = new Date();
   const [fromMonth, setFromMonth] = useState(months[today.getMonth()]);
   const [fromDay, setFromDay] = useState(String(today.getDate()).padStart(2, "0"));
@@ -32,59 +31,24 @@ export default function AdminSafariMoneyDetail() {
   const [customer, setCustomer] = useState("");
   const [userId, setUserId] = useState("");
 
-  // Dialog states
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
 
-  useEffect(() => {
-    fetchSafariBookings();
-    fetchTransporters();
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchSafariBookings(); fetchTransporters(); fetchUsers(); }, []);
 
-  const fetchTransporters = async () => {
-    const { data } = await supabase.from("transporters").select("id, name").order("name");
-    setTransporters(data || []);
-  };
-
-  const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
-    setUsers(data || []);
-  };
-
-  // Helper to get username from users array
-  const getUserName = (userId: string | null | undefined) => {
-    if (!userId) return "Unknown User";
-    const user = users.find(u => u.id === userId);
-    if (!user) return "Unknown User";
-    return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User";
-  };
+  const fetchTransporters = async () => { const { data } = await supabase.from("transporters").select("id, name").order("name"); setTransporters(data || []); };
+  const fetchUsers = async () => { const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username"); setUsers(data || []); };
+  const getUserName = (uid: string | null | undefined) => { if (!uid) return "Unknown User"; const user = users.find(u => u.id === uid); if (!user) return "Unknown User"; return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User"; };
 
   const fetchSafariBookings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("safari_bookings")
-      .select(`
-        *,
-        bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name))
-      `)
-      .order("safari_date", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load safari bookings");
-    } else {
-      setSafariBookings(data || []);
-    }
+    const { data, error } = await supabase.from("safari_bookings").select(`*, bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name))`).order("safari_date", { ascending: false });
+    if (error) toast.error("Failed to load safari bookings"); else setSafariBookings(data || []);
     setLoading(false);
   };
 
-  const handleViewDetails = (booking: any) => {
-    setSelectedBookingData(booking.bookings);
-    setSelectedServiceData(booking);
-    setShowDetailsDialog(true);
-  };
-
+  const handleViewDetails = (booking: any) => { setSelectedBookingData(booking.bookings); setSelectedServiceData(booking); setShowDetailsDialog(true); };
   const getMonthIndex = (monthName: string) => months.indexOf(monthName) + 1;
 
   const filteredBookings = safariBookings.filter(booking => {
@@ -101,154 +65,78 @@ export default function AdminSafariMoneyDetail() {
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
 
-  return (
-    <div className="min-h-screen bg-background">
-      <main className="p-2">
-        <div className="flex justify-between items-center mb-2 px-3 py-2" style={{ backgroundColor: "#1e6e99" }}>
-          <h2 className="text-white font-semibold text-sm">View Safari Money Detail</h2>
-          <button className="bg-[#1e6e99] text-white text-sm px-3 py-1 border border-white hover:bg-[#155a80]">View All Records</button>
+  const filterSection = (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-4 text-xs">
+        <div className="flex items-center gap-1">
+          <span>From :</span>
+          <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="border px-1 py-0.5 text-xs">{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
+          <select value={fromDay} onChange={(e) => setFromDay(e.target.value)} className="border px-1 py-0.5 text-xs">{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+          <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} className="border px-1 py-0.5 text-xs">{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
         </div>
-
-        {/* Search Section */}
-        <div className="border border-[#c99] mb-2">
-          <div className="bg-[#8B1538] text-white px-3 py-1 text-sm font-semibold">Search</div>
-          <div className="p-2 bg-white space-y-2">
-            <div className="flex flex-wrap items-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <span>From :</span>
-                <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  {months.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={fromDay} onChange={(e) => setFromDay(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  {days.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>To :</span>
-                <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  {months.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={toDay} onChange={(e) => setToDay(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  {days.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select value={toYear} onChange={(e) => setToYear(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>Search with Date :</span>
-                <label className="flex items-center gap-1"><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
-                <label className="flex items-center gap-1"><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <span>Transporter :</span>
-                <select value={transporterId} onChange={(e) => setTransporterId(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]">
-                  <option value="">-- Select Transporter --</option>
-                  {transporters.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>Customer :</span>
-                <input type="text" value={customer} onChange={(e) => setCustomer(e.target.value)} className="border px-1 py-0.5 text-xs" />
-              </div>
-              <div className="flex items-center gap-1">
-                <span>User :</span>
-                <select value={userId} onChange={(e) => setUserId(e.target.value)} className="border px-1 py-0.5 text-xs">
-                  <option value="">--Select--</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}
-                </select>
-              </div>
-              <button className="border px-3 py-0.5 text-xs bg-gray-100 hover:bg-gray-200">Search</button>
-            </div>
-          </div>
+        <div className="flex items-center gap-1">
+          <span>To :</span>
+          <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="border px-1 py-0.5 text-xs">{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
+          <select value={toDay} onChange={(e) => setToDay(e.target.value)} className="border px-1 py-0.5 text-xs">{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+          <select value={toYear} onChange={(e) => setToYear(e.target.value)} className="border px-1 py-0.5 text-xs">{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
         </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : (
-            <table className="w-full text-[11px] border-collapse">
-              <thead>
-                <tr style={{ backgroundColor: "#D4A59A" }}>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">S.no</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Date</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Transporter Name</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Customer Name</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Safari Volvo Journey Date</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Booking Price</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">User</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedItems.map((booking, idx) => (
-                  <tr key={booking.id} style={{ backgroundColor: "#F5E6E0" }}>
-                    <td className="border border-[#c99] px-2 py-2">{startIndex + idx + 1}</td>
-                    <td className="border border-[#c99] px-2 py-2">
-                      {booking.bookings?.created_at ? format(new Date(booking.bookings.created_at), "dd/MM/yyyy") : "-"}
-                    </td>
-                    <td className="border border-[#c99] px-2 py-2">{booking.safari_name || "-"}</td>
-                    <td className="border border-[#c99] px-2 py-2">{booking.bookings?.customer_name || "-"}</td>
-                    <td className="border border-[#c99] px-2 py-2">
-                      {booking.safari_date ? format(new Date(booking.safari_date), "dd/MM/yyyy") : "-"}
-                    </td>
-                    <td className="border border-[#c99] px-2 py-2">
-                      Safari Booking Price : Rs {(booking.total_amount || 0).toLocaleString('en-IN')} /-
-                    </td>
-                    <td className="border border-[#c99] px-2 py-2">
-                      {getUserName(booking.bookings?.created_by)}
-                    </td>
-                    <td className="border border-[#c99] px-2 py-2">
-                      <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                        <button className="hover:underline text-left" onClick={() => handleViewDetails(booking)}>View Booking</button>
-                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings, { type: 'safari', id: booking.id })}>View Payment</button>
-                        <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleAddPayment(booking.bookings, { type: 'safari', id: booking.id })}>Add Payment</button>
-                        <button className="hover:underline text-left">View Refund Payment</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {!loading && filteredBookings.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">No safari bookings found</div>
-          )}
+        <div className="flex items-center gap-2">
+          <span>Search with Date :</span>
+          <label className="flex items-center gap-1"><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
+          <label className="flex items-center gap-1"><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
         </div>
-
-        <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
-      </main>
-
-      <BookingDetailsDialog
-        open={showDetailsDialog}
-        onOpenChange={setShowDetailsDialog}
-        booking={selectedBookingData}
-        serviceType="safari"
-        serviceData={selectedServiceData}
-      />
-
-      <PaymentDialogs
-        showViewPaymentDialog={paymentDialog.showViewPaymentDialog}
-        setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
-        showPaymentDialog={paymentDialog.showPaymentDialog}
-        setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
-        selectedBooking={paymentDialog.selectedBooking}
-        bookingPayments={paymentDialog.bookingPayments}
-        paymentAmount={paymentDialog.paymentAmount}
-        setPaymentAmount={paymentDialog.setPaymentAmount}
-        paymentMode={paymentDialog.paymentMode}
-        setPaymentMode={paymentDialog.setPaymentMode}
-        paymentReference={paymentDialog.paymentReference}
-        setPaymentReference={paymentDialog.setPaymentReference}
-        isSubmittingPayment={paymentDialog.isSubmittingPayment}
-        onSubmitPayment={paymentDialog.submitPayment}
-      />
+      </div>
+      <div className="flex flex-wrap items-center gap-4 text-xs">
+        <div className="flex items-center gap-1">
+          <span>Transporter :</span>
+          <select value={transporterId} onChange={(e) => setTransporterId(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]">
+            <option value="">-- Select Transporter --</option>
+            {transporters.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-1"><span>Customer :</span><input type="text" value={customer} onChange={(e) => setCustomer(e.target.value)} className="border px-1 py-0.5 text-xs" /></div>
+        <div className="flex items-center gap-1">
+          <span>User :</span>
+          <select value={userId} onChange={(e) => setUserId(e.target.value)} className="border px-1 py-0.5 text-xs"><option value="">--Select--</option>{users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}</select>
+        </div>
+        <button className="border px-3 py-0.5 text-xs bg-gray-100 hover:bg-gray-200">Search</button>
+      </div>
     </div>
+  );
+
+  return (
+    <>
+      <AdminPageShell title="View Safari Money Detail" actions={[{ label: "View All Records", onClick: () => {} }]} filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+        {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+          <ThemedTable>
+            <ThemedTHead><ThemedTH>S.no</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Transporter Name</ThemedTH><ThemedTH>Customer Name</ThemedTH><ThemedTH>Safari Volvo Journey Date</ThemedTH><ThemedTH>Booking Price</ThemedTH><ThemedTH>User</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
+            <tbody>
+              {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={8} message="No safari bookings found" /> : paginatedItems.map((booking, idx) => (
+                <ThemedTR key={booking.id} index={idx}>
+                  <ThemedTD>{startIndex + idx + 1}</ThemedTD>
+                  <ThemedTD>{booking.bookings?.created_at ? format(new Date(booking.bookings.created_at), "dd/MM/yyyy") : "-"}</ThemedTD>
+                  <ThemedTD>{booking.safari_name || "-"}</ThemedTD>
+                  <ThemedTD>{booking.bookings?.customer_name || "-"}</ThemedTD>
+                  <ThemedTD>{booking.safari_date ? format(new Date(booking.safari_date), "dd/MM/yyyy") : "-"}</ThemedTD>
+                  <ThemedTD>Safari Booking Price : Rs {(booking.total_amount || 0).toLocaleString('en-IN')} /-</ThemedTD>
+                  <ThemedTD>{getUserName(booking.bookings?.created_by)}</ThemedTD>
+                  <ThemedTD>
+                    <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
+                      <button className="hover:underline text-left" onClick={() => handleViewDetails(booking)}>View Booking</button>
+                      <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings, { type: 'safari', id: booking.id })}>View Payment</button>
+                      <button className="hover:underline text-left" onClick={() => booking.bookings && paymentDialog.handleAddPayment(booking.bookings, { type: 'safari', id: booking.id })}>Add Payment</button>
+                      <button className="hover:underline text-left">View Refund Payment</button>
+                    </div>
+                  </ThemedTD>
+                </ThemedTR>
+              ))}
+            </tbody>
+          </ThemedTable>
+        )}
+      </AdminPageShell>
+
+      <BookingDetailsDialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog} booking={selectedBookingData} serviceType="safari" serviceData={selectedServiceData} />
+      <PaymentDialogs showViewPaymentDialog={paymentDialog.showViewPaymentDialog} setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog} showPaymentDialog={paymentDialog.showPaymentDialog} setShowPaymentDialog={paymentDialog.setShowPaymentDialog} selectedBooking={paymentDialog.selectedBooking} bookingPayments={paymentDialog.bookingPayments} paymentAmount={paymentDialog.paymentAmount} setPaymentAmount={paymentDialog.setPaymentAmount} paymentMode={paymentDialog.paymentMode} setPaymentMode={paymentDialog.setPaymentMode} paymentReference={paymentDialog.paymentReference} setPaymentReference={paymentDialog.setPaymentReference} isSubmittingPayment={paymentDialog.isSubmittingPayment} onSubmitPayment={paymentDialog.submitPayment} />
+    </>
   );
 }
