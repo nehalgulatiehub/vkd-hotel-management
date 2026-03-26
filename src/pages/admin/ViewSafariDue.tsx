@@ -367,7 +367,6 @@ export default function ViewSafariDue() {
             )}
           </CardContent>
         </Card>
-      </main>
 
       {/* View Details Dialog */}
       <BookingDetailsDialog
