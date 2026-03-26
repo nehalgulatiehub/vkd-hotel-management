@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Upload, Building2 } from "lucide-react";
+import { Save, Upload, Building2, Eye, EyeOff } from "lucide-react";
 
 interface CompanySettings {
   id: string;
@@ -28,6 +28,7 @@ interface CompanySettings {
 }
 
 export default function Settings() {
+  const [activeTab, setActiveTab] = useState<"settings" | "change-password">("settings");
   const [settings, setSettings] = useState<CompanySettings>({
     id: '',
     company_name: '',
@@ -46,6 +47,9 @@ export default function Settings() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({ newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
     fetchSettings();
@@ -134,10 +138,110 @@ export default function Settings() {
     setLogoPreview(url);
   };
 
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwordData.newPassword });
+      if (error) throw error;
+      toast.success("Password updated successfully");
+      setPasswordData({ newPassword: "", confirmPassword: "" });
+    } catch (error: any) {
+      toast.error(error.message || "Error updating password");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const tabs = [
+    { id: "settings" as const, label: "Company Settings" },
+    { id: "change-password" as const, label: "Change Password" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="Settings" />
       <main className="container mx-auto p-6">
+        {/* Tabs */}
+        <div className="flex border-b mb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "change-password" && (
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="text-base">Update Your Password</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="newPassword" className="text-teal-700 font-semibold">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      required
+                      minLength={6}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-teal-700 font-semibold">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={passwordLoading}
+                  style={{ backgroundColor: "#E91E63" }}
+                >
+                  {passwordLoading ? "Updating..." : "Update Password"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "settings" && (
+        <>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Settings</h1>
@@ -324,6 +428,8 @@ export default function Settings() {
             </CardContent>
           </Card>
         </div>
+        </>
+        )}
       </main>
     </div>
   );
