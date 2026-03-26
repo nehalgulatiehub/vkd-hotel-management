@@ -96,9 +96,7 @@ export default function AdminManageHotels() {
     <div className="min-h-screen bg-[#F5E6E0]">
       {/* Blue Header Bar */}
       <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium">📋 Manage Hotel</span>
-        </div>
+        <span className="text-sm font-medium">Manage Hotel</span>
         <div className="flex gap-2">
           <Button 
             variant="outline" 
