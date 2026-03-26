@@ -1,16 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, Download } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
+import { usePagination } from "@/hooks/usePagination";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import * as XLSX from "xlsx";
 
 interface Agent {
@@ -27,16 +24,10 @@ interface Agent {
   city?: { name: string } | null;
 }
 
-interface City {
-  id: string;
-  name: string;
-}
-
 export default function AdminAgents() {
   const navigate = useNavigate();
-  const { user, isAdmin, isAccount, loading: authLoading } = useAuthContext();
+  const { isAdmin, isAccount, loading: authLoading } = useAuthContext();
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [userFilter, setUserFilter] = useState("");
@@ -45,20 +36,13 @@ export default function AdminAgents() {
   const canManage = isAdmin() || isAccount();
 
   useEffect(() => {
-    if (!authLoading && canManage) {
-      fetchAgents();
-      fetchCities();
-    }
+    if (!authLoading && canManage) fetchAgents();
   }, [authLoading, canManage]);
 
   const fetchAgents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("agents")
-        .select("*, city:cities(name), created_by")
-        .order("name");
-
+      const { data, error } = await supabase.from("agents").select("*, city:cities(name), created_by").order("name");
       if (error) throw error;
       setAgents(data || []);
     } catch (error) {
@@ -69,14 +53,8 @@ export default function AdminAgents() {
     }
   };
 
-  const fetchCities = async () => {
-    const { data } = await supabase.from("cities").select("id, name").order("name");
-    setCities(data || []);
-  };
-
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this agent?")) return;
-    
     try {
       const { error } = await supabase.from("agents").delete().eq("id", id);
       if (error) throw error;
@@ -100,7 +78,6 @@ export default function AdminAgents() {
       User: agent.created_by ? getUserName(agent.created_by) : "",
       Notes: agent.notes || "",
     }));
-
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Agents");
@@ -116,107 +93,93 @@ export default function AdminAgents() {
     return matchesSearch && matchesUser;
   });
 
+  const pagination = usePagination(filteredAgents);
+
   if (authLoading || loading) {
     return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
   }
 
   if (!canManage) {
-    return <div className="p-6"><Card><CardContent className="py-8 text-center">Access Denied</CardContent></Card></div>;
+    return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Manage Agents</h1>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-1" />
-            Export
-          </Button>
-          <Button size="sm" onClick={() => navigate("/admin/agents/add")}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add Agent
-          </Button>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex gap-4 items-end flex-wrap">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search agents..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 h-9"
-              />
-            </div>
-            <div className="w-48">
-              <Label className="text-xs mb-1 block">User</Label>
-              <Select value={userFilter} onValueChange={setUserFilter}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select User" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
-                  {profiles.map(profile => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.username || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <AdminPageShell
+      title="Manage Agents"
+      actions={[
+        { label: "Export", onClick: handleExport },
+        { label: "Add Agent", onClick: () => navigate("/admin/agents/add") },
+      ]}
+      filterSection={
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-700 w-16 text-right">Search :</label>
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 h-7 text-xs"
+              placeholder="Name, company, phone..."
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Commission %</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAgents.map((agent) => (
-                <TableRow key={agent.id}>
-                  <TableCell className="font-medium">{agent.name}</TableCell>
-                  <TableCell>{agent.company_name || "-"}</TableCell>
-                  <TableCell>{agent.phone || "-"}</TableCell>
-                  <TableCell>{agent.email || "-"}</TableCell>
-                  <TableCell>{agent.city?.name || "-"}</TableCell>
-                  <TableCell>{agent.created_by ? getUserName(agent.created_by) : "-"}</TableCell>
-                  <TableCell>{agent.commission_rate ?? "-"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/admin/agents/add?edit=${agent.id}`)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(agent.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-700 w-16 text-right">User :</label>
+            <select
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              className="flex-1 h-7 text-xs border border-gray-300 rounded px-2 bg-white"
+            >
+              <option value="all">All Users</option>
+              {profiles.map(profile => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.username || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown'}
+                </option>
               ))}
-              {filteredAgents.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                    No agents found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+            </select>
+          </div>
+        </div>
+      }
+      pagination={{
+        currentPage: pagination.currentPage,
+        totalPages: pagination.totalPages,
+        onPageChange: pagination.goToPage,
+        totalItems: pagination.totalItems,
+        startIndex: pagination.startIndex,
+        endIndex: pagination.endIndex,
+      }}
+    >
+      <ThemedTable>
+        <ThemedTHead>
+          <ThemedTH className="w-12 text-center">S.No</ThemedTH>
+          <ThemedTH>Name</ThemedTH>
+          <ThemedTH>Company</ThemedTH>
+          <ThemedTH>Phone</ThemedTH>
+          <ThemedTH>Email</ThemedTH>
+          <ThemedTH>City</ThemedTH>
+          <ThemedTH>User</ThemedTH>
+          <ThemedTH>Commission %</ThemedTH>
+          <ThemedTH className="text-center w-24">Action</ThemedTH>
+        </ThemedTHead>
+        <tbody>
+          {pagination.paginatedItems.map((agent, index) => (
+            <ThemedTR key={agent.id} index={index}>
+              <ThemedTD className="text-center">{pagination.startIndex + index}</ThemedTD>
+              <ThemedTD>{agent.name}</ThemedTD>
+              <ThemedTD>{agent.company_name || "-"}</ThemedTD>
+              <ThemedTD>{agent.phone || "-"}</ThemedTD>
+              <ThemedTD>{agent.email || "-"}</ThemedTD>
+              <ThemedTD>{agent.city?.name || "-"}</ThemedTD>
+              <ThemedTD>{agent.created_by ? getUserName(agent.created_by) : "-"}</ThemedTD>
+              <ThemedTD>{agent.commission_rate ?? "-"}</ThemedTD>
+              <ThemedTD className="text-center">
+                <button onClick={() => navigate(`/admin/agents/add?edit=${agent.id}`)} className="text-blue-600 hover:underline text-xs">Edit</button>
+                <span className="text-gray-400 mx-1">/</span>
+                <button onClick={() => handleDelete(agent.id)} className="text-blue-600 hover:underline text-xs">Delete</button>
+              </ThemedTD>
+            </ThemedTR>
+          ))}
+          {filteredAgents.length === 0 && <ThemedEmptyRow colSpan={9} message="No agents found" />}
+        </tbody>
+      </ThemedTable>
+    </AdminPageShell>
   );
 }

@@ -153,9 +153,7 @@ export default function AdminAnotherHotels() {
     <div className="p-4">
       {/* Header */}
       <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium">Manage Another Hotel</span>
-        </div>
+        <span className="text-sm font-medium">Manage Another Hotel</span>
         <Button 
           size="sm" 
           variant="outline"
@@ -164,6 +162,11 @@ export default function AdminAnotherHotels() {
         >
           Add Another Hotel
         </Button>
+      </div>
+
+      {/* Search Header */}
+      <div className="bg-[#8B1538] text-white px-4 py-1">
+        <span className="text-xs font-medium">Search</span>
       </div>
 
       {/* Search Filter Section */}
