@@ -21,6 +21,7 @@ export default function BookingDetails() {
   const [vehicleBookings, setVehicleBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPrint, setShowPrint] = useState(false);
+  const [showVoucher, setShowVoucher] = useState(false);
 
   useEffect(() => {
     fetchBookingDetails();
