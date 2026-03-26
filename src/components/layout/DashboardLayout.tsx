@@ -111,6 +111,8 @@ const menuItems: MenuItem[] = [
   { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
   { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
   { title: "Reports", url: "/purchase/reports", menuKey: "purchase_reports" },
+  { title: "Quotes", url: "/quotes", menuKey: "quotes" },
+  { title: "Change Password", url: "/change-password", menuKey: "change_password" },
 ];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
