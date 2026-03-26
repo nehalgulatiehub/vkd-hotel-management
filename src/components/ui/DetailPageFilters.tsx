@@ -89,7 +89,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("id, first_name, last_name").order("first_name");
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("first_name");
     setUsers(data || []);
   };
 
