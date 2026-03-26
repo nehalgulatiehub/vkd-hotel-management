@@ -175,14 +175,14 @@ export default function Enquiries() {
       adults: formData.adults,
       children: formData.children,
       notes: formData.notes,
-      special_requests: formData.special_requests || null,
+      special_requests: formData.notes || null,
       status: "on_hold"
     };
 
     if (editingEnquiryId) {
       const { error } = await supabase
         .from("enquiries")
-        .update(enquiryData)
+        .update(enquiryData as any)
         .eq("id", editingEnquiryId);
 
       if (error) {
@@ -196,7 +196,7 @@ export default function Enquiries() {
     } else {
       const { error } = await supabase
         .from("enquiries")
-        .insert([enquiryData]);
+        .insert([enquiryData] as any);
 
       if (error) {
         toast.error("Failed to create enquiry");
