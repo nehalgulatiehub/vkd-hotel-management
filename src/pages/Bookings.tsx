@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
 import { useAuthContext } from "@/contexts/AuthContext";
 
@@ -130,6 +131,7 @@ export default function Bookings() {
   const [cancellationPaymentMode, setCancellationPaymentMode] = useState("");
   const [cancellationChequeNo, setCancellationChequeNo] = useState("");
   const [printBookingId, setPrintBookingId] = useState<string | null>(null);
+  const [voucherBookingId, setVoucherBookingId] = useState<string | null>(null);
   const [cities, setCities] = useState<any[]>([]);
   
   // Filter states
@@ -2640,6 +2642,14 @@ export default function Bookings() {
                                   size="sm" 
                                   variant="link" 
                                   className="h-auto p-0 text-xs text-primary"
+                                  onClick={() => setVoucherBookingId(booking.id)}
+                                >
+                                  Booking Voucher
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-primary"
                                   onClick={() => handleViewPayment(booking)}
                                 >
                                   View Payment
@@ -3219,6 +3229,11 @@ export default function Bookings() {
 
       {/* Print Receipt - Hidden on screen, visible when printing */}
       {printBookingId && <BookingReceipt bookingId={printBookingId} />}
+
+      {/* Booking Confirmation Voucher */}
+      {voucherBookingId && (
+        <BookingConfirmationVoucher bookingId={voucherBookingId} onClose={() => setVoucherBookingId(null)} />
+      )}
     </div>
   );
 }
