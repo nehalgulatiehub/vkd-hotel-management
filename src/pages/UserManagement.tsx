@@ -433,11 +433,21 @@ export default function UserManagement() {
     }
     setResettingPassword(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("No active session. Please sign in again.");
+      }
+
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           action: 'reset-password',
           userId: selectedUser.id,
           newPassword: resetPasswordValue,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -453,9 +463,7 @@ export default function UserManagement() {
             try {
               const errorText = await errorContext.text();
               errorMessage = errorText || errorMessage;
-            } catch {
-              // Ignore parsing errors and keep the original message
-            }
+            } catch {}
           }
         }
 
