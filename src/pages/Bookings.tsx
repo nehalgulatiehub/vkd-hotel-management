@@ -2642,6 +2642,14 @@ export default function Bookings() {
                                   size="sm" 
                                   variant="link" 
                                   className="h-auto p-0 text-xs text-primary"
+                                  onClick={() => setVoucherBookingId(booking.id)}
+                                >
+                                  Booking Voucher
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  className="h-auto p-0 text-xs text-primary"
                                   onClick={() => handleViewPayment(booking)}
                                 >
                                   View Payment
