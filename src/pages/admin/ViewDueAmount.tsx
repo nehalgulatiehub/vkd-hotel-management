@@ -316,7 +316,7 @@ export default function ViewDueAmount() {
               <span className="text-[11px] text-muted-foreground">User :</span>
               <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] rounded-sm">
                 <option value="">--Select--</option>
-                {profiles.map(p => <option key={p.id} value={p.id}>{p.first_name || p.username || 'User'} {p.last_name || ''}</option>)}
+                {profiles.map(p => <option key={p.id} value={p.id}>{p.username || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown'}</option>)}
               </select>
             </div>
           </div>

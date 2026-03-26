@@ -89,6 +89,7 @@ export default function Bookings() {
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
   // Multiple another hotels state
@@ -233,7 +234,13 @@ export default function Bookings() {
     fetchTransporters();
     fetchBookings();
     fetchCities();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
+    setUsers(data || []);
+  };
 
   const fetchCities = async () => {
     const { data, error } = await supabase
@@ -2456,7 +2463,11 @@ export default function Bookings() {
                     className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
                   >
                     <option value="">--Select--</option>
-                    <option value="all">All Users</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown'}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

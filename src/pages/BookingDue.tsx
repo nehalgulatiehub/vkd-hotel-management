@@ -14,6 +14,7 @@ export default function BookingDue() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [filterRooms, setFilterRooms] = useState<any[]>([]);
   
   // Dialog states
@@ -55,11 +56,17 @@ export default function BookingDue() {
     fetchBookingsWithDue();
     fetchAgents();
     fetchOwnHotels();
+    fetchUsers();
   }, []);
 
   const fetchAgents = async () => {
     const { data } = await supabase.from("agents").select("*").order("name");
     setAgents(data || []);
+  };
+
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
+    setUsers(data || []);
   };
 
   const fetchOwnHotels = async () => {
@@ -411,7 +418,11 @@ export default function BookingDue() {
                 className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
               >
                 <option value="">--Select--</option>
-                <option value="all">All Users</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown'}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
