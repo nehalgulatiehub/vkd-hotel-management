@@ -64,6 +64,11 @@ export default function BookingDue() {
     setAgents(data || []);
   };
 
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
+    setUsers(data || []);
+  };
+
   const fetchOwnHotels = async () => {
     const { data } = await supabase.from("own_hotels").select("*").order("name");
     setOwnHotels(data || []);

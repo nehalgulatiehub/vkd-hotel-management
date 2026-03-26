@@ -237,6 +237,11 @@ export default function Bookings() {
     fetchUsers();
   }, []);
 
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
+    setUsers(data || []);
+  };
+
   const fetchCities = async () => {
     const { data, error } = await supabase
       .from("cities")
