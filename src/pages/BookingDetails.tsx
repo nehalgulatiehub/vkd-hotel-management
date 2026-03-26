@@ -144,10 +144,16 @@ export default function BookingDetails() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Bookings
           </Button>
-          <Button onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Print
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowVoucher(true)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Booking Voucher
+            </Button>
+            <Button onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+          </div>
         </div>
 
         {/* Main Booking Information */}
