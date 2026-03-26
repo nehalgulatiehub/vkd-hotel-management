@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Upload, Building2 } from "lucide-react";
+import { Save, Upload, Building2, Eye, EyeOff } from "lucide-react";
 
 interface CompanySettings {
   id: string;
