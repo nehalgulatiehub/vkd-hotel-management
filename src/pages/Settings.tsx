@@ -28,6 +28,7 @@ interface CompanySettings {
 }
 
 export default function Settings() {
+  const [activeTab, setActiveTab] = useState<"settings" | "change-password">("settings");
   const [settings, setSettings] = useState<CompanySettings>({
     id: '',
     company_name: '',
@@ -46,6 +47,9 @@ export default function Settings() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({ newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
     fetchSettings();
