@@ -30,6 +30,24 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       setBooking(bookingRes.data);
       setHotelBookings(hotelRes.data || []);
       setCompanySettings(settingsRes.data);
+
+      // Resolve room_type UUIDs to room names
+      const roomTypeIds = (hotelRes.data || [])
+        .map((hb: any) => hb.room_type)
+        .filter(Boolean);
+      if (roomTypeIds.length > 0) {
+        const { data: roomsData } = await supabase
+          .from("rooms")
+          .select("id, room_type, room_number")
+          .in("id", roomTypeIds);
+        if (roomsData) {
+          const map: Record<string, string> = {};
+          roomsData.forEach((r: any) => {
+            map[r.id] = r.room_type || r.room_number;
+          });
+          setRoomNamesMap(map);
+        }
+      }
     } catch (error) {
       console.error("Error fetching voucher data:", error);
     } finally {
