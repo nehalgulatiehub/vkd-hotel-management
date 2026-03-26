@@ -11,6 +11,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
   const [booking, setBooking] = useState<any>(null);
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const [companySettings, setCompanySettings] = useState<any>(null);
+  const [roomNamesMap, setRoomNamesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const voucherRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +30,24 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       setBooking(bookingRes.data);
       setHotelBookings(hotelRes.data || []);
       setCompanySettings(settingsRes.data);
+
+      // Resolve room_type UUIDs to room names
+      const roomTypeIds = (hotelRes.data || [])
+        .map((hb: any) => hb.room_type)
+        .filter(Boolean);
+      if (roomTypeIds.length > 0) {
+        const { data: roomsData } = await supabase
+          .from("rooms")
+          .select("id, room_type, room_number")
+          .in("id", roomTypeIds);
+        if (roomsData) {
+          const map: Record<string, string> = {};
+          roomsData.forEach((r: any) => {
+            map[r.id] = r.room_type || r.room_number;
+          });
+          setRoomNamesMap(map);
+        }
+      }
     } catch (error) {
       console.error("Error fetching voucher data:", error);
     } finally {
@@ -54,7 +73,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
   const hotelName = hotelBookings[0]?.own_hotels?.name || hotelBookings[0]?.another_hotels?.name || companyName;
   const numberOfRooms = hotelBookings.reduce((sum, hb) => sum + (hb.number_of_rooms || 0), 0);
-  const roomType = hotelBookings.map(hb => hb.room_type).filter(Boolean).join(", ") || "-";
+  const roomType = hotelBookings.map(hb => hb.room_type ? (roomNamesMap[hb.room_type] || hb.room_type) : null).filter(Boolean).join(", ") || "-";
 
   return (
     <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:block" id="voucher-container">
