@@ -496,7 +496,6 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
               </div>
             </div>
           </div>
-        </div>
 
         {/* Table Section */}
         {loading ? (
@@ -605,7 +604,6 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
             </div>
           </div>
         )}
-      </main>
 
       <AdminViewPaymentDialog
         open={showPaymentDialog}
