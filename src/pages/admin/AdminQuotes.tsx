@@ -14,6 +14,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuoteItem {
   id: string;
@@ -37,36 +38,46 @@ export default function AdminQuotes() {
 
   const canManage = isAdmin() || isAccount();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("admin_quotes");
-    if (stored) {
-      setQuotes(JSON.parse(stored));
+  const fetchQuotes = async () => {
+    const { data, error } = await supabase
+      .from("quotes")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching quotes:", error);
+    } else {
+      setQuotes(data || []);
     }
-  }, []);
-
-  const saveQuotes = (items: QuoteItem[]) => {
-    localStorage.setItem("admin_quotes", JSON.stringify(items));
-    setQuotes(items);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchQuotes();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingQuote) {
-      const updated = quotes.map((q) =>
-        q.id === editingQuote.id ? { ...q, ...formData } : q
-      );
-      saveQuotes(updated);
+      const { error } = await supabase
+        .from("quotes")
+        .update({ text: formData.text, author: formData.author })
+        .eq("id", editingQuote.id);
+      if (error) {
+        toast.error("Failed to update quote");
+        return;
+      }
       toast.success("Quote updated successfully");
     } else {
-      const newItem: QuoteItem = {
-        id: crypto.randomUUID(),
-        ...formData,
-        created_at: new Date().toISOString(),
-      };
-      saveQuotes([newItem, ...quotes]);
+      const { error } = await supabase
+        .from("quotes")
+        .insert({ text: formData.text, author: formData.author });
+      if (error) {
+        toast.error("Failed to add quote");
+        return;
+      }
       toast.success("Quote added successfully");
     }
     resetForm();
+    fetchQuotes();
   };
 
   const handleEdit = (item: QuoteItem) => {
@@ -75,10 +86,15 @@ export default function AdminQuotes() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this quote?")) return;
-    saveQuotes(quotes.filter((q) => q.id !== id));
+    const { error } = await supabase.from("quotes").delete().eq("id", id);
+    if (error) {
+      toast.error("Failed to delete quote");
+      return;
+    }
     toast.success("Quote deleted successfully");
+    fetchQuotes();
   };
 
   const resetForm = () => {
@@ -89,7 +105,7 @@ export default function AdminQuotes() {
 
   const filteredQuotes = quotes.filter((item) =>
     item.text.toLowerCase().includes(search.toLowerCase()) ||
-    item.author.toLowerCase().includes(search.toLowerCase())
+    (item.author || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredQuotes);
