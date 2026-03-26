@@ -89,6 +89,7 @@ export default function Bookings() {
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
   // Multiple another hotels state

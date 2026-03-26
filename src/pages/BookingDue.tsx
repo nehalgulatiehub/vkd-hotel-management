@@ -14,6 +14,7 @@ export default function BookingDue() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [filterRooms, setFilterRooms] = useState<any[]>([]);
   
   // Dialog states
