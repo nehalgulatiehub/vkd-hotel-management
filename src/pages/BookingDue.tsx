@@ -312,7 +312,9 @@ export default function BookingDue() {
         </div>
 
         {/* Compact Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
+        <div className="mb-3 border border-border">
+              <div className="bg-[#8B1538] text-white px-3 py-1.5 text-xs font-semibold">Search</div>
+              <div className="bg-muted/50">
           {/* Row 1: Dates and Search with Date */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
             <div className="flex items-center gap-1">
