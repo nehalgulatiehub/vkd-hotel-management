@@ -365,16 +365,15 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
   const hotelFilterLabel = serviceLabel || "Hotel";
 
   return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader title={title} />
-      <main className="p-3 space-y-3">
-        {/* Search Filter Section */}
-        <div className="border border-[#c99] rounded">
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ backgroundColor: "#1e6e99" }}>
-            <span className="text-white text-xs font-bold">Search</span>
-            <button onClick={handleViewAll} className="text-white text-xs underline hover:no-underline">View All Records</button>
-          </div>
-          <div className="p-3 space-y-2 bg-background">
+    <div className="p-4">
+      {/* Blue Header */}
+      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+        <span className="text-sm font-medium">{title}</span>
+        <button onClick={handleViewAll} className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs px-3 rounded">View All Records</button>
+      </div>
+      {/* Maroon Search Header */}
+      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3 space-y-2">
             {/* Row 1: From/To dates, Search with Date */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
               <div className="flex items-center gap-1">

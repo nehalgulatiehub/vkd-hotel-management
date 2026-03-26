@@ -206,39 +206,16 @@ export default function ViewSafariDue() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen">
-        <AdminHeader title="Safari Due Amount" />
-        <main className="p-4">
-          <Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card>
-        </main>
-      </div>
-    );
-  }
-
-  if (!canManage) {
-    return (
-      <div className="min-h-screen">
-        <AdminHeader title="Access Denied" />
-        <main className="p-4">
-          <Card><CardContent className="py-8 text-center text-muted-foreground">Access denied.</CardContent></Card>
-        </main>
-      </div>
-    );
-  }
+  if (authLoading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+  if (!canManage) return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
 
   return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader title="Safari Due Amount" />
-      <main className="p-4">
-        {/* Blue Header Bar */}
-        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Safari Due Amount</span>
-          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/admin/safari-details")}>
-            View All Records
-          </Button>
-        </div>
+    <div className="p-4">
+      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+        <span className="text-sm font-medium">Safari Due Amount</span>
+        <Button variant="outline" className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs" onClick={() => navigate("/admin/safari-details")}>View All Records</Button>
+      </div>
+      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
 
         {/* Compact Filter Section */}
         <div className="mb-3 border border-border bg-muted/50">
