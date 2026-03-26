@@ -172,6 +172,7 @@ export default function ViewDelhiManaliDue() {
             </button>
           </div>
         </div>
+              </div>
 
         {/* Table */}
         <Card>

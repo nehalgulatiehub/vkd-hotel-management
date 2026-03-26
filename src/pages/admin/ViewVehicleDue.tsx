@@ -138,6 +138,7 @@ export default function ViewVehicleDue() {
             </button>
           </div>
         </div>
+              </div>
 
         {/* Table */}
         <Card>

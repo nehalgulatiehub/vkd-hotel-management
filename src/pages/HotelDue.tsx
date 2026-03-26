@@ -303,6 +303,7 @@ const fetchHotels = async () => {
             <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
           </div>
         </div>
+              </div>
 
         {/* Main Table */}
         <Card>

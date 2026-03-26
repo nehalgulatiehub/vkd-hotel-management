@@ -156,6 +156,7 @@ export default function Hotels() {
             </button>
           </div>
         </div>
+              </div>
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 mb-3">
