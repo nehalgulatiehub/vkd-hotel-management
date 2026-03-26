@@ -175,7 +175,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
             <span className={labelClass}>User :</span>
             <select className={`${selectClass} w-24`} value={filters.user} onChange={(e) => updateFilter("user", e.target.value)}>
               <option value="">--Select--</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}
+              {users.map(u => <option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>)}
             </select>
           </div>
         )}
@@ -188,7 +188,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
             <span className={labelClass}>User</span>
             <select className={`${selectClass} w-24`} value={filters.user} onChange={(e) => updateFilter("user", e.target.value)}>
               <option value="">--Select--</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}
+              {users.map(u => <option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>)}
             </select>
           </div>
         )}
