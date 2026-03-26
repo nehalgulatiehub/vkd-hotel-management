@@ -28,6 +28,7 @@ import Refunds from "./pages/Refunds";
 import Settings from "./pages/Settings";
 import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
+import Quotes from "./pages/Quotes";
 import ExportCities from "./pages/ExportCities";
 import ExportAgents from "./pages/ExportAgents";
 import ExportTransporters from "./pages/ExportTransporters";
@@ -549,6 +550,14 @@ const App = () => (
             element={
               <DashboardLayout>
                 <ChangePassword />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/quotes"
+            element={
+              <DashboardLayout>
+                <Quotes />
               </DashboardLayout>
             }
           />
