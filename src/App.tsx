@@ -721,6 +721,15 @@ const App = () => (
           <Route path="/admin/invoices" element={<AdminLayout><AdminInvoiceList /></AdminLayout>} />
           <Route path="/admin/invoice-templates" element={<AdminLayout><AdminInvoiceTemplates /></AdminLayout>} />
           
+          {/* Admin Restaurant Routes */}
+          <Route path="/admin/restaurant/tables" element={<AdminLayout><RestaurantTables /></AdminLayout>} />
+          <Route path="/admin/restaurant/menu" element={<AdminLayout><FoodMenu /></AdminLayout>} />
+          <Route path="/admin/restaurant/pos" element={<AdminLayout><RestaurantPOS /></AdminLayout>} />
+          <Route path="/admin/restaurant/orders" element={<AdminLayout><RestaurantOrders /></AdminLayout>} />
+          <Route path="/admin/restaurant/invoices" element={<AdminLayout><RestaurantOrders /></AdminLayout>} />
+          <Route path="/admin/restaurant/invoice/:orderId" element={<AdminLayout><RestaurantInvoice /></AdminLayout>} />
+          <Route path="/admin/restaurant/reports" element={<AdminLayout><RestaurantReports /></AdminLayout>} />
+          
           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
           
