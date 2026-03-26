@@ -11,6 +11,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
   const [booking, setBooking] = useState<any>(null);
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const [companySettings, setCompanySettings] = useState<any>(null);
+  const [roomNamesMap, setRoomNamesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const voucherRef = useRef<HTMLDivElement>(null);
 
