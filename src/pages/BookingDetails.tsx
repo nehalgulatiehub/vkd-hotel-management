@@ -5,8 +5,9 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, FileText } from "lucide-react";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 
 export default function BookingDetails() {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export default function BookingDetails() {
   const [vehicleBookings, setVehicleBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPrint, setShowPrint] = useState(false);
+  const [showVoucher, setShowVoucher] = useState(false);
 
   useEffect(() => {
     fetchBookingDetails();
@@ -142,10 +144,16 @@ export default function BookingDetails() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Bookings
           </Button>
-          <Button onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Print
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowVoucher(true)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Booking Voucher
+            </Button>
+            <Button onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+          </div>
         </div>
 
         {/* Main Booking Information */}
@@ -395,6 +403,11 @@ export default function BookingDetails() {
       
       {/* Print Receipt */}
       {showPrint && id && <BookingReceipt bookingId={id} />}
+      
+      {/* Booking Confirmation Voucher */}
+      {showVoucher && id && (
+        <BookingConfirmationVoucher bookingId={id} onClose={() => setShowVoucher(false)} />
+      )}
     </div>
   );
 }
