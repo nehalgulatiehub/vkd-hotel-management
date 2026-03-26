@@ -241,9 +241,7 @@ export default function ViewDueAmount() {
         </div>
 
         {/* Compact Filter Section */}
-        <div className="mb-3 border border-border">
-              <div className="bg-[#8B1538] text-white px-3 py-1.5 text-xs font-semibold">Search</div>
-              <div className="bg-muted/50">
+        <div className="mb-3 border border-border bg-muted/50">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-muted-foreground">From :</span>
@@ -339,7 +337,6 @@ export default function ViewDueAmount() {
             <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
           </div>
         </div>
-              </div>
 
         {/* Main Table */}
         <Card>

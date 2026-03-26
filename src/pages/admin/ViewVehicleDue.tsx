@@ -116,9 +116,7 @@ export default function ViewVehicleDue() {
         </div>
 
         {/* Filter Section */}
-        <div className="mb-3 border border-border">
-              <div className="bg-[#8B1538] text-white px-3 py-1.5 text-xs font-semibold">Search</div>
-              <div className="bg-muted/50">
+        <div className="mb-3 border border-border bg-muted/50">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5">
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-muted-foreground">Transporter :</span>
@@ -138,7 +136,6 @@ export default function ViewVehicleDue() {
             </button>
           </div>
         </div>
-              </div>
 
         {/* Table */}
         <Card>

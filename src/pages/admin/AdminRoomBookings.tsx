@@ -307,11 +307,12 @@ export default function AdminRoomBookings() {
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="border border-border">
-        <div className="bg-[#8B1538] text-white px-3 py-1.5 text-xs font-semibold">Search</div>
+      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+        <span className="text-sm font-medium">View Room Booking</span>
+      </div>
 
-        {/* Search Filter Section */}
-        <div className="bg-[#F5E6E0] p-3">
+      {/* Search Filter Section */}
+      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3">
         
         <div className="flex flex-wrap items-center gap-4 text-xs">
           {/* Booking From */}
@@ -403,7 +404,6 @@ export default function AdminRoomBookings() {
             {loading ? "..." : "Search"}
           </Button>
         </div>
-      </div>
       </div>
 
       {/* Date Bookings Table */}
