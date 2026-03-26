@@ -404,6 +404,7 @@ export default function AdminRoomBookings() {
           </Button>
         </div>
       </div>
+      </div>
 
       {/* Date Bookings Table */}
       <div className="border border-t-0 border-gray-300 overflow-x-auto">
