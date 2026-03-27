@@ -592,7 +592,7 @@ const App = () => (
           {/* Admin Panel Routes */}
           <Route path="/admin/login" element={<AdminAuth />} />
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-          <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
+          <Route path="/admin/users" element={<AdminLayout><AdminUserList /></AdminLayout>} />
           <Route path="/admin/approvals" element={<AdminLayout><PaymentApprovals /></AdminLayout>} />
           <Route path="/admin/cities" element={<AdminLayout><AdminCities /></AdminLayout>} />
           <Route path="/admin/cities/add" element={<AdminLayout><AdminAddCity /></AdminLayout>} />
