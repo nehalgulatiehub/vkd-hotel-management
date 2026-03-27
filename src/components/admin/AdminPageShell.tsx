@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/TablePagination";
 
 interface ActionButton {
@@ -23,43 +22,81 @@ interface AdminPageShellProps {
   };
 }
 
+const MAROON = "#b44a50";
+const MAROON_LIGHT = "#c47a7e";
+const ROW_ALT = "#f6f0f0";
+
 export function AdminPageShell({ title, actions, filterSection, children, pagination }: AdminPageShellProps) {
   return (
-    <div className="p-4">
-      {/* Blue Header */}
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
-        <span className="text-sm font-medium">{title}</span>
-        {actions && actions.length > 0 && (
-          <div className="flex gap-2">
-            {actions.map((action, i) => (
-              <Button
-                key={i}
-                size="sm"
-                variant="outline"
-                className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs"
-                onClick={action.onClick}
-              >
-                {action.label}
-              </Button>
-            ))}
-          </div>
-        )}
+    <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+      {/* Page Title */}
+      <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>
+        📋 {title}
       </div>
 
       {/* Search/Filter Section */}
       {filterSection && (
-        <>
-          <div className="bg-[#8B1538] text-white px-4 py-1">
-            <span className="text-xs font-medium">Search</span>
+        <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
+          {/* Search header bar */}
+          <div style={{
+            backgroundColor: MAROON,
+            color: "#fff",
+            padding: "4px 10px",
+            fontSize: 11,
+            fontWeight: "bold",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <span>Search</span>
+            {actions && actions.length > 0 && (
+              <div style={{ display: "flex", gap: 6 }}>
+                {actions.map((action, i) => (
+                  <span
+                    key={i}
+                    onClick={action.onClick}
+                    style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}
+                  >
+                    {action.label}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3">
+          {/* Filter content */}
+          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc" }}>
             {filterSection}
           </div>
-        </>
+        </div>
+      )}
+
+      {/* If no filter, show actions in a simple bar */}
+      {!filterSection && actions && actions.length > 0 && (
+        <div style={{
+          backgroundColor: MAROON,
+          color: "#fff",
+          padding: "4px 10px",
+          fontSize: 11,
+          fontWeight: "bold",
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: 6
+        }}>
+          {actions.map((action, i) => (
+            <span
+              key={i}
+              onClick={action.onClick}
+              style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}
+            >
+              {action.label}
+            </span>
+          ))}
+        </div>
       )}
 
       {/* Table */}
-      <div className="border border-t-0 border-gray-300 overflow-x-auto">
+      <div style={{ border: "1px solid #ccc", borderTop: filterSection ? "none" : "1px solid #ccc", overflowX: "auto" }}>
         {children}
       </div>
 
@@ -78,22 +115,36 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
   );
 }
 
-/* Reusable themed table sub-components */
+/* Reusable themed table sub-components matching screenshot exactly */
 export function ThemedTable({ children }: { children: ReactNode }) {
-  return <table className="w-full text-xs">{children}</table>;
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      {children}
+    </table>
+  );
 }
 
 export function ThemedTHead({ children }: { children: ReactNode }) {
   return (
     <thead>
-      <tr className="bg-[#D4A59A] text-gray-800">{children}</tr>
+      <tr style={{ backgroundColor: MAROON_LIGHT, color: "#fff", fontWeight: "bold" }}>
+        {children}
+      </tr>
     </thead>
   );
 }
 
 export function ThemedTH({ children, className = "" }: { children?: ReactNode; className?: string }) {
   return (
-    <th className={`border border-gray-400 px-2 py-1.5 text-left font-medium ${className}`}>
+    <th style={{
+      border: "1px solid #a88",
+      padding: "5px 8px",
+      textAlign: "left",
+      fontWeight: "bold",
+      fontSize: 11,
+      color: "#fff",
+      backgroundColor: MAROON_LIGHT
+    }}>
       {children}
     </th>
   );
@@ -101,7 +152,13 @@ export function ThemedTH({ children, className = "" }: { children?: ReactNode; c
 
 export function ThemedTD({ children, className = "" }: { children?: ReactNode; className?: string }) {
   return (
-    <td className={`border border-gray-300 px-2 py-1.5 ${className}`}>
+    <td style={{
+      border: "1px solid #ddd",
+      padding: "5px 8px",
+      fontSize: 11,
+      color: "#606060",
+      verticalAlign: "top"
+    }}>
       {children}
     </td>
   );
@@ -109,7 +166,7 @@ export function ThemedTD({ children, className = "" }: { children?: ReactNode; c
 
 export function ThemedTR({ children, index }: { children: ReactNode; index: number }) {
   return (
-    <tr className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-white"}>
+    <tr style={{ backgroundColor: index % 2 === 0 ? "#fff" : ROW_ALT }}>
       {children}
     </tr>
   );
@@ -118,9 +175,54 @@ export function ThemedTR({ children, index }: { children: ReactNode; index: numb
 export function ThemedEmptyRow({ colSpan, message = "No records found" }: { colSpan: number; message?: string }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="border border-gray-300 px-2 py-8 text-center text-gray-500">
+      <td colSpan={colSpan} style={{
+        border: "1px solid #ddd",
+        padding: "20px 8px",
+        textAlign: "center",
+        color: "#999",
+        fontSize: 11
+      }}>
         {message}
       </td>
     </tr>
   );
 }
+
+/* Reusable action link for table Action columns */
+export function ThemedActionLink({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <span
+      onClick={onClick}
+      style={{ color: "#c00", cursor: "pointer", fontSize: 10, display: "block" }}
+      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* Reusable filter input styling */
+export const filterSelectStyle: React.CSSProperties = {
+  border: "1px solid #999",
+  padding: "2px 4px",
+  fontSize: 11,
+  fontFamily: "Arial, Helvetica, sans-serif",
+  minWidth: 120,
+};
+
+export const filterInputStyle: React.CSSProperties = {
+  border: "1px solid #999",
+  padding: "2px 4px",
+  fontSize: 11,
+  fontFamily: "Arial, Helvetica, sans-serif",
+};
+
+export const filterButtonStyle: React.CSSProperties = {
+  border: "1px solid #888",
+  padding: "2px 12px",
+  fontSize: 11,
+  fontFamily: "Arial, Helvetica, sans-serif",
+  backgroundColor: "#f5f5f5",
+  cursor: "pointer",
+};

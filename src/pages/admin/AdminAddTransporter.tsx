@@ -91,12 +91,12 @@ export default function AdminAddTransporter() {
       <h1 className="text-xl font-bold mb-4">{isEditMode ? "Edit Transporter" : "Add Transporter"}</h1>
       
       {/* Blue Header Bar */}
-      <div className="flex justify-between items-center px-4 py-2 mb-0 rounded-t" style={{ backgroundColor: "#1e6e99" }}>
+      <div className="flex justify-between items-center px-4 py-2 mb-0 rounded-t" style={{ backgroundColor: "#b44a50" }}>
         <span className="text-white font-semibold text-sm">{isEditMode ? "Edit Transporter" : "Add Transporter"}</span>
       </div>
 
       {/* Form Card */}
-      <Card className="rounded-t-none border-t-0" style={{ backgroundColor: "#F5E6E0" }}>
+      <Card className="rounded-t-none border-t-0" style={{ backgroundColor: "#f6f0f0" }}>
         <CardContent className="pt-4">
           {/* Required fields note */}
           <div className="text-right text-red-500 text-xs mb-4">* - Required fields</div>

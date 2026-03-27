@@ -31,7 +31,7 @@ export default function AdminEmail() {
   return (
     <AdminPageShell title="Admin Email">
       <div className="p-6 max-w-md mx-auto">
-        <div className="bg-[#F5E6E0] p-6 rounded border border-gray-300">
+        <div className="bg-[#f6f0f0] p-6 rounded border border-gray-300">
           <h2 className="text-sm font-medium mb-4">Update Admin Email</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -42,7 +42,7 @@ export default function AdminEmail() {
               <Label className="text-xs">New Email</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-7 text-xs" />
             </div>
-            <Button type="submit" className="w-full h-8 text-xs bg-[#1e6e99] hover:bg-[#165a80]" disabled={loading}>
+            <Button type="submit" className="w-full h-8 text-xs bg-[#b44a50] hover:bg-[#165a80]" disabled={loading}>
               {loading ? "Updating..." : "Update Email"}
             </Button>
           </form>

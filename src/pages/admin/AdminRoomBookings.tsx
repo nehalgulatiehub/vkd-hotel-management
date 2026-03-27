@@ -307,12 +307,12 @@ export default function AdminRoomBookings() {
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
         <span className="text-sm font-medium">View Room Booking</span>
       </div>
 
       {/* Search Filter Section */}
-      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3">
+      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3">
         
         <div className="flex flex-wrap items-center gap-4 text-xs">
           {/* Booking From */}
@@ -411,7 +411,7 @@ export default function AdminRoomBookings() {
         <table className="w-full text-xs">
           <tbody>
             {dateBookings.length === 0 ? (
-              <tr className="bg-[#F5E6E0]">
+              <tr className="bg-[#f6f0f0]">
                 <td colSpan={2} className="border border-gray-300 px-3 py-8 text-center text-gray-500">
                   {loading ? "Loading..." : "Select date range and click Search to view room bookings"}
                 </td>
@@ -420,7 +420,7 @@ export default function AdminRoomBookings() {
               <>
                 {/* Date rows */}
                 {dateBookings.map((dateBooking, dateIdx) => (
-                  <tr key={`date-${dateIdx}`} className="bg-[#F5E6E0]">
+                  <tr key={`date-${dateIdx}`} className="bg-[#f6f0f0]">
                     <td className="border border-gray-300 px-3 py-2 align-top font-medium w-32">
                       {dateBooking.date}
                     </td>
@@ -447,7 +447,7 @@ export default function AdminRoomBookings() {
 
                 {/* User Bookings Section */}
                 {userBookings.map((userBooking, userIdx) => (
-                  <tr key={`user-${userIdx}`} className="bg-[#F5E6E0]">
+                  <tr key={`user-${userIdx}`} className="bg-[#f6f0f0]">
                     <td className="border border-gray-300 px-3 py-2 align-top font-medium w-32">
                       {userBooking.userName}
                     </td>

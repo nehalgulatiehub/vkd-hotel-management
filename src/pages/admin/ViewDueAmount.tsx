@@ -233,7 +233,7 @@ export default function ViewDueAmount() {
           <span>📋</span> Due Amount Booking
         </h1>
 
-        <div className="flex justify-between items-center px-4 py-2 mb-0" style={{ backgroundColor: "#1e6e99" }}>
+        <div className="flex justify-between items-center px-4 py-2 mb-0" style={{ backgroundColor: "#b44a50" }}>
           <span className="text-white font-semibold text-sm">Search</span>
           <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/admin/dashboard")}>
             View All Records
@@ -347,29 +347,29 @@ export default function ViewDueAmount() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ backgroundColor: "#D4A59A" }}>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking↕</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer Name↕</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Price</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date↕</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User↕</th>
-                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Action</th>
+                    <tr style={{ backgroundColor: "#c47a7e" }}>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Booking↕</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Customer Name↕</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Price</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Date↕</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">User↕</th>
+                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredBookings.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                        <td colSpan={8} className="border border-[#ddd] px-4 py-8 text-center text-muted-foreground">
                           No bookings with due amount found
                         </td>
                       </tr>
                     ) : (
                       filteredBookings.map((booking, index) => (
-                        <tr key={booking.id} style={{ backgroundColor: "#F5E6E0" }}>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{index + 1}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                        <tr key={booking.id} style={{ backgroundColor: "#f6f0f0" }}>
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">{index + 1}</td>
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div className="space-y-0.5">
                               <div>Booking:</div>
                               <div>{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"} - {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
@@ -378,28 +378,28 @@ export default function ViewDueAmount() {
                               <div>Price: Rs. {(booking.total_amount || 0).toLocaleString("en-IN")}/-</div>
                             </div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top text-center">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top text-center">
                             <div className="capitalize">{booking.booking_type === "agent" ? "Agent" : "Direct"}</div>
                             {booking.agents?.name && <div>{booking.agents.name}</div>}
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div className="font-medium">{booking.customer_name || "-"}</div>
                             <div className="text-muted-foreground">Contact No.: {booking.contact_no || ""}</div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div className="space-y-0.5">
                               <div>Booking Price : Rs. {(booking.total_amount || 0).toLocaleString("en-IN")} /-</div>
                               <div>Receviced Price : Rs. {(booking.paid_amount || 0).toLocaleString("en-IN")} /-</div>
                               <div>Due Price : Rs. {(booking.due_amount || 0).toLocaleString("en-IN")} /-</div>
                             </div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             {booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             {getUserName(booking.created_by)}
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 align-top">
+                          <td className="border border-[#ddd] px-3 py-2 align-top">
                             <div className="flex flex-col gap-0.5">
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>
                                 View Booking
@@ -445,12 +445,12 @@ export default function ViewDueAmount() {
       {/* View Booking Details Dialog */}
       <Dialog open={showViewDetailDialog} onOpenChange={setShowViewDetailDialog}>
         <DialogContent className="max-w-xl max-h-[80vh] overflow-auto p-0 rounded-lg">
-          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+          <div className="px-4 py-2" style={{ backgroundColor: "#b44a50" }}>
             <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
           </div>
           {selectedBooking && (
             <div className="p-4">
-              <div className="border border-gray-400 rounded" style={{ backgroundColor: "#F5E6E0" }}>
+              <div className="border border-gray-400 rounded" style={{ backgroundColor: "#f6f0f0" }}>
                 <div className="p-4 text-[12px]">
                   <table className="w-full">
                     <tbody>
@@ -554,7 +554,7 @@ export default function ViewDueAmount() {
               </div>
             </div>
           )}
-          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+          <div className="px-4 py-2" style={{ backgroundColor: "#b44a50" }}>
             <span className="text-white text-xs">&nbsp;</span>
           </div>
         </DialogContent>

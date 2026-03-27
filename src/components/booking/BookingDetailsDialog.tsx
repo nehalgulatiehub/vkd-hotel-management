@@ -187,12 +187,12 @@ export function BookingDetailsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[80vh] overflow-auto p-0 rounded-lg">
-        <DialogHeader className="px-4 py-3" style={{ backgroundColor: "#1e6e99" }}>
+        <DialogHeader className="px-4 py-3" style={{ backgroundColor: "#b44a50" }}>
           <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
         </DialogHeader>
         
         <div className="p-4">
-          <div className="border border-gray-400 rounded" style={{ backgroundColor: "#F5E6E0" }}>
+          <div className="border border-gray-400 rounded" style={{ backgroundColor: "#f6f0f0" }}>
             <div className="p-4 text-[12px]">
               <table className="w-full">
                 <tbody>
@@ -213,7 +213,7 @@ export function BookingDetailsDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+        <div className="px-4 py-2" style={{ backgroundColor: "#b44a50" }}>
           <span className="text-white text-[11px]">&nbsp;</span>
         </div>
       </DialogContent>

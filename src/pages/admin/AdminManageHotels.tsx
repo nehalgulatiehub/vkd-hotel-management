@@ -93,9 +93,9 @@ export default function AdminManageHotels() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5E6E0]">
+    <div className="min-h-screen bg-[#f6f0f0]">
       {/* Blue Header Bar */}
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between">
         <span className="text-sm font-medium">Manage Hotel</span>
         <div className="flex gap-2">
           <Button 
@@ -122,7 +122,7 @@ export default function AdminManageHotels() {
         <div className="border border-gray-300 bg-white">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#D4A59A] text-white">
+              <tr className="bg-[#c47a7e] text-white">
                 <th className="border border-gray-300 px-3 py-2 text-left font-medium">Hotel↓↑</th>
                 <th className="border border-gray-300 px-3 py-2 text-center font-medium w-[200px]">Action</th>
                 <th className="border border-gray-300 px-3 py-2 text-center font-medium w-[50px]">
@@ -135,7 +135,7 @@ export default function AdminManageHotels() {
             </thead>
             <tbody>
               {hotels.map((hotel, index) => (
-                <tr key={hotel.id} className={index % 2 === 0 ? "bg-white" : "bg-[#F5E6E0]"}>
+                <tr key={hotel.id} className={index % 2 === 0 ? "bg-white" : "bg-[#f6f0f0]"}>
                   <td className="border border-gray-300 px-3 py-2">{hotel.name}</td>
                   <td className="border border-gray-300 px-3 py-2 text-center">
                     <div className="flex items-center justify-center gap-4">
