@@ -192,7 +192,7 @@ export function BookingDetailsDialog({
         </DialogHeader>
         
         <div className="p-4">
-          <div className="border border-gray-400 rounded" style={{ backgroundColor: "#F5E6E0" }}>
+          <div className="border border-gray-400 rounded" style={{ backgroundColor: "#f6f0f0" }}>
             <div className="p-4 text-[12px]">
               <table className="w-full">
                 <tbody>

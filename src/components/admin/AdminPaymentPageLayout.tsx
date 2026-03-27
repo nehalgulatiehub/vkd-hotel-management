@@ -367,13 +367,13 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
   return (
     <div className="p-4">
       {/* Blue Header */}
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
         <span className="text-sm font-medium">{title}</span>
-        <button onClick={handleViewAll} className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs px-3 rounded">View All Records</button>
+        <button onClick={handleViewAll} className="bg-white text-[#c00] hover:bg-gray-100 h-7 text-xs px-3 rounded">View All Records</button>
       </div>
       {/* Maroon Search Header */}
-      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
-      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3 space-y-2">
+      <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3 space-y-2">
             {/* Row 1: From/To dates, Search with Date */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
               <div className="flex items-center gap-1">
@@ -503,67 +503,67 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         ) : paginatedItems.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">No {statusLabel.toLowerCase()} payments found.</div>
         ) : (
-          <div className="border border-[#c99] rounded overflow-x-auto">
+          <div className="border border-[#ddd] rounded overflow-x-auto">
             <table className="w-full border-collapse" style={{ fontSize: "11px" }}>
               <thead>
-                <tr style={{ backgroundColor: "#D4A59A" }}>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">S.No.</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Booking</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Customer Name↕</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Package↕</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Payment</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Payment Mode</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">{dateColumnLabel}</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">User↕</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Status</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-center font-bold text-xs">
+                <tr style={{ backgroundColor: "#c47a7e" }}>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">S.No.</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Booking</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Customer Name↕</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Package↕</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Payment</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Payment Mode</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">{dateColumnLabel}</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">User↕</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Status</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-center font-bold text-xs">
                     <input type="checkbox" checked={paginatedItems.length > 0 && selectedPayments.size === paginatedItems.length} onChange={e => handleSelectAll(e.target.checked)} />
                   </th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left font-bold text-xs">Action</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedItems.map((payment, index) => (
-                  <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">{startIndex + index + 1}</td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">
+                  <tr key={payment.id} style={{ backgroundColor: "#f6f0f0" }}>
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">{startIndex + index + 1}</td>
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
                       <div>Booking:</div>
                       <div>{payment.booking?.check_in_date ? format(new Date(payment.booking.check_in_date), "dd/MM/yyyy") : ""}</div>
                       <div>No. of Rooms: {payment.hotel_info?.number_of_rooms || 0}</div>
                       <div>{payment.booking?.adults || 0} Adult Children</div>
                       <div>Price: Rs. {payment.booking?.total_amount?.toLocaleString("en-IN") || 0}/-</div>
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
                       <div className="font-semibold">{payment.booking?.customer_name || "N/A"}</div>
                       <div>Contact No.: {payment.booking?.contact_no || ""}</div>
                       <div>Place : {payment.city_info?.name || payment.booking?.address || ""}</div>
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
                       <div>Agent :{payment.booking?.agent?.name || ""}</div>
                       <div>Hotel : {payment.hotel_info?.hotel_name || ""}</div>
                       <div>Room : {payment.hotel_info?.room_type || ""}</div>
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top font-medium">Rs. {payment.amount?.toLocaleString("en-IN") || 0}/-</td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top font-medium">Rs. {payment.amount?.toLocaleString("en-IN") || 0}/-</td>
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
                       <div>{payment.payment_mode || "N/A"}</div>
                       {payment.reference_number && <div>Code={payment.reference_number}</div>}
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
                       {approvalStatus === "approved"
                         ? (payment.approved_at ? format(new Date(payment.approved_at), "yyyy-MM-dd") : "N/A")
                         : (payment.payment_date ? format(new Date(payment.payment_date), "dd-MMM-yyyy") : "N/A")
                       }
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">{payment.created_by_profile?.username || payment.created_by_profile?.first_name || "N/A"}</td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">{statusLabel}</td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top text-center">
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">{payment.created_by_profile?.username || payment.created_by_profile?.first_name || "N/A"}</td>
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">{statusLabel}</td>
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top text-center">
                       <input type="checkbox" checked={selectedPayments.has(payment.id)} onChange={e => handleSelectPayment(payment.id, e.target.checked)} />
                     </td>
-                    <td className="border border-[#c99] px-2 py-2 text-xs align-top">
+                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
                       <div className="flex flex-col gap-0.5">
-                        <button className="text-[#1e6e99] hover:underline text-left" onClick={() => payment.booking?.id && handleViewBooking(payment.booking.id)}>View Booking</button>
+                        <button className="text-[#c00] hover:underline text-left" onClick={() => payment.booking?.id && handleViewBooking(payment.booking.id)}>View Booking</button>
                         {approvalStatus === "pending" && (
-                          <button className="text-[#1e6e99] hover:underline text-left" onClick={async () => {
+                          <button className="text-[#c00] hover:underline text-left" onClick={async () => {
                             if (payment.id) {
                               try {
                                 const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
@@ -576,8 +576,8 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
                             }
                           }}>Approved</button>
                         )}
-                        <button className="text-[#1e6e99] hover:underline text-left" onClick={() => payment.booking?.id && handleViewPayment(payment.booking.id)}>View Payment</button>
-                        <button className="text-[#1e6e99] hover:underline text-left" onClick={() => navigate(`/admin/refund-payments?id=${payment.booking?.id}`)}>View Refund Payment</button>
+                        <button className="text-[#c00] hover:underline text-left" onClick={() => payment.booking?.id && handleViewPayment(payment.booking.id)}>View Payment</button>
+                        <button className="text-[#c00] hover:underline text-left" onClick={() => navigate(`/admin/refund-payments?id=${payment.booking?.id}`)}>View Refund Payment</button>
                       </div>
                     </td>
                   </tr>
@@ -585,7 +585,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
               </tbody>
             </table>
 
-            <div className="flex items-center justify-between p-3 border-t border-[#c99]">
+            <div className="flex items-center justify-between p-3 border-t border-[#ddd]">
               <div className="text-xs font-medium">Total Payment: Rs. {totalPaymentAmount.toLocaleString("en-IN")}/-</div>
               <div className="flex items-center gap-3">
                 <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
@@ -619,7 +619,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
           </DialogHeader>
           {detailBooking && (
             <div className="p-4">
-              <div className="border border-gray-400 rounded" style={{ backgroundColor: "#F5E6E0" }}>
+              <div className="border border-gray-400 rounded" style={{ backgroundColor: "#f6f0f0" }}>
                 <div className="p-4 text-[12px]">
                   <table className="w-full">
                     <tbody>

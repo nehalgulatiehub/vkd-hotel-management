@@ -211,11 +211,11 @@ export default function ViewSafariDue() {
 
   return (
     <div className="p-4">
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
         <span className="text-sm font-medium">Safari Due Amount</span>
-        <Button variant="outline" className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs" onClick={() => navigate("/admin/safari-details")}>View All Records</Button>
+        <Button variant="outline" className="bg-white text-[#c00] hover:bg-gray-100 h-7 text-xs" onClick={() => navigate("/admin/safari-details")}>View All Records</Button>
       </div>
-      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
 
         {/* Compact Filter Section */}
         <div className="mb-3 border border-border bg-muted/50">
@@ -306,43 +306,43 @@ export default function ViewSafariDue() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr style={{ backgroundColor: "#D4A59A" }}>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User</th>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer Details</th>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Safari Details</th>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
-                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
+                      <tr style={{ backgroundColor: "#c47a7e" }}>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">User</th>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Customer Details</th>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Safari Details</th>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Date</th>
+                        <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredSafaris.map((safari, index) => (
-                        <tr key={safari.id} style={{ backgroundColor: "#F5E6E0" }}>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{index + 1}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                        <tr key={safari.id} style={{ backgroundColor: "#f6f0f0" }}>
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">{index + 1}</td>
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div className="capitalize">{safari.booking?.booking_type || "Direct"}</div>
                             <div className="text-muted-foreground">{safari.booking?.agents?.name || ""}</div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{getUserName((safari.booking as any)?.created_by)}</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">{getUserName((safari.booking as any)?.created_by)}</td>
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div className="font-medium">{safari.booking?.customer_name || "-"}</div>
                             {safari.booking?.address && <div className="text-muted-foreground">{safari.booking.address}</div>}
                             <div className="text-muted-foreground">Contact No.: {safari.booking?.contact_no || ""}</div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div><strong>No of Persons :</strong> {safari.number_of_persons || 1}</div>
                             <div><strong>Booking Price :</strong> Rs. {safari.total_amount?.toLocaleString("en-IN") || 0}/-</div>
                             <div><strong>Selling Price :</strong> Rs. {safari.total_amount?.toLocaleString("en-IN") || 0}/-</div>
                             <div><strong>Total Received Payment :</strong> Rs. {safari.paid_amount?.toLocaleString("en-IN") || 0}/-</div>
                             <div className="text-destructive"><strong>Due Payment :</strong> Rs. {safari.due_amount?.toLocaleString("en-IN") || 0}/-</div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
                             <div><strong>Date :</strong> {safari.booking?.created_at ? new Date(safari.booking.created_at).toLocaleDateString("en-GB") : "-"}</div>
                             <div><strong>Safari Date :</strong></div>
                             <div>{safari.safari_date ? new Date(safari.safari_date).toLocaleDateString("en-GB") : "-"}</div>
                           </td>
-                          <td className="border border-[#c99] px-3 py-2 align-top">
+                          <td className="border border-[#ddd] px-3 py-2 align-top">
                             <div className="flex flex-col gap-0.5">
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(safari)}>View Details</Button>
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => safari.booking && navigate(`/bookings/${safari.booking.id}`)}>Print Booking</Button>
@@ -391,25 +391,25 @@ export default function ViewSafariDue() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
-                <tr style={{ backgroundColor: "#D4A59A" }}>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left">Date</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left">Mode</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left">Reference</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-right">Amount</th>
-                  <th className="border border-[#c99] px-2 py-1.5 text-left">Status</th>
+                <tr style={{ backgroundColor: "#c47a7e" }}>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left">Date</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left">Mode</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left">Reference</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-right">Amount</th>
+                  <th className="border border-[#ddd] px-2 py-1.5 text-left">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {bookingPayments.length === 0 ? (
-                  <tr><td colSpan={5} className="border border-[#c99] px-2 py-4 text-center text-muted-foreground">No payments found</td></tr>
+                  <tr><td colSpan={5} className="border border-[#ddd] px-2 py-4 text-center text-muted-foreground">No payments found</td></tr>
                 ) : (
                   bookingPayments.map(payment => (
-                    <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
-                      <td className="border border-[#c99] px-2 py-1.5">{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString("en-GB") : "-"}</td>
-                      <td className="border border-[#c99] px-2 py-1.5">{payment.payment_mode || "-"}</td>
-                      <td className="border border-[#c99] px-2 py-1.5">{payment.reference_number || "-"}</td>
-                      <td className="border border-[#c99] px-2 py-1.5 text-right">Rs. {payment.amount?.toLocaleString("en-IN")}/-</td>
-                      <td className="border border-[#c99] px-2 py-1.5 capitalize">{payment.approval_status || "pending"}</td>
+                    <tr key={payment.id} style={{ backgroundColor: "#f6f0f0" }}>
+                      <td className="border border-[#ddd] px-2 py-1.5">{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString("en-GB") : "-"}</td>
+                      <td className="border border-[#ddd] px-2 py-1.5">{payment.payment_mode || "-"}</td>
+                      <td className="border border-[#ddd] px-2 py-1.5">{payment.reference_number || "-"}</td>
+                      <td className="border border-[#ddd] px-2 py-1.5 text-right">Rs. {payment.amount?.toLocaleString("en-IN")}/-</td>
+                      <td className="border border-[#ddd] px-2 py-1.5 capitalize">{payment.approval_status || "pending"}</td>
                     </tr>
                   ))
                 )}

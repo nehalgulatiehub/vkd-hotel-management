@@ -106,12 +106,12 @@ export default function ViewManaliDelhiDue() {
 
   return (
     <div className="p-4">
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
         <span className="text-sm font-medium">Due MD Transporter Payment</span>
-        <Button variant="outline" className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs" onClick={() => setSelectedTransporter("")}>View All Records</Button>
+        <Button variant="outline" className="bg-white text-[#c00] hover:bg-gray-100 h-7 text-xs" onClick={() => setSelectedTransporter("")}>View All Records</Button>
       </div>
-      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
-      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3 mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3 mb-0">
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-gray-700">Transporter :</label>
           <select value={selectedTransporter} onChange={(e) => setSelectedTransporter(e.target.value)} className="h-7 text-xs border border-gray-300 rounded px-2 bg-white min-w-[200px]">
@@ -124,7 +124,7 @@ export default function ViewManaliDelhiDue() {
         {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#D4A59A] text-gray-800">
+              <tr className="bg-[#c47a7e] text-gray-800">
                 <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">S.No.</th>
                 <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Transporter</th>
                 <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Total Paid</th>
@@ -137,7 +137,7 @@ export default function ViewManaliDelhiDue() {
               {filteredSummaries.length === 0 ? (
                 <tr><td colSpan={6} className="border border-gray-300 text-center py-8 text-gray-500">No records found.</td></tr>
               ) : filteredSummaries.map((summary, index) => (
-                <tr key={summary.transporter_id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-white"}>
+                <tr key={summary.transporter_id} className={index % 2 === 0 ? "bg-[#f6f0f0]" : "bg-white"}>
                   <td className="border border-gray-300 px-2 py-1.5">{index + 1}</td>
                   <td className="border border-gray-300 px-2 py-1.5">{summary.transporter_name}</td>
                   <td className="border border-gray-300 px-2 py-1.5">Rs {summary.total_paid.toLocaleString("en-IN")}</td>

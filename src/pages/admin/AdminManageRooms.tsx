@@ -222,9 +222,9 @@ export default function AdminManageRooms() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5E6E0]">
+    <div className="min-h-screen bg-[#f6f0f0]">
       {/* Blue Header Bar */}
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium">📋 Manage Rooms {hotel ? `- ${hotel.name}` : ""}</span>
         </div>
@@ -253,7 +253,7 @@ export default function AdminManageRooms() {
         <div className="border border-gray-300 bg-white">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#D4A59A] text-white">
+              <tr className="bg-[#c47a7e] text-white">
                 <th className="border border-gray-300 px-3 py-2 text-left font-medium">Room Type↓↑</th>
                 <th className="border border-gray-300 px-3 py-2 text-left font-medium w-[150px]">No of Room↓↑</th>
                 <th className="border border-gray-300 px-3 py-2 text-center font-medium w-[150px]">Action</th>
@@ -267,7 +267,7 @@ export default function AdminManageRooms() {
             </thead>
             <tbody>
               {rooms.map((room, index) => (
-                <tr key={room.id} className={index % 2 === 0 ? "bg-white" : "bg-[#F5E6E0]"}>
+                <tr key={room.id} className={index % 2 === 0 ? "bg-white" : "bg-[#f6f0f0]"}>
                   <td className="border border-gray-300 px-3 py-2">{room.room_number}</td>
                   <td className="border border-gray-300 px-3 py-2">{room.total_quantity}</td>
                   <td className="border border-gray-300 px-3 py-2 text-center">

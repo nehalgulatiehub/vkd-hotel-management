@@ -80,12 +80,12 @@ export default function ViewHotelDue() {
 
   return (
     <div className="p-4">
-      <div className="bg-[#1e6e99] text-white px-4 py-2 flex items-center justify-between mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
         <span className="text-sm font-medium">View Another Hotel Payment</span>
-        <button onClick={() => setHotelFilter("")} className="bg-white text-[#1e6e99] hover:bg-gray-100 h-7 text-xs px-3 rounded border-0">View All Records</button>
+        <button onClick={() => setHotelFilter("")} className="bg-white text-[#c00] hover:bg-gray-100 h-7 text-xs px-3 rounded border-0">View All Records</button>
       </div>
-      <div className="bg-[#8B1538] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
-      <div className="border border-t-0 border-gray-300 bg-[#F5E6E0] p-3 mb-0">
+      <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
+      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3 mb-0">
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-gray-700">Another Hotel :</label>
           <select value={hotelFilter} onChange={e => setHotelFilter(e.target.value)} className="h-7 text-xs border border-gray-300 rounded px-2 bg-white min-w-[200px]">
@@ -99,7 +99,7 @@ export default function ViewHotelDue() {
           <>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-[#D4A59A] text-gray-800">
+                <tr className="bg-[#c47a7e] text-gray-800">
                   <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">S.No.</th>
                   <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Date</th>
                   <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Hotel</th>
@@ -110,7 +110,7 @@ export default function ViewHotelDue() {
                 {filteredSummaries.length === 0 ? (
                   <tr><td colSpan={4} className="border border-gray-300 text-center py-8 text-gray-500">No another hotel data found</td></tr>
                 ) : filteredSummaries.map((summary, idx) => (
-                  <tr key={summary.hotel_id} className={idx % 2 === 0 ? "bg-[#F5E6E0]" : "bg-white"}>
+                  <tr key={summary.hotel_id} className={idx % 2 === 0 ? "bg-[#f6f0f0]" : "bg-white"}>
                     <td className="border border-gray-300 px-2 py-1.5">{idx + 1}</td>
                     <td className="border border-gray-300 px-2 py-1.5">{summary.latest_date ? new Date(summary.latest_date).toLocaleDateString("en-GB") : "-"}</td>
                     <td className="border border-gray-300 px-2 py-1.5 font-medium">{summary.hotel_name}</td>
@@ -120,7 +120,7 @@ export default function ViewHotelDue() {
               </tbody>
             </table>
             {filteredSummaries.length > 0 && (
-              <div className="flex items-center justify-between p-3 border-t border-gray-300 bg-[#F5E6E0]">
+              <div className="flex items-center justify-between p-3 border-t border-gray-300 bg-[#f6f0f0]">
                 <div className="text-xs font-medium">
                   Total: Rs. {filteredSummaries.reduce((s, r) => s + r.total_amount, 0).toLocaleString("en-IN")}/-
                   &nbsp;|&nbsp; Paid: Rs. {filteredSummaries.reduce((s, r) => s + r.total_paid, 0).toLocaleString("en-IN")}/-
