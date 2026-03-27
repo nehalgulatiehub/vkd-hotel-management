@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminUserActionDialogs } from "@/components/admin/AdminUserActionDialogs";
+import { ADMIN_USER_MENU_ITEMS } from "@/components/admin/adminUserMenuItems";
 
 interface UserData {
   id: string;
@@ -17,14 +18,24 @@ interface UserData {
 }
 
 export default function AdminUserList() {
-  const navigate = useNavigate();
   const { isAdmin, isAccount, loading: authLoading } = useAuthContext();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [actionUser, setActionUser] = useState<UserData | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [isMenuDialogOpen, setIsMenuDialogOpen] = useState(false);
+  const [selectedMenuKeys, setSelectedMenuKeys] = useState<string[]>([]);
+  const [loadingMenuAccess, setLoadingMenuAccess] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [resetPasswordValue, setResetPasswordValue] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   const canManage = isAdmin() || isAccount();
+  const allMenuKeys = ADMIN_USER_MENU_ITEMS.flatMap((group) => group.items.map((item) => item.key));
 
   useEffect(() => {
     if (!authLoading && canManage) fetchUsers();
@@ -94,28 +105,184 @@ export default function AdminUserList() {
   };
 
   const handleEditUser = (user: UserData) => {
+    setSelectedUser(user);
+    setNewUsername(user.username || "");
     setActionUser(null);
-    navigate("/admin/user-management");
+    setIsUsernameDialogOpen(true);
+  };
+
+  const handleUpdateUsername = async () => {
+    if (!selectedUser) return;
+
+    const sanitizedUsername = newUsername.toLowerCase().replace(/[^a-z0-9_]/g, "").trim();
+    if (!sanitizedUsername) {
+      toast.error("Username is required");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username: sanitizedUsername })
+        .eq("id", selectedUser.id);
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Username already taken");
+          return;
+        }
+
+        throw error;
+      }
+
+      toast.success("Username updated successfully");
+      setIsUsernameDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update username");
+    }
+  };
+
+  const handleManageModuleAccess = async (user: UserData) => {
+    setSelectedUser(user);
+    setSelectedMenuKeys([]);
+    setLoadingMenuAccess(true);
+    setActionUser(null);
+
+    try {
+      const { data, error } = await supabase
+        .from("user_menu_permissions")
+        .select("menu_key")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setSelectedMenuKeys((data || []).map((item) => item.menu_key));
+      setIsMenuDialogOpen(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load module access");
+    } finally {
+      setLoadingMenuAccess(false);
+    }
+  };
+
+  const toggleMenuKey = (key: string) => {
+    setSelectedMenuKeys((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]));
+  };
+
+  const handleSaveMenuPermissions = async () => {
+    if (!selectedUser) return;
+
+    try {
+      const { error: deleteError } = await supabase
+        .from("user_menu_permissions")
+        .delete()
+        .eq("user_id", selectedUser.id);
+
+      if (deleteError) throw deleteError;
+
+      if (selectedMenuKeys.length > 0) {
+        const { error: insertError } = await supabase.from("user_menu_permissions").insert(
+          selectedMenuKeys.map((menu_key) => ({
+            user_id: selectedUser.id,
+            menu_key,
+          }))
+        );
+
+        if (insertError) throw insertError;
+      }
+
+      toast.success("Module access updated successfully");
+      setIsMenuDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update module access");
+    }
   };
 
   const handleToggleStatus = async (user: UserData) => {
-    await supabase.from("profiles").update({ is_active: !user.is_active }).eq("id", user.id);
-    toast.success(user.is_active ? "User deactivated" : "User activated");
-    setActionUser(null);
-    fetchUsers();
+    try {
+      const { error } = await supabase.from("profiles").update({ is_active: !user.is_active }).eq("id", user.id);
+      if (error) throw error;
+
+      toast.success(user.is_active ? "User deactivated" : "User activated");
+      setActionUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update user status");
+    }
   };
 
-  const handleResetPassword = (user: UserData) => {
+  const handleOpenResetPassword = (user: UserData) => {
+    setSelectedUser(user);
+    setResetPasswordValue("");
+    setShowResetPassword(false);
     setActionUser(null);
-    navigate("/admin/change-password");
+    setIsResetPasswordDialogOpen(true);
   };
 
-  const handleDeleteUser = async (user: UserData) => {
-    if (!confirm(`Delete user "${user.username}"?`)) return;
-    await supabase.from("profiles").delete().eq("id", user.id);
-    toast.success("User deleted");
-    setActionUser(null);
-    fetchUsers();
+  const handleResetPassword = async () => {
+    if (!selectedUser || !resetPasswordValue) return;
+    if (resetPasswordValue.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setResettingPassword(true);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("No active session. Please sign in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: {
+          action: "reset-password",
+          userId: selectedUser.id,
+          newPassword: resetPasswordValue,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (error) {
+        let errorMessage = error.message || "Failed to reset password";
+        const errorContext = (error as Error & { context?: Response }).context;
+
+        if (errorContext) {
+          try {
+            const errorData = await errorContext.json();
+            errorMessage = errorData?.error || errorMessage;
+          } catch {
+            try {
+              const errorText = await errorContext.text();
+              errorMessage = errorText || errorMessage;
+            } catch {}
+          }
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      if (data?.error) throw new Error(data.error);
+      if (!data?.success) throw new Error("Failed to reset password");
+
+      toast.success("Password updated successfully");
+      setIsResetPasswordDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   if (authLoading || loading)
@@ -220,32 +387,65 @@ export default function AdminUserList() {
           </DialogHeader>
           <div className="flex flex-col gap-2 pt-2">
             <button
-              className="text-left text-xs px-3 py-2 hover:bg-gray-100 rounded"
+              className="text-left text-xs px-3 py-2 hover:bg-gray-100"
               onClick={() => actionUser && handleEditUser(actionUser)}
             >
-              ✏️ Edit User
+              Edit User
             </button>
             <button
-              className="text-left text-xs px-3 py-2 hover:bg-gray-100 rounded"
+              className="text-left text-xs px-3 py-2 hover:bg-gray-100"
+              onClick={() => actionUser && handleManageModuleAccess(actionUser)}
+            >
+              Manage Module Access
+            </button>
+            <button
+              className="text-left text-xs px-3 py-2 hover:bg-gray-100"
               onClick={() => actionUser && handleToggleStatus(actionUser)}
             >
-              {actionUser?.is_active ? "🚫 Deactivate" : "✅ Activate"}
+              {actionUser?.is_active ? "Deactivate User" : "Activate User"}
             </button>
             <button
-              className="text-left text-xs px-3 py-2 hover:bg-gray-100 rounded"
-              onClick={() => actionUser && handleResetPassword(actionUser)}
+              className="text-left text-xs px-3 py-2 hover:bg-gray-100"
+              onClick={() => actionUser && handleOpenResetPassword(actionUser)}
             >
-              🔑 Reset Password
-            </button>
-            <button
-              className="text-left text-xs px-3 py-2 hover:bg-gray-100 rounded text-red-600"
-              onClick={() => actionUser && handleDeleteUser(actionUser)}
-            >
-              🗑️ Delete User
+              Change Password
             </button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AdminUserActionDialogs
+        usernameDialog={{
+          open: isUsernameDialogOpen,
+          onOpenChange: setIsUsernameDialogOpen,
+          userLabel: selectedUser?.username || selectedUser?.first_name || "User",
+          username: newUsername,
+          onUsernameChange: (value) => setNewUsername(value.toLowerCase().replace(/[^a-z0-9_]/g, "")),
+          onSave: handleUpdateUsername,
+        }}
+        menuAccessDialog={{
+          open: isMenuDialogOpen,
+          onOpenChange: setIsMenuDialogOpen,
+          userLabel: selectedUser?.username || selectedUser?.first_name || "User",
+          selectedKeys: selectedMenuKeys,
+          onToggleKey: toggleMenuKey,
+          onSelectAll: () => setSelectedMenuKeys(allMenuKeys),
+          onClearAll: () => setSelectedMenuKeys([]),
+          onSave: handleSaveMenuPermissions,
+          loading: loadingMenuAccess,
+        }}
+        passwordDialog={{
+          open: isResetPasswordDialogOpen,
+          onOpenChange: setIsResetPasswordDialogOpen,
+          userLabel: selectedUser?.username || selectedUser?.first_name || "User",
+          password: resetPasswordValue,
+          showPassword: showResetPassword,
+          onPasswordChange: setResetPasswordValue,
+          onTogglePasswordVisibility: () => setShowResetPassword((prev) => !prev),
+          onSave: handleResetPassword,
+          saving: resettingPassword,
+        }}
+      />
     </div>
   );
 }
