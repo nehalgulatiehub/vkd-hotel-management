@@ -369,7 +369,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
       {/* Blue Header */}
       <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
         <span className="text-sm font-medium">{title}</span>
-        <button onClick={handleViewAll} className="bg-white text-[#c00] hover:bg-gray-100 h-7 text-xs px-3 rounded">View All Records</button>
+        <span onClick={handleViewAll} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
       </div>
       {/* Maroon Search Header */}
       <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
