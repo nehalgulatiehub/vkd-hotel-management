@@ -121,15 +121,13 @@ export default function AdminUserList() {
 
   return (
     <div className="p-4">
-      {/* Header bar - matching reference */}
-      <div className="flex items-center justify-between border border-gray-300 px-3 py-2 bg-gray-50">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">📋 Manage User</span>
-        </div>
+      {/* Header bar */}
+      <div className="flex items-center justify-between border border-gray-300 px-3 py-1.5" style={{ backgroundColor: "#f0f0f0" }}>
+        <span style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: "12px", color: "#333" }}>📋 Manage User</span>
         <Button
           variant="outline"
           size="sm"
-          className="text-xs h-7 border-gray-400"
+          className="text-xs h-6 px-3 border-gray-400 rounded-sm bg-white"
           onClick={() => navigate("/admin/user-management")}
         >
           Add User
