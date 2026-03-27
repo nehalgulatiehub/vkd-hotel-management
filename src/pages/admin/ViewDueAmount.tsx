@@ -233,7 +233,7 @@ export default function ViewDueAmount() {
           <span>📋</span> Due Amount Booking
         </h1>
 
-        <div className="flex justify-between items-center px-4 py-2 mb-0" style={{ backgroundColor: "#1e6e99" }}>
+        <div className="flex justify-between items-center px-4 py-2 mb-0" style={{ backgroundColor: "#b44a50" }}>
           <span className="text-white font-semibold text-sm">Search</span>
           <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/admin/dashboard")}>
             View All Records
@@ -445,7 +445,7 @@ export default function ViewDueAmount() {
       {/* View Booking Details Dialog */}
       <Dialog open={showViewDetailDialog} onOpenChange={setShowViewDetailDialog}>
         <DialogContent className="max-w-xl max-h-[80vh] overflow-auto p-0 rounded-lg">
-          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+          <div className="px-4 py-2" style={{ backgroundColor: "#b44a50" }}>
             <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
           </div>
           {selectedBooking && (
@@ -554,7 +554,7 @@ export default function ViewDueAmount() {
               </div>
             </div>
           )}
-          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+          <div className="px-4 py-2" style={{ backgroundColor: "#b44a50" }}>
             <span className="text-white text-xs">&nbsp;</span>
           </div>
         </DialogContent>

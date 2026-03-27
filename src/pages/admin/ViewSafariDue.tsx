@@ -381,7 +381,7 @@ export default function ViewSafariDue() {
       <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
         <DialogContent className="max-w-2xl">
           <DialogTitle>Payment History</DialogTitle>
-          <div className="p-3 rounded mb-4" style={{ backgroundColor: "#1e6e99" }}>
+          <div className="p-3 rounded mb-4" style={{ backgroundColor: "#b44a50" }}>
             <div className="flex justify-between text-white text-sm">
               <span>Total: Rs. {selectedBooking?.total_amount?.toLocaleString("en-IN") || 0}/-</span>
               <span>Received: Rs. {selectedBooking?.paid_amount?.toLocaleString("en-IN") || 0}/-</span>

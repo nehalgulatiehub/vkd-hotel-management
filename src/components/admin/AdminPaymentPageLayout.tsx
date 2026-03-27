@@ -614,7 +614,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
       {/* Full Booking Details Dialog */}
       <Dialog open={showFullDetailsDialog} onOpenChange={setShowFullDetailsDialog}>
         <DialogContent className="max-w-xl max-h-[80vh] overflow-auto p-0 rounded-lg">
-          <DialogHeader className="px-4 py-3" style={{ backgroundColor: "#1e6e99" }}>
+          <DialogHeader className="px-4 py-3" style={{ backgroundColor: "#b44a50" }}>
             <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
           </DialogHeader>
           {detailBooking && (
@@ -701,7 +701,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
               </div>
             </div>
           )}
-          <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+          <div className="px-4 py-2" style={{ backgroundColor: "#b44a50" }}>
             <span className="text-white text-[11px]">&nbsp;</span>
           </div>
         </DialogContent>

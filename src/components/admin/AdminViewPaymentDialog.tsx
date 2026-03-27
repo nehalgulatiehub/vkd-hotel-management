@@ -230,7 +230,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] p-0">
-        <DialogHeader className="p-4 border-b" style={{ backgroundColor: "#1e6e99" }}>
+        <DialogHeader className="p-4 border-b" style={{ backgroundColor: "#b44a50" }}>
           <DialogTitle className="text-white flex items-center gap-2">
             📋 View Payment
           </DialogTitle>

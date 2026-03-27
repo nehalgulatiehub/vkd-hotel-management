@@ -109,7 +109,7 @@ export default function AdminAddOwnHotel() {
       <h1 className="text-xl font-bold mb-4">{isEditMode ? "Edit Own Hotel" : "Add Own Hotel"}</h1>
       
       {/* Blue Header Bar */}
-      <div className="flex justify-between items-center px-4 py-2 mb-0 rounded-t" style={{ backgroundColor: "#1e6e99" }}>
+      <div className="flex justify-between items-center px-4 py-2 mb-0 rounded-t" style={{ backgroundColor: "#b44a50" }}>
         <span className="text-white font-semibold text-sm">{isEditMode ? "Edit Own Hotel" : "Add Own Hotel"}</span>
       </div>
 
