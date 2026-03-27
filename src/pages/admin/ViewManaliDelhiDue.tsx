@@ -124,7 +124,7 @@ export default function ViewManaliDelhiDue() {
         {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#c47a7e] text-gray-800">
+              <tr className="bg-[#c47a7e] text-white">
                 <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">S.No.</th>
                 <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Transporter</th>
                 <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Total Paid</th>

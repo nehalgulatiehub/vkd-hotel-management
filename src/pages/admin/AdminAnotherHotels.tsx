@@ -247,7 +247,7 @@ export default function AdminAnotherHotels() {
       <div className="border border-t-0 border-gray-300 overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#c47a7e] text-gray-800">
+            <tr className="bg-[#c47a7e] text-white">
               <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Hotel Name</th>
               <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Room</th>
               <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Contact Person/Email</th>

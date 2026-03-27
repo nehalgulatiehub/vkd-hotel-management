@@ -373,7 +373,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
       </div>
       {/* Maroon Search Header */}
       <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
-      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3 space-y-2">
+      <div className="border border-t-0 border-gray-300 bg-white p-3 space-y-2">
             {/* Row 1: From/To dates, Search with Date */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
               <div className="flex items-center gap-1">
@@ -506,7 +506,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
           <div className="border border-[#ddd] rounded overflow-x-auto">
             <table className="w-full border-collapse" style={{ fontSize: "11px" }}>
               <thead>
-                <tr style={{ backgroundColor: "#c47a7e" }}>
+                <tr style={{ backgroundColor: "#c47a7e", color: "#fff" }}>
                   <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">S.No.</th>
                   <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Booking</th>
                   <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Customer Name↕</th>
