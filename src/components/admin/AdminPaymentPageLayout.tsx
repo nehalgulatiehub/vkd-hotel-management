@@ -364,240 +364,197 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
   const statusLabel = approvalStatus === "approved" ? "Approved" : "Pending";
   const hotelFilterLabel = serviceLabel || "Hotel";
 
+  const sty = { border: "1px solid #999", padding: "2px 4px", fontSize: 11 } as React.CSSProperties;
+
   return (
-    <div className="p-4">
-      {/* Blue Header */}
-      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
-        <span className="text-sm font-medium">{title}</span>
+    <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+      <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 {title}</div>
+
+      {/* Maroon Search Header */}
+      <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>Search</span>
         <span onClick={handleViewAll} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
       </div>
-      {/* Maroon Search Header */}
-      <div className="bg-[#b44a50] text-white px-4 py-1"><span className="text-xs font-medium">Search</span></div>
-      <div className="border border-t-0 border-gray-300 bg-white p-3 space-y-2">
-            {/* Row 1: From/To dates, Search with Date */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
-              <div className="flex items-center gap-1">
-                <span>From :</span>
-                <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  {months.map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}
-                </select>
-                <select value={fromDay} onChange={e => setFromDay(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  {days.map(d => <option key={d} value={String(d)}>{d}</option>)}
-                </select>
-                <input type="text" value={fromYear} onChange={e => setFromYear(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-14" />
-              </div>
-              <div className="flex items-center gap-1">
-                <span>To :</span>
-                <select value={toMonth} onChange={e => setToMonth(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  {months.map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}
-                </select>
-                <select value={toDay} onChange={e => setToDay(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  {days.map(d => <option key={d} value={String(d)}>{d}</option>)}
-                </select>
-                <input type="text" value={toYear} onChange={e => setToYear(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-14" />
-              </div>
-              <div className="flex items-center gap-2 ml-auto">
-                <span>Search with Date :</span>
-                <label className="flex items-center gap-0.5"><input type="radio" name="searchDate" checked={searchWithDate === "yes"} onChange={() => setSearchWithDate("yes")} /> YES</label>
-                <label className="flex items-center gap-0.5"><input type="radio" name="searchDate" checked={searchWithDate === "no"} onChange={() => setSearchWithDate("no")} /> NO</label>
-              </div>
-            </div>
 
-            {/* Row 2: Type, Agent, Hotel, Room, Reference, User */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
-              <div className="flex items-center gap-1">
-                <span>Type :</span>
-                <select value={filterType} onChange={e => setFilterType(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  <option value="all">--Select--</option>
-                  <option value="agent">Agent</option>
-                  <option value="direct">Direct</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>Agent Name :</span>
-                <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  <option value="all">--Select--</option>
-                  {agents.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-1 ml-auto">
-                <span>Reference :</span>
-                <input type="text" value={filterReference} onChange={e => setFilterReference(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-28" />
-              </div>
+      <div style={{ border: "1px solid #ccc", borderTop: "none", padding: "8px 10px", backgroundColor: "#fff" }}>
+            {/* Row 1 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+              <label style={{ fontSize: 11 }}>From :</label>
+              <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={sty}>
+                {months.map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}
+              </select>
+              <select value={fromDay} onChange={e => setFromDay(e.target.value)} style={sty}>
+                {days.map(d => <option key={d} value={String(d)}>{d}</option>)}
+              </select>
+              <input type="text" value={fromYear} onChange={e => setFromYear(e.target.value)} style={{ ...sty, width: 45 }} />
+              <label style={{ fontSize: 11, marginLeft: 16 }}>To :</label>
+              <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={sty}>
+                {months.map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}
+              </select>
+              <select value={toDay} onChange={e => setToDay(e.target.value)} style={sty}>
+                {days.map(d => <option key={d} value={String(d)}>{d}</option>)}
+              </select>
+              <input type="text" value={toYear} onChange={e => setToYear(e.target.value)} style={{ ...sty, width: 45 }} />
+              <label style={{ fontSize: 11, marginLeft: 16 }}>Search with Date :</label>
+              <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="searchDate" checked={searchWithDate === "yes"} onChange={() => setSearchWithDate("yes")} style={{ width: 12, height: 12 }} /> YES</label>
+              <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="searchDate" checked={searchWithDate === "no"} onChange={() => setSearchWithDate("no")} style={{ width: 12, height: 12 }} /> NO</label>
             </div>
-
-            {/* Row 3: Hotel, Room, User, Payment Place */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
-              <div className="flex items-center gap-1">
-                <span>{hotelFilterLabel} :</span>
-                <select value={filterHotel} onChange={e => setFilterHotel(e.target.value)} className="border rounded px-1 py-0.5 text-xs min-w-[120px]">
-                  <option value="all">--Select--</option>
-                  {hotels.map(h => <option key={h.id} value={h.name}>{h.name}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>Room :</span>
-                <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  <option value="all">--Select--</option>
-                  {rooms.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-1 ml-auto">
-                <span>User :</span>
-                <select value={filterUser} onChange={e => setFilterUser(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  <option value="all">--Select--</option>
-                  {users.map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
-                </select>
-              </div>
+            {/* Row 2 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+              <label style={{ fontSize: 11 }}>Type :</label>
+              <select value={filterType} onChange={e => setFilterType(e.target.value)} style={sty}>
+                <option value="all">--Select--</option><option value="agent">Agent</option><option value="direct">Direct</option>
+              </select>
+              <label style={{ fontSize: 11, marginLeft: 16 }}>Agent Name :</label>
+              <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)} style={{ ...sty, minWidth: 140 }}>
+                <option value="all">--Select--</option>
+                {agents.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+              </select>
+              <label style={{ fontSize: 11, marginLeft: 16 }}>Reference :</label>
+              <input type="text" value={filterReference} onChange={e => setFilterReference(e.target.value)} style={{ ...sty, width: 120 }} />
             </div>
-
-            {/* Row 4: Package, Customer, Payment Place */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
-              <div className="flex items-center gap-1">
-                <span>Package :</span>
-                <select value={filterPackage} onChange={e => setFilterPackage(e.target.value)} className="border rounded px-1 py-0.5 text-xs min-w-[120px]">
-                  <option value="all">--Select--</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>Customer :</span>
-                <input type="text" value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-28" />
-              </div>
-              <div className="flex items-center gap-1 ml-auto">
-                <span>Payment Place :</span>
-                <select value={filterPaymentPlace} onChange={e => setFilterPaymentPlace(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  <option value="all">Select Place</option>
-                  {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                </select>
-              </div>
+            {/* Row 3 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+              <label style={{ fontSize: 11 }}>{hotelFilterLabel} :</label>
+              <select value={filterHotel} onChange={e => setFilterHotel(e.target.value)} style={{ ...sty, minWidth: 140 }}>
+                <option value="all">--Select--</option>
+                {hotels.map(h => <option key={h.id} value={h.name}>{h.name}</option>)}
+              </select>
+              <label style={{ fontSize: 11, marginLeft: 16 }}>Room :</label>
+              <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} style={sty}>
+                <option value="all">--Select--</option>
+                {rooms.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+              </select>
+              <label style={{ fontSize: 11, marginLeft: 16 }}>User :</label>
+              <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={sty}>
+                <option value="all">--Select--</option>
+                {users.map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
+              </select>
             </div>
-
-            {/* Row 5: Payment Mode, NFT Code, Search button */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5" style={{ fontSize: "11px" }}>
-              <div className="flex items-center gap-1">
-                <span>Payment Mode</span>
-                <select value={filterPaymentMode} onChange={e => setFilterPaymentMode(e.target.value)} className="border rounded px-1 py-0.5 text-xs">
-                  <option value="all">---Select Mode---</option>
-                  <option value="cash">Cash</option>
-                  <option value="cash in hand">Cash In Hand</option>
-                  <option value="upi">UPI</option>
-                  <option value="net banking">Net Banking</option>
-                  <option value="credit card">Credit Card</option>
-                  <option value="cheque">Cheque</option>
-                </select>
-                <span className="text-red-500">*</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>NFT Code :</span>
-                <input type="text" value={filterNFTCode} onChange={e => setFilterNFTCode(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-28" />
-              </div>
-              <div className="ml-auto">
-                <button onClick={handleSearch} className="border rounded px-4 py-1 text-xs font-bold bg-background hover:bg-muted">Search</button>
-              </div>
+            {/* Row 4 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+              <label style={{ fontSize: 11 }}>Package :</label>
+              <select value={filterPackage} onChange={e => setFilterPackage(e.target.value)} style={{ ...sty, minWidth: 120 }}>
+                <option value="all">--Select--</option>
+              </select>
+              <label style={{ fontSize: 11, marginLeft: 16 }}>Customer :</label>
+              <input type="text" value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} style={{ ...sty, width: 120 }} />
+              <label style={{ fontSize: 11, marginLeft: 16 }}>Payment Place :</label>
+              <select value={filterPaymentPlace} onChange={e => setFilterPaymentPlace(e.target.value)} style={sty}>
+                <option value="all">Select Place</option>
+                {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
+            </div>
+            {/* Row 5 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 11 }}>
+              <label style={{ fontSize: 11 }}>Payment Mode :</label>
+              <select value={filterPaymentMode} onChange={e => setFilterPaymentMode(e.target.value)} style={sty}>
+                <option value="all">---Select Mode---</option>
+                <option value="cash">Cash</option><option value="cash in hand">Cash In Hand</option>
+                <option value="upi">UPI</option><option value="net banking">Net Banking</option>
+                <option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
+              </select>
+              <label style={{ fontSize: 11, marginLeft: 16 }}>NFT Code :</label>
+              <input type="text" value={filterNFTCode} onChange={e => setFilterNFTCode(e.target.value)} style={{ ...sty, width: 120 }} />
+              <button onClick={handleSearch} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer", marginLeft: 8 }}>Search</button>
             </div>
           </div>
 
         {/* Table Section */}
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          <div style={{ textAlign: "center", padding: "20px 8px", color: "#999", fontSize: 11 }}>Loading...</div>
         ) : paginatedItems.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">No {statusLabel.toLowerCase()} payments found.</div>
+          <div style={{ textAlign: "center", padding: "20px 8px", color: "#999", fontSize: 11 }}>No {statusLabel.toLowerCase()} payments found.</div>
         ) : (
-          <div className="border border-[#ddd] rounded overflow-x-auto">
-            <table className="w-full border-collapse" style={{ fontSize: "11px" }}>
+          <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
               <thead>
-                <tr style={{ backgroundColor: "#c47a7e", color: "#fff" }}>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">S.No.</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Booking</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Customer Name↕</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Package↕</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Payment</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Payment Mode</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">{dateColumnLabel}</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">User↕</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Status</th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-center font-bold text-xs">
+                <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
+                  {["S.No.","Booking","Customer Name","Package","Payment","Payment Mode",dateColumnLabel,"User","Status"].map(h => (
+                    <th key={h} style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff" }}>{h}</th>
+                  ))}
+                  <th style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "center", fontWeight: "bold", fontSize: 11, color: "#fff" }}>
                     <input type="checkbox" checked={paginatedItems.length > 0 && selectedPayments.size === paginatedItems.length} onChange={e => handleSelectAll(e.target.checked)} />
                   </th>
-                  <th className="border border-[#ddd] px-2 py-1.5 text-left font-bold text-xs">Action</th>
+                  <th style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedItems.map((payment, index) => (
-                  <tr key={payment.id} style={{ backgroundColor: "#f6f0f0" }}>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">{startIndex + index + 1}</td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
+                  <tr key={payment.id} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#f6f0f0" }}>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{startIndex + index + 1}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                       <div>Booking:</div>
                       <div>{payment.booking?.check_in_date ? format(new Date(payment.booking.check_in_date), "dd/MM/yyyy") : ""}</div>
                       <div>No. of Rooms: {payment.hotel_info?.number_of_rooms || 0}</div>
                       <div>{payment.booking?.adults || 0} Adult Children</div>
                       <div>Price: Rs. {payment.booking?.total_amount?.toLocaleString("en-IN") || 0}/-</div>
                     </td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
-                      <div className="font-semibold">{payment.booking?.customer_name || "N/A"}</div>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                      <div style={{ fontWeight: 500 }}>{payment.booking?.customer_name || "N/A"}</div>
                       <div>Contact No.: {payment.booking?.contact_no || ""}</div>
                       <div>Place : {payment.city_info?.name || payment.booking?.address || ""}</div>
                     </td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                       <div>Agent :{payment.booking?.agent?.name || ""}</div>
                       <div>Hotel : {payment.hotel_info?.hotel_name || ""}</div>
                       <div>Room : {payment.hotel_info?.room_type || ""}</div>
                     </td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top font-medium">Rs. {payment.amount?.toLocaleString("en-IN") || 0}/-</td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top", fontWeight: 500 }}>Rs. {payment.amount?.toLocaleString("en-IN") || 0}/-</td>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                       <div>{payment.payment_mode || "N/A"}</div>
                       {payment.reference_number && <div>Code={payment.reference_number}</div>}
                     </td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                       {approvalStatus === "approved"
                         ? (payment.approved_at ? format(new Date(payment.approved_at), "yyyy-MM-dd") : "N/A")
                         : (payment.payment_date ? format(new Date(payment.payment_date), "dd-MMM-yyyy") : "N/A")
                       }
                     </td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">{payment.created_by_profile?.username || payment.created_by_profile?.first_name || "N/A"}</td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">{statusLabel}</td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top text-center">
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{payment.created_by_profile?.username || payment.created_by_profile?.first_name || "N/A"}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{statusLabel}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top", textAlign: "center" }}>
                       <input type="checkbox" checked={selectedPayments.has(payment.id)} onChange={e => handleSelectPayment(payment.id, e.target.checked)} />
                     </td>
-                    <td className="border border-[#ddd] px-2 py-2 text-xs align-top">
-                      <div className="flex flex-col gap-0.5">
-                        <button className="text-[#c00] hover:underline text-left" onClick={() => payment.booking?.id && handleViewBooking(payment.booking.id)}>View Booking</button>
-                        {approvalStatus === "pending" && (
-                          <button className="text-[#c00] hover:underline text-left" onClick={async () => {
-                            if (payment.id) {
-                              try {
-                                const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
-                                const { error } = await supabase.from("payments").update({ approval_status: "approved", approved_by: user?.id, approved_at: new Date().toISOString() }).eq("id", payment.id);
-                                if (error) throw error;
-                                if (paymentDetails) await syncServiceTableOnApproval(paymentDetails as any);
-                                toast.success("Payment approved successfully");
-                                fetchPayments();
-                              } catch { toast.error("Failed to approve payment"); }
-                            }
-                          }}>Approved</button>
-                        )}
-                        <button className="text-[#c00] hover:underline text-left" onClick={() => payment.booking?.id && handleViewPayment(payment.booking.id)}>View Payment</button>
-                        <button className="text-[#c00] hover:underline text-left" onClick={() => navigate(`/admin/refund-payments?id=${payment.booking?.id}`)}>View Refund Payment</button>
-                      </div>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top" }}>
+                      {[
+                        { label: "View Booking", fn: () => payment.booking?.id && handleViewBooking(payment.booking.id) },
+                        ...(approvalStatus === "pending" ? [{ label: "Approved", fn: async () => {
+                          if (payment.id) {
+                            try {
+                              const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
+                              const { error } = await supabase.from("payments").update({ approval_status: "approved", approved_by: user?.id, approved_at: new Date().toISOString() }).eq("id", payment.id);
+                              if (error) throw error;
+                              if (paymentDetails) await syncServiceTableOnApproval(paymentDetails as any);
+                              toast.success("Payment approved successfully");
+                              fetchPayments();
+                            } catch { toast.error("Failed to approve payment"); }
+                          }
+                        }}] : []),
+                        { label: "View Payment", fn: () => payment.booking?.id && handleViewPayment(payment.booking.id) },
+                        { label: "View Refund Payment", fn: () => navigate(`/admin/refund-payments?id=${payment.booking?.id}`) },
+                      ].map((a, i) => (
+                        <span key={i} onClick={a.fn} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10, display: "block" }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>{a.label}</span>
+                      ))}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div className="flex items-center justify-between p-3 border-t border-[#ddd]">
-              <div className="text-xs font-medium">Total Payment: Rs. {totalPaymentAmount.toLocaleString("en-IN")}/-</div>
-              <div className="flex items-center gap-3">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderTop: "1px solid #ddd" }}>
+              <div style={{ fontSize: 11, fontWeight: "bold" }}>Total Payment: Rs. {totalPaymentAmount.toLocaleString("en-IN")}/-</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
                 {approvalStatus === "pending" && (
-                  <div className="flex gap-2">
-                    <button onClick={() => handleBulkApproval("approved")} disabled={selectedPayments.size === 0} className="border rounded px-3 py-1 text-xs bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Approved ({selectedPayments.size})</button>
-                    <button onClick={() => handleBulkApproval("rejected")} disabled={selectedPayments.size === 0} className="border rounded px-3 py-1 text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject ({selectedPayments.size})</button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => handleBulkApproval("approved")} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#4CAF50", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Approved ({selectedPayments.size})</button>
+                    <button onClick={() => handleBulkApproval("rejected")} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#c00", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Reject ({selectedPayments.size})</button>
                   </div>
                 )}
                 {approvalStatus === "approved" && (
-                  <div className="flex gap-2">
-                    <button onClick={handleBulkReject} disabled={selectedPayments.size === 0} className="border rounded px-3 py-1 text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject ({selectedPayments.size})</button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={handleBulkReject} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#c00", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Reject ({selectedPayments.size})</button>
                   </div>
                 )}
               </div>
