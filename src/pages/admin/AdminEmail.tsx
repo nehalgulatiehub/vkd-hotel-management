@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import { AdminPageShell } from "@/components/admin/AdminPageShell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AdminPageShell, filterInputStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -12,9 +9,7 @@ export default function AdminEmail() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
 
-  useEffect(() => {
-    if (user?.email) setEmail(user.email);
-  }, [user]);
+  useEffect(() => { if (user?.email) setEmail(user.email); }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,21 +25,21 @@ export default function AdminEmail() {
 
   return (
     <AdminPageShell title="Admin Email">
-      <div className="p-6 max-w-md mx-auto">
-        <div className="bg-[#f6f0f0] p-6 rounded border border-gray-300">
-          <h2 className="text-sm font-medium mb-4">Update Admin Email</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label className="text-xs">Current Email</Label>
-              <Input type="email" value={user?.email || ""} disabled className="bg-white h-7 text-xs" />
+      <div style={{ padding: 24, maxWidth: 400, margin: "0 auto" }}>
+        <div style={{ backgroundColor: "#f6f0f0", padding: 24, border: "1px solid #ccc", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+          <div style={{ fontWeight: "bold", marginBottom: 12, fontSize: 12 }}>Update Admin Email</div>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ marginBottom: 2 }}>Current Email</div>
+              <input type="email" value={user?.email || ""} disabled style={{ ...filterInputStyle, width: "100%", backgroundColor: "#eee" }} />
             </div>
-            <div>
-              <Label className="text-xs">New Email</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-7 text-xs" />
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ marginBottom: 2 }}>New Email</div>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ ...filterInputStyle, width: "100%" }} />
             </div>
-            <Button type="submit" className="w-full h-8 text-xs bg-[#b44a50] hover:bg-[#165a80]" disabled={loading}>
+            <button type="submit" disabled={loading} style={{ ...filterButtonStyle, width: "100%", backgroundColor: "#b44a50", color: "#fff", border: "none", padding: "4px 12px" }}>
               {loading ? "Updating..." : "Update Email"}
-            </Button>
+            </button>
           </form>
         </div>
       </div>

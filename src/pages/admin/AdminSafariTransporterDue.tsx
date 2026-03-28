@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 
 interface SafariTransporterSummary {
   safari_name: string; total_amount: number; total_paid: number; due_amount: number; booking_ids: string[]; latest_date: string | null;
@@ -44,20 +44,21 @@ export default function AdminSafariTransporterDue() {
   const filteredSummaries = summaries.filter(s => !transporterFilter || s.safari_name === transporterFilter);
 
   const filterSection = (
-    <div className="flex flex-wrap items-center gap-4 text-xs">
-      <div className="flex items-center gap-1"><span>Transporter :</span>
-        <select value={transporterFilter} onChange={e => setTransporterFilter(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]">
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <span>Transporter :</span>
+        <select value={transporterFilter} onChange={e => setTransporterFilter(e.target.value)} style={{ ...filterSelectStyle, minWidth: 200 }}>
           <option value="">--Select--</option>{safariNames.map(name => <option key={name} value={name}>{name}</option>)}
         </select>
       </div>
-      <button className="border px-3 py-0.5 text-xs bg-gray-100 hover:bg-gray-200">Search</button>
+      <button style={filterButtonStyle}>Search</button>
     </div>
   );
 
   return (
     <>
       <AdminPageShell title="View Safari Transporter Payment" actions={[{ label: "View All Records", onClick: () => setTransporterFilter("") }]} filterSection={filterSection}>
-        {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+        {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999", fontSize: 11 }}>Loading...</div> : (
           <>
             <ThemedTable>
               <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Total Amount</ThemedTH><ThemedTH>Paid Amount</ThemedTH><ThemedTH>Due Amount</ThemedTH></ThemedTHead>
@@ -69,16 +70,16 @@ export default function AdminSafariTransporterDue() {
                     <ThemedTD>{summary.safari_name}</ThemedTD>
                     <ThemedTD>Rs {summary.total_amount.toLocaleString("en-IN")}</ThemedTD>
                     <ThemedTD>Rs {summary.total_paid.toLocaleString("en-IN")}</ThemedTD>
-                    <ThemedTD className="font-medium">Rs {summary.due_amount.toLocaleString("en-IN")}</ThemedTD>
+                    <ThemedTD>Rs {summary.due_amount.toLocaleString("en-IN")}</ThemedTD>
                   </ThemedTR>
                 ))}
               </tbody>
             </ThemedTable>
             {filteredSummaries.length > 0 && (
-              <div className="flex items-center justify-between p-3 border-t border-gray-300 text-xs font-medium">
-                Total: Rs. {filteredSummaries.reduce((s, r) => s + r.total_amount, 0).toLocaleString("en-IN")}/-
-                &nbsp;|&nbsp; Paid: Rs. {filteredSummaries.reduce((s, r) => s + r.total_paid, 0).toLocaleString("en-IN")}/-
-                &nbsp;|&nbsp; Due: Rs. {filteredSummaries.reduce((s, r) => s + r.due_amount, 0).toLocaleString("en-IN")}/-
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px", borderTop: "1px solid #ccc", fontSize: 11, fontWeight: "bold", fontFamily: "Arial, Helvetica, sans-serif" }}>
+                <span>Total: Rs. {filteredSummaries.reduce((s, r) => s + r.total_amount, 0).toLocaleString("en-IN")}/-</span>
+                <span>Paid: Rs. {filteredSummaries.reduce((s, r) => s + r.total_paid, 0).toLocaleString("en-IN")}/-</span>
+                <span>Due: Rs. {filteredSummaries.reduce((s, r) => s + r.due_amount, 0).toLocaleString("en-IN")}/-</span>
               </div>
             )}
           </>

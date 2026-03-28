@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
 
 export default function ViewTotalPax() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -26,19 +26,22 @@ export default function ViewTotalPax() {
   const totalAdults = filteredBookings.reduce((sum, b) => sum + (b.adults || 0), 0);
   const totalChildren = filteredBookings.reduce((sum, b) => sum + (b.children || 0), 0);
 
-  if (authLoading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
-  if (!isAdmin()) return <div className="p-6 text-center">Admin access required.</div>;
+  if (authLoading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontSize: 11 }}>Loading...</div>;
+  if (!isAdmin()) return <div style={{ padding: 24, textAlign: "center", fontSize: 11 }}>Admin access required.</div>;
 
   const filterSection = (
-    <div className="flex flex-wrap items-center gap-4 text-xs">
-      <div className="flex items-center gap-1"><span>Search :</span><input value={searchCustomer} onChange={(e) => setSearchCustomer(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]" placeholder="Search customer or booking..." /></div>
-      <div className="ml-auto text-xs font-medium">Total Pax: {totalAdults + totalChildren} (Adults: {totalAdults}, Children: {totalChildren})</div>
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <span>Search :</span>
+        <input value={searchCustomer} onChange={(e) => setSearchCustomer(e.target.value)} style={{ ...filterInputStyle, minWidth: 200 }} placeholder="Search customer or booking..." />
+      </div>
+      <div style={{ marginLeft: "auto", fontWeight: "bold", fontSize: 11 }}>Total Pax: {totalAdults + totalChildren} (Adults: {totalAdults}, Children: {totalChildren})</div>
     </div>
   );
 
   return (
     <AdminPageShell title="Total Pax" filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
-      {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+      {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999", fontSize: 11 }}>Loading...</div> : (
         <ThemedTable>
           <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Booking</ThemedTH><ThemedTH>Customer Name</ThemedTH><ThemedTH>Agent</ThemedTH><ThemedTH>Check In</ThemedTH><ThemedTH>Check Out</ThemedTH><ThemedTH>Adults</ThemedTH><ThemedTH>Children</ThemedTH><ThemedTH>Total Pax</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
           <tbody>
@@ -52,12 +55,10 @@ export default function ViewTotalPax() {
                 <ThemedTD>{booking.check_out_date}</ThemedTD>
                 <ThemedTD>{booking.adults || 0}</ThemedTD>
                 <ThemedTD>{booking.children || 0}</ThemedTD>
-                <ThemedTD className="font-medium">{(booking.adults || 0) + (booking.children || 0)}</ThemedTD>
+                <ThemedTD>{(booking.adults || 0) + (booking.children || 0)}</ThemedTD>
                 <ThemedTD>
-                  <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                    <button className="hover:underline text-left" onClick={() => navigate(`/admin/bookings/${booking.id}`)}>View Booking</button>
-                    <button className="hover:underline text-left" onClick={() => navigate(`/admin/booking-payments?id=${booking.id}`)}>View Payments</button>
-                  </div>
+                  <ThemedActionLink onClick={() => navigate(`/admin/bookings/${booking.id}`)}>View Booking</ThemedActionLink>
+                  <ThemedActionLink onClick={() => navigate(`/admin/booking-payments?id=${booking.id}`)}>View Payments</ThemedActionLink>
                 </ThemedTD>
               </ThemedTR>
             ))}

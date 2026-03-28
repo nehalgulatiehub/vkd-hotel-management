@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
 
 export default function AdminPlaces() {
   const location = useLocation();
@@ -42,13 +42,13 @@ export default function AdminPlaces() {
   const filteredPlaces = places.filter((p) => p.name?.toLowerCase().includes(search.toLowerCase()) || p.state?.toLowerCase().includes(search.toLowerCase()));
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPlaces);
 
-  if (authLoading || loading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
-  if (!canManage) return <div className="p-6 text-center">Access Denied</div>;
+  if (authLoading || loading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontSize: 11 }}>Loading...</div>;
+  if (!canManage) return <div style={{ padding: 24, textAlign: "center", fontSize: 11 }}>Access Denied</div>;
 
   const filterSection = (
-    <div className="flex items-center gap-2 text-xs">
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
       <span>Search :</span>
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search places..." className="border px-2 py-0.5 text-xs min-w-[200px]" />
+      <input value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...filterInputStyle, minWidth: 200 }} placeholder="Search places..." />
     </div>
   );
 
@@ -65,8 +65,8 @@ export default function AdminPlaces() {
                 <ThemedTD>{place.state || "-"}</ThemedTD>
                 <ThemedTD>{place.country || "-"}</ThemedTD>
                 <ThemedTD>
-                  <button onClick={() => handleEdit(place)} className="text-[#c00] hover:underline text-[10px] mr-2">Edit</button>
-                  <button onClick={() => handleDelete(place.id)} className="text-[#c00] hover:underline text-[10px]">Delete</button>
+                  <ThemedActionLink onClick={() => handleEdit(place)}>Edit</ThemedActionLink>
+                  <ThemedActionLink onClick={() => handleDelete(place.id)}>Delete</ThemedActionLink>
                 </ThemedTD>
               </ThemedTR>
             ))}

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,7 @@ export default function AdminGuestUsers() {
 
   const canManage = isAdmin() || isAccount();
 
-  useEffect(() => {
-    if (!authLoading && canManage) { fetchGuests(); fetchCities(); }
-  }, [authLoading, canManage]);
+  useEffect(() => { if (!authLoading && canManage) { fetchGuests(); fetchCities(); } }, [authLoading, canManage]);
 
   const fetchGuests = async () => {
     setLoading(true);
@@ -42,10 +40,7 @@ export default function AdminGuestUsers() {
     finally { setLoading(false); }
   };
 
-  const fetchCities = async () => {
-    const { data } = await supabase.from("cities").select("*").order("name");
-    setCities(data || []);
-  };
+  const fetchCities = async () => { const { data } = await supabase.from("cities").select("*").order("name"); setCities(data || []); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +60,7 @@ export default function AdminGuestUsers() {
 
   const handleEdit = (guest: any) => {
     setEditingGuest(guest);
-    setFormData({
-      first_name: guest.first_name || "", last_name: guest.last_name || "",
-      email: guest.email || "", phone: guest.phone || "", address: guest.address || "",
-      city_id: guest.city_id || "", id_proof_type: guest.id_proof_type || "",
-      id_proof_number: guest.id_proof_number || "", notes: guest.notes || "",
-    });
+    setFormData({ first_name: guest.first_name || "", last_name: guest.last_name || "", email: guest.email || "", phone: guest.phone || "", address: guest.address || "", city_id: guest.city_id || "", id_proof_type: guest.id_proof_type || "", id_proof_number: guest.id_proof_number || "", notes: guest.notes || "" });
     setIsDialogOpen(true);
   };
 
@@ -96,47 +86,34 @@ export default function AdminGuestUsers() {
 
   const pagination = usePagination(filteredGuests);
 
-  if (authLoading || loading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
-  if (!canManage) return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
+  if (authLoading || loading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontSize: 11 }}>Loading...</div>;
+  if (!canManage) return <div style={{ padding: 24, textAlign: "center", fontSize: 11 }}>Access Denied</div>;
+
+  const filterSection = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <span>Search :</span>
+      <input value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...filterInputStyle, minWidth: 250 }} placeholder="Search by name, email, phone..." />
+    </div>
+  );
 
   return (
     <>
-      <AdminPageShell
-        title="Guest User Manager"
-        actions={[{ label: "Add Guest", onClick: () => { resetForm(); setIsDialogOpen(true); } }]}
-        filterSection={
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-20 text-right">Search :</label>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 max-w-sm h-7 text-xs" placeholder="Search by name, email, phone..." />
-          </div>
-        }
-        pagination={{
-          currentPage: pagination.currentPage, totalPages: pagination.totalPages,
-          onPageChange: pagination.goToPage, totalItems: pagination.totalItems,
-          startIndex: pagination.startIndex, endIndex: pagination.endIndex,
-        }}
-      >
+      <AdminPageShell title="Guest User Manager" actions={[{ label: "Add Guest", onClick: () => { resetForm(); setIsDialogOpen(true); } }]} filterSection={filterSection} pagination={{ currentPage: pagination.currentPage, totalPages: pagination.totalPages, onPageChange: pagination.goToPage, totalItems: pagination.totalItems, startIndex: pagination.startIndex, endIndex: pagination.endIndex }}>
         <ThemedTable>
           <ThemedTHead>
-            <ThemedTH className="w-12 text-center">S.No</ThemedTH>
-            <ThemedTH>Name</ThemedTH>
-            <ThemedTH>Email</ThemedTH>
-            <ThemedTH>Phone</ThemedTH>
-            <ThemedTH>City</ThemedTH>
-            <ThemedTH className="text-center w-24">Action</ThemedTH>
+            <ThemedTH>S.No</ThemedTH><ThemedTH>Name</ThemedTH><ThemedTH>Email</ThemedTH><ThemedTH>Phone</ThemedTH><ThemedTH>City</ThemedTH><ThemedTH>Action</ThemedTH>
           </ThemedTHead>
           <tbody>
             {pagination.paginatedItems.map((guest, index) => (
               <ThemedTR key={guest.id} index={index}>
-                <ThemedTD className="text-center">{pagination.startIndex + index}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
                 <ThemedTD>{guest.first_name} {guest.last_name}</ThemedTD>
                 <ThemedTD>{guest.email || "-"}</ThemedTD>
                 <ThemedTD>{guest.phone || "-"}</ThemedTD>
                 <ThemedTD>{guest.cities?.name || "-"}</ThemedTD>
-                <ThemedTD className="text-center">
-                  <button onClick={() => handleEdit(guest)} className="text-blue-600 hover:underline text-xs">Edit</button>
-                  <span className="text-gray-400 mx-1">/</span>
-                  <button onClick={() => handleDelete(guest.id)} className="text-blue-600 hover:underline text-xs">Delete</button>
+                <ThemedTD>
+                  <ThemedActionLink onClick={() => handleEdit(guest)}>Edit</ThemedActionLink>
+                  <ThemedActionLink onClick={() => handleDelete(guest.id)}>Delete</ThemedActionLink>
                 </ThemedTD>
               </ThemedTR>
             ))}
