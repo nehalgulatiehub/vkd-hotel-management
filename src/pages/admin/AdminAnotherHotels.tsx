@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AdminPageShell,
+  ThemedTable,
+  ThemedTHead,
+  ThemedTH,
+  ThemedTD,
+  ThemedTR,
+  ThemedEmptyRow,
+  ThemedActionLink,
+  filterSelectStyle,
+  filterInputStyle,
+  filterButtonStyle,
+} from "@/components/admin/AdminPageShell";
 
 interface City {
   id: string;
@@ -34,8 +44,7 @@ export default function AdminAnotherHotels() {
   const [filteredHotels, setFilteredHotels] = useState<AnotherHotel[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Filter states
+
   const [hotelNameFilter, setHotelNameFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [emailFilter, setEmailFilter] = useState("");
@@ -62,7 +71,6 @@ export default function AdminAnotherHotels() {
         .from("another_hotels")
         .select("*, city:cities(name)")
         .order("name");
-
       if (error) throw error;
       setHotels(data || []);
     } catch (error) {
@@ -75,10 +83,7 @@ export default function AdminAnotherHotels() {
 
   const fetchCities = async () => {
     try {
-      const { data, error } = await supabase
-        .from("cities")
-        .select("id, name")
-        .order("name");
+      const { data, error } = await supabase.from("cities").select("id, name").order("name");
       if (error) throw error;
       setCities(data || []);
     } catch (error) {
@@ -88,20 +93,10 @@ export default function AdminAnotherHotels() {
 
   const handleSearch = () => {
     let result = [...hotels];
-    
-    if (hotelNameFilter) {
-      result = result.filter(h => h.id === hotelNameFilter);
-    }
-    if (cityFilter) {
-      result = result.filter(h => h.city_id === cityFilter);
-    }
-    if (emailFilter) {
-      result = result.filter(h => h.email?.toLowerCase().includes(emailFilter.toLowerCase()));
-    }
-    if (contactNoFilter) {
-      result = result.filter(h => h.phone?.includes(contactNoFilter));
-    }
-    
+    if (hotelNameFilter) result = result.filter(h => h.id === hotelNameFilter);
+    if (cityFilter) result = result.filter(h => h.city_id === cityFilter);
+    if (emailFilter) result = result.filter(h => h.email?.toLowerCase().includes(emailFilter.toLowerCase()));
+    if (contactNoFilter) result = result.filter(h => h.phone?.includes(contactNoFilter));
     setFilteredHotels(result);
   };
 
@@ -115,7 +110,6 @@ export default function AdminAnotherHotels() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this hotel?")) return;
-    
     try {
       const { error } = await supabase.from("another_hotels").delete().eq("id", id);
       if (error) throw error;
@@ -128,9 +122,7 @@ export default function AdminAnotherHotels() {
   };
 
   const toggleHotelSelection = (id: string) => {
-    setSelectedHotels(prev => 
-      prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id]
-    );
+    setSelectedHotels(prev => prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id]);
   };
 
   const toggleSelectAll = () => {
@@ -142,175 +134,86 @@ export default function AdminAnotherHotels() {
   };
 
   if (authLoading || loading) {
-    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
   }
 
   if (!canManage) {
-    return <div className="p-6 text-center">Access Denied</div>;
+    return <div style={{ padding: 24, textAlign: "center" }}>Access Denied</div>;
   }
 
-  return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
-        <span className="text-sm font-medium">Manage Another Hotel</span>
-        <Button 
-          size="sm" 
-          variant="outline"
-          className="bg-white text-[#c00] hover:bg-gray-100 h-7 text-xs"
-          onClick={() => navigate("/admin/another-hotels/add")}
-        >
-          Add Another Hotel
-        </Button>
+  const filterSection = (
+    <div>
+      {/* Row 1 */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+        <label style={{ fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", minWidth: 80, textAlign: "right" }}>Hotel Name :</label>
+        <select value={hotelNameFilter} onChange={e => setHotelNameFilter(e.target.value)} style={{ ...filterSelectStyle, flex: 1, maxWidth: 500 }}>
+          <option value="">---Select Type---</option>
+          {hotels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+        </select>
+        <label style={{ fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", minWidth: 50, textAlign: "right", marginLeft: 20 }}>Email :</label>
+        <input value={emailFilter} onChange={e => setEmailFilter(e.target.value)} style={{ ...filterInputStyle, width: 160 }} />
       </div>
-
-      {/* Search Header */}
-      <div className="bg-[#b44a50] text-white px-4 py-1">
-        <span className="text-xs font-medium">Search</span>
-      </div>
-
-      {/* Search Filter Section */}
-      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3">
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
-          {/* Row 1 */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-20 text-right">Hotel Name :</label>
-            <select
-              value={hotelNameFilter}
-              onChange={(e) => setHotelNameFilter(e.target.value)}
-              className="flex-1 h-7 text-xs border border-gray-300 rounded px-2 bg-white"
-            >
-              <option value="">-- Select --</option>
-              {hotels.map(h => (
-                <option key={h.id} value={h.id}>{h.name}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-16 text-right">Email :</label>
-            <Input
-              value={emailFilter}
-              onChange={(e) => setEmailFilter(e.target.value)}
-              className="flex-1 h-7 text-xs"
-              placeholder=""
-            />
-          </div>
-
-          {/* Row 2 */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-20 text-right">City Name :</label>
-            <select
-              value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-              className="flex-1 h-7 text-xs border border-gray-300 rounded px-2 bg-white"
-            >
-              <option value="">-- Select --</option>
-              {cities.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-16 text-right">Contact No :</label>
-            <Input
-              value={contactNoFilter}
-              onChange={(e) => setContactNoFilter(e.target.value)}
-              className="flex-1 h-7 text-xs"
-              placeholder=""
-            />
-            <Button 
-              size="sm" 
-              onClick={handleSearch}
-              className="h-7 text-xs px-4 bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-400"
-            >
-              Search
-            </Button>
-          </div>
-        </div>
-
-        {/* View All Records Button */}
-        <div className="flex justify-end mt-2">
-          <Button 
-            size="sm" 
-            onClick={handleViewAll}
-            className="h-7 text-xs px-3 bg-[#b44a50] hover:bg-[#165a80] text-white"
-          >
-            View All Records
-          </Button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="border border-t-0 border-gray-300 overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-[#c47a7e] text-white">
-              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Hotel Name</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Room</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Contact Person/Email</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Contact No/City</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Address</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-left font-medium">Package</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-center font-medium">Action</th>
-              <th className="border border-gray-400 px-2 py-1.5 text-center font-medium w-8">
-                <Checkbox 
-                  checked={selectedHotels.length === filteredHotels.length && filteredHotels.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                />
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredHotels.map((hotel, index) => (
-              <tr key={hotel.id} className={index % 2 === 0 ? "bg-[#f6f0f0]" : "bg-white"}>
-                <td className="border border-gray-300 px-2 py-1.5">{hotel.name}</td>
-                <td className="border border-gray-300 px-2 py-1.5">{hotel.room_types || ""}</td>
-                <td className="border border-gray-300 px-2 py-1.5">
-                  <div>{hotel.contact_person || ""}</div>
-                  <div className="text-gray-600">Email : {hotel.email || ""}</div>
-                </td>
-                <td className="border border-gray-300 px-2 py-1.5">
-                  <div>{hotel.phone || ""}</div>
-                  <div className="text-gray-600">City : {hotel.city?.name || ""}</div>
-                </td>
-                <td className="border border-gray-300 px-2 py-1.5">{hotel.address || ""}</td>
-                <td className="border border-gray-300 px-2 py-1.5">{hotel.packages || ""}</td>
-                <td className="border border-gray-300 px-2 py-1.5 text-center">
-                  <button
-                    onClick={() => navigate(`/admin/another-hotels/add?edit=${hotel.id}`)}
-                    className="text-blue-600 hover:underline text-xs"
-                  >
-                    Edit
-                  </button>
-                  <span className="text-gray-400">/</span>
-                  <button
-                    onClick={() => handleDelete(hotel.id)}
-                    className="text-blue-600 hover:underline text-xs"
-                  >
-                    Delete
-                  </button>
-                </td>
-                <td className="border border-gray-300 px-2 py-1.5 text-center">
-                  <Checkbox 
-                    checked={selectedHotels.includes(hotel.id)}
-                    onCheckedChange={() => toggleHotelSelection(hotel.id)}
-                  />
-                </td>
-              </tr>
-            ))}
-            {filteredHotels.length === 0 && (
-              <tr>
-                <td colSpan={8} className="border border-gray-300 px-2 py-8 text-center text-gray-500">
-                  No hotels found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Row 2 */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <label style={{ fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", minWidth: 80, textAlign: "right" }}>City Name:</label>
+        <select value={cityFilter} onChange={e => setCityFilter(e.target.value)} style={{ ...filterSelectStyle, width: 180 }}>
+          <option value="">Select city</option>
+          {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <label style={{ fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", minWidth: 70, textAlign: "right", marginLeft: 20 }}>Contact No :</label>
+        <input value={contactNoFilter} onChange={e => setContactNoFilter(e.target.value)} style={{ ...filterInputStyle, width: 160 }} />
+        <button onClick={handleSearch} style={filterButtonStyle}>Search</button>
       </div>
     </div>
+  );
+
+  return (
+    <AdminPageShell
+      title="Manage Another Hotel"
+      actions={[{ label: "View All Records", onClick: handleViewAll }]}
+      filterSection={filterSection}
+    >
+      <ThemedTable>
+        <ThemedTHead>
+          <ThemedTH>Hotel Name</ThemedTH>
+          <ThemedTH>Room</ThemedTH>
+          <ThemedTH>Contact Person/Email</ThemedTH>
+          <ThemedTH>Contact No/City</ThemedTH>
+          <ThemedTH>Address</ThemedTH>
+          <ThemedTH>Package</ThemedTH>
+          <ThemedTH>Action</ThemedTH>
+          <th style={{ border: "1px solid #a88", padding: "5px 8px", backgroundColor: "#c47a7e", textAlign: "center", width: 28 }}>
+            <input type="checkbox" checked={selectedHotels.length === filteredHotels.length && filteredHotels.length > 0} onChange={toggleSelectAll} />
+          </th>
+        </ThemedTHead>
+        <tbody>
+          {filteredHotels.map((hotel, index) => (
+            <ThemedTR key={hotel.id} index={index}>
+              <ThemedTD>{hotel.name}</ThemedTD>
+              <ThemedTD>{hotel.room_types || ""}</ThemedTD>
+              <ThemedTD>
+                <div>{hotel.contact_person || ""}</div>
+                <div>Email : {hotel.email || ""}</div>
+              </ThemedTD>
+              <ThemedTD>
+                <div>{hotel.phone || ""}</div>
+                <div>City : {hotel.city?.name || ""}</div>
+              </ThemedTD>
+              <ThemedTD>{hotel.address || ""}</ThemedTD>
+              <ThemedTD>{hotel.packages || ""}</ThemedTD>
+              <ThemedTD>
+                <ThemedActionLink onClick={() => navigate(`/admin/another-hotels/add?edit=${hotel.id}`)}>Edit</ThemedActionLink>
+                /
+                <ThemedActionLink onClick={() => handleDelete(hotel.id)}>Delete</ThemedActionLink>
+              </ThemedTD>
+              <td style={{ border: "1px solid #ddd", padding: "5px 8px", textAlign: "center", verticalAlign: "top" }}>
+                <input type="checkbox" checked={selectedHotels.includes(hotel.id)} onChange={() => toggleHotelSelection(hotel.id)} />
+              </td>
+            </ThemedTR>
+          ))}
+          {filteredHotels.length === 0 && <ThemedEmptyRow colSpan={8} />}
+        </tbody>
+      </ThemedTable>
+    </AdminPageShell>
   );
 }
