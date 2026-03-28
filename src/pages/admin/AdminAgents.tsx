@@ -5,9 +5,7 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { usePagination } from "@/hooks/usePagination";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterInputStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import * as XLSX from "xlsx";
 
 interface Agent {
@@ -96,11 +94,11 @@ export default function AdminAgents() {
   const pagination = usePagination(filteredAgents);
 
   if (authLoading || loading) {
-    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
   }
 
   if (!canManage) {
-    return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Access Denied</div>;
   }
 
   return (
@@ -111,31 +109,27 @@ export default function AdminAgents() {
         { label: "Add Agent", onClick: () => navigate("/admin/agents/add") },
       ]}
       filterSection={
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-16 text-right">Search :</label>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 h-7 text-xs"
-              placeholder="Name, company, phone..."
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-700 w-16 text-right">User :</label>
-            <select
-              value={userFilter}
-              onChange={(e) => setUserFilter(e.target.value)}
-              className="flex-1 h-7 text-xs border border-gray-300 rounded px-2 bg-white"
-            >
-              <option value="all">All Users</option>
-              {profiles.map(profile => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.username || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown'}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <label style={{ fontSize: 11, minWidth: 50, textAlign: "right" }}>Search :</label>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Name, company, phone..."
+            style={{ ...filterInputStyle, width: 200 }}
+          />
+          <label style={{ fontSize: 11, marginLeft: 16 }}>User :</label>
+          <select
+            value={userFilter}
+            onChange={(e) => setUserFilter(e.target.value)}
+            style={filterSelectStyle}
+          >
+            <option value="all">All Users</option>
+            {profiles.map(profile => (
+              <option key={profile.id} value={profile.id}>
+                {profile.username || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown'}
+              </option>
+            ))}
+          </select>
         </div>
       }
       pagination={{
@@ -149,7 +143,7 @@ export default function AdminAgents() {
     >
       <ThemedTable>
         <ThemedTHead>
-          <ThemedTH className="w-12 text-center">S.No</ThemedTH>
+          <ThemedTH>S.No</ThemedTH>
           <ThemedTH>Name</ThemedTH>
           <ThemedTH>Company</ThemedTH>
           <ThemedTH>Phone</ThemedTH>
@@ -157,12 +151,12 @@ export default function AdminAgents() {
           <ThemedTH>City</ThemedTH>
           <ThemedTH>User</ThemedTH>
           <ThemedTH>Commission %</ThemedTH>
-          <ThemedTH className="text-center w-24">Action</ThemedTH>
+          <ThemedTH>Action</ThemedTH>
         </ThemedTHead>
         <tbody>
           {pagination.paginatedItems.map((agent, index) => (
             <ThemedTR key={agent.id} index={index}>
-              <ThemedTD className="text-center">{pagination.startIndex + index}</ThemedTD>
+              <ThemedTD>{pagination.startIndex + index}</ThemedTD>
               <ThemedTD>{agent.name}</ThemedTD>
               <ThemedTD>{agent.company_name || "-"}</ThemedTD>
               <ThemedTD>{agent.phone || "-"}</ThemedTD>
@@ -170,10 +164,10 @@ export default function AdminAgents() {
               <ThemedTD>{agent.city?.name || "-"}</ThemedTD>
               <ThemedTD>{agent.created_by ? getUserName(agent.created_by) : "-"}</ThemedTD>
               <ThemedTD>{agent.commission_rate ?? "-"}</ThemedTD>
-              <ThemedTD className="text-center">
-                <button onClick={() => navigate(`/admin/agents/add?edit=${agent.id}`)} className="text-blue-600 hover:underline text-xs">Edit</button>
-                <span className="text-gray-400 mx-1">/</span>
-                <button onClick={() => handleDelete(agent.id)} className="text-blue-600 hover:underline text-xs">Delete</button>
+              <ThemedTD>
+                <span onClick={() => navigate(`/admin/agents/add?edit=${agent.id}`)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Edit</span>
+                {" / "}
+                <span onClick={() => handleDelete(agent.id)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Delete</span>
               </ThemedTD>
             </ThemedTR>
           ))}

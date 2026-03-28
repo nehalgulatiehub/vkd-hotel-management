@@ -4,9 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterInputStyle } from "@/components/admin/AdminPageShell";
 
 interface City {
   id: string;
@@ -64,11 +62,11 @@ export default function AdminCities() {
   const pagination = usePagination(filteredCities);
 
   if (authLoading || loading) {
-    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
   }
 
   if (!canManage) {
-    return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Access Denied</div>;
   }
 
   return (
@@ -76,13 +74,13 @@ export default function AdminCities() {
       title="Manage Cities"
       actions={[{ label: "Add City", onClick: () => navigate("/admin/cities/add") }]}
       filterSection={
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700 w-20 text-right">Search :</label>
-          <Input
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <label style={{ fontSize: 11, minWidth: 50, textAlign: "right" }}>Search :</label>
+          <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 max-w-sm h-7 text-xs"
             placeholder="Search by name or state..."
+            style={{ ...filterInputStyle, width: 250 }}
           />
         </div>
       }
@@ -97,23 +95,23 @@ export default function AdminCities() {
     >
       <ThemedTable>
         <ThemedTHead>
-          <ThemedTH className="w-12 text-center">S.No</ThemedTH>
+          <ThemedTH>S.No</ThemedTH>
           <ThemedTH>Name</ThemedTH>
           <ThemedTH>State</ThemedTH>
           <ThemedTH>Country</ThemedTH>
-          <ThemedTH className="text-center w-24">Action</ThemedTH>
+          <ThemedTH>Action</ThemedTH>
         </ThemedTHead>
         <tbody>
           {pagination.paginatedItems.map((city, index) => (
             <ThemedTR key={city.id} index={index}>
-              <ThemedTD className="text-center">{pagination.startIndex + index}</ThemedTD>
+              <ThemedTD>{pagination.startIndex + index}</ThemedTD>
               <ThemedTD>{city.name}</ThemedTD>
               <ThemedTD>{city.state || "-"}</ThemedTD>
               <ThemedTD>{city.country || "India"}</ThemedTD>
-              <ThemedTD className="text-center">
-                <button onClick={() => navigate(`/admin/cities/add?edit=${city.id}`)} className="text-blue-600 hover:underline text-xs">Edit</button>
-                <span className="text-gray-400 mx-1">/</span>
-                <button onClick={() => handleDelete(city.id)} className="text-blue-600 hover:underline text-xs">Delete</button>
+              <ThemedTD>
+                <span onClick={() => navigate(`/admin/cities/add?edit=${city.id}`)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Edit</span>
+                {" / "}
+                <span onClick={() => handleDelete(city.id)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Delete</span>
               </ThemedTD>
             </ThemedTR>
           ))}

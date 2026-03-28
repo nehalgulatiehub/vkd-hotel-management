@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
-import { Input } from "@/components/ui/input";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterInputStyle } from "@/components/admin/AdminPageShell";
 
 interface OwnHotel {
   id: string;
@@ -62,17 +61,17 @@ export default function AdminOwnHotels() {
   const filteredHotels = hotels.filter(h => h.name.toLowerCase().includes(search.toLowerCase()));
   const pagination = usePagination(filteredHotels);
 
-  if (authLoading || loading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
-  if (!canManage) return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
+  if (authLoading || loading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
+  if (!canManage) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Access Denied</div>;
 
   return (
     <AdminPageShell
       title="Manage Own Hotels"
       actions={[{ label: "Add Hotel", onClick: () => navigate("/admin/own-hotels/add") }]}
       filterSection={
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700 w-20 text-right">Search :</label>
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 max-w-sm h-7 text-xs" placeholder="Search by hotel name..." />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <label style={{ fontSize: 11, minWidth: 50, textAlign: "right" }}>Search :</label>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by hotel name..." style={{ ...filterInputStyle, width: 250 }} />
         </div>
       }
       pagination={{
@@ -83,27 +82,27 @@ export default function AdminOwnHotels() {
     >
       <ThemedTable>
         <ThemedTHead>
-          <ThemedTH className="w-12 text-center">S.No</ThemedTH>
+          <ThemedTH>S.No</ThemedTH>
           <ThemedTH>Name</ThemedTH>
           <ThemedTH>Contact Person</ThemedTH>
           <ThemedTH>Phone</ThemedTH>
           <ThemedTH>City</ThemedTH>
           <ThemedTH>Rating</ThemedTH>
-          <ThemedTH className="text-center w-24">Action</ThemedTH>
+          <ThemedTH>Action</ThemedTH>
         </ThemedTHead>
         <tbody>
           {pagination.paginatedItems.map((h, index) => (
             <ThemedTR key={h.id} index={index}>
-              <ThemedTD className="text-center">{pagination.startIndex + index}</ThemedTD>
+              <ThemedTD>{pagination.startIndex + index}</ThemedTD>
               <ThemedTD>{h.name}</ThemedTD>
               <ThemedTD>{h.contact_person || "-"}</ThemedTD>
               <ThemedTD>{h.phone || "-"}</ThemedTD>
               <ThemedTD>{h.city?.name || "-"}</ThemedTD>
               <ThemedTD>{h.rating ?? "-"}</ThemedTD>
-              <ThemedTD className="text-center">
-                <button onClick={() => navigate(`/admin/own-hotels/add?edit=${h.id}`)} className="text-blue-600 hover:underline text-xs">Edit</button>
-                <span className="text-gray-400 mx-1">/</span>
-                <button onClick={() => handleDelete(h.id)} className="text-blue-600 hover:underline text-xs">Delete</button>
+              <ThemedTD>
+                <span onClick={() => navigate(`/admin/own-hotels/add?edit=${h.id}`)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Edit</span>
+                {" / "}
+                <span onClick={() => handleDelete(h.id)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Delete</span>
               </ThemedTD>
             </ThemedTR>
           ))}

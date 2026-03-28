@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -35,7 +34,6 @@ export default function AdminManageRooms() {
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  // Form dialog state
   const [showForm, setShowForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [formData, setFormData] = useState({
@@ -58,12 +56,7 @@ export default function AdminManageRooms() {
 
   const fetchHotel = async () => {
     try {
-      const { data, error } = await supabase
-        .from("own_hotels")
-        .select("id, name")
-        .eq("id", hotelId)
-        .single();
-
+      const { data, error } = await supabase.from("own_hotels").select("id, name").eq("id", hotelId).single();
       if (error) throw error;
       setHotel(data);
     } catch (error) {
@@ -75,12 +68,7 @@ export default function AdminManageRooms() {
   const fetchRooms = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("rooms")
-        .select("id, room_number, total_quantity, adult_capacity, child_capacity, description, notes")
-        .eq("hotel_id", hotelId)
-        .order("room_number");
-
+      const { data, error } = await supabase.from("rooms").select("id, room_number, total_quantity, adult_capacity, child_capacity, description, notes").eq("hotel_id", hotelId).order("room_number");
       if (error) throw error;
       setRooms(data || []);
     } catch (error) {
@@ -92,34 +80,18 @@ export default function AdminManageRooms() {
   };
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(rooms.map(r => r.id));
-    } else {
-      setSelectedIds([]);
-    }
+    setSelectedIds(checked ? rooms.map(r => r.id) : []);
   };
 
   const handleSelectOne = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds([...selectedIds, id]);
-    } else {
-      setSelectedIds(selectedIds.filter(sid => sid !== id));
-    }
+    setSelectedIds(checked ? [...selectedIds, id] : selectedIds.filter(sid => sid !== id));
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedIds.length === 0) {
-      toast.error("Please select at least one room to delete");
-      return;
-    }
+    if (selectedIds.length === 0) { toast.error("Please select at least one room to delete"); return; }
     if (!confirm(`Are you sure you want to delete ${selectedIds.length} room(s)?`)) return;
-
     try {
-      const { error } = await supabase
-        .from("rooms")
-        .delete()
-        .in("id", selectedIds);
-
+      const { error } = await supabase.from("rooms").delete().in("id", selectedIds);
       if (error) throw error;
       toast.success(`${selectedIds.length} room(s) deleted successfully`);
       setSelectedIds([]);
@@ -131,76 +103,40 @@ export default function AdminManageRooms() {
   };
 
   const resetForm = () => {
-    setFormData({
-      room_name: "",
-      total_quantity: "1",
-      adult_capacity: "2",
-      child_capacity: "1",
-      description: "",
-      notes: ""
-    });
+    setFormData({ room_name: "", total_quantity: "1", adult_capacity: "2", child_capacity: "1", description: "", notes: "" });
     setEditingRoom(null);
   };
 
   const handleEdit = async (room: Room) => {
-    // Fetch full room data
-    const { data, error } = await supabase
-      .from("rooms")
-      .select("*")
-      .eq("id", room.id)
-      .single();
-
-    if (error) {
-      toast.error("Failed to load room details");
-      return;
-    }
-
+    const { data, error } = await supabase.from("rooms").select("*").eq("id", room.id).single();
+    if (error) { toast.error("Failed to load room details"); return; }
     setFormData({
-      room_name: data.room_number || "",
-      total_quantity: String(data.total_quantity || 1),
-      adult_capacity: String(data.adult_capacity || 2),
-      child_capacity: String(data.child_capacity || 1),
-      description: data.description || "",
-      notes: data.notes || ""
+      room_name: data.room_number || "", total_quantity: String(data.total_quantity || 1),
+      adult_capacity: String(data.adult_capacity || 2), child_capacity: String(data.child_capacity || 1),
+      description: data.description || "", notes: data.notes || ""
     });
     setEditingRoom(room);
     setShowForm(true);
   };
 
-  const handleAddRoom = () => {
-    resetForm();
-    setShowForm(true);
-  };
+  const handleAddRoom = () => { resetForm(); setShowForm(true); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const roomData = {
-      hotel_id: hotelId,
-      room_number: formData.room_name,
-      room_type: formData.room_name,
+      hotel_id: hotelId, room_number: formData.room_name, room_type: formData.room_name,
       total_quantity: parseInt(formData.total_quantity),
       capacity: parseInt(formData.adult_capacity) + parseInt(formData.child_capacity),
-      adult_capacity: parseInt(formData.adult_capacity),
-      child_capacity: parseInt(formData.child_capacity),
-      description: formData.description,
-      notes: formData.notes
+      adult_capacity: parseInt(formData.adult_capacity), child_capacity: parseInt(formData.child_capacity),
+      description: formData.description, notes: formData.notes
     };
-
     try {
       if (editingRoom) {
-        const { error } = await supabase
-          .from("rooms")
-          .update(roomData)
-          .eq("id", editingRoom.id);
-
+        const { error } = await supabase.from("rooms").update(roomData).eq("id", editingRoom.id);
         if (error) throw error;
         toast.success("Room updated successfully");
       } else {
-        const { error } = await supabase
-          .from("rooms")
-          .insert([roomData]);
-
+        const { error } = await supabase.from("rooms").insert([roomData]);
         if (error) throw error;
         toast.success("Room created successfully");
       }
@@ -213,102 +149,58 @@ export default function AdminManageRooms() {
     }
   };
 
-  if (authLoading || loading) {
-    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
-  }
-
-  if (!canManage) {
-    return <div className="p-6 text-center text-muted-foreground">Access Denied</div>;
-  }
+  if (authLoading || loading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
+  if (!canManage) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Access Denied</div>;
 
   return (
-    <div className="min-h-screen bg-[#f6f0f0]">
-      {/* Blue Header Bar */}
-      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium">📋 Manage Rooms {hotel ? `- ${hotel.name}` : ""}</span>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-7 bg-white text-black hover:bg-gray-100 text-xs"
-            onClick={() => navigate("/admin/manage-hotels")}
-          >
-            Manage Hotel
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-7 bg-white text-black hover:bg-gray-100 text-xs"
-            onClick={handleAddRoom}
-          >
-            Add Rooms
-          </Button>
+    <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+      <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 Manage Rooms {hotel ? `- ${hotel.name}` : ""}</div>
+      
+      {/* Maroon header bar */}
+      <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>Manage Rooms</span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <span onClick={() => navigate("/admin/manage-hotels")} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>Manage Hotel</span>
+          <span onClick={handleAddRoom} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>Add Rooms</span>
         </div>
       </div>
 
-      <div className="p-4">
-        {/* Table */}
-        <div className="border border-gray-300 bg-white">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-[#c47a7e] text-white">
-                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Room Type↓↑</th>
-                <th className="border border-gray-300 px-3 py-2 text-left font-medium w-[150px]">No of Room↓↑</th>
-                <th className="border border-gray-300 px-3 py-2 text-center font-medium w-[150px]">Action</th>
-                <th className="border border-gray-300 px-3 py-2 text-center font-medium w-[50px]">
-                  <Checkbox
-                    checked={selectedIds.length === rooms.length && rooms.length > 0}
-                    onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                  />
-                </th>
+      {/* Table */}
+      <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
+              <th style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff" }}>Room Type</th>
+              <th style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff", width: 150 }}>No of Room</th>
+              <th style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "center", fontWeight: "bold", fontSize: 11, color: "#fff", width: 150 }}>Action</th>
+              <th style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "center", fontWeight: "bold", fontSize: 11, color: "#fff", width: 40 }}>
+                <input type="checkbox" checked={selectedIds.length === rooms.length && rooms.length > 0} onChange={(e) => handleSelectAll(e.target.checked)} />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rooms.map((room, index) => (
+              <tr key={room.id} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#f6f0f0" }}>
+                <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060" }}>{room.room_number}</td>
+                <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060" }}>{room.total_quantity}</td>
+                <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, textAlign: "center" }}>
+                  <span onClick={() => handleEdit(room)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Edit</span>
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "5px 8px", textAlign: "center" }}>
+                  <input type="checkbox" checked={selectedIds.includes(room.id)} onChange={(e) => handleSelectOne(room.id, e.target.checked)} />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {rooms.map((room, index) => (
-                <tr key={room.id} className={index % 2 === 0 ? "bg-white" : "bg-[#f6f0f0]"}>
-                  <td className="border border-gray-300 px-3 py-2">{room.room_number}</td>
-                  <td className="border border-gray-300 px-3 py-2">{room.total_quantity}</td>
-                  <td className="border border-gray-300 px-3 py-2 text-center">
-                    <button
-                      className="text-blue-600 hover:text-blue-800 hover:underline text-xs"
-                      onClick={() => handleEdit(room)}
-                    >
-                      Edit
-                    </button>
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-center">
-                    <Checkbox
-                      checked={selectedIds.includes(room.id)}
-                      onCheckedChange={(checked) => handleSelectOne(room.id, !!checked)}
-                    />
-                  </td>
-                </tr>
-              ))}
-              {rooms.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="border border-gray-300 px-3 py-8 text-center text-muted-foreground">
-                    No rooms found. Click "Add Rooms" to create your first room.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            ))}
+            {rooms.length === 0 && (
+              <tr><td colSpan={4} style={{ border: "1px solid #ddd", padding: "20px 8px", textAlign: "center", color: "#999", fontSize: 11 }}>No rooms found. Click "Add Rooms" to create your first room.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Delete Button */}
-        <div className="flex justify-end mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={handleDeleteSelected}
-            disabled={selectedIds.length === 0}
-          >
-            Delete
-          </Button>
-        </div>
+      {/* Delete Button */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+        <button onClick={handleDeleteSelected} disabled={selectedIds.length === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: selectedIds.length === 0 ? "not-allowed" : "pointer", opacity: selectedIds.length === 0 ? 0.5 : 1 }}>Delete</button>
       </div>
 
       {/* Add/Edit Room Dialog */}
@@ -320,70 +212,33 @@ export default function AdminManageRooms() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Room Name / Type <span className="text-destructive">*</span></Label>
-              <Input
-                required
-                placeholder="e.g., Presidential Suite, Deluxe Room"
-                value={formData.room_name}
-                onChange={(e) => setFormData({ ...formData, room_name: e.target.value })}
-              />
+              <Input required placeholder="e.g., Presidential Suite, Deluxe Room" value={formData.room_name} onChange={(e) => setFormData({ ...formData, room_name: e.target.value })} />
             </div>
-
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Total Quantity <span className="text-destructive">*</span></Label>
-                <Input
-                  type="number"
-                  min="1"
-                  required
-                  value={formData.total_quantity}
-                  onChange={(e) => setFormData({ ...formData, total_quantity: e.target.value })}
-                />
+                <Input type="number" min="1" required value={formData.total_quantity} onChange={(e) => setFormData({ ...formData, total_quantity: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Adult Capacity</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={formData.adult_capacity}
-                  onChange={(e) => setFormData({ ...formData, adult_capacity: e.target.value })}
-                />
+                <Input type="number" min="1" value={formData.adult_capacity} onChange={(e) => setFormData({ ...formData, adult_capacity: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Child Capacity</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.child_capacity}
-                  onChange={(e) => setFormData({ ...formData, child_capacity: e.target.value })}
-                />
+                <Input type="number" min="0" value={formData.child_capacity} onChange={(e) => setFormData({ ...formData, child_capacity: e.target.value })} />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>Description</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={2}
-              />
+              <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={2} />
             </div>
-
             <div className="space-y-2">
               <Label>Notes</Label>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={2}
-              />
+              <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} />
             </div>
-
             <div className="flex gap-3 justify-end">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                {editingRoom ? "Update Room" : "Add Room"}
-              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button type="submit">{editingRoom ? "Update Room" : "Add Room"}</Button>
             </div>
           </form>
         </DialogContent>
