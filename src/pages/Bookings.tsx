@@ -2542,8 +2542,6 @@ export default function Bookings() {
                 <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
               </CardContent>
             </Card>
-            </>
-            )}
           </>
         )}
 
