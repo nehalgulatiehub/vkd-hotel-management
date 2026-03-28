@@ -2358,187 +2358,226 @@ export default function Bookings() {
           </Card>
         ) : (
           <>
-            {/* Compact Filter Section - Matching Reference Design */}
+            {isAdminRoute ? (
+              <div style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+                <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 View Booking</div>
+                <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
+                  <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Search</span>
+                    <span onClick={() => setFilters({ fromMonth: "", fromDay: "", fromYear: "", toMonth: "", toDay: "", toYear: "", type: "", agentName: "", hotel: "", room: "", package: "", customer: "", reference: "", user: "", chequeNo: "", searchWithDate: false })} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
+                  </div>
+                  <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                      <label style={{ fontSize: 11, minWidth: 35 }}>From :</label>
+                      <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+                        <option value="">Mon</option>
+                        {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
+                      </select>
+                      <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+                        <option value="">1</option>
+                        {days.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                      <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 45 }} />
+                      <label style={{ fontSize: 11, marginLeft: 16, minWidth: 20 }}>To :</label>
+                      <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+                        <option value="">Mon</option>
+                        {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
+                      </select>
+                      <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+                        <option value="">1</option>
+                        {days.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                      <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 45 }} />
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>Search with Date :</label>
+                      <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="adminSWD" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} style={{ width: 12, height: 12 }} /> YES</label>
+                      <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="adminSWD" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} style={{ width: 12, height: 12 }} /> NO</label>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                      <label style={{ fontSize: 11, minWidth: 35 }}>Type :</label>
+                      <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+                        <option value="">--Select--</option><option value="agent">Agent</option><option value="direct">Direct</option>
+                      </select>
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>Agent Name :</label>
+                      <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, minWidth: 140 }}>
+                        <option value="">--Select--</option>
+                        {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                      </select>
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>Reference :</label>
+                      <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 120 }} />
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>User :</label>
+                      <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+                        <option value="">--Select--</option>
+                        {users.map(u => <option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <label style={{ fontSize: 11, minWidth: 35 }}>Hotel :</label>
+                      <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, minWidth: 140 }}>
+                        <option value="">--Select--</option>
+                        {ownHotels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                      </select>
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>Room :</label>
+                      <select value={filters.room} onChange={(e) => setFilters({...filters, room: e.target.value})} disabled={!filters.hotel} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, minWidth: 100 }}>
+                        <option value="">--Select--</option>
+                        {filterRooms.map(r => <option key={r.id} value={r.id}>{r.room_type || r.room_number}</option>)}
+                      </select>
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>Package :</label>
+                      <select value={filters.package} onChange={(e) => setFilters({...filters, package: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, minWidth: 140 }}>
+                        <option value="">--Select--</option>
+                      </select>
+                      <label style={{ fontSize: 11, marginLeft: 16 }}>Customer :</label>
+                      <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 100 }} />
+                      <button style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer", marginLeft: 8 }}>Search</button>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
+                        {["S.No.","Booking","Type","Customer Name","Hotel","Price","Date","User","Action"].map(h => (
+                          <th key={h} style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBookings.length === 0 ? (
+                        <tr><td colSpan={9} style={{ border: "1px solid #ddd", padding: "20px 8px", textAlign: "center", color: "#999", fontSize: 11 }}>No bookings found</td></tr>
+                      ) : (
+                        pagination.paginatedItems.map((booking: any, index: number) => (
+                          <tr key={booking.id} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#f6f0f0" }}>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{pagination.startIndex + index}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div><strong>Booking:</strong></div>
+                              <div>{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"} -</div>
+                              <div>{booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
+                              {booking.hotel_info?.number_of_rooms && <div><strong>No. of Rooms:</strong> {booking.hotel_info.number_of_rooms}</div>}
+                              <div>{booking.adults || 0} Adult {booking.children || 0} Children</div>
+                              <div><strong>Price:</strong> Rs. {booking.total_amount || 0}/-</div>
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              {booking.booking_type === "agent" ? <><div>Agent</div><div>{booking.agents?.name || "-"}</div></> : "Direct"}
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div>{booking.customer_name || "-"}</div>
+                              <div>Contact No.: {booking.contact_no || ""}</div>
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{booking.hotel_info?.hotel_name || ""}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div><strong>Booking Price :</strong> Rs. {booking.total_amount || 0} /-</div>
+                              <div><strong>Recevied Price :</strong> Rs. {booking.paid_amount || 0} /-</div>
+                              <div><strong>Due Price :</strong> Rs. {booking.due_amount || 0} /-</div>
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{booking.created_by_name || "-"}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top" }}>
+                              {[
+                                { label: "View Booking", fn: () => handleViewDetails(booking) },
+                                { label: "Print Booking", fn: () => handlePrintBooking(booking) },
+                                { label: "View Payment", fn: () => handleViewPayment(booking) },
+                                { label: "View Refund Payment", fn: () => handleRefundPayment(booking) },
+                              ].map((a, i) => (
+                                <span key={i} onClick={a.fn} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10, display: "block" }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>{a.label}</span>
+                              ))}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
+              </div>
+            ) : (
+            <>
             <div className="mb-3 border border-border bg-muted/50">
-              {/* Row 1: Dates and Search with Date */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">From :</span>
-                  <select 
-                    value={filters.fromMonth} 
-                    onChange={(e) => setFilters({...filters, fromMonth: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
-                  >
+                  <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
                     <option value="">Jan</option>
                     {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
                   </select>
-                  <select 
-                    value={filters.fromDay} 
-                    onChange={(e) => setFilters({...filters, fromDay: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
-                  >
+                  <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
                     <option value="">1</option>
                     {days.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
-                  <input 
-                    type="text" 
-                    placeholder="2026" 
-                    value={filters.fromYear} 
-                    onChange={(e) => setFilters({...filters, fromYear: e.target.value})} 
-                    className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                  />
+                  <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">To :</span>
-                  <select 
-                    value={filters.toMonth} 
-                    onChange={(e) => setFilters({...filters, toMonth: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
-                  >
+                  <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
                     <option value="">Jan</option>
                     {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
                   </select>
-                  <select 
-                    value={filters.toDay} 
-                    onChange={(e) => setFilters({...filters, toDay: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
-                  >
+                  <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
                     <option value="">1</option>
                     {days.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
-                  <input 
-                    type="text" 
-                    placeholder="2026" 
-                    value={filters.toYear} 
-                    onChange={(e) => setFilters({...filters, toYear: e.target.value})} 
-                    className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                  />
+                  <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">Search with Date :</span>
-                  <label className="flex items-center gap-0.5 text-[11px]">
-                    <input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" />
-                    YES
-                  </label>
-                  <label className="flex items-center gap-0.5 text-[11px]">
-                    <input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" />
-                    NO
-                  </label>
+                  <label className="flex items-center gap-0.5 text-[11px]"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" /> YES</label>
+                  <label className="flex items-center gap-0.5 text-[11px]"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" /> NO</label>
                 </div>
               </div>
-
-              {/* Row 2: Type, Agent, Reference, User */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">Type :</span>
-                  <select 
-                    value={filters.type} 
-                    onChange={(e) => setFilters({...filters, type: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
-                  >
-                    <option value="">--Select--</option>
-                    <option value="agent">Agent</option>
-                    <option value="direct">Direct</option>
+                  <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
+                    <option value="">--Select--</option><option value="agent">Agent</option><option value="direct">Direct</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">Agent Name :</span>
-                  <select 
-                    value={filters.agentName} 
-                    onChange={(e) => setFilters({...filters, agentName: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm"
-                  >
+                  <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
                     <option value="">--Select--</option>
                     {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
                   </select>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">Reference :</span>
-                  <input 
-                    value={filters.reference} 
-                    onChange={(e) => setFilters({...filters, reference: e.target.value})} 
-                    className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                  />
+                  <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">User :</span>
-                  <select 
-                    value={filters.user} 
-                    onChange={(e) => setFilters({...filters, user: e.target.value})}
-                    className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
-                  >
+                  <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
                     <option value="">--Select--</option>
-                    {users.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown'}
-                      </option>
-                    ))}
+                    {users.map(u => (<option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>))}
                   </select>
                 </div>
               </div>
-
-              {/* Row 3: Hotel, Room, Package, Customer, Cheque, Search */}
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
                   <div className="flex items-center gap-1">
                     <span className="text-[11px] text-muted-foreground">Hotel :</span>
-                    <select 
-                      value={filters.hotel} 
-                      onChange={(e) => {
-                        setFilters({...filters, hotel: e.target.value, room: ""});
-                        fetchFilterRoomsForHotel(e.target.value);
-                      }}
-                      className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm"
-                    >
+                    <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
                       <option value="">--Select--</option>
                       {ownHotels.map(hotel => (<option key={hotel.id} value={hotel.id}>{hotel.name}</option>))}
                     </select>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-[11px] text-muted-foreground">Room :</span>
-                    <select 
-                      value={filters.room} 
-                      onChange={(e) => setFilters({...filters, room: e.target.value})}
-                      disabled={!filters.hotel}
-                      className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] disabled:bg-muted rounded-sm"
-                    >
+                    <select value={filters.room} onChange={(e) => setFilters({...filters, room: e.target.value})} disabled={!filters.hotel} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] disabled:bg-muted rounded-sm">
                       <option value="">{filters.hotel ? "--Select--" : "Select hotel"}</option>
                       {filterRooms.map(room => (<option key={room.id} value={room.id}>{room.room_type || room.room_number}</option>))}
                     </select>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-[11px] text-muted-foreground">Package :</span>
-                    <select 
-                      value={filters.package} 
-                      onChange={(e) => setFilters({...filters, package: e.target.value})}
-                      className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm"
-                    >
-                      <option value="">--Select--</option>
-                      <option value="all">All Packages</option>
+                    <select value={filters.package} onChange={(e) => setFilters({...filters, package: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
+                      <option value="">--Select--</option><option value="all">All Packages</option>
                     </select>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-[11px] text-muted-foreground">Customer :</span>
-                    <input 
-                      value={filters.customer} 
-                      onChange={(e) => setFilters({...filters, customer: e.target.value})} 
-                      className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                    />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-muted-foreground">Cheque No. :</span>
-                    <input 
-                      value={filters.chequeNo} 
-                      onChange={(e) => setFilters({...filters, chequeNo: e.target.value})} 
-                      className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                    />
+                    <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
                   </div>
                 </div>
                 <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
               </div>
             </div>
-
-            {/* Detailed Table */}
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -2558,43 +2597,23 @@ export default function Bookings() {
                     </thead>
                     <tbody>
                       {filteredBookings.length === 0 ? (
-                        <tr>
-                          <td colSpan={9} className="border border-border px-4 py-8 text-center text-muted-foreground">
-                            No bookings found
-                          </td>
-                        </tr>
+                        <tr><td colSpan={9} className="border border-border px-4 py-8 text-center text-muted-foreground">No bookings found</td></tr>
                       ) : (
                         pagination.paginatedItems.map((booking, index) => (
                           <tr key={booking.id} className="hover:bg-muted/50">
                             <td className="border border-border px-3 py-2 text-sm">{pagination.startIndex + index}</td>
                             <td className="border border-border px-3 py-2 text-sm font-medium">{booking.booking_number || "-"}</td>
                             <td className="border border-border px-3 py-2 text-sm">
-                              {booking.booking_type === "agent" ? (
-                                <>
-                                  <div>Agent</div>
-                                  <div className="text-xs text-muted-foreground">{booking.agents?.name || "-"}</div>
-                                </>
-                              ) : (
-                                <div>Direct</div>
-                              )}
+                              {booking.booking_type === "agent" ? (<><div>Agent</div><div className="text-xs text-muted-foreground">{booking.agents?.name || "-"}</div></>) : (<div>Direct</div>)}
                             </td>
-                            <td className="border border-border px-3 py-2 text-sm">
-                              {booking.created_by_name || "-"}
-                            </td>
+                            <td className="border border-border px-3 py-2 text-sm">{booking.created_by_name || "-"}</td>
                             <td className="border border-border px-3 py-2 text-sm">
                               <div className="font-medium">{booking.customer_name || "-"}</div>
                               <div className="text-xs text-muted-foreground">Contact No.: {booking.contact_no || "-"}</div>
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
                               <div className="space-y-1 text-xs">
-                                {booking.hotel_info && (
-                                  <>
-                                    <div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div>
-                                    <div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>
-                                    {booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}
-                                    {booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}
-                                  </>
-                                )}
+                                {booking.hotel_info && (<><div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div><div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>{booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}{booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}</>)}
                                 {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
                                 {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
                                 {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
@@ -2622,72 +2641,16 @@ export default function Bookings() {
                             </td>
                             <td className="border border-border px-3 py-2">
                               <div className="flex flex-col gap-1">
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleViewDetails(booking)}
-                                >
-                                  View Details
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handlePrintBooking(booking)}
-                                >
-                                 Print Booking
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => setVoucherBookingId(booking.id)}
-                                >
-                                  Booking Voucher
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  className="h-auto p-0 text-xs text-primary"
-                                  onClick={() => handleViewPayment(booking)}
-                                >
-                                  View Payment
-                                </Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
+                                <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
                                 {(booking.created_by === user?.id || isAdmin()) && (
                                   <>
-                                    <Button 
-                                      size="sm" 
-                                      variant="link" 
-                                      className="h-auto p-0 text-xs text-primary"
-                                      onClick={() => handleEditBooking(booking)}
-                                    >
-                                      Edit Booking
-                                    </Button>
-                                    <Button 
-                                      size="sm" 
-                                      variant="link" 
-                                      className="h-auto p-0 text-xs text-primary"
-                                      onClick={() => handleAddPayment(booking)}
-                                    >
-                                      Add Payment
-                                    </Button>
-                                    <Button
-                                      size="sm" 
-                                      variant="link" 
-                                      className="h-auto p-0 text-xs text-primary"
-                                      onClick={() => handleRefundPayment(booking)}
-                                    >
-                                      Refund Payment
-                                    </Button>
-                                    <Button 
-                                      size="sm" 
-                                      variant="link" 
-                                      className="h-auto p-0 text-xs text-destructive"
-                                      onClick={() => handleCancelBooking(booking)}
-                                    >
-                                      Cancel
-                                    </Button>
+                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
+                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
+                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
+                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
                                   </>
                                 )}
                               </div>
@@ -2698,32 +2661,18 @@ export default function Bookings() {
                     </tbody>
                   </table>
                 </div>
-                
-                {/* Summary Footer */}
                 <div className="bg-muted border border-border p-3 space-y-1">
-                  <div className="font-semibold text-sm">
-                    Total Booking Price : Rs. {filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0).toLocaleString('en-IN')} /-
-                  </div>
+                  <div className="font-semibold text-sm">Total Booking Price : Rs. {filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0).toLocaleString('en-IN')} /-</div>
                   <div className="flex gap-8 text-sm">
-                    <span className="font-semibold">
-                      Total Received Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.paid_amount || 0), 0).toLocaleString('en-IN')} /-
-                    </span>
-                    <span className="font-semibold">
-                      Total Due Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0).toLocaleString('en-IN')} /-
-                    </span>
+                    <span className="font-semibold">Total Received Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.paid_amount || 0), 0).toLocaleString('en-IN')} /-</span>
+                    <span className="font-semibold">Total Due Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0).toLocaleString('en-IN')} /-</span>
                   </div>
                 </div>
-
-                <TablePagination
-                  currentPage={pagination.currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={pagination.goToPage}
-                  totalItems={pagination.totalItems}
-                  startIndex={pagination.startIndex}
-                  endIndex={pagination.endIndex}
-                />
+                <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
               </CardContent>
             </Card>
+            </>
+            )}
           </>
         )}
 
