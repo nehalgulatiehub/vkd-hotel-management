@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle, filterSelectStyle } from "@/components/admin/AdminPageShell";
 
 export default function ViewPaidPayment() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -32,24 +32,28 @@ export default function ViewPaidPayment() {
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments);
   const totalPaid = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  if (authLoading) return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
-  if (!isAdmin()) return <div className="p-6 text-center">Admin access required.</div>;
+  if (authLoading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontSize: 11 }}>Loading...</div>;
+  if (!isAdmin()) return <div style={{ padding: 24, textAlign: "center", fontSize: 11 }}>Admin access required.</div>;
 
   const filterSection = (
-    <div className="flex flex-wrap items-center gap-4 text-xs">
-      <div className="flex items-center gap-1"><span>Customer :</span><input value={searchCustomer} onChange={(e) => setSearchCustomer(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]" placeholder="Search..." /></div>
-      <div className="flex items-center gap-1"><span>Mode :</span>
-        <select value={filterPaymentMode} onChange={(e) => setFilterPaymentMode(e.target.value)} className="border px-1 py-0.5 text-xs">
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <span>Customer :</span>
+        <input value={searchCustomer} onChange={(e) => setSearchCustomer(e.target.value)} style={{ ...filterInputStyle, minWidth: 200 }} placeholder="Search..." />
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <span>Mode :</span>
+        <select value={filterPaymentMode} onChange={(e) => setFilterPaymentMode(e.target.value)} style={filterSelectStyle}>
           <option value="">All Modes</option><option value="cash">Cash</option><option value="upi">UPI</option><option value="net banking">Net Banking</option><option value="card">Card</option><option value="cheque">Cheque</option>
         </select>
       </div>
-      <div className="ml-auto text-xs font-medium">Total Paid: Rs. {totalPaid.toLocaleString()}/-</div>
+      <div style={{ marginLeft: "auto", fontWeight: "bold", fontSize: 11 }}>Total Paid: Rs. {totalPaid.toLocaleString()}/-</div>
     </div>
   );
 
   return (
     <AdminPageShell title="View Paid Payment" filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
-      {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+      {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999", fontSize: 11 }}>Loading...</div> : (
         <ThemedTable>
           <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Booking</ThemedTH><ThemedTH>Customer</ThemedTH><ThemedTH>Payment Date</ThemedTH><ThemedTH>Amount</ThemedTH><ThemedTH>Mode</ThemedTH><ThemedTH>Type</ThemedTH><ThemedTH>Reference</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
           <tbody>
@@ -64,10 +68,8 @@ export default function ViewPaidPayment() {
                 <ThemedTD>{payment.payment_type || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.reference_number || "N/A"}</ThemedTD>
                 <ThemedTD>
-                  <div className="flex flex-col gap-0.5 text-[#c00] text-[10px]">
-                    <button className="hover:underline text-left" onClick={() => navigate(`/admin/bookings/${payment.booking?.id}`)}>View Booking</button>
-                    <button className="hover:underline text-left" onClick={() => navigate(`/admin/booking-payments?id=${payment.booking?.id}`)}>View Payments</button>
-                  </div>
+                  <ThemedActionLink onClick={() => navigate(`/admin/bookings/${payment.booking?.id}`)}>View Booking</ThemedActionLink>
+                  <ThemedActionLink onClick={() => navigate(`/admin/booking-payments?id=${payment.booking?.id}`)}>View Payments</ThemedActionLink>
                 </ThemedTD>
               </ThemedTR>
             ))}
