@@ -2505,6 +2505,11 @@ export default function Bookings() {
                     </tbody>
                   </table>
                 </div>
+                <div style={{ padding: "6px 10px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", color: "#c00", fontStyle: "italic" }}>
+                  <strong>Total Booking Price :</strong> Rs. {filteredBookings.reduce((s: number, b: any) => s + (b.total_amount || 0), 0).toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
+                  <strong>Total Received Payment :</strong> Rs. {filteredBookings.reduce((s: number, b: any) => s + (b.paid_amount || 0), 0).toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
+                  <strong>Total Due Payment :</strong> Rs. {filteredBookings.reduce((s: number, b: any) => s + (b.due_amount || 0), 0).toLocaleString('en-IN')} /-
+                </div>
                 <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
               </div>
             ) : (
