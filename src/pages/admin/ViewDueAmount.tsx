@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -10,6 +8,7 @@ import { toast } from "sonner";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterInputStyle } from "@/components/admin/AdminPageShell";
 
 export default function ViewDueAmount() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -31,7 +30,6 @@ export default function ViewDueAmount() {
 
   const paymentDialog = usePaymentDialog(() => fetchBookingsWithDue());
 
-  // View Details Dialog states
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [viewDetailOwnHotelInfo, setViewDetailOwnHotelInfo] = useState<any[]>([]);
@@ -52,16 +50,8 @@ export default function ViewDueAmount() {
     }
   }, [authLoading]);
 
-  const fetchAgents = async () => {
-    const { data } = await supabase.from("agents").select("*").order("name");
-    setAgents(data || []);
-  };
-
-  const fetchOwnHotels = async () => {
-    const { data } = await supabase.from("own_hotels").select("*").order("name");
-    setOwnHotels(data || []);
-  };
-
+  const fetchAgents = async () => { const { data } = await supabase.from("agents").select("*").order("name"); setAgents(data || []); };
+  const fetchOwnHotels = async () => { const { data } = await supabase.from("own_hotels").select("*").order("name"); setOwnHotels(data || []); };
   const fetchFilterRoomsForHotel = async (hotelId: string) => {
     if (!hotelId) { setFilterRooms([]); return; }
     const { data } = await supabase.from("rooms").select("*").eq("hotel_id", hotelId).order("room_number");
@@ -71,22 +61,11 @@ export default function ViewDueAmount() {
   const fetchBookingsWithDue = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*, agents(name)")
-        .gt("due_amount", 0)
-        .neq("status", "cancelled")
-        .order("created_at", { ascending: false });
-
+      const { data, error } = await supabase.from("bookings").select("*, agents(name)").gt("due_amount", 0).neq("status", "cancelled").order("created_at", { ascending: false });
       if (error) throw error;
-
       const bookingIds = (data || []).map(b => b.id);
       if (bookingIds.length > 0) {
-        const { data: hotelData } = await supabase
-          .from("hotel_bookings")
-          .select("*, own_hotels(name), another_hotels(name)")
-          .in("booking_id", bookingIds);
-
+        const { data: hotelData } = await supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name)").in("booking_id", bookingIds);
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const roomIds = [...new Set((hotelData || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
         let roomsMap: Record<string, string> = {};
@@ -94,41 +73,19 @@ export default function ViewDueAmount() {
           const { data: roomsData } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
           roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
         }
-
         const hotelBookingsMap: Record<string, any> = {};
         hotelData?.forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
-          hotelBookingsMap[hb.booking_id] = {
-            hotel_id: hb.own_hotel_id || hb.hotel_id,
-            room_id: isUuid ? hb.room_type : null,
-            hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
-            room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
-            number_of_rooms: hb.number_of_rooms,
-            notes: hb.notes
-          };
+          hotelBookingsMap[hb.booking_id] = { hotel_id: hb.own_hotel_id || hb.hotel_id, room_id: isUuid ? hb.room_type : null, hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null, room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type, number_of_rooms: hb.number_of_rooms, notes: hb.notes };
         });
-
         setBookings((data || []).map(b => ({ ...b, hotel_info: hotelBookingsMap[b.id] || null })));
-      } else {
-        setBookings(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching bookings with due:", error);
-    } finally {
-      setLoading(false);
-    }
+      } else { setBookings(data || []); }
+    } catch (error) { console.error("Error fetching bookings with due:", error); }
+    finally { setLoading(false); }
   };
 
   const handleViewDetails = async (booking: any) => {
-    setSelectedBooking(booking);
-    setViewDetailOwnHotelInfo([]);
-    setViewDetailAnotherHotelInfo([]);
-    setViewDetailSafariInfo([]);
-    setViewDetailVehicleInfo([]);
-    setViewDetailVolvoDMInfo([]);
-    setViewDetailVolvoMDInfo([]);
-    setShowViewDetailDialog(true);
-
+    setSelectedBooking(booking); setViewDetailOwnHotelInfo([]); setViewDetailAnotherHotelInfo([]); setViewDetailSafariInfo([]); setViewDetailVehicleInfo([]); setViewDetailVolvoDMInfo([]); setViewDetailVolvoMDInfo([]); setShowViewDetailDialog(true);
     const [hotelRes, safariRes, vehicleRes, volvoDMRes, volvoMDRes] = await Promise.all([
       supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name, cities(name))").eq("booking_id", booking.id),
       supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
@@ -136,64 +93,18 @@ export default function ViewDueAmount() {
       supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "delhi_manali"),
       supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id).eq("route", "manali_delhi")
     ]);
-
     if (hotelRes.data && hotelRes.data.length > 0) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const roomIds = [...new Set(hotelRes.data.map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
       let roomsMap: Record<string, string> = {};
-      if (roomIds.length > 0) {
-        const { data: roomsData } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds);
-        roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
-      }
-      const ownHotelBookings = hotelRes.data.filter((hb: any) => hb.own_hotel_id && hb.own_hotels?.name);
-      const anotherHotelBookings = hotelRes.data.filter((hb: any) => hb.hotel_id && hb.another_hotels?.name);
-
-      setViewDetailOwnHotelInfo(ownHotelBookings.map((hb: any) => ({
-        hotelName: hb.own_hotels?.name || "-",
-        roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"),
-        numberOfRooms: hb.number_of_rooms || 1, notes: hb.notes || "",
-        checkIn: hb.check_in_date || "", checkOut: hb.check_out_date || "",
-        totalAmount: hb.total_amount || 0, roomRate: hb.room_rate || 0, createdAt: booking.created_at
-      })));
-      setViewDetailAnotherHotelInfo(anotherHotelBookings.map((hb: any) => ({
-        hotelName: hb.another_hotels?.name || "-",
-        roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"),
-        numberOfRooms: hb.number_of_rooms || 1, notes: hb.notes || "",
-        checkIn: hb.check_in_date || "", checkOut: hb.check_out_date || "",
-        totalAmount: hb.total_amount || 0, roomRate: hb.room_rate || 0, createdAt: booking.created_at
-      })));
+      if (roomIds.length > 0) { const { data: roomsData } = await supabase.from("rooms").select("id, room_type, room_number").in("id", roomIds); roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {}); }
+      setViewDetailOwnHotelInfo(hotelRes.data.filter((hb: any) => hb.own_hotel_id && hb.own_hotels?.name).map((hb: any) => ({ hotelName: hb.own_hotels?.name || "-", roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"), numberOfRooms: hb.number_of_rooms || 1, notes: hb.notes || "", checkIn: hb.check_in_date || "", checkOut: hb.check_out_date || "", totalAmount: hb.total_amount || 0, roomRate: hb.room_rate || 0, createdAt: booking.created_at })));
+      setViewDetailAnotherHotelInfo(hotelRes.data.filter((hb: any) => hb.hotel_id && hb.another_hotels?.name).map((hb: any) => ({ hotelName: hb.another_hotels?.name || "-", roomName: hb.room_type && uuidRegex.test(hb.room_type) ? (roomsMap[hb.room_type] || hb.room_type) : (hb.room_type || "-"), numberOfRooms: hb.number_of_rooms || 1, notes: hb.notes || "", checkIn: hb.check_in_date || "", checkOut: hb.check_out_date || "", totalAmount: hb.total_amount || 0, roomRate: hb.room_rate || 0, createdAt: booking.created_at })));
     }
-
-    if (safariRes.data) {
-      setViewDetailSafariInfo(safariRes.data.map((sb: any) => ({
-        transporter: sb.transporters?.name || "-", safariDate: sb.safari_date,
-        numberOfPersons: sb.number_of_persons || 0, ratePerPerson: sb.rate_per_person || 0,
-        totalAmount: sb.total_amount || 0, createdAt: booking.created_at
-      })));
-    }
-    if (vehicleRes.data) {
-      setViewDetailVehicleInfo(vehicleRes.data.map((vb: any) => ({
-        vehicleType: vb.vehicle_type || "-", transporter: vb.transporters?.name || "-",
-        pickupDate: vb.pickup_date, rate: vb.rate || 0,
-        totalAmount: vb.total_amount || 0, createdAt: booking.created_at
-      })));
-    }
-    if (volvoDMRes.data) {
-      setViewDetailVolvoDMInfo(volvoDMRes.data.map((vb: any) => ({
-        numberOfSeats: vb.number_of_seats || 0, ticketNumber: vb.ticket_number || "-",
-        seatNumbers: vb.seat_numbers || "-", transporter: vb.transporters?.name || "-",
-        travelDate: vb.travel_date, ratePerSeat: vb.rate_per_seat || 0,
-        totalAmount: vb.total_amount || 0, createdAt: booking.created_at
-      })));
-    }
-    if (volvoMDRes.data) {
-      setViewDetailVolvoMDInfo(volvoMDRes.data.map((vb: any) => ({
-        numberOfSeats: vb.number_of_seats || 0, ticketNumber: vb.ticket_number || "-",
-        seatNumbers: vb.seat_numbers || "-", transporter: vb.transporters?.name || "-",
-        travelDate: vb.travel_date, ratePerSeat: vb.rate_per_seat || 0,
-        totalAmount: vb.total_amount || 0, createdAt: booking.created_at
-      })));
-    }
+    if (safariRes.data) setViewDetailSafariInfo(safariRes.data.map((sb: any) => ({ transporter: sb.transporters?.name || "-", safariDate: sb.safari_date, numberOfPersons: sb.number_of_persons || 0, ratePerPerson: sb.rate_per_person || 0, totalAmount: sb.total_amount || 0, createdAt: booking.created_at })));
+    if (vehicleRes.data) setViewDetailVehicleInfo(vehicleRes.data.map((vb: any) => ({ vehicleType: vb.vehicle_type || "-", transporter: vb.transporters?.name || "-", pickupDate: vb.pickup_date, rate: vb.rate || 0, totalAmount: vb.total_amount || 0, createdAt: booking.created_at })));
+    if (volvoDMRes.data) setViewDetailVolvoDMInfo(volvoDMRes.data.map((vb: any) => ({ numberOfSeats: vb.number_of_seats || 0, ticketNumber: vb.ticket_number || "-", seatNumbers: vb.seat_numbers || "-", transporter: vb.transporters?.name || "-", travelDate: vb.travel_date, ratePerSeat: vb.rate_per_seat || 0, totalAmount: vb.total_amount || 0, createdAt: booking.created_at })));
+    if (volvoMDRes.data) setViewDetailVolvoMDInfo(volvoMDRes.data.map((vb: any) => ({ numberOfSeats: vb.number_of_seats || 0, ticketNumber: vb.ticket_number || "-", seatNumbers: vb.seat_numbers || "-", transporter: vb.transporters?.name || "-", travelDate: vb.travel_date, ratePerSeat: vb.rate_per_seat || 0, totalAmount: vb.total_amount || 0, createdAt: booking.created_at })));
   };
 
   const filteredBookings = bookings.filter(booking => {
@@ -204,7 +115,6 @@ export default function ViewDueAmount() {
     const matchesHotel = !filters.hotel || booking.hotel_info?.hotel_id === filters.hotel;
     const matchesRoom = !filters.room || booking.hotel_info?.room_id === filters.room;
     const matchesUser = !filters.user || booking.created_by === filters.user;
-
     let matchesDate = true;
     if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
       const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth.padStart(2, '0')}-${filters.fromDay.padStart(2, '0')}`);
@@ -215,7 +125,6 @@ export default function ViewDueAmount() {
         matchesDate = matchesDate && bookingDate <= toDate;
       }
     }
-
     return matchesType && matchesAgent && matchesCustomer && matchesReference && matchesDate && matchesHotel && matchesRoom && matchesUser;
   });
 
@@ -223,224 +132,137 @@ export default function ViewDueAmount() {
   const totalPaid = filteredBookings.reduce((sum, b) => sum + (b.paid_amount || 0), 0);
   const totalDue = filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0);
 
-  if (authLoading) return <div className="p-4 text-center text-muted-foreground">Loading...</div>;
-  if (!isAdmin()) return <div className="p-4 text-center text-muted-foreground">Admin access required.</div>;
+  if (authLoading) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
+  if (!isAdmin()) return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Admin access required.</div>;
+
+  const fs: React.CSSProperties = { border: "1px solid #999", padding: "2px 4px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" };
+
+  const filterSection = (
+    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, borderBottom: "1px solid #ccc", padding: "4px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>From :</span>
+          <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} style={fs}><option value="">Month</option>{months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}</select>
+          <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} style={fs}><option value="">Day</option>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+          <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} style={{ ...fs, width: 48 }} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>To :</span>
+          <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} style={fs}><option value="">Month</option>{months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}</select>
+          <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} style={fs}><option value="">Day</option>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+          <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} style={{ ...fs, width: 48 }} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+          <span>Search with Date :</span>
+          <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} /> YES</label>
+          <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} /> NO</label>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>Reference :</span>
+          <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} style={{ ...fs, width: 96 }} />
+        </div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, borderBottom: "1px solid #ccc", padding: "4px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>Type :</span>
+          <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} style={fs}><option value="">--Select--</option><option value="agent">Agent</option><option value="direct">Direct</option></select>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>Agent Name :</span>
+          <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} style={{ ...fs, minWidth: 120 }}><option value="">--Select--</option>{agents.map(agent => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>Hotel :</span>
+          <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} style={{ ...fs, minWidth: 120 }}><option value="">--Select--</option>{ownHotels.map(hotel => <option key={hotel.id} value={hotel.id}>{hotel.name}</option>)}</select>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span>Room :</span>
+          <select value={filters.room} onChange={(e) => setFilters({...filters, room: e.target.value})} disabled={!filters.hotel} style={{ ...fs, minWidth: 100 }}><option value="">{filters.hotel ? "--Select--" : "Select hotel"}</option>{filterRooms.map(room => <option key={room.id} value={room.id}>{room.room_type || room.room_number}</option>)}</select>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+          <span>User :</span>
+          <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} style={{ ...fs, minWidth: 100 }}><option value="">--Select--</option>{profiles.map(p => <option key={p.id} value={p.id}>{p.username || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown'}</option>)}</select>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", padding: "4px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span>Package :</span>
+            <select value={filters.package} onChange={(e) => setFilters({...filters, package: e.target.value})} style={{ ...fs, minWidth: 120 }}><option value="">--Select--</option></select>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span>Customer :</span>
+            <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} style={{ ...fs, width: 112 }} />
+          </div>
+        </div>
+        <button style={{ border: "1px solid #888", padding: "2px 16px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer" }}>Search</button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="p-4">
-        <h1 className="text-sm font-medium mb-3 flex items-center gap-1">
-          <span>📋</span> Due Amount Booking
-        </h1>
-
-        <div className="flex justify-between items-center px-4 py-2 mb-0" style={{ backgroundColor: "#b44a50" }}>
-          <span className="text-white font-semibold text-sm">Search</span>
-          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/admin/dashboard")}>
-            View All Records
-          </Button>
-        </div>
-
-        {/* Compact Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">From :</span>
-              <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                <option value="">Month</option>
-                {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-              </select>
-              <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                <option value="">Day</option>
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
+    <>
+      <AdminPageShell title="Due Amount Booking" actions={[{ label: "View All Records", onClick: () => navigate("/admin/dashboard") }]} filterSection={filterSection}>
+        {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999" }}>Loading...</div> : (
+          <>
+            <ThemedTable>
+              <ThemedTHead>
+                <ThemedTH>S.No.</ThemedTH>
+                <ThemedTH>Booking↕</ThemedTH>
+                <ThemedTH>Type</ThemedTH>
+                <ThemedTH>Customer Name↕</ThemedTH>
+                <ThemedTH>Price</ThemedTH>
+                <ThemedTH>Date↕</ThemedTH>
+                <ThemedTH>User↕</ThemedTH>
+                <ThemedTH>Action</ThemedTH>
+              </ThemedTHead>
+              <tbody>
+                {filteredBookings.length === 0 ? <ThemedEmptyRow colSpan={8} message="No bookings with due amount found" /> : filteredBookings.map((booking, index) => (
+                  <ThemedTR key={booking.id} index={index}>
+                    <ThemedTD>{index + 1}</ThemedTD>
+                    <ThemedTD>
+                      <div>Booking:</div>
+                      <div>{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"} - {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
+                      <div>No. of Rooms: {booking.hotel_info?.number_of_rooms || 1}</div>
+                      <div>{booking.adults || 0} Adult {booking.children || 0} Children</div>
+                      <div>Price: Rs. {(booking.total_amount || 0).toLocaleString("en-IN")}/-</div>
+                    </ThemedTD>
+                    <ThemedTD>
+                      <div style={{ textTransform: "capitalize" }}>{booking.booking_type === "agent" ? "Agent" : "Direct"}</div>
+                      {booking.agents?.name && <div>{booking.agents.name}</div>}
+                    </ThemedTD>
+                    <ThemedTD>
+                      <div style={{ fontWeight: 500 }}>{booking.customer_name || "-"}</div>
+                      <div>Contact No.: {booking.contact_no || ""}</div>
+                    </ThemedTD>
+                    <ThemedTD>
+                      <div>Booking Price : Rs. {(booking.total_amount || 0).toLocaleString("en-IN")} /-</div>
+                      <div>Receviced Price : Rs. {(booking.paid_amount || 0).toLocaleString("en-IN")} /-</div>
+                      <div>Due Price : Rs. {(booking.due_amount || 0).toLocaleString("en-IN")} /-</div>
+                    </ThemedTD>
+                    <ThemedTD>{booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}</ThemedTD>
+                    <ThemedTD>{getUserName(booking.created_by)}</ThemedTD>
+                    <ThemedTD>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <span onClick={() => handleViewDetails(booking)} style={{ color: "#c00", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>View Booking</span>
+                        <span onClick={() => window.print()} style={{ color: "#c00", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Print Booking</span>
+                        <span onClick={() => paymentDialog.handleViewPayment(booking)} style={{ color: "#c00", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>View Payment</span>
+                        <span onClick={() => navigate(`/admin/refunds?booking_id=${booking.id}&view=true`)} style={{ color: "#c00", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>View Refund Payment</span>
+                        <span onClick={() => toast.info("Delete booking feature coming soon")} style={{ color: "#c00", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Delete Booking</span>
+                      </div>
+                    </ThemedTD>
+                  </ThemedTR>
+                ))}
+              </tbody>
+            </ThemedTable>
+            <div style={{ padding: "6px 10px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", color: "#c00", fontStyle: "italic" }}>
+              <strong>Total Booking Price :</strong> Rs. {totalAmount.toLocaleString('en-IN')} /-&nbsp;&nbsp;
+              <strong>Total Received Payment :</strong> Rs. {totalPaid.toLocaleString('en-IN')} /-&nbsp;&nbsp;
+              <strong>Total Due Payment :</strong> Rs. {totalDue.toLocaleString('en-IN')} /-
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">To :</span>
-              <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                <option value="">Month</option>
-                {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-              </select>
-              <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                <option value="">Day</option>
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
-            </div>
-            <div className="flex items-center gap-1 ml-auto">
-              <span className="text-[11px] text-muted-foreground">Search with Date :</span>
-              <label className="flex items-center gap-0.5 text-[11px]">
-                <input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" /> YES
-              </label>
-              <label className="flex items-center gap-0.5 text-[11px]">
-                <input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" /> NO
-              </label>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Reference :</span>
-              <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Type :</span>
-              <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                <option value="">--Select--</option>
-                <option value="agent">Agent</option>
-                <option value="direct">Direct</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Agent Name :</span>
-              <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
-                <option value="">--Select--</option>
-                {agents.map(agent => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Hotel :</span>
-              <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
-                <option value="">--Select--</option>
-                {ownHotels.map(hotel => <option key={hotel.id} value={hotel.id}>{hotel.name}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Room :</span>
-              <select value={filters.room} onChange={(e) => setFilters({...filters, room: e.target.value})} disabled={!filters.hotel} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] disabled:bg-muted rounded-sm">
-                <option value="">{filters.hotel ? "--Select--" : "Select hotel"}</option>
-                {filterRooms.map(room => <option key={room.id} value={room.id}>{room.room_type || room.room_number}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-1 ml-auto">
-              <span className="text-[11px] text-muted-foreground">User :</span>
-              <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] rounded-sm">
-                <option value="">--Select--</option>
-                {profiles.map(p => <option key={p.id} value={p.id}>{p.username || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown'}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Package :</span>
-                <select value={filters.package} onChange={(e) => setFilters({...filters, package: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
-                  <option value="">--Select--</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Customer :</span>
-                <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
-              </div>
-            </div>
-            <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
-          </div>
-        </div>
-
-        {/* Main Table */}
-        <Card>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr style={{ backgroundColor: "#c47a7e" }}>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Booking↕</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Type</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Customer Name↕</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Price</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Date↕</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">User↕</th>
-                      <th className="border border-[#ddd] px-3 py-2 text-left text-xs font-semibold">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredBookings.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} className="border border-[#ddd] px-4 py-8 text-center text-muted-foreground">
-                          No bookings with due amount found
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredBookings.map((booking, index) => (
-                        <tr key={booking.id} style={{ backgroundColor: "#f6f0f0" }}>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">{index + 1}</td>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
-                            <div className="space-y-0.5">
-                              <div>Booking:</div>
-                              <div>{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"} - {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
-                              <div>No. of Rooms: {booking.hotel_info?.number_of_rooms || 1}</div>
-                              <div>{booking.adults || 0} Adult {booking.children || 0} Children</div>
-                              <div>Price: Rs. {(booking.total_amount || 0).toLocaleString("en-IN")}/-</div>
-                            </div>
-                          </td>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top text-center">
-                            <div className="capitalize">{booking.booking_type === "agent" ? "Agent" : "Direct"}</div>
-                            {booking.agents?.name && <div>{booking.agents.name}</div>}
-                          </td>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
-                            <div className="font-medium">{booking.customer_name || "-"}</div>
-                            <div className="text-muted-foreground">Contact No.: {booking.contact_no || ""}</div>
-                          </td>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
-                            <div className="space-y-0.5">
-                              <div>Booking Price : Rs. {(booking.total_amount || 0).toLocaleString("en-IN")} /-</div>
-                              <div>Receviced Price : Rs. {(booking.paid_amount || 0).toLocaleString("en-IN")} /-</div>
-                              <div>Due Price : Rs. {(booking.due_amount || 0).toLocaleString("en-IN")} /-</div>
-                            </div>
-                          </td>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
-                            {booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}
-                          </td>
-                          <td className="border border-[#ddd] px-3 py-2 text-xs align-top">
-                            {getUserName(booking.created_by)}
-                          </td>
-                          <td className="border border-[#ddd] px-3 py-2 align-top">
-                            <div className="flex flex-col gap-0.5">
-                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewDetails(booking)}>
-                                View Booking
-                              </Button>
-                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => window.print()}>
-                                Print Booking
-                              </Button>
-                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => paymentDialog.handleViewPayment(booking)}>
-                                View Payment
-                              </Button>
-                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/admin/refunds?booking_id=${booking.id}&view=true`)}>
-                                View Refund Payment
-                              </Button>
-                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive justify-start" onClick={() => toast.info("Delete booking feature coming soon")}>
-                                Delete Booking
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Summary Footer */}
-            <div className="flex justify-end gap-6 p-4 border-t" style={{ backgroundColor: "#FDE1E1", borderColor: "#FFC1C1" }}>
-              <div className="text-xs">
-                <span className="font-semibold">Total Booking Price:</span> ₹{totalAmount.toLocaleString("en-IN")}
-              </div>
-              <div className="text-xs">
-                <span className="font-semibold">Total Received Payment:</span> ₹{totalPaid.toLocaleString("en-IN")}
-              </div>
-              <div className="text-xs text-destructive">
-                <span className="font-semibold">Total Due Payment:</span> ₹{totalDue.toLocaleString("en-IN")}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </>
+        )}
+      </AdminPageShell>
 
       {/* View Booking Details Dialog */}
       <Dialog open={showViewDetailDialog} onOpenChange={setShowViewDetailDialog}>
@@ -462,8 +284,6 @@ export default function ViewDueAmount() {
                       <tr><td className="pr-4 py-0.5">No. of People :</td><td className="py-0.5">{selectedBooking.adults || 0} Adult {selectedBooking.children || 0} Children</td></tr>
                       <tr><td className="pr-4 py-0.5">Booking From :</td><td className="py-0.5">{selectedBooking.check_in_date ? new Date(selectedBooking.check_in_date).toLocaleDateString("en-GB") : "-"}</td></tr>
                       <tr><td className="pr-4 py-0.5">Booking To :</td><td className="py-0.5">{selectedBooking.check_out_date ? new Date(selectedBooking.check_out_date).toLocaleDateString("en-GB") : "-"}</td></tr>
-
-                      {/* Own Hotel Section */}
                       {viewDetailOwnHotelInfo.length > 0 && viewDetailOwnHotelInfo.map((hotel, idx) => (
                         <React.Fragment key={`own-hotel-${idx}`}>
                           <tr><td colSpan={2} className="font-bold pt-3 pb-1">Hotel :</td></tr>
@@ -475,8 +295,6 @@ export default function ViewDueAmount() {
                           <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
                         </React.Fragment>
                       ))}
-
-                      {/* Another Hotel Section */}
                       {viewDetailAnotherHotelInfo.length > 0 && viewDetailAnotherHotelInfo.map((hotel, idx) => (
                         <React.Fragment key={`another-hotel-${idx}`}>
                           <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Hotel :</td></tr>
@@ -490,8 +308,6 @@ export default function ViewDueAmount() {
                           <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
                         </React.Fragment>
                       ))}
-
-                      {/* Safari Section */}
                       {viewDetailSafariInfo.length > 0 && viewDetailSafariInfo.map((safari, idx) => (
                         <React.Fragment key={`safari-${idx}`}>
                           <tr><td colSpan={2} className="font-bold pt-3 pb-1">Safari :</td></tr>
@@ -503,8 +319,6 @@ export default function ViewDueAmount() {
                           <tr><td className="pr-4 py-0.5">Safari Selling Price :</td><td className="py-0.5">Rs. {(safari.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
                         </React.Fragment>
                       ))}
-
-                      {/* Delhi-Manali Volvo Section */}
                       {viewDetailVolvoDMInfo.length > 0 && viewDetailVolvoDMInfo.map((volvo, idx) => (
                         <React.Fragment key={`dm-${idx}`}>
                           <tr><td colSpan={2} className="font-bold pt-3 pb-1">Delhi - Manali :</td></tr>
@@ -518,8 +332,6 @@ export default function ViewDueAmount() {
                           <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
                         </React.Fragment>
                       ))}
-
-                      {/* Manali-Delhi Volvo Section */}
                       {viewDetailVolvoMDInfo.length > 0 && viewDetailVolvoMDInfo.map((volvo, idx) => (
                         <React.Fragment key={`md-${idx}`}>
                           <tr><td colSpan={2} className="font-bold pt-3 pb-1">Manali - Delhi :</td></tr>
@@ -533,8 +345,6 @@ export default function ViewDueAmount() {
                           <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
                         </React.Fragment>
                       ))}
-
-                      {/* Vehicle Section */}
                       {viewDetailVehicleInfo.length > 0 && viewDetailVehicleInfo.map((vehicle, idx) => (
                         <React.Fragment key={`vehicle-${idx}`}>
                           <tr><td colSpan={2} className="font-bold pt-3 pb-1">Another Vehicle :</td></tr>
@@ -546,7 +356,6 @@ export default function ViewDueAmount() {
                           <tr><td className="pr-4 py-0.5">Vehicle Journey Date :</td><td className="py-0.5">{vehicle.pickupDate ? new Date(vehicle.pickupDate).toLocaleDateString("en-GB") : "-"}</td></tr>
                         </React.Fragment>
                       ))}
-
                       <tr><td className="pr-4 py-0.5 pt-3">Date :</td><td className="py-0.5 pt-3">{selectedBooking.created_at ? new Date(selectedBooking.created_at).toLocaleDateString("en-GB") : "-"}</td></tr>
                     </tbody>
                   </table>
@@ -560,7 +369,6 @@ export default function ViewDueAmount() {
         </DialogContent>
       </Dialog>
 
-      {/* Payment Dialogs */}
       <PaymentDialogs
         showPaymentDialog={paymentDialog.showPaymentDialog}
         setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
@@ -577,6 +385,6 @@ export default function ViewDueAmount() {
         isSubmittingPayment={paymentDialog.isSubmittingPayment}
         onSubmitPayment={paymentDialog.submitPayment}
       />
-    </div>
+    </>
   );
 }
