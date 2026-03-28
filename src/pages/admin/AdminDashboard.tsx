@@ -243,43 +243,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Bookings */}
-      <div style={{ background: "#fff", border: "1px solid #ccc" }}>
-        <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>Recent Bookings</span>
-          <span onClick={() => navigate("/admin/bookings")} style={{ fontSize: 10, cursor: "pointer", textDecoration: "underline", fontWeight: "normal" }}>View All</span>
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-          <thead>
-            <tr style={{ background: "#c47a7e", color: "#fff" }}>
-              {["S.No", "Booking No", "Customer", "Amount", "Status", "Date"].map(h => (
-                <th key={h} style={{ border: "1px solid #a88", padding: "4px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11 }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {recentBookings.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: 16, color: "#999" }}>No bookings found</td></tr>
-            ) : recentBookings.map((b, i) => (
-              <tr key={b.id} style={{ background: i % 2 === 0 ? "#fff" : "#f6f0f0", cursor: "pointer" }}
-                onClick={() => navigate(`/admin/bookings/${b.id}`)}>
-                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{i + 1}</td>
-                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#0066cc", fontWeight: "bold" }}>{b.booking_number}</td>
-                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{b.customer_name || "-"}</td>
-                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{fmt(b.total_amount || 0)}</td>
-                <td style={{ border: "1px solid #ddd", padding: "4px 8px" }}>
-                  <span style={{
-                    padding: "1px 6px", fontSize: 10, fontWeight: "bold",
-                    background: b.status === "confirmed" ? "#d4edda" : b.status === "cancelled" ? "#f8d7da" : "#fff3cd",
-                    color: b.status === "confirmed" ? "#155724" : b.status === "cancelled" ? "#721c24" : "#856404",
-                  }}>{b.status || "N/A"}</span>
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{b.created_at ? format(new Date(b.created_at), "dd-MMM-yyyy") : "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
