@@ -376,86 +376,87 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         <span onClick={handleViewAll} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
       </div>
 
-      <div style={{ border: "1px solid #ccc", borderTop: "none", padding: "8px 10px", backgroundColor: "#fff" }}>
-            {/* Row 1 */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+      <div style={{ border: "1px solid #ccc", borderTop: "none", backgroundColor: "#fff", fontSize: 11 }}>
+            {/* Row 1: Date */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", borderBottom: "1px solid #ccc", flexWrap: "wrap" }}>
               <label style={{ fontSize: 11 }}>From :</label>
-              <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={sty}>
+              <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={{ ...sty, minWidth: 60 }}>
                 {months.map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}
               </select>
-              <select value={fromDay} onChange={e => setFromDay(e.target.value)} style={sty}>
+              <select value={fromDay} onChange={e => setFromDay(e.target.value)} style={{ ...sty, minWidth: 45 }}>
                 {days.map(d => <option key={d} value={String(d)}>{d}</option>)}
               </select>
-              <input type="text" value={fromYear} onChange={e => setFromYear(e.target.value)} style={{ ...sty, width: 45 }} />
+              <input type="text" value={fromYear} onChange={e => setFromYear(e.target.value)} style={{ ...sty, width: 50 }} />
               <label style={{ fontSize: 11, marginLeft: 16 }}>To :</label>
-              <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={sty}>
+              <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={{ ...sty, minWidth: 60 }}>
                 {months.map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}
               </select>
-              <select value={toDay} onChange={e => setToDay(e.target.value)} style={sty}>
+              <select value={toDay} onChange={e => setToDay(e.target.value)} style={{ ...sty, minWidth: 45 }}>
                 {days.map(d => <option key={d} value={String(d)}>{d}</option>)}
               </select>
-              <input type="text" value={toYear} onChange={e => setToYear(e.target.value)} style={{ ...sty, width: 45 }} />
+              <input type="text" value={toYear} onChange={e => setToYear(e.target.value)} style={{ ...sty, width: 50 }} />
               <label style={{ fontSize: 11, marginLeft: 16 }}>Search with Date :</label>
               <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="searchDate" checked={searchWithDate === "yes"} onChange={() => setSearchWithDate("yes")} style={{ width: 12, height: 12 }} /> YES</label>
               <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="searchDate" checked={searchWithDate === "no"} onChange={() => setSearchWithDate("no")} style={{ width: 12, height: 12 }} /> NO</label>
             </div>
-            {/* Row 2 */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+            {/* Row 2: Type, Agent, Reference */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", borderBottom: "1px solid #ccc", flexWrap: "wrap" }}>
               <label style={{ fontSize: 11 }}>Type :</label>
-              <select value={filterType} onChange={e => setFilterType(e.target.value)} style={sty}>
+              <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ ...sty, minWidth: 90 }}>
                 <option value="all">--Select--</option><option value="agent">Agent</option><option value="direct">Direct</option>
               </select>
               <label style={{ fontSize: 11, marginLeft: 16 }}>Agent Name :</label>
-              <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)} style={{ ...sty, minWidth: 140 }}>
+              <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)} style={{ ...sty, minWidth: 200 }}>
                 <option value="all">--Select--</option>
                 {agents.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
               </select>
-              <label style={{ fontSize: 11, marginLeft: 16 }}>Reference :</label>
+              <span style={{ flex: 1 }} />
+              <label style={{ fontSize: 11 }}>Reference :</label>
               <input type="text" value={filterReference} onChange={e => setFilterReference(e.target.value)} style={{ ...sty, width: 120 }} />
             </div>
-            {/* Row 3 */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+            {/* Row 3: Hotel, Room, User */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", borderBottom: "1px solid #ccc", flexWrap: "wrap" }}>
               <label style={{ fontSize: 11 }}>{hotelFilterLabel} :</label>
-              <select value={filterHotel} onChange={e => setFilterHotel(e.target.value)} style={{ ...sty, minWidth: 140 }}>
+              <select value={filterHotel} onChange={e => setFilterHotel(e.target.value)} style={{ ...sty, minWidth: 160 }}>
                 <option value="all">--Select--</option>
                 {hotels.map(h => <option key={h.id} value={h.name}>{h.name}</option>)}
               </select>
               <label style={{ fontSize: 11, marginLeft: 16 }}>Room :</label>
-              <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} style={sty}>
+              <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} style={{ ...sty, minWidth: 160 }}>
                 <option value="all">--Select--</option>
                 {rooms.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
               </select>
               <label style={{ fontSize: 11, marginLeft: 16 }}>User :</label>
-              <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={sty}>
+              <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={{ ...sty, minWidth: 120 }}>
                 <option value="all">--Select--</option>
                 {users.map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
               </select>
             </div>
-            {/* Row 4 */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap", fontSize: 11 }}>
+            {/* Row 4: Package, Customer, Payment Place */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", borderBottom: "1px solid #ccc", flexWrap: "wrap" }}>
               <label style={{ fontSize: 11 }}>Package :</label>
               <select value={filterPackage} onChange={e => setFilterPackage(e.target.value)} style={{ ...sty, minWidth: 120 }}>
                 <option value="all">--Select--</option>
               </select>
               <label style={{ fontSize: 11, marginLeft: 16 }}>Customer :</label>
-              <input type="text" value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} style={{ ...sty, width: 120 }} />
+              <input type="text" value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} style={{ ...sty, width: 140 }} />
               <label style={{ fontSize: 11, marginLeft: 16 }}>Payment Place :</label>
-              <select value={filterPaymentPlace} onChange={e => setFilterPaymentPlace(e.target.value)} style={sty}>
+              <select value={filterPaymentPlace} onChange={e => setFilterPaymentPlace(e.target.value)} style={{ ...sty, minWidth: 120 }}>
                 <option value="all">Select Place</option>
                 {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
-            {/* Row 5 */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 11 }}>
+            {/* Row 5: Payment Mode, NFT Code, Search */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", flexWrap: "wrap" }}>
               <label style={{ fontSize: 11 }}>Payment Mode :</label>
-              <select value={filterPaymentMode} onChange={e => setFilterPaymentMode(e.target.value)} style={sty}>
+              <select value={filterPaymentMode} onChange={e => setFilterPaymentMode(e.target.value)} style={{ ...sty, minWidth: 120 }}>
                 <option value="all">---Select Mode---</option>
                 <option value="cash">Cash</option><option value="cash in hand">Cash In Hand</option>
                 <option value="upi">UPI</option><option value="net banking">Net Banking</option>
                 <option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
               </select>
               <label style={{ fontSize: 11, marginLeft: 16 }}>NFT Code :</label>
-              <input type="text" value={filterNFTCode} onChange={e => setFilterNFTCode(e.target.value)} style={{ ...sty, width: 120 }} />
+              <input type="text" value={filterNFTCode} onChange={e => setFilterNFTCode(e.target.value)} style={{ ...sty, width: 140 }} />
               <button onClick={handleSearch} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer", marginLeft: 8 }}>Search</button>
             </div>
           </div>
