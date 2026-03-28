@@ -1,15 +1,10 @@
-import { Header } from "@/components/layout/Header";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePagination } from "@/hooks/usePagination";
-import { TablePagination } from "@/components/ui/TablePagination";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
+import { Header } from "@/components/layout/Header";
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
@@ -18,22 +13,11 @@ export default function CancelledBookings() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchCancelledBookings();
-  }, []);
+  useEffect(() => { fetchCancelledBookings(); }, []);
 
   const fetchCancelledBookings = async () => {
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("*, agents(name), cancellations(*)")
-      .eq("status", "cancelled")
-      .order("updated_at", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load cancelled bookings");
-    } else {
-      setBookings(data || []);
-    }
+    const { data, error } = await supabase.from("bookings").select("*, agents(name), cancellations(*)").eq("status", "cancelled").order("updated_at", { ascending: false });
+    if (error) { toast.error("Failed to load cancelled bookings"); } else { setBookings(data || []); }
   };
 
   const filteredBookings = bookings.filter(booking =>
@@ -42,102 +26,55 @@ export default function CancelledBookings() {
   );
 
   const pagination = usePagination(filteredBookings);
-  
-  useEffect(() => {
-    pagination.resetPage();
-  }, [searchTerm]);
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header title="Cancelled Bookings" />
-      <main className="p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold">View Cancelled Bookings</h2>
-          <p className="text-muted-foreground mt-2">
-            Total Cancelled: <span className="font-bold">{filteredBookings.length}</span>
-          </p>
-        </div>
+  useEffect(() => { pagination.resetPage(); }, [searchTerm]);
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by booking number or customer..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-semibold">S.No.</th>
-                    <th className="text-left p-4 font-semibold">Booking No</th>
-                    <th className="text-left p-4 font-semibold">Customer</th>
-                    <th className="text-left p-4 font-semibold">Contact</th>
-                    <th className="text-left p-4 font-semibold">Check-in</th>
-                    <th className="text-left p-4 font-semibold">Check-out</th>
-                    <th className="text-left p-4 font-semibold">Total</th>
-                    <th className="text-left p-4 font-semibold">Paid</th>
-                    <th className="text-left p-4 font-semibold">Reason</th>
-                    <th className="text-left p-4 font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagination.paginatedItems.map((booking, index) => (
-                    <tr key={booking.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4">{pagination.startIndex + index}</td>
-                      <td className="p-4 font-medium">{booking.booking_number}</td>
-                      <td className="p-4">{booking.customer_name || "-"}</td>
-                      <td className="p-4">{booking.contact_no || "-"}</td>
-                      <td className="p-4">
-                        {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="p-4">
-                        {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="p-4">₹{booking.total_amount?.toLocaleString() || 0}</td>
-                      <td className="p-4">₹{booking.paid_amount?.toLocaleString() || 0}</td>
-                      <td className="p-4">
-                        {booking.cancellations?.[0]?.cancellation_reason || "-"}
-                      </td>
-                      <td className="p-4">
-                        {booking.paid_amount > 0 && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => navigate(isAdminRoute ? `/admin/refund-payments?id=${booking.id}` : `/refunds?id=${booking.id}`)}
-                          >
-                            Process Refund
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredBookings.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No cancelled bookings found
-                </div>
-              )}
-            </div>
-            <TablePagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={pagination.goToPage}
-              totalItems={pagination.totalItems}
-              startIndex={pagination.startIndex}
-              endIndex={pagination.endIndex}
-            />
-          </CardContent>
-        </Card>
-      </main>
+  const filterSection = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <span>Search :</span>
+      <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ ...filterInputStyle, flex: 1 }} placeholder="Search by booking number or customer..." />
+      <span style={{ marginLeft: "auto", fontWeight: "bold" }}>Total Cancelled: {filteredBookings.length}</span>
     </div>
   );
+
+  const content = (
+    <AdminPageShell title="Cancelled Bookings" filterSection={filterSection} pagination={{ currentPage: pagination.currentPage, totalPages: pagination.totalPages, onPageChange: pagination.goToPage, totalItems: pagination.totalItems, startIndex: pagination.startIndex, endIndex: pagination.endIndex }}>
+      <ThemedTable>
+        <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Booking No</ThemedTH><ThemedTH>Customer</ThemedTH><ThemedTH>Contact</ThemedTH><ThemedTH>Check-in</ThemedTH><ThemedTH>Check-out</ThemedTH><ThemedTH>Total</ThemedTH><ThemedTH>Paid</ThemedTH><ThemedTH>Reason</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
+        <tbody>
+          {pagination.paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={10} message="No cancelled bookings found" /> : pagination.paginatedItems.map((booking, index) => (
+            <ThemedTR key={booking.id} index={index}>
+              <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{booking.booking_number}</ThemedTD>
+              <ThemedTD>{booking.customer_name || "-"}</ThemedTD>
+              <ThemedTD>{booking.contact_no || "-"}</ThemedTD>
+              <ThemedTD>{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</ThemedTD>
+              <ThemedTD>{booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}</ThemedTD>
+              <ThemedTD>Rs. {booking.total_amount?.toLocaleString() || 0}/-</ThemedTD>
+              <ThemedTD>Rs. {booking.paid_amount?.toLocaleString() || 0}/-</ThemedTD>
+              <ThemedTD>{booking.cancellations?.[0]?.cancellation_reason || "-"}</ThemedTD>
+              <ThemedTD>
+                {booking.paid_amount > 0 && (
+                  <ThemedActionLink onClick={() => navigate(isAdminRoute ? `/admin/refund-payments?id=${booking.id}` : `/refunds?id=${booking.id}`)}>
+                    Process Refund
+                  </ThemedActionLink>
+                )}
+              </ThemedTD>
+            </ThemedTR>
+          ))}
+        </tbody>
+      </ThemedTable>
+    </AdminPageShell>
+  );
+
+  if (!isAdminRoute) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header title="Cancelled Bookings" />
+        <main className="p-6">{content}</main>
+      </div>
+    );
+  }
+
+  return content;
 }
