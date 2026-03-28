@@ -1,19 +1,17 @@
-import { Header } from "@/components/layout/Header";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { usePagination } from "@/hooks/usePagination";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
 export default function VolvoPayments() {
-  const navigate = useNavigate();
   const [payments, setPayments] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
-  
   const [fromMonth, setFromMonth] = useState(months[new Date().getMonth()]);
   const [fromDay, setFromDay] = useState(new Date().getDate());
   const [fromYear, setFromYear] = useState(new Date().getFullYear());
@@ -23,202 +21,88 @@ export default function VolvoPayments() {
   const [searchWithDate, setSearchWithDate] = useState(false);
   const [transporterFilter, setTransporterFilter] = useState("");
 
-  useEffect(() => {
-    fetchPayments();
-    fetchTransporters();
-  }, []);
+  useEffect(() => { fetchPayments(); fetchTransporters(); }, []);
 
-  const fetchTransporters = async () => {
-    const { data } = await supabase.from("transporters").select("id, name").order("name");
-    setTransporters(data || []);
-  };
+  const fetchTransporters = async () => { const { data } = await supabase.from("transporters").select("id, name").order("name"); setTransporters(data || []); };
 
   const fetchPayments = async () => {
-    // Get payments for both volvo routes
-    const { data: dmPayments, error: dmError } = await supabase
-      .from("payments")
-      .select(`
-        *,
-        bookings(id, booking_number, customer_name, contact_no)
-      `)
-      .eq("payment_type", "delhi_manali")
-      .order("payment_date", { ascending: false });
-
-    const { data: mdPayments, error: mdError } = await supabase
-      .from("payments")
-      .select(`
-        *,
-        bookings(id, booking_number, customer_name, contact_no)
-      `)
-      .eq("payment_type", "manali_delhi")
-      .order("payment_date", { ascending: false });
-
-    if (dmError || mdError) {
-      toast.error("Failed to load volvo payments");
-    } else {
+    const { data: dmPayments, error: dmError } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).eq("payment_type", "delhi_manali").order("payment_date", { ascending: false });
+    const { data: mdPayments, error: mdError } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).eq("payment_type", "manali_delhi").order("payment_date", { ascending: false });
+    if (dmError || mdError) { toast.error("Failed to load volvo payments"); } else {
       const allPayments = [...(dmPayments || []), ...(mdPayments || [])];
-      
-      // Get volvo booking details for each payment
       const paymentsWithDetails = await Promise.all(allPayments.map(async (payment) => {
         if (payment.bookings?.id) {
-          const { data: volvoData } = await supabase
-            .from("volvo_bookings")
-            .select("*, transporters(name)")
-            .eq("booking_id", payment.bookings.id)
-            .maybeSingle();
+          const { data: volvoData } = await supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", payment.bookings.id).maybeSingle();
           return { ...payment, volvo_booking: volvoData };
         }
         return payment;
       }));
-      
-      // Sort by date
-      paymentsWithDetails.sort((a, b) => 
-        new Date(b.payment_date || 0).getTime() - new Date(a.payment_date || 0).getTime()
-      );
-      
+      paymentsWithDetails.sort((a, b) => new Date(b.payment_date || 0).getTime() - new Date(a.payment_date || 0).getTime());
       setPayments(paymentsWithDetails);
     }
-  };
-
-  const handleSearch = () => {
-    fetchPayments();
   };
 
   const filteredPayments = payments.filter(payment => {
     let matchesDate = true;
     if (searchWithDate && payment.payment_date) {
       const paymentDate = new Date(payment.payment_date);
-      const fromDate = new Date(fromYear, months.indexOf(fromMonth), fromDay);
-      const toDate = new Date(toYear, months.indexOf(toMonth), toDay);
-      matchesDate = paymentDate >= fromDate && paymentDate <= toDate;
+      matchesDate = paymentDate >= new Date(fromYear, months.indexOf(fromMonth), fromDay) && paymentDate <= new Date(toYear, months.indexOf(toMonth), toDay);
     }
-
-    const matchesTransporter = !transporterFilter || 
-      payment.volvo_booking?.transporters?.name?.toLowerCase().includes(transporterFilter.toLowerCase());
-
+    const matchesTransporter = !transporterFilter || payment.volvo_booking?.transporters?.name?.toLowerCase().includes(transporterFilter.toLowerCase());
     return matchesDate && matchesTransporter;
   });
 
   const totalPayments = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments);
+  const sty = filterSelectStyle;
+
+  const filterSection = (
+    <div style={{ width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid #ccc" }}>
+        <span>From :</span>
+        <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={sty}>{months.map(m => <option key={m}>{m}</option>)}</select>
+        <select value={fromDay} onChange={e => setFromDay(Number(e.target.value))} style={sty}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+        <select value={fromYear} onChange={e => setFromYear(Number(e.target.value))} style={sty}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+        <span style={{ marginLeft: 16 }}>To :</span>
+        <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={sty}>{months.map(m => <option key={m}>{m}</option>)}</select>
+        <select value={toDay} onChange={e => setToDay(Number(e.target.value))} style={sty}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+        <select value={toYear} onChange={e => setToYear(Number(e.target.value))} style={sty}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+        <span style={{ marginLeft: 16 }}>Search with Date :</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
+        <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0" }}>
+        <span>Transporter :</span>
+        <select value={transporterFilter} onChange={e => setTransporterFilter(e.target.value)} style={{ ...sty, minWidth: 200 }}>
+          <option value="">-- Select Transporter --</option>
+          {transporters.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+        </select>
+        <button onClick={fetchPayments} style={filterButtonStyle}>Search</button>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontWeight: "bold" }}>Total: Rs. {totalPayments.toLocaleString("en-IN")}/-</span>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header title="Volvo Payment" />
-      <main className="p-4">
-        {/* Header Bar */}
-        <div className="bg-[#1e6e99] text-white px-4 py-2 flex justify-between items-center">
-          <span className="font-semibold">Volvo Payment</span>
-          <Link to="/payments/volvo" className="text-white hover:underline text-sm">View All Records</Link>
-        </div>
-
-        {/* Filters */}
-        <div className="border border-[#ccc] p-3 bg-white">
-          {/* Row 1 */}
-          <div className="flex flex-wrap items-center gap-4 mb-2 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>From :</span>
-              <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={fromDay} onChange={(e) => setFromDay(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={fromYear} onChange={(e) => setFromYear(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span>To :</span>
-              <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={toDay} onChange={(e) => setToDay(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={toYear} onChange={(e) => setToYear(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span>Search with Date :</span>
-              <label className="flex items-center gap-1">
-                <input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES
-              </label>
-              <label className="flex items-center gap-1">
-                <input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO
-              </label>
-            </div>
-          </div>
-
-          {/* Row 2 */}
-          <div className="flex flex-wrap items-center gap-4 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>Transporter :</span>
-              <select 
-                value={transporterFilter} 
-                onChange={(e) => setTransporterFilter(e.target.value)} 
-                className="border px-1 py-0.5 text-[11px] min-w-[200px]"
-              >
-                <option value="">-- Select Transporter --</option>
-                {transporters.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
-
-            <button onClick={handleSearch} className="border px-3 py-1 bg-gray-100 hover:bg-gray-200 text-[11px]">
-              Search
-            </button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto mt-0">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#D4A59A] text-black">
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">S.No.</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Transporter</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Payment</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Date</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Payment Mode</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPayments.map((payment, index) => (
-                <tr key={payment.id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-[#FDE1E1]"}>
-                  <td className="border border-[#c99] px-3 py-2 align-top">{index + 1}</td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    {payment.volvo_booking?.transporters?.name || "-"}
-                  </td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    Rs. {payment.amount?.toLocaleString("en-IN")} /-
-                  </td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    {payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}
-                  </td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
-                    <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredPayments.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground bg-[#F5E6E0]">
-              No volvo payments found
-            </div>
-          )}
-        </div>
-
-        {/* Summary Footer */}
-        <div className="bg-[#FDE1E1] border border-[#FFC1C1] p-3 mt-0">
-          <div className="text-sm font-semibold">
-            Total Payments: Rs. {totalPayments.toLocaleString("en-IN")} /-
-          </div>
-        </div>
-      </main>
-    </div>
+    <AdminPageShell title="Volvo Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => {} }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+      <ThemedTable>
+        <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
+        <tbody>
+          {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No volvo payments found" /> : paginatedItems.map((payment, index) => (
+            <ThemedTR key={payment.id} index={index}>
+              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{payment.volvo_booking?.transporters?.name || "-"}</ThemedTD>
+              <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
+              <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
+              <ThemedTD>
+                <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
+                <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
+              </ThemedTD>
+            </ThemedTR>
+          ))}
+        </tbody>
+      </ThemedTable>
+    </AdminPageShell>
   );
 }
