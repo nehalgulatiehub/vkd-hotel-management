@@ -65,41 +65,42 @@ export default function AdminSafariMoneyDetail() {
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
 
+  const ss: React.CSSProperties = { border: "1px solid #999", padding: "2px 4px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" };
   const filterSection = (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-4 text-xs">
-        <div className="flex items-center gap-1">
+    <div style={{ fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>From :</span>
-          <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="border px-1 py-0.5 text-xs">{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
-          <select value={fromDay} onChange={(e) => setFromDay(e.target.value)} className="border px-1 py-0.5 text-xs">{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
-          <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} className="border px-1 py-0.5 text-xs">{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+          <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} style={ss}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
+          <select value={fromDay} onChange={(e) => setFromDay(e.target.value)} style={ss}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+          <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} style={ss}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
         </div>
-        <div className="flex items-center gap-1">
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>To :</span>
-          <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="border px-1 py-0.5 text-xs">{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
-          <select value={toDay} onChange={(e) => setToDay(e.target.value)} className="border px-1 py-0.5 text-xs">{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
-          <select value={toYear} onChange={(e) => setToYear(e.target.value)} className="border px-1 py-0.5 text-xs">{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+          <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} style={ss}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
+          <select value={toDay} onChange={(e) => setToDay(e.target.value)} style={ss}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+          <select value={toYear} onChange={(e) => setToYear(e.target.value)} style={ss}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
         </div>
-        <div className="flex items-center gap-2">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span>Search with Date :</span>
-          <label className="flex items-center gap-1"><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
-          <label className="flex items-center gap-1"><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
+          <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
+          <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-4 text-xs">
-        <div className="flex items-center gap-1">
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>Transporter :</span>
-          <select value={transporterId} onChange={(e) => setTransporterId(e.target.value)} className="border px-1 py-0.5 text-xs min-w-[200px]">
+          <select value={transporterId} onChange={(e) => setTransporterId(e.target.value)} style={{ ...ss, minWidth: 200 }}>
             <option value="">-- Select Transporter --</option>
             {transporters.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
-        <div className="flex items-center gap-1"><span>Customer :</span><input type="text" value={customer} onChange={(e) => setCustomer(e.target.value)} className="border px-1 py-0.5 text-xs" /></div>
-        <div className="flex items-center gap-1">
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span>Customer :</span><input type="text" value={customer} onChange={(e) => setCustomer(e.target.value)} style={ss} /></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>User :</span>
-          <select value={userId} onChange={(e) => setUserId(e.target.value)} className="border px-1 py-0.5 text-xs"><option value="">--Select--</option>{users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}</select>
+          <select value={userId} onChange={(e) => setUserId(e.target.value)} style={ss}><option value="">--Select--</option>{users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}</select>
         </div>
-        <button className="border px-3 py-0.5 text-xs bg-gray-100 hover:bg-gray-200">Search</button>
+        <button style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer" }}>Search</button>
       </div>
     </div>
   );
