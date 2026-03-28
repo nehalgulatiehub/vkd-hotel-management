@@ -2360,7 +2360,6 @@ export default function Bookings() {
           <>
             {isAdminRoute ? (
               <div style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
-                <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 View Booking</div>
                 <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
                   <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Search</span>
@@ -2435,7 +2434,7 @@ export default function Bookings() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
                     <thead>
                       <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
-                        {["S.No.","Booking","Type","Customer Name","Hotel","Price","Date","User","Action"].map(h => (
+                        {["S.No.","Booking ID","Type","User","Customer Details","Package Details","Booking Price","Date","Actions"].map(h => (
                           <th key={h} style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff" }}>{h}</th>
                         ))}
                       </tr>
@@ -2447,35 +2446,55 @@ export default function Bookings() {
                         pagination.paginatedItems.map((booking: any, index: number) => (
                           <tr key={booking.id} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#f6f0f0" }}>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{pagination.startIndex + index}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top", fontWeight: 500 }}>{booking.booking_number || "-"}</td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
-                              <div><strong>Booking:</strong></div>
-                              <div>{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"} -</div>
-                              <div>{booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
-                              {booking.hotel_info?.number_of_rooms && <div><strong>No. of Rooms:</strong> {booking.hotel_info.number_of_rooms}</div>}
-                              <div>{booking.adults || 0} Adult {booking.children || 0} Children</div>
-                              <div><strong>Price:</strong> Rs. {booking.total_amount || 0}/-</div>
+                              {booking.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10, color: "#888" }}>{booking.agents?.name || "-"}</div></> : "Direct"}
                             </td>
-                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
-                              {booking.booking_type === "agent" ? <><div>Agent</div><div>{booking.agents?.name || "-"}</div></> : "Direct"}
-                            </td>
-                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
-                              <div>{booking.customer_name || "-"}</div>
-                              <div>Contact No.: {booking.contact_no || ""}</div>
-                            </td>
-                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{booking.hotel_info?.hotel_name || ""}</td>
-                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
-                              <div><strong>Booking Price :</strong> Rs. {booking.total_amount || 0} /-</div>
-                              <div><strong>Recevied Price :</strong> Rs. {booking.paid_amount || 0} /-</div>
-                              <div><strong>Due Price :</strong> Rs. {booking.due_amount || 0} /-</div>
-                            </td>
-                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}</td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{booking.created_by_name || "-"}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div style={{ fontWeight: 500 }}>{booking.customer_name || "-"}</div>
+                              <div style={{ fontSize: 10, color: "#888" }}>Contact No.: {booking.contact_no || "-"}</div>
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div style={{ fontSize: 10 }}>
+                                {booking.hotel_info && (<><div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div><div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>{booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}{booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}</>)}
+                                {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
+                                {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
+                                {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
+                                {booking.include_safari && <div>✓ Safari</div>}
+                                {booking.include_another_hotel && <div>✓ Another Hotel</div>}
+                                {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
+                                {booking.include_group_expenses && <div>✓ Group Expenses</div>}
+                                {booking.notes && <div><strong>Note :</strong> {booking.notes}</div>}
+                              </div>
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div style={{ fontSize: 10 }}>
+                                <div><strong>Booking Price:</strong> Rs. {booking.total_amount || 0}/-</div>
+                                <div><strong>Total Received:</strong> Rs. {booking.paid_amount || 0}/-</div>
+                                <div><strong>Payment:</strong> Rs. {booking.paid_amount || 0}/-</div>
+                                <div style={{ color: "#c00" }}><strong>Due Payment:</strong> Rs. {booking.due_amount || 0}/-</div>
+                              </div>
+                            </td>
+                            <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
+                              <div style={{ fontSize: 10 }}>
+                                <div><strong>Date:</strong> {booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}</div>
+                                <div><strong>Booking From:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"}</div>
+                                <div><strong>Booking to:</strong> {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
+                              </div>
+                            </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top" }}>
                               {[
                                 { label: "View Booking", fn: () => handleViewDetails(booking) },
                                 { label: "Print Booking", fn: () => handlePrintBooking(booking) },
+                                { label: "Booking Voucher", fn: () => setVoucherBookingId(booking.id) },
                                 { label: "View Payment", fn: () => handleViewPayment(booking) },
                                 { label: "View Refund Payment", fn: () => handleRefundPayment(booking) },
+                                ...(booking.created_by === user?.id || isAdmin() ? [
+                                  { label: "Edit Booking", fn: () => handleEditBooking(booking) },
+                                  { label: "Add Payment", fn: () => handleAddPayment(booking) },
+                                  { label: "Cancel", fn: () => handleCancelBooking(booking) },
+                                ] : []),
                               ].map((a, i) => (
                                 <span key={i} onClick={a.fn} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10, display: "block" }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>{a.label}</span>
                               ))}
