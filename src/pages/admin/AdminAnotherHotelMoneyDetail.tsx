@@ -90,7 +90,7 @@ export default function AdminAnotherHotelMoneyDetail() {
   return (
     <>
       <AdminPageShell title="View Another Hotel Money Detail" actions={[{ label: "View All Records", onClick: () => {} }]} filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
-        {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+        {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999", fontSize: 11 }}>Loading...</div> : (
           <ThemedTable>
             <ThemedTHead><ThemedTH>S.no</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Customer</ThemedTH><ThemedTH>Hotel</ThemedTH><ThemedTH>Another Hotel Journey Date</ThemedTH><ThemedTH>Booking Price</ThemedTH><ThemedTH>User</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
             <tbody>

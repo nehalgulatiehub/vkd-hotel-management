@@ -108,7 +108,7 @@ export default function AdminSafariMoneyDetail() {
   return (
     <>
       <AdminPageShell title="View Safari Money Detail" actions={[{ label: "View All Records", onClick: () => {} }]} filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
-        {loading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
+        {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999", fontSize: 11 }}>Loading...</div> : (
           <ThemedTable>
             <ThemedTHead><ThemedTH>S.no</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Transporter Name</ThemedTH><ThemedTH>Customer Name</ThemedTH><ThemedTH>Safari Volvo Journey Date</ThemedTH><ThemedTH>Booking Price</ThemedTH><ThemedTH>User</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
             <tbody>
