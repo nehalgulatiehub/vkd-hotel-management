@@ -1,19 +1,20 @@
-import { Header } from "@/components/layout/Header";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { format } from "date-fns";
+import { usePagination } from "@/hooks/usePagination";
+import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterInputStyle, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
 export default function SafariPayments() {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const [payments, setPayments] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
-  
   const [fromMonth, setFromMonth] = useState(months[new Date().getMonth()]);
   const [fromDay, setFromDay] = useState(new Date().getDate());
   const [fromYear, setFromYear] = useState(new Date().getFullYear());
@@ -24,10 +25,7 @@ export default function SafariPayments() {
   const [transporterFilter, setTransporterFilter] = useState("");
   const [paymentModeFilter, setPaymentModeFilter] = useState("");
 
-  useEffect(() => {
-    fetchPayments();
-    fetchTransporters();
-  }, []);
+  useEffect(() => { fetchPayments(); fetchTransporters(); }, []);
 
   const fetchTransporters = async () => {
     const { data } = await supabase.from("transporters").select("id, name").order("name");
@@ -35,50 +33,18 @@ export default function SafariPayments() {
   };
 
   const fetchPayments = async () => {
-    const { data, error } = await supabase
-      .from("payments")
-      .select(`
-        *,
-        bookings(id, booking_number, customer_name, contact_no),
-        transporter:transporters(id, name)
-      `)
-      .eq("payment_type", "safari")
-      .order("payment_date", { ascending: false });
-
-    // Also fetch direct safari payments
-    const { data: directPayments } = await supabase
-      .from("payments")
-      .select(`
-        *,
-        transporter:transporters(id, name)
-      `)
-      .eq("payment_type", "safari_direct")
-      .order("payment_date", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load safari payments");
-    } else {
-      // Get safari booking details for each booking-based payment
+    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no), transporter:transporters(id, name)`).eq("payment_type", "safari").order("payment_date", { ascending: false });
+    const { data: directPayments } = await supabase.from("payments").select(`*, transporter:transporters(id, name)`).eq("payment_type", "safari_direct").order("payment_date", { ascending: false });
+    if (error) { toast.error("Failed to load safari payments"); } else {
       const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
         if (payment.bookings?.id) {
-          const { data: safariData } = await supabase
-            .from("safari_bookings")
-            .select("*")
-            .eq("booking_id", payment.bookings.id)
-            .maybeSingle();
+          const { data: safariData } = await supabase.from("safari_bookings").select("*").eq("booking_id", payment.bookings.id).maybeSingle();
           return { ...payment, safari_booking: safariData };
         }
         return payment;
       }));
-      
-      // Combine both payment types
-      const allPayments = [...paymentsWithDetails, ...(directPayments || [])];
-      setPayments(allPayments);
+      setPayments([...paymentsWithDetails, ...(directPayments || [])]);
     }
-  };
-
-  const handleSearch = () => {
-    fetchPayments();
   };
 
   const filteredPayments = payments.filter(payment => {
@@ -89,147 +55,72 @@ export default function SafariPayments() {
       const toDate = new Date(toYear, months.indexOf(toMonth), toDay);
       matchesDate = paymentDate >= fromDate && paymentDate <= toDate;
     }
-
-    const matchesTransporter = !transporterFilter || 
-      payment.safari_booking?.safari_name?.toLowerCase().includes(transporterFilter.toLowerCase());
-    
+    const matchesTransporter = !transporterFilter || payment.safari_booking?.safari_name?.toLowerCase().includes(transporterFilter.toLowerCase());
     const matchesPaymentMode = !paymentModeFilter || payment.payment_mode === paymentModeFilter;
-
     return matchesDate && matchesTransporter && matchesPaymentMode;
   });
 
   const totalPayments = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments);
+
+  const sty = filterSelectStyle;
+
+  const filterSection = (
+    <div style={{ width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid #ccc" }}>
+        <span>From :</span>
+        <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={sty}>{months.map(m => <option key={m}>{m}</option>)}</select>
+        <select value={fromDay} onChange={e => setFromDay(Number(e.target.value))} style={sty}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+        <select value={fromYear} onChange={e => setFromYear(Number(e.target.value))} style={sty}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+        <span style={{ marginLeft: 16 }}>To :</span>
+        <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={sty}>{months.map(m => <option key={m}>{m}</option>)}</select>
+        <select value={toDay} onChange={e => setToDay(Number(e.target.value))} style={sty}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
+        <select value={toYear} onChange={e => setToYear(Number(e.target.value))} style={sty}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+        <span style={{ marginLeft: 16 }}>Search with Date :</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
+        <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0" }}>
+        <span>Transporter :</span>
+        <select value={transporterFilter} onChange={e => setTransporterFilter(e.target.value)} style={{ ...sty, minWidth: 200 }}>
+          <option value="">-- Select Transporter --</option>
+          {transporters.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+        </select>
+        <span style={{ marginLeft: 16 }}>Payment Mode :</span>
+        <select value={paymentModeFilter} onChange={e => setPaymentModeFilter(e.target.value)} style={sty}>
+          <option value="">---Select Mode---</option>
+          <option value="Cash">Cash in Hand</option>
+          <option value="Net Banking">Net Banking</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+        <button onClick={fetchPayments} style={filterButtonStyle}>Search</button>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontWeight: "bold" }}>Total: Rs. {totalPayments.toLocaleString("en-IN")}/-</span>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header title="Safari Payment" />
-      <main className="p-4">
-        {/* Header Bar */}
-        <div className="bg-[#1e6e99] text-white px-4 py-2 flex justify-between items-center">
-          <span className="font-semibold">Safari Payment</span>
-          <Link to="/payments/safari-due" className="text-white hover:underline text-sm">View All Records</Link>
-        </div>
-
-        {/* Filters */}
-        <div className="border border-[#ccc] p-3 bg-white">
-          {/* Row 1 */}
-          <div className="flex flex-wrap items-center gap-4 mb-2 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>From :</span>
-              <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={fromDay} onChange={(e) => setFromDay(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={fromYear} onChange={(e) => setFromYear(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span>To :</span>
-              <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={toDay} onChange={(e) => setToDay(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={toYear} onChange={(e) => setToYear(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span>Search with Date :</span>
-              <label className="flex items-center gap-1">
-                <input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES
-              </label>
-              <label className="flex items-center gap-1">
-                <input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO
-              </label>
-            </div>
-          </div>
-
-          {/* Row 2 */}
-          <div className="flex flex-wrap items-center gap-4 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>Transporter :</span>
-              <select 
-                value={transporterFilter} 
-                onChange={(e) => setTransporterFilter(e.target.value)} 
-                className="border px-1 py-0.5 text-[11px] min-w-[200px]"
-              >
-                <option value="">-- Select Transporter --</option>
-                {transporters.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span>Payment Mode :</span>
-              <select value={paymentModeFilter} onChange={(e) => setPaymentModeFilter(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                <option value="">---Select Mode---</option>
-                <option value="Cash">Cash in Hand</option>
-                <option value="Net Banking">Net Banking</option>
-                <option value="UPI">UPI</option>
-                <option value="Card">Card</option>
-                <option value="Cheque">Cheque</option>
-              </select>
-            </div>
-
-            <button onClick={handleSearch} className="border px-3 py-1 bg-gray-100 hover:bg-gray-200 text-[11px]">
-              Search
-            </button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto mt-0">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#D4A59A] text-black">
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">S.No.</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Transporter</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Payment</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Date</th>
-                <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Payment Mode</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPayments.map((payment, index) => (
-                <tr key={payment.id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-[#FDE1E1]"}>
-                  <td className="border border-[#c99] px-3 py-2 align-top">{index + 1}</td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    {payment.transporter?.name || payment.safari_booking?.safari_name || "-"}
-                  </td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    Rs. {payment.amount?.toLocaleString("en-IN")} /-
-                  </td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    {payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}
-                  </td>
-                  <td className="border border-[#c99] px-3 py-2 align-top">
-                    <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
-                    <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredPayments.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground bg-[#F5E6E0]">
-              No safari payments found
-            </div>
-          )}
-        </div>
-
-        {/* Summary Footer */}
-        <div className="bg-[#FDE1E1] border border-[#FFC1C1] p-3 mt-0">
-          <div className="text-sm font-semibold">
-            Total Payments: Rs. {totalPayments.toLocaleString("en-IN")} /-
-          </div>
-        </div>
-      </main>
-    </div>
+    <AdminPageShell title="Safari Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => {} }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+      <ThemedTable>
+        <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
+        <tbody>
+          {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No safari payments found" /> : paginatedItems.map((payment, index) => (
+            <ThemedTR key={payment.id} index={index}>
+              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{payment.transporter?.name || payment.safari_booking?.safari_name || "-"}</ThemedTD>
+              <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
+              <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
+              <ThemedTD>
+                <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
+                <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
+              </ThemedTD>
+            </ThemedTR>
+          ))}
+        </tbody>
+      </ThemedTable>
+    </AdminPageShell>
   );
 }
