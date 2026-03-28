@@ -297,137 +297,80 @@ export default function AdminRoomBookings() {
   };
 
   if (authLoading || loading) {
-    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Loading...</div>;
   }
 
   if (!canManage) {
-    return <div className="p-6 text-center">Access Denied</div>;
+    return <div style={{ padding: 24, textAlign: "center", color: "#999", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>Access Denied</div>;
   }
 
   return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="bg-[#b44a50] text-white px-4 py-2 flex items-center justify-between mb-0">
-        <span className="text-sm font-medium">View Room Booking</span>
+    <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+      <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 View Room Booking</div>
+
+      {/* Maroon header */}
+      <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold" }}>
+        <span>Search</span>
       </div>
 
       {/* Search Filter Section */}
-      <div className="border border-t-0 border-gray-300 bg-[#f6f0f0] p-3">
-        
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          {/* Booking From */}
-          <div className="flex items-center gap-2">
-            <label className="font-medium text-gray-700">Booking From :</label>
-            <select
-              value={fromMonth}
-              onChange={(e) => setFromMonth(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-1 bg-white"
-            >
-              {months.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-            <select
-              value={fromDay}
-              onChange={(e) => setFromDay(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-1 bg-white"
-            >
-              {days.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-            <select
-              value={fromYear}
-              onChange={(e) => setFromYear(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-1 bg-white"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
+      <div style={{ border: "1px solid #ccc", borderTop: "none", padding: "8px 10px", backgroundColor: "#fff" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <label style={{ fontSize: 11 }}>Booking From :</label>
+          <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+          <select value={fromDay} onChange={(e) => setFromDay(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+            {days.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
 
-          {/* Booking To */}
-          <div className="flex items-center gap-2">
-            <label className="font-medium text-gray-700">Booking To :</label>
-            <select
-              value={toMonth}
-              onChange={(e) => setToMonth(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-1 bg-white"
-            >
-              {months.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-            <select
-              value={toDay}
-              onChange={(e) => setToDay(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-1 bg-white"
-            >
-              {days.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-            <select
-              value={toYear}
-              onChange={(e) => setToYear(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-1 bg-white"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
+          <label style={{ fontSize: 11, marginLeft: 16 }}>Booking To :</label>
+          <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+          <select value={toDay} onChange={(e) => setToDay(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+            {days.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select value={toYear} onChange={(e) => setToYear(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
 
-          {/* Hotel Dropdown */}
-          <div className="flex items-center gap-2">
-            <label className="font-medium text-gray-700">Hotel :</label>
-            <select
-              value={selectedHotel}
-              onChange={(e) => setSelectedHotel(e.target.value)}
-              className="h-6 text-xs border border-gray-300 rounded px-2 bg-white min-w-[140px]"
-            >
-              <option value="">Select Hotel</option>
-              {hotels.map((hotel) => (
-                <option key={hotel.id} value={hotel.id}>{hotel.name}</option>
-              ))}
-            </select>
-          </div>
+          <label style={{ fontSize: 11, marginLeft: 16 }}>Hotel :</label>
+          <select value={selectedHotel} onChange={(e) => setSelectedHotel(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, minWidth: 140 }}>
+            <option value="">Select Hotel</option>
+            {hotels.map((hotel) => <option key={hotel.id} value={hotel.id}>{hotel.name}</option>)}
+          </select>
 
-          {/* Search Button */}
-          <Button
-            size="sm"
-            onClick={handleSearch}
-            disabled={loading}
-            className="h-6 px-4 text-xs bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-400"
-          >
+          <button onClick={handleSearch} disabled={loading} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer", marginLeft: 8 }}>
             {loading ? "..." : "Search"}
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Date Bookings Table */}
-      <div className="border border-t-0 border-gray-300 overflow-x-auto">
-        <table className="w-full text-xs">
+      <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
           <tbody>
             {dateBookings.length === 0 ? (
-              <tr className="bg-[#f6f0f0]">
-                <td colSpan={2} className="border border-gray-300 px-3 py-8 text-center text-gray-500">
+              <tr style={{ backgroundColor: "#f6f0f0" }}>
+                <td colSpan={2} style={{ border: "1px solid #ddd", padding: "20px 8px", textAlign: "center", color: "#999", fontSize: 11 }}>
                   {loading ? "Loading..." : "Select date range and click Search to view room bookings"}
                 </td>
               </tr>
             ) : (
               <>
-                {/* Date rows */}
                 {dateBookings.map((dateBooking, dateIdx) => (
-                  <tr key={`date-${dateIdx}`} className="bg-[#f6f0f0]">
-                    <td className="border border-gray-300 px-3 py-2 align-top font-medium w-32">
+                  <tr key={`date-${dateIdx}`} style={{ backgroundColor: dateIdx % 2 === 0 ? "#fff" : "#f6f0f0" }}>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", verticalAlign: "top", fontWeight: 500, width: 120, fontSize: 11, color: "#606060" }}>
                       {dateBooking.date}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060" }}>
                       {dateBooking.hotels.map((hotel, hotelIdx) => (
-                        <div key={hotelIdx} className="mb-2">
-                          <div className="font-bold">{hotel.hotelName}</div>
+                        <div key={hotelIdx} style={{ marginBottom: 6 }}>
+                          <div style={{ fontWeight: "bold" }}>{hotel.hotelName}</div>
                           {hotel.rooms.map((room, roomIdx) => (
                             <div key={roomIdx}>{room.roomName}:{room.count}</div>
                           ))}
@@ -438,23 +381,21 @@ export default function AdminRoomBookings() {
                   </tr>
                 ))}
 
-                {/* Total no. of Rooms row - at the end after all dates */}
-                <tr className="bg-white">
-                  <td colSpan={2} className="border border-gray-300 px-3 py-2 font-bold text-sm">
+                <tr style={{ backgroundColor: "#fff" }}>
+                  <td colSpan={2} style={{ border: "1px solid #ddd", padding: "5px 8px", fontWeight: "bold", fontSize: 12 }}>
                     Total no. of Rooms : {grandTotal}
                   </td>
                 </tr>
 
-                {/* User Bookings Section */}
                 {userBookings.map((userBooking, userIdx) => (
-                  <tr key={`user-${userIdx}`} className="bg-[#f6f0f0]">
-                    <td className="border border-gray-300 px-3 py-2 align-top font-medium w-32">
+                  <tr key={`user-${userIdx}`} style={{ backgroundColor: userIdx % 2 === 0 ? "#f6f0f0" : "#fff" }}>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", verticalAlign: "top", fontWeight: 500, width: 120, fontSize: 11, color: "#606060" }}>
                       {userBooking.userName}
                     </td>
-                    <td className="border border-gray-300 px-3 py-2">
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060" }}>
                       {userBooking.hotels.map((hotel, hotelIdx) => (
-                        <div key={hotelIdx} className="mb-2">
-                          <div className="font-bold">{hotel.hotelName}</div>
+                        <div key={hotelIdx} style={{ marginBottom: 6 }}>
+                          <div style={{ fontWeight: "bold" }}>{hotel.hotelName}</div>
                           {hotel.rooms.map((room, roomIdx) => (
                             <div key={roomIdx}>{room.roomName}:{room.count}</div>
                           ))}
