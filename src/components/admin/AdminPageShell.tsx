@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, cloneElement, isValidElement } from "react";
 import { TablePagination } from "@/components/ui/TablePagination";
 
 interface ActionButton {
@@ -36,7 +36,7 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
 
       {/* Search/Filter Section */}
       {filterSection && (
-        <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
+        <div style={{ border: "1px solid #ccc", marginBottom: 0, width: "100%" }}>
           {/* Search header bar */}
           <div style={{
             backgroundColor: MAROON,
@@ -64,8 +64,16 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
             )}
           </div>
           {/* Filter content */}
-          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc" }}>
-            {filterSection}
+          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box" }}>
+            {isValidElement(filterSection)
+              ? cloneElement(filterSection, {
+                  style: {
+                    ...(filterSection.props.style || {}),
+                    width: "100%",
+                    boxSizing: "border-box",
+                  },
+                })
+              : filterSection}
           </div>
         </div>
       )}
