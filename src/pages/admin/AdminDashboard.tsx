@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, startOfDay } from "date-fns";
+import { format, subDays, eachDayOfInterval, startOfMonth } from "date-fns";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, LineChart, Line, Area, AreaChart
+  PieChart, Pie, Cell, AreaChart, Area
 } from "recharts";
-
-const COLORS = ["#b44a50", "#c47a7e", "#d4a59a", "#e8c8c0", "#4a90b4", "#6ab04c", "#f0932b", "#eb4d4b"];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -20,7 +18,6 @@ export default function AdminDashboard() {
   });
   const [bookingTrend, setBookingTrend] = useState<any[]>([]);
   const [paymentStatusData, setPaymentStatusData] = useState<any[]>([]);
-  const [revenueByMonth, setRevenueByMonth] = useState<any[]>([]);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,19 +68,11 @@ export default function AdminDashboard() {
       todayBookings, monthRevenue,
     });
 
-    // Payment status pie
     setPaymentStatusData([
-      { name: "Pending", value: pending, color: "#f0932b" },
-      { name: "Approved", value: approved, color: "#6ab04c" },
-      { name: "Rejected", value: payments.filter(p => p.approval_status === "rejected").length, color: "#eb4d4b" },
+      { name: "Pending", value: pending, color: "#e6a817" },
+      { name: "Approved", value: approved, color: "#2e7d32" },
+      { name: "Rejected", value: payments.filter(p => p.approval_status === "rejected").length, color: "#c62828" },
     ].filter(d => d.value > 0));
-
-    // Revenue by payment type
-    const typeMap: Record<string, number> = {};
-    payments.filter(p => p.approval_status === "approved").forEach(p => {
-      const t = p.payment_type || "other";
-      typeMap[t] = (typeMap[t] || 0) + (p.amount || 0);
-    });
   };
 
   const fetchBookingTrend = async () => {
@@ -106,202 +95,186 @@ export default function AdminDashboard() {
     setRecentBookings(data || []);
   };
 
-  const formatCurrency = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+  const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center", fontFamily: "Arial", fontSize: 13, color: "#999" }}>Loading dashboard...</div>;
+  if (loading) return (
+    <div style={{ padding: 40, textAlign: "center", fontFamily: "Arial", fontSize: 12, color: "#666" }}>
+      Loading dashboard...
+    </div>
+  );
+
+  const s: React.CSSProperties = { fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 };
 
   return (
-    <div style={{ padding: 16, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 12 }}>
-      {/* Welcome Banner */}
-      <div style={{
-        background: "linear-gradient(135deg, #b44a50 0%, #8b3a3e 100%)",
-        borderRadius: 8, padding: "20px 24px", marginBottom: 16, color: "#fff",
-        display: "flex", justifyContent: "space-between", alignItems: "center"
-      }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: "bold" }}>Welcome to Admin Dashboard</h1>
-          <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.9 }}>{format(new Date(), "EEEE, dd MMMM yyyy")}</p>
-        </div>
-        <div style={{ display: "flex", gap: 12 }}>
-          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 6, padding: "8px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: "bold" }}>{stats.todayBookings}</div>
-            <div style={{ fontSize: 10, opacity: 0.8 }}>Today's Bookings</div>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 6, padding: "8px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: "bold" }}>{formatCurrency(stats.monthRevenue)}</div>
-            <div style={{ fontSize: 10, opacity: 0.8 }}>This Month Revenue</div>
-          </div>
-        </div>
+    <div style={{ ...s, padding: 12, background: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Top Bar */}
+      <div style={{ background: "#b44a50", color: "#fff", padding: "8px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontWeight: "bold", fontSize: 13 }}>Admin Dashboard</span>
+        <span style={{ fontSize: 11 }}>{format(new Date(), "dd-MMM-yyyy, EEEE")}</span>
       </div>
 
-      {/* Stat Cards Row 1 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+      {/* Summary Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
         {[
-          { label: "Total Bookings", value: stats.totalBookings, sub: `${stats.confirmedBookings} confirmed`, color: "#b44a50", icon: "📅" },
-          { label: "Total Revenue", value: formatCurrency(stats.totalRevenue), sub: `Paid: ${formatCurrency(stats.totalPaid)}`, color: "#4a90b4", icon: "💰" },
-          { label: "Due Amount", value: formatCurrency(stats.totalDue), sub: "Outstanding balance", color: "#f0932b", icon: "⚠️" },
-          { label: "Pending Payments", value: stats.pendingPayments, sub: `${stats.approvedPayments} approved`, color: "#6ab04c", icon: "⏳" },
-        ].map((card, i) => (
-          <div key={i} style={{
-            border: "1px solid #e0e0e0", borderRadius: 6, padding: 16, backgroundColor: "#fff",
-            borderLeft: `4px solid ${card.color}`, position: "relative", overflow: "hidden"
+          { label: "Today's Bookings", val: stats.todayBookings, bg: "#fff" },
+          { label: "Total Bookings", val: stats.totalBookings, bg: "#fff" },
+          { label: "This Month Revenue", val: fmt(stats.monthRevenue), bg: "#fff" },
+          { label: "Pending Payments", val: stats.pendingPayments, bg: "#fff" },
+        ].map((c, i) => (
+          <div key={i} style={{ background: c.bg, border: "1px solid #ccc", padding: "10px 12px" }}>
+            <div style={{ fontSize: 10, color: "#777", textTransform: "uppercase", fontWeight: "bold", marginBottom: 4 }}>{c.label}</div>
+            <div style={{ fontSize: 18, fontWeight: "bold", color: "#333" }}>{c.val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Stats Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+        {[
+          { label: "Confirmed", val: stats.confirmedBookings, color: "#2e7d32" },
+          { label: "Cancelled", val: stats.cancelledBookings, color: "#c62828" },
+          { label: "On Hold", val: stats.holdBookings, color: "#e6a817" },
+          { label: "Approved Payments", val: stats.approvedPayments, color: "#1565c0" },
+        ].map((c, i) => (
+          <div key={i} style={{ background: "#fff", border: "1px solid #ccc", padding: "10px 12px", borderTop: `3px solid ${c.color}` }}>
+            <div style={{ fontSize: 10, color: "#777", textTransform: "uppercase", fontWeight: "bold", marginBottom: 4 }}>{c.label}</div>
+            <div style={{ fontSize: 18, fontWeight: "bold", color: "#333" }}>{c.val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Links */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+        {[
+          { label: "Users", val: stats.totalUsers, link: "/admin/users" },
+          { label: "Agents", val: stats.totalAgents, link: "/admin/agents" },
+          { label: "Hotels", val: stats.totalHotels, link: "/admin/manage-hotels" },
+          { label: "Transporters", val: stats.totalTransporters, link: "/admin/transporters" },
+        ].map((c, i) => (
+          <div key={i} onClick={() => navigate(c.link)} style={{
+            background: "#fff", border: "1px solid #ccc", padding: "10px 12px", cursor: "pointer"
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 0.5 }}>{card.label}</div>
-                <div style={{ fontSize: 22, fontWeight: "bold", color: "#333" }}>{card.value}</div>
-                <div style={{ fontSize: 10, color: "#999", marginTop: 4 }}>{card.sub}</div>
-              </div>
-              <span style={{ fontSize: 28, opacity: 0.3 }}>{card.icon}</span>
-            </div>
+            <div style={{ fontSize: 10, color: "#777", textTransform: "uppercase", fontWeight: "bold", marginBottom: 4 }}>{c.label}</div>
+            <div style={{ fontSize: 18, fontWeight: "bold", color: "#0066cc" }}>{c.val}</div>
           </div>
         ))}
       </div>
 
-      {/* Stat Cards Row 2 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-        {[
-          { label: "Users", value: stats.totalUsers, color: "#9b59b6", icon: "👥", link: "/admin/users" },
-          { label: "Agents", value: stats.totalAgents, color: "#3498db", icon: "🤝", link: "/admin/agents" },
-          { label: "Hotels", value: stats.totalHotels, color: "#e67e22", icon: "🏨", link: "/admin/manage-hotels" },
-          { label: "Transporters", value: stats.totalTransporters, color: "#27ae60", icon: "🚗", link: "/admin/transporters" },
-        ].map((card, i) => (
-          <div key={i} onClick={() => navigate(card.link)} style={{
-            border: "1px solid #e0e0e0", borderRadius: 6, padding: "12px 16px", backgroundColor: "#fff",
-            borderTop: `3px solid ${card.color}`, cursor: "pointer", transition: "box-shadow 0.2s"
-          }}
-          onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)")}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: 10, color: "#888", fontWeight: "bold", textTransform: "uppercase" }}>{card.label}</div>
-                <div style={{ fontSize: 20, fontWeight: "bold", color: "#333" }}>{card.value}</div>
-              </div>
-              <span style={{ fontSize: 24, opacity: 0.4 }}>{card.icon}</span>
-            </div>
-          </div>
-        ))}
+      {/* Financial Summary Table */}
+      <div style={{ background: "#fff", border: "1px solid #ccc", marginBottom: 12 }}>
+        <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12 }}>
+          Financial Summary
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <tbody>
+            <tr style={{ borderBottom: "1px solid #ddd" }}>
+              <td style={{ padding: "6px 12px", color: "#555", width: "25%" }}>Total Revenue</td>
+              <td style={{ padding: "6px 12px", fontWeight: "bold" }}>{fmt(stats.totalRevenue)}</td>
+              <td style={{ padding: "6px 12px", color: "#555", width: "25%" }}>Total Collected</td>
+              <td style={{ padding: "6px 12px", fontWeight: "bold", color: "#2e7d32" }}>{fmt(stats.totalPaid)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: "6px 12px", color: "#555" }}>Outstanding Due</td>
+              <td style={{ padding: "6px 12px", fontWeight: "bold", color: "#c62828" }}>{fmt(stats.totalDue)}</td>
+              <td style={{ padding: "6px 12px", color: "#555" }}>Collection Rate</td>
+              <td style={{ padding: "6px 12px", fontWeight: "bold" }}>
+                {stats.totalRevenue > 0 ? ((stats.totalPaid / stats.totalRevenue) * 100).toFixed(1) : 0}%
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12, marginBottom: 16 }}>
-        {/* Booking Trend */}
-        <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 16, backgroundColor: "#fff" }}>
-          <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 12, color: "#333" }}>📈 Booking Trend (Last 30 Days)</div>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={bookingTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 9 }} interval={4} />
-              <YAxis tick={{ fontSize: 9 }} allowDecimals={false} />
-              <Tooltip contentStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="bookings" stroke="#b44a50" fill="#b44a50" fillOpacity={0.15} strokeWidth={2} name="Bookings" />
-            </AreaChart>
-          </ResponsiveContainer>
+      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 8, marginBottom: 12 }}>
+        <div style={{ background: "#fff", border: "1px solid #ccc" }}>
+          <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12 }}>
+            Booking Trend (Last 30 Days)
+          </div>
+          <div style={{ padding: 10 }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={bookingTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis dataKey="date" tick={{ fontSize: 9 }} interval={4} />
+                <YAxis tick={{ fontSize: 9 }} allowDecimals={false} />
+                <Tooltip contentStyle={{ fontSize: 10, border: "1px solid #ccc" }} />
+                <Area type="monotone" dataKey="bookings" stroke="#b44a50" fill="#b44a50" fillOpacity={0.1} strokeWidth={1.5} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Payment Status Pie */}
-        <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 16, backgroundColor: "#fff" }}>
-          <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 12, color: "#333" }}>🥧 Payment Status</div>
-          {paymentStatusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={paymentStatusData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                  {paymentStatusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : <div style={{ textAlign: "center", padding: 40, color: "#999" }}>No payment data</div>}
+        <div style={{ background: "#fff", border: "1px solid #ccc" }}>
+          <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12 }}>
+            Payment Status
+          </div>
+          <div style={{ padding: 10 }}>
+            {paymentStatusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={paymentStatusData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} paddingAngle={2} dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false} style={{ fontSize: 9 }}>
+                    {paymentStatusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ fontSize: 10 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <div style={{ textAlign: "center", padding: 40, color: "#999", fontSize: 11 }}>No data</div>}
+          </div>
         </div>
       </div>
 
-      {/* Revenue Chart + Booking Status */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-        {/* Revenue Trend */}
-        <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 16, backgroundColor: "#fff" }}>
-          <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 12, color: "#333" }}>💰 Revenue Trend (Last 30 Days)</div>
-          <ResponsiveContainer width="100%" height={200}>
+      {/* Revenue Chart */}
+      <div style={{ background: "#fff", border: "1px solid #ccc", marginBottom: 12 }}>
+        <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12 }}>
+          Revenue Trend (Last 30 Days)
+        </div>
+        <div style={{ padding: 10 }}>
+          <ResponsiveContainer width="100%" height={160}>
             <BarChart data={bookingTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
               <XAxis dataKey="date" tick={{ fontSize: 9 }} interval={4} />
               <YAxis tick={{ fontSize: 9 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
-              <Tooltip contentStyle={{ fontSize: 11 }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]} />
-              <Bar dataKey="revenue" fill="#4a90b4" radius={[3, 3, 0, 0]} name="Revenue" />
+              <Tooltip contentStyle={{ fontSize: 10, border: "1px solid #ccc" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]} />
+              <Bar dataKey="revenue" fill="#4a7a8a" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Booking Status Breakdown */}
-        <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 16, backgroundColor: "#fff" }}>
-          <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 12, color: "#333" }}>📊 Booking Status</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { label: "Confirmed", count: stats.confirmedBookings, total: stats.totalBookings, color: "#6ab04c" },
-              { label: "Cancelled", count: stats.cancelledBookings, total: stats.totalBookings, color: "#eb4d4b" },
-              { label: "On Hold", count: stats.holdBookings, total: stats.totalBookings, color: "#f0932b" },
-            ].map((item, i) => {
-              const pct = stats.totalBookings > 0 ? (item.count / stats.totalBookings) * 100 : 0;
-              return (
-                <div key={i}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 11 }}>
-                    <span style={{ fontWeight: "bold" }}>{item.label}</span>
-                    <span>{item.count} ({pct.toFixed(1)}%)</span>
-                  </div>
-                  <div style={{ height: 8, backgroundColor: "#f0f0f0", borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, backgroundColor: item.color, borderRadius: 4, transition: "width 0.5s" }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ marginTop: 16, padding: "10px 12px", backgroundColor: "#f9f5f5", borderRadius: 4, border: "1px solid #eee" }}>
-            <div style={{ fontSize: 11, fontWeight: "bold", color: "#333", marginBottom: 6 }}>💵 Financial Summary</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, fontSize: 11 }}>
-              <span style={{ color: "#666" }}>Total Revenue:</span><span style={{ fontWeight: "bold", textAlign: "right" }}>{formatCurrency(stats.totalRevenue)}</span>
-              <span style={{ color: "#666" }}>Total Collected:</span><span style={{ fontWeight: "bold", textAlign: "right", color: "#6ab04c" }}>{formatCurrency(stats.totalPaid)}</span>
-              <span style={{ color: "#666" }}>Outstanding Due:</span><span style={{ fontWeight: "bold", textAlign: "right", color: "#eb4d4b" }}>{formatCurrency(stats.totalDue)}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Recent Bookings Table */}
-      <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, overflow: "hidden", backgroundColor: "#fff" }}>
-        <div style={{
-          backgroundColor: "#b44a50", color: "#fff", padding: "8px 16px", fontSize: 13, fontWeight: "bold",
-          display: "flex", justifyContent: "space-between", alignItems: "center"
-        }}>
-          <span>📋 Recent Bookings</span>
-          <span onClick={() => navigate("/admin/bookings")} style={{ fontSize: 11, cursor: "pointer", textDecoration: "underline" }}>View All</span>
+      {/* Recent Bookings */}
+      <div style={{ background: "#fff", border: "1px solid #ccc" }}>
+        <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Recent Bookings</span>
+          <span onClick={() => navigate("/admin/bookings")} style={{ fontSize: 10, cursor: "pointer", textDecoration: "underline", fontWeight: "normal" }}>View All</span>
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
           <thead>
-            <tr style={{ backgroundColor: "#c47a7e", color: "#fff" }}>
+            <tr style={{ background: "#c47a7e", color: "#fff" }}>
               {["S.No", "Booking No", "Customer", "Amount", "Status", "Date"].map(h => (
-                <th key={h} style={{ border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold" }}>{h}</th>
+                <th key={h} style={{ border: "1px solid #a88", padding: "4px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {recentBookings.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: 20, color: "#999" }}>No bookings found</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: 16, color: "#999" }}>No bookings found</td></tr>
             ) : recentBookings.map((b, i) => (
-              <tr key={b.id} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f6f0f0", cursor: "pointer" }}
-                onClick={() => navigate(`/admin/bookings/${b.id}`)}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#ece4e4")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#fff" : "#f6f0f0")}>
-                <td style={{ border: "1px solid #ddd", padding: "5px 8px", color: "#606060" }}>{i + 1}</td>
-                <td style={{ border: "1px solid #ddd", padding: "5px 8px", color: "#0066cc", fontWeight: "bold" }}>{b.booking_number}</td>
-                <td style={{ border: "1px solid #ddd", padding: "5px 8px", color: "#606060" }}>{b.customer_name || "-"}</td>
-                <td style={{ border: "1px solid #ddd", padding: "5px 8px", color: "#606060" }}>{formatCurrency(b.total_amount || 0)}</td>
-                <td style={{ border: "1px solid #ddd", padding: "5px 8px" }}>
+              <tr key={b.id} style={{ background: i % 2 === 0 ? "#fff" : "#f6f0f0", cursor: "pointer" }}
+                onClick={() => navigate(`/admin/bookings/${b.id}`)}>
+                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{i + 1}</td>
+                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#0066cc", fontWeight: "bold" }}>{b.booking_number}</td>
+                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{b.customer_name || "-"}</td>
+                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{fmt(b.total_amount || 0)}</td>
+                <td style={{ border: "1px solid #ddd", padding: "4px 8px" }}>
                   <span style={{
-                    padding: "1px 6px", borderRadius: 3, fontSize: 10, fontWeight: "bold",
-                    backgroundColor: b.status === "confirmed" ? "#d4edda" : b.status === "cancelled" ? "#f8d7da" : "#fff3cd",
+                    padding: "1px 6px", fontSize: 10, fontWeight: "bold",
+                    background: b.status === "confirmed" ? "#d4edda" : b.status === "cancelled" ? "#f8d7da" : "#fff3cd",
                     color: b.status === "confirmed" ? "#155724" : b.status === "cancelled" ? "#721c24" : "#856404",
                   }}>{b.status || "N/A"}</span>
                 </td>
-                <td style={{ border: "1px solid #ddd", padding: "5px 8px", color: "#606060" }}>{b.created_at ? format(new Date(b.created_at), "dd-MMM-yyyy") : "-"}</td>
+                <td style={{ border: "1px solid #ddd", padding: "4px 8px", color: "#555" }}>{b.created_at ? format(new Date(b.created_at), "dd-MMM-yyyy") : "-"}</td>
               </tr>
             ))}
           </tbody>
