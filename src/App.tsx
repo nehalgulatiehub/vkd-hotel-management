@@ -149,6 +149,12 @@ import AdminMDTransporterMoneyDetail from "./pages/admin/AdminMDTransporterMoney
 import AdminVehicleTransporterMoneyDetail from "./pages/admin/AdminVehicleTransporterMoneyDetail";
 import AdminSafariTransporterDue from "./pages/admin/AdminSafariTransporterDue";
 
+// Account Panel imports
+import { AccountLayout } from "./components/layout/AccountLayout";
+import AccountAuth from "./pages/account/AccountAuth";
+import AccountHome from "./pages/account/AccountHome";
+import AccountChangePassword from "./pages/account/AccountChangePassword";
+
 const queryClient = new QueryClient();
 
 const App = () => (
