@@ -86,6 +86,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
   const [rejectingPaymentId, setRejectingPaymentId] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState(false);
+  const [restrictedCityIds, setRestrictedCityIds] = useState<Set<string>>(new Set());
 
   // View Booking Details dialog state
   const [showBookingDetailsDialog, setShowBookingDetailsDialog] = useState(false);
@@ -180,6 +181,13 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
     if (!authLoading && canManage) {
       fetchPayments();
       fetchFilters();
+      // Fetch city restrictions for account users
+      if (isAccount() && !isAdmin() && user?.id) {
+        supabase.from("account_city_restrictions").select("city_id").eq("user_id", user.id)
+          .then(({ data }) => {
+            setRestrictedCityIds(new Set((data || []).map((r: any) => r.city_id)));
+          });
+      }
     }
   }, [authLoading]);
 
@@ -306,6 +314,26 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         const cashPayments = paymentDetails.filter(p => p.payment_mode?.toLowerCase() === "cash");
         if (cashPayments.length > 0) {
           toast.error("Account users cannot approve Cash payments. Only Admin can approve Cash payments.");
+          return;
+        }
+      }
+
+      // Account users cannot approve payments for restricted cities
+      if (status === "approved" && isAccount() && !isAdmin() && restrictedCityIds.size > 0) {
+        const selectedPaymentsList = payments.filter(p => selectedPayments.has(p.id));
+        const restrictedPayments = selectedPaymentsList.filter(p => p.city_info && restrictedCityIds.has(
+          // Find city_id from payments data
+          (payments.find(pay => pay.id === p.id) as any)?.city_id || ""
+        ));
+        // Better approach: check city_id from the raw payment data
+        const { data: rawPayments } = await supabase.from("payments").select("id, city_id").in("id", Array.from(selectedPayments));
+        const blockedPayments = (rawPayments || []).filter(p => p.city_id && restrictedCityIds.has(p.city_id));
+        if (blockedPayments.length > 0) {
+          const blockedCityNames = [...new Set(blockedPayments.map(bp => {
+            const city = cities.find(c => c.id === bp.city_id);
+            return city?.name || "Unknown";
+          }))];
+          toast.error(`You are restricted from approving payments for: ${blockedCityNames.join(", ")}`);
           return;
         }
       }
@@ -559,6 +587,15 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
             if (isAccount() && !isAdmin() && payment.payment_mode?.toLowerCase() === "cash") {
               toast.error("Account users cannot approve Cash payments. Only Admin can approve Cash payments.");
               return;
+            }
+            // Account users cannot approve payments for restricted cities
+            if (isAccount() && !isAdmin() && restrictedCityIds.size > 0) {
+              const { data: rawPay } = await supabase.from("payments").select("city_id").eq("id", payment.id).single();
+              if (rawPay?.city_id && restrictedCityIds.has(rawPay.city_id)) {
+                const cityName = cities.find(c => c.id === rawPay.city_id)?.name || "this city";
+                toast.error(`You are restricted from approving payments for ${cityName}`);
+                return;
+              }
             }
             try {
               const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
