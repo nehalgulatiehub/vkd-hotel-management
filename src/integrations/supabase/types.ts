@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_city_restrictions: {
+        Row: {
+          city_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          city_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          city_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_city_restrictions_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           address: string | null
