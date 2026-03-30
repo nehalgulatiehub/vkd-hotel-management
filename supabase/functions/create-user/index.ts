@@ -42,12 +42,12 @@ serve(async (req) => {
     });
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await callerClient.auth.getUser(token);
-    const callerId = userData?.user?.id;
+    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+    const callerId = claimsData?.claims?.sub;
 
-    if (userError || !callerId) {
+    if (claimsError || !callerId) {
       console.error("Unauthorized user validation failed", {
-        message: userError?.message,
+        message: claimsError?.message,
       });
 
       return new Response(JSON.stringify({ error: "Unauthorized" }), {

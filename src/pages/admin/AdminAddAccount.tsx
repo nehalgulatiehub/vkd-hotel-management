@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { AdminPageShell } from "@/components/admin/AdminPageShell";
 
 export default function AdminAddAccount() {
-  const { isAdmin, loading: authLoading, session } = useAuthContext();
+  const { isAdmin, loading: authLoading } = useAuthContext();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -29,36 +29,47 @@ export default function AdminAddAccount() {
 
     setSubmitting(true);
     try {
-      // Check if session is active
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!currentSession) {
-        toast.error("Your session has expired. Please log in again.");
-        setSubmitting(false);
-        return;
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        await supabase.auth.signOut();
+        navigate("/admin/login", { replace: true });
+        throw new Error("Session expired. Please sign in again.");
       }
 
-      const res = await supabase.functions.invoke("create-user", {
-        body: { username: sanitized, password, firstName: firstName || sanitized, lastName: lastName || "" },
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession?.access_token) {
+        await supabase.auth.signOut();
+        navigate("/admin/login", { replace: true });
+        throw new Error("Session expired. Please sign in again.");
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentSession.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          username: sanitized,
+          password,
+          firstName: firstName || sanitized,
+          lastName: lastName || "",
+        }),
       });
 
-      if (res.error) {
-        const msg = res.error.message || "Failed to create user";
-        if (msg.includes("non-2xx") || msg.includes("Unauthorized")) {
-          throw new Error("Session expired or unauthorized. Please log out and log in again.");
-        }
-        throw new Error(msg);
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || result?.message || "Failed to create user");
       }
-      if (res.data?.error) throw new Error(res.data.error);
 
-      const userId = res.data?.user?.id;
+      const userId = result?.user?.id;
       if (!userId) throw new Error("User created but no ID returned");
 
-      // Update phone if provided
       if (phone) {
         await supabase.from("profiles").update({ phone }).eq("id", userId);
       }
 
-      // Assign account role
       const { error: roleError } = await supabase.from("user_roles").insert({ user_id: userId, role: "account" });
       if (roleError) {
         console.error("Role assignment error:", roleError);
