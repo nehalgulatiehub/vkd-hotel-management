@@ -39,7 +39,7 @@ export default function Bookings() {
   const navigate = useNavigate();
   const location = useLocation();
   const { hasMenuAccess, isAdmin, isAccount, user } = useAuthContext();
-  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/account");
   const isAddRoute = location.pathname === "/bookings/add";
   
   // Permission checks for booking sections
@@ -77,7 +77,7 @@ export default function Bookings() {
         }
       };
       loadBookingForEdit();
-    } else if (location.pathname === "/bookings" || location.pathname === "/admin/bookings") {
+    } else if (location.pathname === "/bookings" || location.pathname === "/admin/bookings" || location.pathname === "/account/bookings") {
       setShowForm(false);
       setEditingBookingId(null);
     }
