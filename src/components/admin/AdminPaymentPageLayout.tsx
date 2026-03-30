@@ -86,6 +86,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
   const [rejectingPaymentId, setRejectingPaymentId] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState(false);
+  const [restrictedCityIds, setRestrictedCityIds] = useState<Set<string>>(new Set());
 
   // View Booking Details dialog state
   const [showBookingDetailsDialog, setShowBookingDetailsDialog] = useState(false);
