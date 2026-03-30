@@ -311,17 +311,42 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
 
       // Account users: can approve all modes EXCEPT cash for restricted cities
       if (status === "approved" && isAccount() && !isAdmin() && restrictedCityIds.size > 0 && paymentDetails) {
-        const { data: rawPayments } = await supabase.from("payments").select("id, city_id, payment_mode").in("id", Array.from(selectedPayments));
-        const blockedPayments = (rawPayments || []).filter(p =>
-          p.payment_mode?.toLowerCase() === "cash" && p.city_id && restrictedCityIds.has(p.city_id)
-        );
-        if (blockedPayments.length > 0) {
-          const blockedCityNames = [...new Set(blockedPayments.map(bp => {
-            const city = cities.find(c => c.id === bp.city_id);
-            return city?.name || "Unknown";
-          }))];
-          toast.error(`You cannot approve Cash payments for restricted cities: ${blockedCityNames.join(", ")}`);
-          return;
+        const { data: rawPayments } = await supabase.from("payments").select("id, city_id, payment_mode, booking_id").in("id", Array.from(selectedPayments));
+        const cashPayments = (rawPayments || []).filter(p => p.payment_mode?.toLowerCase() === "cash");
+        
+        if (cashPayments.length > 0) {
+          // Resolve city_id for payments that don't have it set - check hotel_bookings
+          const needsCityLookup = cashPayments.filter(p => !p.city_id && p.booking_id);
+          if (needsCityLookup.length > 0) {
+            const bookingIds = [...new Set(needsCityLookup.map(p => p.booking_id).filter(Boolean))];
+            const { data: hotelBookings } = await supabase
+              .from("hotel_bookings")
+              .select("booking_id, hotel:another_hotels(city_id)")
+              .in("booking_id", bookingIds as string[]);
+            const bookingCityMap: Record<string, string> = {};
+            (hotelBookings || []).forEach((hb: any) => {
+              if (hb.hotel?.city_id && hb.booking_id) bookingCityMap[hb.booking_id] = hb.hotel.city_id;
+            });
+            cashPayments.forEach(p => {
+              if (!p.city_id && p.booking_id && bookingCityMap[p.booking_id]) {
+                (p as any).resolved_city_id = bookingCityMap[p.booking_id];
+              }
+            });
+          }
+          
+          const blockedPayments = cashPayments.filter(p => {
+            const cityId = p.city_id || (p as any).resolved_city_id;
+            return cityId && restrictedCityIds.has(cityId);
+          });
+          if (blockedPayments.length > 0) {
+            const blockedCityNames = [...new Set(blockedPayments.map(bp => {
+              const cityId = bp.city_id || (bp as any).resolved_city_id;
+              const city = cities.find(c => c.id === cityId);
+              return city?.name || "Unknown";
+            }))];
+            toast.error(`You cannot approve Cash payments for restricted cities: ${blockedCityNames.join(", ")}`);
+            return;
+          }
         }
       }
 
@@ -572,9 +597,20 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
           if (payment.id) {
             // Account users: block cash approval only for restricted cities
             if (isAccount() && !isAdmin() && payment.payment_mode?.toLowerCase() === "cash" && restrictedCityIds.size > 0) {
-              const { data: rawPay } = await supabase.from("payments").select("city_id").eq("id", payment.id).single();
-              if (rawPay?.city_id && restrictedCityIds.has(rawPay.city_id)) {
-                const cityName = cities.find(c => c.id === rawPay.city_id)?.name || "this city";
+              const { data: rawPay } = await supabase.from("payments").select("city_id, booking_id").eq("id", payment.id).single();
+              let resolvedCityId = rawPay?.city_id;
+              // If city_id is null, resolve from hotel booking
+              if (!resolvedCityId && rawPay?.booking_id) {
+                const { data: hb } = await supabase
+                  .from("hotel_bookings")
+                  .select("hotel:another_hotels(city_id)")
+                  .eq("booking_id", rawPay.booking_id)
+                  .limit(1)
+                  .maybeSingle();
+                resolvedCityId = (hb as any)?.hotel?.city_id || null;
+              }
+              if (resolvedCityId && restrictedCityIds.has(resolvedCityId)) {
+                const cityName = cities.find(c => c.id === resolvedCityId)?.name || "this city";
                 toast.error(`You cannot approve Cash payments for restricted city: ${cityName}`);
                 return;
               }
