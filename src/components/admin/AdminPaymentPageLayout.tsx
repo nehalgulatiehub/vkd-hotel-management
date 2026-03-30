@@ -298,8 +298,17 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
     try {
       const { data: paymentDetails } = await supabase
         .from("payments")
-        .select("id, amount, booking_id, payment_type")
+        .select("id, amount, booking_id, payment_type, payment_mode")
         .in("id", Array.from(selectedPayments));
+
+      // Account users cannot approve cash payments
+      if (status === "approved" && isAccount() && !isAdmin() && paymentDetails) {
+        const cashPayments = paymentDetails.filter(p => p.payment_mode?.toLowerCase() === "cash");
+        if (cashPayments.length > 0) {
+          toast.error("Account users cannot approve Cash payments. Only Admin can approve Cash payments.");
+          return;
+        }
+      }
 
       const { error } = await supabase.from("payments").update({ approval_status: status, approved_by: user?.id, approved_at: new Date().toISOString() }).in("id", Array.from(selectedPayments));
       if (error) throw error;
@@ -544,18 +553,23 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top" }}>
                       {[
                         { label: "View Booking", fn: () => payment.booking?.id && handleViewBooking(payment.booking.id) },
-                        ...(approvalStatus === "pending" ? [{ label: "Approved", fn: async () => {
-                          if (payment.id) {
-                            try {
-                              const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
-                              const { error } = await supabase.from("payments").update({ approval_status: "approved", approved_by: user?.id, approved_at: new Date().toISOString() }).eq("id", payment.id);
-                              if (error) throw error;
-                              if (paymentDetails) await syncServiceTableOnApproval(paymentDetails as any);
-                              toast.success("Payment approved successfully");
-                              fetchPayments();
-                            } catch { toast.error("Failed to approve payment"); }
-                          }
-                        }}] : []),
+        ...(approvalStatus === "pending" ? [{ label: "Approved", fn: async () => {
+          if (payment.id) {
+            // Account users cannot approve cash payments
+            if (isAccount() && !isAdmin() && payment.payment_mode?.toLowerCase() === "cash") {
+              toast.error("Account users cannot approve Cash payments. Only Admin can approve Cash payments.");
+              return;
+            }
+            try {
+              const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
+              const { error } = await supabase.from("payments").update({ approval_status: "approved", approved_by: user?.id, approved_at: new Date().toISOString() }).eq("id", payment.id);
+              if (error) throw error;
+              if (paymentDetails) await syncServiceTableOnApproval(paymentDetails as any);
+              toast.success("Payment approved successfully");
+              fetchPayments();
+            } catch { toast.error("Failed to approve payment"); }
+          }
+        }}] : []),
                         { label: "View Payment", fn: () => payment.booking?.id && handleViewPayment(payment.booking.id) },
                         { label: "View Refund Payment", fn: () => navigate(`/admin/refund-payments?id=${payment.booking?.id}`) },
                       ].map((a, i) => (
