@@ -318,6 +318,26 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         }
       }
 
+      // Account users cannot approve payments for restricted cities
+      if (status === "approved" && isAccount() && !isAdmin() && restrictedCityIds.size > 0) {
+        const selectedPaymentsList = payments.filter(p => selectedPayments.has(p.id));
+        const restrictedPayments = selectedPaymentsList.filter(p => p.city_info && restrictedCityIds.has(
+          // Find city_id from payments data
+          (payments.find(pay => pay.id === p.id) as any)?.city_id || ""
+        ));
+        // Better approach: check city_id from the raw payment data
+        const { data: rawPayments } = await supabase.from("payments").select("id, city_id").in("id", Array.from(selectedPayments));
+        const blockedPayments = (rawPayments || []).filter(p => p.city_id && restrictedCityIds.has(p.city_id));
+        if (blockedPayments.length > 0) {
+          const blockedCityNames = [...new Set(blockedPayments.map(bp => {
+            const city = cities.find(c => c.id === bp.city_id);
+            return city?.name || "Unknown";
+          }))];
+          toast.error(`You are restricted from approving payments for: ${blockedCityNames.join(", ")}`);
+          return;
+        }
+      }
+
       const { error } = await supabase.from("payments").update({ approval_status: status, approved_by: user?.id, approved_at: new Date().toISOString() }).in("id", Array.from(selectedPayments));
       if (error) throw error;
 
