@@ -309,31 +309,18 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         .select("id, amount, booking_id, payment_type, payment_mode")
         .in("id", Array.from(selectedPayments));
 
-      // Account users cannot approve cash payments
-      if (status === "approved" && isAccount() && !isAdmin() && paymentDetails) {
-        const cashPayments = paymentDetails.filter(p => p.payment_mode?.toLowerCase() === "cash");
-        if (cashPayments.length > 0) {
-          toast.error("Account users cannot approve Cash payments. Only Admin can approve Cash payments.");
-          return;
-        }
-      }
-
-      // Account users cannot approve payments for restricted cities
-      if (status === "approved" && isAccount() && !isAdmin() && restrictedCityIds.size > 0) {
-        const selectedPaymentsList = payments.filter(p => selectedPayments.has(p.id));
-        const restrictedPayments = selectedPaymentsList.filter(p => p.city_info && restrictedCityIds.has(
-          // Find city_id from payments data
-          (payments.find(pay => pay.id === p.id) as any)?.city_id || ""
-        ));
-        // Better approach: check city_id from the raw payment data
-        const { data: rawPayments } = await supabase.from("payments").select("id, city_id").in("id", Array.from(selectedPayments));
-        const blockedPayments = (rawPayments || []).filter(p => p.city_id && restrictedCityIds.has(p.city_id));
+      // Account users: can approve all modes EXCEPT cash for restricted cities
+      if (status === "approved" && isAccount() && !isAdmin() && restrictedCityIds.size > 0 && paymentDetails) {
+        const { data: rawPayments } = await supabase.from("payments").select("id, city_id, payment_mode").in("id", Array.from(selectedPayments));
+        const blockedPayments = (rawPayments || []).filter(p =>
+          p.payment_mode?.toLowerCase() === "cash" && p.city_id && restrictedCityIds.has(p.city_id)
+        );
         if (blockedPayments.length > 0) {
           const blockedCityNames = [...new Set(blockedPayments.map(bp => {
             const city = cities.find(c => c.id === bp.city_id);
             return city?.name || "Unknown";
           }))];
-          toast.error(`You are restricted from approving payments for: ${blockedCityNames.join(", ")}`);
+          toast.error(`You cannot approve Cash payments for restricted cities: ${blockedCityNames.join(", ")}`);
           return;
         }
       }
