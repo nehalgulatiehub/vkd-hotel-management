@@ -123,7 +123,8 @@ export function useAuth() {
   const canApprovePayment = useCallback(
     (paymentMode: string) => {
       if (authState.roles.includes("admin")) return true;
-      if (authState.roles.includes("account") && paymentMode.toLowerCase() !== "cash") return true;
+      // Account users can approve all payment modes; city-based cash restriction is handled in the UI
+      if (authState.roles.includes("account")) return true;
       return false;
     },
     [authState.roles]
