@@ -736,8 +736,82 @@ const App = () => (
           <Route path="/admin/restaurant/invoice/:orderId" element={<AdminLayout><RestaurantInvoice /></AdminLayout>} />
           <Route path="/admin/restaurant/reports" element={<AdminLayout><RestaurantReports /></AdminLayout>} />
           
-          {/* Admin placeholder routes for pages under development */}
+           {/* Admin placeholder routes for pages under development */}
           <Route path="/admin/*" element={<AdminLayout><AdminPlaceholder /></AdminLayout>} />
+          
+          {/* ========== Account Panel Routes ========== */}
+          <Route path="/account/login" element={<AccountAuth />} />
+          <Route path="/account" element={<AccountLayout><AccountHome /></AccountLayout>} />
+          <Route path="/account/email" element={<AccountLayout><AdminEmail /></AccountLayout>} />
+          <Route path="/account/change-password" element={<AccountLayout><AccountChangePassword /></AccountLayout>} />
+          
+          {/* Account Booking Manager */}
+          <Route path="/account/bookings" element={<AccountLayout><Bookings /></AccountLayout>} />
+          <Route path="/account/bookings/:id" element={<AccountLayout><BookingDetails /></AccountLayout>} />
+          <Route path="/account/room-bookings" element={<AccountLayout><AdminRoomBookings /></AccountLayout>} />
+          <Route path="/account/pending-payments" element={<AccountLayout><ViewPendingPayment /></AccountLayout>} />
+          <Route path="/account/approved-payments" element={<AccountLayout><ViewApprovedPayment /></AccountLayout>} />
+          <Route path="/account/due-amount" element={<AccountLayout><ViewDueAmount /></AccountLayout>} />
+          
+          {/* Account Safari Manager */}
+          <Route path="/account/safari-details" element={<AccountLayout><SafariDetails /></AccountLayout>} />
+          <Route path="/account/safari-pending" element={<AccountLayout><AdminSafariPendingPayments /></AccountLayout>} />
+          <Route path="/account/safari-approved" element={<AccountLayout><AdminSafariApprovedPayments /></AccountLayout>} />
+          <Route path="/account/safari-due" element={<AccountLayout><ViewSafariDue /></AccountLayout>} />
+          
+          {/* Account Safari Payment Manager */}
+          <Route path="/account/safari-money" element={<AccountLayout><AdminSafariMoneyDetail /></AccountLayout>} />
+          <Route path="/account/add-safari-payment" element={<AccountLayout><AdminAddSafariPayment /></AccountLayout>} />
+          <Route path="/account/safari-payments" element={<AccountLayout><SafariPayments /></AccountLayout>} />
+          
+          {/* Account D-M Volvo Manager */}
+          <Route path="/account/dm-volvo-details" element={<AccountLayout><VolvoDelhiManali /></AccountLayout>} />
+          <Route path="/account/dm-volvo-pending" element={<AccountLayout><AdminDMVolvoPendingPayments /></AccountLayout>} />
+          <Route path="/account/dm-volvo-approved" element={<AccountLayout><AdminDMVolvoApprovedPayments /></AccountLayout>} />
+          <Route path="/account/dm-volvo-due" element={<AccountLayout><ViewDelhiManaliDue /></AccountLayout>} />
+          
+          {/* Account M-D Volvo Manager */}
+          <Route path="/account/md-volvo-details" element={<AccountLayout><VolvoManaliDelhi /></AccountLayout>} />
+          <Route path="/account/md-volvo-pending" element={<AccountLayout><AdminMDVolvoPendingPayments /></AccountLayout>} />
+          <Route path="/account/md-volvo-approved" element={<AccountLayout><AdminMDVolvoApprovedPayments /></AccountLayout>} />
+          <Route path="/account/md-volvo-due" element={<AccountLayout><ViewManaliDelhiDue /></AccountLayout>} />
+          
+          {/* Account D-M and M-D Transport Payment Manager */}
+          <Route path="/account/dm-transporter-money" element={<AccountLayout><AdminDMTransporterMoneyDetail /></AccountLayout>} />
+          <Route path="/account/md-transporter-money" element={<AccountLayout><AdminMDTransporterMoneyDetail /></AccountLayout>} />
+          <Route path="/account/transporter-payments/add" element={<AccountLayout><VolvoPayments /></AccountLayout>} />
+          <Route path="/account/transporter-payments" element={<AccountLayout><VolvoPayments /></AccountLayout>} />
+          
+          {/* Account Another Hotel Manager */}
+          <Route path="/account/another-hotel-details" element={<AccountLayout><HotelDetails /></AccountLayout>} />
+          <Route path="/account/another-hotel-pending" element={<AccountLayout><AdminHotelPendingPayments /></AccountLayout>} />
+          <Route path="/account/another-hotel-approved" element={<AccountLayout><AdminHotelApprovedPayments /></AccountLayout>} />
+          <Route path="/account/another-hotel-due" element={<AccountLayout><ViewHotelDue /></AccountLayout>} />
+          
+          {/* Account Another Hotel Payment Manager */}
+          <Route path="/account/another-hotel-money" element={<AccountLayout><AdminAnotherHotelMoneyDetail /></AccountLayout>} />
+          <Route path="/account/add-hotel-payment" element={<AccountLayout><AdminAddHotelPayment /></AccountLayout>} />
+          <Route path="/account/another-hotel-payments" element={<AccountLayout><HotelPayments /></AccountLayout>} />
+          
+          {/* Account Additional Vehicle Manager */}
+          <Route path="/account/vehicle-details" element={<AccountLayout><VehicleDetails /></AccountLayout>} />
+          <Route path="/account/vehicle-pending" element={<AccountLayout><AdminVehiclePendingPayments /></AccountLayout>} />
+          <Route path="/account/vehicle-approved" element={<AccountLayout><AdminVehicleApprovedPayments /></AccountLayout>} />
+          <Route path="/account/vehicle-due" element={<AccountLayout><ViewVehicleDue /></AccountLayout>} />
+          
+          {/* Account Another Vehicle Transport Payment Manager */}
+          <Route path="/account/vehicle-transporter-money" element={<AccountLayout><AdminVehicleTransporterMoneyDetail /></AccountLayout>} />
+          <Route path="/account/add-transporter-payment" element={<AccountLayout><AdminAddTransporterPayment /></AccountLayout>} />
+          <Route path="/account/vehicle-transporter-payments" element={<AccountLayout><VehiclePayments /></AccountLayout>} />
+          <Route path="/account/group-expenses" element={<AccountLayout><Expenses /></AccountLayout>} />
+          
+          {/* Account Refund Payment Manager */}
+          <Route path="/account/book-return-payments" element={<AccountLayout><ViewBookReturnPayment /></AccountLayout>} />
+          <Route path="/account/paid-payments" element={<AccountLayout><ViewPaidPayment /></AccountLayout>} />
+          <Route path="/account/receive-payments" element={<AccountLayout><ViewReceivePayment /></AccountLayout>} />
+          
+          {/* Account fallback */}
+          <Route path="/account/*" element={<AccountLayout><AccountHome /></AccountLayout>} />
           
           {/* Redirects for old URLs */}
           <Route path="/hold-booking/create" element={<Navigate to="/bookings/hold" replace />} />
