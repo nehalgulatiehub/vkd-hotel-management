@@ -114,6 +114,7 @@ import AdminEmail from "./pages/admin/AdminEmail";
 import AdminFollowups from "./pages/admin/AdminFollowups";
 import AdminGuestUsers from "./pages/admin/AdminGuestUsers";
 import AdminAccounts from "./pages/admin/AdminAccounts";
+import AdminAddAccount from "./pages/admin/AdminAddAccount";
 import AdminRoomTypes from "./pages/admin/AdminRoomTypes";
 import AdminPlaces from "./pages/admin/AdminPlaces";
 import AdminNews from "./pages/admin/AdminNews";
@@ -657,7 +658,7 @@ const App = () => (
           <Route path="/admin/guest-users" element={<AdminLayout><AdminGuestUsers /></AdminLayout>} />
           <Route path="/admin/guest-users/add" element={<AdminLayout><AdminGuestUsers /></AdminLayout>} />
           <Route path="/admin/accounts" element={<AdminLayout><AdminAccounts /></AdminLayout>} />
-          <Route path="/admin/accounts/add" element={<AdminLayout><AdminAccounts /></AdminLayout>} />
+          <Route path="/admin/accounts/add" element={<AdminLayout><AdminAddAccount /></AdminLayout>} />
           <Route path="/admin/room-types" element={<AdminLayout><AdminRoomTypes /></AdminLayout>} />
           <Route path="/admin/room-types/add" element={<AdminLayout><AdminRoomTypes /></AdminLayout>} />
           <Route path="/admin/places" element={<AdminLayout><AdminPlaces /></AdminLayout>} />
