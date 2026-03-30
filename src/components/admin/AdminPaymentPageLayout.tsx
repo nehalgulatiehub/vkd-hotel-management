@@ -588,6 +588,15 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
               toast.error("Account users cannot approve Cash payments. Only Admin can approve Cash payments.");
               return;
             }
+            // Account users cannot approve payments for restricted cities
+            if (isAccount() && !isAdmin() && restrictedCityIds.size > 0) {
+              const { data: rawPay } = await supabase.from("payments").select("city_id").eq("id", payment.id).single();
+              if (rawPay?.city_id && restrictedCityIds.has(rawPay.city_id)) {
+                const cityName = cities.find(c => c.id === rawPay.city_id)?.name || "this city";
+                toast.error(`You are restricted from approving payments for ${cityName}`);
+                return;
+              }
+            }
             try {
               const { data: paymentDetails } = await supabase.from("payments").select("id, amount, booking_id, payment_type").eq("id", payment.id);
               const { error } = await supabase.from("payments").update({ approval_status: "approved", approved_by: user?.id, approved_at: new Date().toISOString() }).eq("id", payment.id);
