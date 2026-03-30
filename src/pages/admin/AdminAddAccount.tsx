@@ -29,11 +29,25 @@ export default function AdminAddAccount() {
 
     setSubmitting(true);
     try {
+      // Check if session is active
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        toast.error("Your session has expired. Please log in again.");
+        setSubmitting(false);
+        return;
+      }
+
       const res = await supabase.functions.invoke("create-user", {
         body: { username: sanitized, password, firstName: firstName || sanitized, lastName: lastName || "" },
       });
 
-      if (res.error) throw new Error(res.error.message || "Failed to create user");
+      if (res.error) {
+        const msg = res.error.message || "Failed to create user";
+        if (msg.includes("non-2xx") || msg.includes("Unauthorized")) {
+          throw new Error("Session expired or unauthorized. Please log out and log in again.");
+        }
+        throw new Error(msg);
+      }
       if (res.data?.error) throw new Error(res.data.error);
 
       const userId = res.data?.user?.id;
