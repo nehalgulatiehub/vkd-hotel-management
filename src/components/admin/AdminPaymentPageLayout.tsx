@@ -181,6 +181,13 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
     if (!authLoading && canManage) {
       fetchPayments();
       fetchFilters();
+      // Fetch city restrictions for account users
+      if (isAccount() && !isAdmin() && user?.id) {
+        supabase.from("account_city_restrictions").select("city_id").eq("user_id", user.id)
+          .then(({ data }) => {
+            setRestrictedCityIds(new Set((data || []).map((r: any) => r.city_id)));
+          });
+      }
     }
   }, [authLoading]);
 
