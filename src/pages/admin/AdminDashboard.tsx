@@ -255,6 +255,85 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Today's Check-in & Check-out */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+        {/* Check-in Table */}
+        <div style={{ background: "#fff", border: "1px solid #ccc" }}>
+          <div style={{ background: "#2e7d32", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+            <span>Today's Check-In</span>
+            <span>{todayCheckins.length} booking(s)</span>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead>
+                <tr style={{ background: "#c47a7e", color: "#fff" }}>
+                  <th style={thStyle}>S.No</th>
+                  <th style={thStyle}>Booking</th>
+                  <th style={thStyle}>Customer</th>
+                  <th style={thStyle}>Contact</th>
+                  <th style={thStyle}>Pax</th>
+                  <th style={thStyle}>Check-out</th>
+                  <th style={thStyle}>Agent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {todayCheckins.length === 0 ? (
+                  <tr><td colSpan={7} style={{ padding: 16, textAlign: "center", color: "#999" }}>No check-ins today</td></tr>
+                ) : todayCheckins.map((b, i) => (
+                  <tr key={b.id} style={{ background: i % 2 === 0 ? "#fff" : "#f6f0f0", borderBottom: "1px solid #ddd", cursor: "pointer" }} onClick={() => navigate(`/admin/bookings/${b.id}`)}>
+                    <td style={tdStyle}>{i + 1}</td>
+                    <td style={{ ...tdStyle, color: "#0066cc" }}>{b.booking_number}</td>
+                    <td style={tdStyle}>{b.customer_name || "-"}</td>
+                    <td style={tdStyle}>{b.contact_no || "-"}</td>
+                    <td style={tdStyle}>{(b.adults || 0) + (b.children || 0)}</td>
+                    <td style={tdStyle}>{b.check_out_date}</td>
+                    <td style={tdStyle}>{b.agent?.name || "Direct"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Check-out Table */}
+        <div style={{ background: "#fff", border: "1px solid #ccc" }}>
+          <div style={{ background: "#c62828", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+            <span>Today's Check-Out</span>
+            <span>{todayCheckouts.length} booking(s)</span>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead>
+                <tr style={{ background: "#c47a7e", color: "#fff" }}>
+                  <th style={thStyle}>S.No</th>
+                  <th style={thStyle}>Booking</th>
+                  <th style={thStyle}>Customer</th>
+                  <th style={thStyle}>Contact</th>
+                  <th style={thStyle}>Pax</th>
+                  <th style={thStyle}>Check-in</th>
+                  <th style={thStyle}>Agent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {todayCheckouts.length === 0 ? (
+                  <tr><td colSpan={7} style={{ padding: 16, textAlign: "center", color: "#999" }}>No check-outs today</td></tr>
+                ) : todayCheckouts.map((b, i) => (
+                  <tr key={b.id} style={{ background: i % 2 === 0 ? "#fff" : "#f6f0f0", borderBottom: "1px solid #ddd", cursor: "pointer" }} onClick={() => navigate(`/admin/bookings/${b.id}`)}>
+                    <td style={tdStyle}>{i + 1}</td>
+                    <td style={{ ...tdStyle, color: "#0066cc" }}>{b.booking_number}</td>
+                    <td style={tdStyle}>{b.customer_name || "-"}</td>
+                    <td style={tdStyle}>{b.contact_no || "-"}</td>
+                    <td style={tdStyle}>{(b.adults || 0) + (b.children || 0)}</td>
+                    <td style={tdStyle}>{b.check_in_date}</td>
+                    <td style={tdStyle}>{b.agent?.name || "Direct"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
