@@ -97,6 +97,16 @@ export default function AdminDashboard() {
     setRecentBookings(data || []);
   };
 
+  const fetchCheckinCheckout = async () => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    const [checkinRes, checkoutRes] = await Promise.all([
+      supabase.from("bookings").select("id, booking_number, customer_name, contact_no, adults, children, check_in_date, check_out_date, agent:agents(name)").eq("check_in_date", today).in("status", ["confirmed", "completed"]).order("booking_number"),
+      supabase.from("bookings").select("id, booking_number, customer_name, contact_no, adults, children, check_in_date, check_out_date, agent:agents(name)").eq("check_out_date", today).in("status", ["confirmed", "completed"]).order("booking_number"),
+    ]);
+    setTodayCheckins(checkinRes.data || []);
+    setTodayCheckouts(checkoutRes.data || []);
+  };
+
   const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
   if (loading) return (
