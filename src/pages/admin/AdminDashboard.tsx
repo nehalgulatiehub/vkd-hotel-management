@@ -107,6 +107,9 @@ export default function AdminDashboard() {
     setTodayCheckouts(checkoutRes.data || []);
   };
 
+  const thStyle: React.CSSProperties = { padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, borderBottom: "1px solid #a88" };
+  const tdStyle: React.CSSProperties = { padding: "4px 8px", fontSize: 11 };
+
   const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
   if (loading) return (
