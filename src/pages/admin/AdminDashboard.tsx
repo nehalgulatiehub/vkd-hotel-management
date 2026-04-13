@@ -27,7 +27,7 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchBookingTrend(), fetchRecentBookings()]);
+    await Promise.all([fetchStats(), fetchBookingTrend(), fetchRecentBookings(), fetchCheckinCheckout()]);
     setLoading(false);
   };
 
