@@ -19,6 +19,8 @@ export default function AdminDashboard() {
   const [bookingTrend, setBookingTrend] = useState<any[]>([]);
   const [paymentStatusData, setPaymentStatusData] = useState<any[]>([]);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [todayCheckins, setTodayCheckins] = useState<any[]>([]);
+  const [todayCheckouts, setTodayCheckouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { fetchAll(); }, []);
