@@ -178,7 +178,7 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
             </div>
           ))}
 
-          <div className="grid grid-cols-2 mt-4">
+          <div className="grid grid-cols-2 mt-2">
             <p className="text-sm text-gray-600">Booking number</p>
             <p className="text-sm">{booking.booking_number}</p>
           </div>
