@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface InvoiceTemplate {
+interface QuotationTemplate {
   id: string;
   template_name: string;
   company_name: string;
@@ -46,7 +46,7 @@ interface InvoiceTemplate {
   is_default: boolean;
 }
 
-const emptyTemplate: Omit<InvoiceTemplate, 'id'> = {
+const emptyTemplate: Omit<QuotationTemplate, 'id'> = {
   template_name: '',
   company_name: '',
   sub_title: '',
@@ -60,16 +60,16 @@ const emptyTemplate: Omit<InvoiceTemplate, 'id'> = {
   account_no: '',
   ifsc_code: '',
   branch_name: '',
-  terms_conditions: 'This is computer generated invoice no signature and stamp required.',
+  terms_conditions: 'This is computer generated quotation no signature and stamp required.',
   is_default: false
 };
 
-export default function InvoiceTemplates() {
-  const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
+export default function QuotationTemplates() {
+  const [templates, setTemplates] = useState<QuotationTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<Partial<InvoiceTemplate> | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<Partial<QuotationTemplate> | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function InvoiceTemplates() {
   const fetchTemplates = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
-      .from("invoice_templates")
+      .from("quotation_templates")
       .select("*")
       .order("is_default", { ascending: false })
       .order("template_name");
@@ -99,7 +99,7 @@ export default function InvoiceTemplates() {
     setDialogOpen(true);
   };
 
-  const openEditDialog = (template: InvoiceTemplate) => {
+  const openEditDialog = (template: QuotationTemplate) => {
     setEditingTemplate(template);
     setLogoPreview(template.logo_url || '');
     setDialogOpen(true);
@@ -120,7 +120,7 @@ export default function InvoiceTemplates() {
       if ('id' in editingTemplate && editingTemplate.id) {
         // Update existing
         const { error } = await supabase
-          .from("invoice_templates")
+          .from("quotation_templates")
           .update({
             template_name: editingTemplate.template_name,
             company_name: editingTemplate.company_name,
@@ -144,7 +144,7 @@ export default function InvoiceTemplates() {
       } else {
         // Insert new
         const { error } = await supabase
-          .from("invoice_templates")
+          .from("quotation_templates")
           .insert({
             template_name: editingTemplate.template_name,
             company_name: editingTemplate.company_name,
@@ -182,13 +182,13 @@ export default function InvoiceTemplates() {
     try {
       // First, unset all defaults
       await supabase
-        .from("invoice_templates")
+        .from("quotation_templates")
         .update({ is_default: false })
         .neq("id", templateId);
 
       // Set the selected one as default
       const { error } = await supabase
-        .from("invoice_templates")
+        .from("quotation_templates")
         .update({ is_default: true })
         .eq("id", templateId);
 
@@ -204,7 +204,7 @@ export default function InvoiceTemplates() {
   const deleteTemplate = async (templateId: string) => {
     try {
       const { error } = await supabase
-        .from("invoice_templates")
+        .from("quotation_templates")
         .delete()
         .eq("id", templateId);
 
@@ -217,7 +217,7 @@ export default function InvoiceTemplates() {
     }
   };
 
-  const updateField = (field: keyof InvoiceTemplate, value: string | boolean) => {
+  const updateField = (field: keyof QuotationTemplate, value: string | boolean) => {
     if (editingTemplate) {
       setEditingTemplate({ ...editingTemplate, [field]: value });
       if (field === 'logo_url') {
@@ -228,12 +228,12 @@ export default function InvoiceTemplates() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Invoice Templates" />
+      <Header title="Quotation Templates" />
       <main className="container mx-auto p-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold">Invoice Templates</h1>
-            <p className="text-xs text-muted-foreground">Manage company templates for billing invoices</p>
+            <h1 className="text-xl font-bold">Quotation Templates</h1>
+            <p className="text-xs text-muted-foreground">Manage company templates for billing quotations</p>
           </div>
           <Button size="sm" onClick={openCreateDialog}>
             <Plus className="h-3 w-3 mr-1" />

@@ -146,7 +146,7 @@ interface CompanySettings {
   terms_conditions: string | null;
 }
 
-interface InvoiceTemplate {
+interface QuotationTemplate {
   id: string;
   template_name: string;
   company_name: string;
@@ -165,10 +165,10 @@ interface InvoiceTemplate {
   is_default: boolean;
 }
 
-interface SavedInvoice {
+interface SavedQuotation {
   id: string;
-  invoice_number: string;
-  invoice_date: string;
+  quotation_number: string;
+  quotation_date: string;
   customer_name: string | null;
   total_amount: number | null;
   created_at: string;
@@ -177,7 +177,7 @@ interface SavedInvoice {
 export default function Billing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const editInvoiceId = searchParams.get("edit");
+  const editQuotationId = searchParams.get("edit");
   
   const [searchTerm, setSearchTerm] = useState("");
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
@@ -189,17 +189,17 @@ export default function Billing() {
   const [vehicleBookings, setVehicleBookings] = useState<VehicleBooking[]>([]);
   const [restaurantOrders, setRestaurantOrders] = useState<RestaurantOrder[]>([]);
   const [billingItems, setBillingItems] = useState<BillingItem[]>([]);
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [quotationNumber, setQuotationNumber] = useState("");
+  const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
-  const [invoiceTemplates, setInvoiceTemplates] = useState<InvoiceTemplate[]>([]);
+  const [quotationTemplates, setQuotationTemplates] = useState<QuotationTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [customerGstNo, setCustomerGstNo] = useState("");
   const [customerPanNo, setCustomerPanNo] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [savedInvoices, setSavedInvoices] = useState<SavedInvoice[]>([]);
-  const [showSavedInvoices, setShowSavedInvoices] = useState(false);
-  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | null>(null);
+  const [savedQuotations, setSavedQuotations] = useState<SavedQuotation[]>([]);
+  const [showSavedQuotations, setShowSavedQuotations] = useState(false);
+  const [currentQuotationId, setCurrentQuotationId] = useState<string | null>(null);
   
   // Custom row state
   const [showAddRow, setShowAddRow] = useState(false);
@@ -214,16 +214,16 @@ export default function Billing() {
   useEffect(() => {
     fetchBookings();
     fetchCompanySettings();
-    fetchInvoiceTemplates();
-    fetchSavedInvoices();
+    fetchQuotationTemplates();
+    fetchSavedQuotations();
   }, []);
 
-  // Load invoice if edit param is present
+  // Load quotation if edit param is present
   useEffect(() => {
-    if (editInvoiceId) {
-      loadSavedInvoice(editInvoiceId);
+    if (editQuotationId) {
+      loadSavedQuotation(editQuotationId);
     }
-  }, [editInvoiceId]);
+  }, [editQuotationId]);
 
   useEffect(() => {
     if (selectedBookingId) {
@@ -244,16 +244,16 @@ export default function Billing() {
     }
   };
 
-  const fetchInvoiceTemplates = async () => {
+  const fetchQuotationTemplates = async () => {
     const { data, error } = await supabase
-      .from("invoice_templates")
+      .from("quotation_templates")
       .select("*")
       .order("is_default", { ascending: false })
       .order("template_name");
     if (error) {
-      console.error("Failed to load invoice templates", error);
+      console.error("Failed to load quotation templates", error);
     } else {
-      setInvoiceTemplates(data || []);
+      setQuotationTemplates(data || []);
       // Select default template if available
       const defaultTemplate = data?.find(t => t.is_default);
       if (defaultTemplate) {
@@ -263,7 +263,7 @@ export default function Billing() {
     }
   };
 
-  const applyTemplate = (template: InvoiceTemplate) => {
+  const applyTemplate = (template: QuotationTemplate) => {
     setCompanySettings({
       id: template.id,
       company_name: template.company_name,
@@ -284,23 +284,23 @@ export default function Billing() {
 
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplateId(templateId);
-    const template = invoiceTemplates.find(t => t.id === templateId);
+    const template = quotationTemplates.find(t => t.id === templateId);
     if (template) {
       applyTemplate(template);
     }
   };
 
-  const fetchSavedInvoices = async () => {
+  const fetchSavedQuotations = async () => {
     const { data, error } = await supabase
-      .from("billing_invoices")
-      .select("id, invoice_number, invoice_date, customer_name, total_amount, created_at")
+      .from("quotations")
+      .select("id, quotation_number, quotation_date, customer_name, total_amount, created_at")
       .order("created_at", { ascending: false })
       .limit(50);
     
     if (error) {
-      console.error("Failed to load saved invoices", error);
+      console.error("Failed to load saved quotations", error);
     } else {
-      setSavedInvoices(data || []);
+      setSavedQuotations(data || []);
     }
   };
 
@@ -317,23 +317,23 @@ export default function Billing() {
     }
   };
 
-  const generateNextInvoiceNumber = async () => {
+  const generateNextQuotationNumber = async () => {
     const year = new Date().getFullYear();
     const nextYear = (year + 1).toString().slice(-2);
     const prefix = `INV/${year}-${nextYear}/`;
     
-    // Get the latest invoice number for this year
+    // Get the latest quotation number for this year
     const { data, error } = await supabase
-      .from("billing_invoices")
-      .select("invoice_number")
-      .like("invoice_number", `${prefix}%`)
+      .from("quotations")
+      .select("quotation_number")
+      .like("quotation_number", `${prefix}%`)
       .order("created_at", { ascending: false })
       .limit(1);
     
     let nextNumber = 1;
     if (!error && data && data.length > 0) {
-      const lastInvoice = data[0].invoice_number;
-      const lastNumberStr = lastInvoice.replace(prefix, "");
+      const lastQuotation = data[0].quotation_number;
+      const lastNumberStr = lastQuotation.replace(prefix, "");
       const lastNumber = parseInt(lastNumberStr, 10);
       if (!isNaN(lastNumber)) {
         nextNumber = lastNumber + 1;
@@ -356,10 +356,10 @@ export default function Billing() {
     }
     setSelectedBooking(bookingData);
     
-    // Generate sequential invoice number only for new invoices
-    if (!currentInvoiceId) {
-      const newInvoiceNumber = await generateNextInvoiceNumber();
-      setInvoiceNumber(newInvoiceNumber);
+    // Generate sequential quotation number only for new quotations
+    if (!currentQuotationId) {
+      const newQuotationNumber = await generateNextQuotationNumber();
+      setQuotationNumber(newQuotationNumber);
     }
     
     const [hotelRes, volvoRes, safariRes, vehicleRes, restaurantRes] = await Promise.all([
@@ -601,7 +601,7 @@ export default function Billing() {
     setBillingItems(updatedItems);
   };
 
-  const saveInvoice = async () => {
+  const saveQuotation = async () => {
     if (!selectedBooking || billingItems.length === 0) {
       toast.error("Please select a booking first");
       return;
@@ -614,15 +614,15 @@ export default function Billing() {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      let invoiceId = currentInvoiceId;
+      let quotationId = currentQuotationId;
       
-      if (currentInvoiceId) {
-        // Update existing invoice
-        const { error: invoiceError } = await supabase
-          .from("billing_invoices")
+      if (currentQuotationId) {
+        // Update existing quotation
+        const { error: quotationError } = await supabase
+          .from("quotations")
           .update({
-            invoice_number: invoiceNumber,
-            invoice_date: invoiceDate,
+            quotation_number: quotationNumber,
+            quotation_date: quotationDate,
             booking_id: selectedBookingId,
             customer_name: selectedBooking.customer_name || selectedBooking.reference,
             customer_address: selectedBooking.address,
@@ -634,22 +634,22 @@ export default function Billing() {
             total_amount: totals.totalAmount,
             amount_in_words: numberToWords(totals.totalAmount),
           })
-          .eq("id", currentInvoiceId);
+          .eq("id", currentQuotationId);
         
-        if (invoiceError) throw invoiceError;
+        if (quotationError) throw quotationError;
         
         // Delete existing items
         await supabase
-          .from("billing_invoice_items")
+          .from("quotation_items")
           .delete()
-          .eq("invoice_id", currentInvoiceId);
+          .eq("quotation_id", currentQuotationId);
       } else {
-        // Insert new invoice
-        const { data: invoiceData, error: invoiceError } = await supabase
-          .from("billing_invoices")
+        // Insert new quotation
+        const { data: quotationData, error: quotationError } = await supabase
+          .from("quotations")
           .insert({
-            invoice_number: invoiceNumber,
-            invoice_date: invoiceDate,
+            quotation_number: quotationNumber,
+            quotation_date: quotationDate,
             booking_id: selectedBookingId,
             customer_name: selectedBooking.customer_name || selectedBooking.reference,
             customer_address: selectedBooking.address,
@@ -665,14 +665,14 @@ export default function Billing() {
           .select()
           .single();
         
-        if (invoiceError) throw invoiceError;
-        invoiceId = invoiceData.id;
-        setCurrentInvoiceId(invoiceId);
+        if (quotationError) throw quotationError;
+        quotationId = quotationData.id;
+        setCurrentQuotationId(quotationId);
       }
       
-      // Insert invoice items
-      const invoiceItems = billingItems.map((item, index) => ({
-        invoice_id: invoiceId,
+      // Insert quotation items
+      const quotationItems = billingItems.map((item, index) => ({
+        quotation_id: quotationId,
         sr_no: index + 1,
         particulars: item.particulars,
         hsn_code: companySettings?.hsn_code || '996311',
@@ -689,49 +689,49 @@ export default function Billing() {
       }));
       
       const { error: itemsError } = await supabase
-        .from("billing_invoice_items")
-        .insert(invoiceItems);
+        .from("quotation_items")
+        .insert(quotationItems);
       
       if (itemsError) throw itemsError;
       
-      toast.success(currentInvoiceId ? "Invoice updated successfully" : "Invoice saved successfully");
-      fetchSavedInvoices();
+      toast.success(currentQuotationId ? "Quotation updated successfully" : "Quotation saved successfully");
+      fetchSavedQuotations();
     } catch (error: any) {
-      console.error("Failed to save invoice:", error);
-      toast.error("Failed to save invoice: " + error.message);
+      console.error("Failed to save quotation:", error);
+      toast.error("Failed to save quotation: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const loadSavedInvoice = async (invoiceId: string) => {
+  const loadSavedQuotation = async (quotationId: string) => {
     try {
-      // Load invoice
-      const { data: invoice, error: invoiceError } = await supabase
-        .from("billing_invoices")
+      // Load quotation
+      const { data: quotation, error: quotationError } = await supabase
+        .from("quotations")
         .select("*")
-        .eq("id", invoiceId)
+        .eq("id", quotationId)
         .single();
       
-      if (invoiceError) throw invoiceError;
+      if (quotationError) throw quotationError;
       
-      // Load invoice items
+      // Load quotation items
       const { data: items, error: itemsError } = await supabase
-        .from("billing_invoice_items")
+        .from("quotation_items")
         .select("*")
-        .eq("invoice_id", invoiceId)
+        .eq("quotation_id", quotationId)
         .order("sr_no");
       
       if (itemsError) throw itemsError;
       
       // Set form values
-      setInvoiceNumber(invoice.invoice_number);
-      setInvoiceDate(invoice.invoice_date);
-      setCustomerGstNo(invoice.customer_gstin || "");
-      setCustomerPanNo(invoice.customer_pan || "");
+      setQuotationNumber(quotation.quotation_number);
+      setQuotationDate(quotation.quotation_date);
+      setCustomerGstNo(quotation.customer_gstin || "");
+      setCustomerPanNo(quotation.customer_pan || "");
       
-      if (invoice.booking_id) {
-        setSelectedBookingId(invoice.booking_id);
+      if (quotation.booking_id) {
+        setSelectedBookingId(quotation.booking_id);
       }
       
       // Convert items to billing items
@@ -755,11 +755,11 @@ export default function Billing() {
       });
       
       setBillingItems(loadedItems);
-      setCurrentInvoiceId(invoiceId);
-      setShowSavedInvoices(false);
-      toast.success("Invoice loaded");
+      setCurrentQuotationId(quotationId);
+      setShowSavedQuotations(false);
+      toast.success("Quotation loaded");
     } catch (error: any) {
-      toast.error("Failed to load invoice: " + error.message);
+      toast.error("Failed to load quotation: " + error.message);
     }
   };
 
@@ -807,7 +807,7 @@ export default function Billing() {
     const totals = calculateTotals();
     const settings = companySettings;
 
-    // Create worksheet data matching the professional invoice format
+    // Create worksheet data matching the professional quotation format
     const wsData: any[][] = [];
 
     // Company Header
@@ -816,13 +816,13 @@ export default function Billing() {
     wsData.push([settings?.address || '', '', '', '', '', '', '', '', '', '']);
     wsData.push([`Contact No.: ${settings?.contact_no || ''}`, '', '', '', '', '', '', '', '', '']);
     wsData.push([`GSTIN: ${settings?.gstin || ''}`, '', '', '', '', '', '', '', '', '']);
-    wsData.push([`Pan No.: ${settings?.pan_no || ''}`, '', '', '', '', '', 'INVOICE', '', '', '']);
+    wsData.push([`Pan No.: ${settings?.pan_no || ''}`, '', '', '', '', '', 'QUOTATION', '', '', '']);
     wsData.push([`HSN/SAC Code: ${settings?.hsn_code || '996311'}`, '', '', '', '', '', '', '', '', '']);
     wsData.push([]); // Empty row
 
-    // Bill To section with Date and Invoice No
-    wsData.push(['Bill To :', selectedBooking.customer_name || selectedBooking.reference || 'Guest', '', '', '', '', '', '', '', `DATE:${formatDate(invoiceDate)}`]);
-    wsData.push(['Address :', selectedBooking.address || '-', '', '', '', '', '', '', '', `INVOICE No: ${invoiceNumber}`]);
+    // Bill To section with Date and Quotation No
+    wsData.push(['Bill To :', selectedBooking.customer_name || selectedBooking.reference || 'Guest', '', '', '', '', '', '', '', `DATE:${formatDate(quotationDate)}`]);
+    wsData.push(['Address :', selectedBooking.address || '-', '', '', '', '', '', '', '', `QUOTATION No: ${quotationNumber}`]);
     wsData.push([`GST NO : ${customerGstNo || 'N/A'}`, '', '', '', '', '', '', '', '', '']);
     wsData.push([`Pan No.: ${customerPanNo || 'N/A'}`, '', '', '', '', '', '', '', '', '']);
     wsData.push([]); // Empty row
@@ -854,7 +854,7 @@ export default function Billing() {
     // Total in words and company signature
     wsData.push([`TOTAL IN WORDS : ${numberToWords(totals.totalAmount)}`, '', '', '', '', '', '', `FOR ${settings?.company_name || 'Company'}`, '', '', '']);
     wsData.push(['Terms and Condition:', '', '', '', '', '', '', '', '', '', '']);
-    wsData.push(['Note:', settings?.terms_conditions || 'This is computer generated invoice no signature and stamp required.', '', '', '', '', '', 'Authorised Signatory', '', '', '']);
+    wsData.push(['Note:', settings?.terms_conditions || 'This is computer generated quotation no signature and stamp required.', '', '', '', '', '', 'Authorised Signatory', '', '', '']);
 
     // Bank Details
     if (settings?.bank_name) {
@@ -887,9 +887,9 @@ export default function Billing() {
     ];
     
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Invoice");
-    XLSX.writeFile(wb, `Invoice_${selectedBooking.booking_number}_${invoiceDate}.xlsx`);
-    toast.success("Invoice exported to Excel");
+    XLSX.utils.book_append_sheet(wb, ws, "Quotation");
+    XLSX.writeFile(wb, `Quotation_${selectedBooking.booking_number}_${quotationDate}.xlsx`);
+    toast.success("Quotation exported to Excel");
   };
 
   const handlePrint = () => {
@@ -910,38 +910,38 @@ export default function Billing() {
       <Header title="Billing" />
       <div className="container mx-auto p-6 print:p-0">
         <div className="flex items-center justify-between mb-6 print:hidden">
-          <h1 className="text-3xl font-bold">Billing / Invoice</h1>
+          <h1 className="text-3xl font-bold">Billing / Quotation</h1>
           <div className="flex gap-2">
-            <Dialog open={showSavedInvoices} onOpenChange={setShowSavedInvoices}>
+            <Dialog open={showSavedQuotations} onOpenChange={setShowSavedQuotations}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <List className="h-4 w-4 mr-2" />
-                  Saved Invoices
+                  Saved Quotations
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Saved Invoices</DialogTitle>
+                  <DialogTitle>Saved Quotations</DialogTitle>
                 </DialogHeader>
                 <div className="max-h-[400px] overflow-y-auto">
-                  {savedInvoices.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No saved invoices</p>
+                  {savedQuotations.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No saved quotations</p>
                   ) : (
                     <div className="space-y-2">
-                      {savedInvoices.map(inv => (
+                      {savedQuotations.map(inv => (
                         <div 
                           key={inv.id}
-                          onClick={() => loadSavedInvoice(inv.id)}
+                          onClick={() => loadSavedQuotation(inv.id)}
                           className="p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors"
                         >
                           <div className="flex justify-between items-center">
                             <div>
-                              <div className="font-medium">{inv.invoice_number}</div>
+                              <div className="font-medium">{inv.quotation_number}</div>
                               <div className="text-sm text-muted-foreground">{inv.customer_name || 'Guest'}</div>
                             </div>
                             <div className="text-right">
                               <div className="font-medium">₹{inv.total_amount?.toLocaleString()}</div>
-                              <div className="text-xs text-muted-foreground">{formatDate(inv.invoice_date)}</div>
+                              <div className="text-xs text-muted-foreground">{formatDate(inv.quotation_date)}</div>
                             </div>
                           </div>
                         </div>
@@ -951,11 +951,11 @@ export default function Billing() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" onClick={() => navigate('/invoices')}>
+            <Button variant="outline" onClick={() => navigate('/quotations')}>
               <List className="h-4 w-4 mr-2" />
-              View All Invoices
+              View All Quotations
             </Button>
-            <Button variant="outline" onClick={() => navigate('/invoice-templates')}>
+            <Button variant="outline" onClick={() => navigate('/quotation-templates')}>
               <FileText className="h-4 w-4 mr-2" />
               Templates
             </Button>
@@ -963,9 +963,9 @@ export default function Billing() {
               <Settings className="h-4 w-4 mr-2" />
               Company Settings
             </Button>
-            <Button variant="outline" onClick={saveInvoice} disabled={!selectedBooking || isSaving}>
+            <Button variant="outline" onClick={saveQuotation} disabled={!selectedBooking || isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : (currentInvoiceId ? 'Update Invoice' : 'Save Invoice')}
+              {isSaving ? 'Saving...' : (currentQuotationId ? 'Update Quotation' : 'Save Quotation')}
             </Button>
             <Button variant="outline" onClick={exportToExcel} disabled={!selectedBooking}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
@@ -973,7 +973,7 @@ export default function Billing() {
             </Button>
             <Button onClick={handlePrint} disabled={!selectedBooking}>
               <Printer className="h-4 w-4 mr-2" />
-              Print Invoice
+              Print Quotation
             </Button>
           </div>
         </div>
@@ -1021,14 +1021,14 @@ export default function Billing() {
 
               {/* Template Selector */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Invoice Template</Label>
-                {invoiceTemplates.length > 0 ? (
+                <Label className="text-xs font-medium">Quotation Template</Label>
+                {quotationTemplates.length > 0 ? (
                   <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
                     <SelectTrigger className="h-8 text-xs bg-background">
                       <SelectValue placeholder="Select template" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-50">
-                      {invoiceTemplates.map(template => (
+                      {quotationTemplates.map(template => (
                         <SelectItem key={template.id} value={template.id} className="text-xs">
                           {template.template_name} {template.is_default && '(Default)'}
                         </SelectItem>
@@ -1042,7 +1042,7 @@ export default function Billing() {
                       size="sm" 
                       variant="outline" 
                       className="h-7 text-[10px]"
-                      onClick={() => navigate('/invoice-templates')}
+                      onClick={() => navigate('/quotation-templates')}
                     >
                       Create Template
                     </Button>
@@ -1073,19 +1073,19 @@ export default function Billing() {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Invoice Number</Label>
+                  <Label className="text-xs">Quotation Number</Label>
                   <Input
-                    value={invoiceNumber}
-                    onChange={e => setInvoiceNumber(e.target.value)}
+                    value={quotationNumber}
+                    onChange={e => setQuotationNumber(e.target.value)}
                     className="h-8 text-sm"
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Invoice Date</Label>
+                  <Label className="text-xs">Quotation Date</Label>
                   <Input
                     type="date"
-                    value={invoiceDate}
-                    onChange={e => setInvoiceDate(e.target.value)}
+                    value={quotationDate}
+                    onChange={e => setQuotationDate(e.target.value)}
                     className="h-8 text-sm"
                   />
                 </div>
@@ -1169,10 +1169,10 @@ export default function Billing() {
             </CardContent>
           </Card>
 
-          {/* Invoice Preview */}
+          {/* Quotation Preview */}
           <Card className="lg:col-span-3 print:shadow-none print:border-none">
             <CardContent className="p-0">
-              <div ref={printRef} className="bg-white text-black p-8 print:p-0" id="invoice-preview">
+              <div ref={printRef} className="bg-white text-black p-8 print:p-0" id="quotation-preview">
                 {selectedBooking ? (
                   <div className="space-y-0">
                     {/* Professional Header */}
@@ -1206,7 +1206,7 @@ export default function Billing() {
                             />
                           )}
                           <div className="text-2xl font-bold px-4 py-1 inline-block text-secondary-foreground border-primary-foreground border-0">
-                            INVOICE
+                            QUOTATION
                           </div>
                         </div>
                       </div>
@@ -1221,12 +1221,12 @@ export default function Billing() {
                             <td className="p-2 font-medium">
                               {selectedBooking.customer_name || selectedBooking.reference || 'Guest'}
                             </td>
-                            <td className="p-2 text-right font-medium">DATE:{formatDate(invoiceDate)}</td>
+                            <td className="p-2 text-right font-medium">DATE:{formatDate(quotationDate)}</td>
                           </tr>
                           <tr className="border-b border-black">
                             <td className="p-2 font-medium border-r border-black">Address :</td>
                             <td className="p-2">{selectedBooking.address || '-'}</td>
-                            <td className="p-2 text-right font-medium">INVOICE No: {invoiceNumber}</td>
+                            <td className="p-2 text-right font-medium">QUOTATION No: {quotationNumber}</td>
                           </tr>
                           <tr className="border-b border-black">
                             <td className="p-2 border-r border-black" colSpan={2}>
@@ -1418,7 +1418,7 @@ export default function Billing() {
                           <td className="p-2">
                             <span className="font-medium">Note:</span>{' '}
                             {companySettings?.terms_conditions ||
-                              'This is computer generated invoice no signature and stamp required.'}
+                              'This is computer generated quotation no signature and stamp required.'}
                           </td>
                           <td className="p-2 text-right">Authorised Signatory</td>
                         </tr>
@@ -1451,7 +1451,7 @@ export default function Billing() {
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground print:hidden">
-                    Select a booking to generate invoice
+                    Select a booking to generate quotation
                   </div>
                 )}
               </div>
@@ -1466,10 +1466,10 @@ export default function Billing() {
           body * {
             visibility: hidden;
           }
-          #invoice-preview, #invoice-preview * {
+          #quotation-preview, #quotation-preview * {
             visibility: visible;
           }
-          #invoice-preview {
+          #quotation-preview {
             position: absolute;
             left: 0;
             top: 0;

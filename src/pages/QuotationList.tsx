@@ -28,10 +28,10 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { Search, Trash2, Edit, Plus, FileText } from "lucide-react";
 import { format } from "date-fns";
 
-interface Invoice {
+interface Quotation {
   id: string;
-  invoice_number: string;
-  invoice_date: string;
+  quotation_number: string;
+  quotation_date: string;
   customer_name: string | null;
   customer_gstin: string | null;
   total_amount: number | null;
@@ -39,21 +39,21 @@ interface Invoice {
   created_at: string;
 }
 
-const InvoiceList = () => {
+const QuotationList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
 
-  const filteredInvoices = invoices.filter((invoice) => {
+  const filteredQuotations = quotations.filter((quotation) => {
     const query = searchQuery.toLowerCase();
     return (
-      invoice.invoice_number.toLowerCase().includes(query) ||
-      (invoice.customer_name?.toLowerCase() || "").includes(query) ||
-      (invoice.customer_gstin?.toLowerCase() || "").includes(query)
+      quotation.quotation_number.toLowerCase().includes(query) ||
+      (quotation.customer_name?.toLowerCase() || "").includes(query) ||
+      (quotation.customer_gstin?.toLowerCase() || "").includes(query)
     );
   });
 
@@ -67,22 +67,22 @@ const InvoiceList = () => {
     startIndex,
     endIndex,
     totalItems,
-  } = usePagination(filteredInvoices, { itemsPerPage: 10 });
+  } = usePagination(filteredQuotations, { itemsPerPage: 10 });
 
   useEffect(() => {
-    fetchInvoices();
+    fetchQuotations();
   }, []);
 
-  const fetchInvoices = async () => {
+  const fetchQuotations = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("billing_invoices")
+        .from("quotations")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setInvoices(data || []);
+      setQuotations(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -95,31 +95,31 @@ const InvoiceList = () => {
   };
 
   const handleDelete = async () => {
-    if (!invoiceToDelete) return;
+    if (!quotationToDelete) return;
 
     try {
-      // First delete related invoice items
+      // First delete related quotation items
       const { error: itemsError } = await supabase
-        .from("billing_invoice_items")
+        .from("quotation_items")
         .delete()
-        .eq("invoice_id", invoiceToDelete.id);
+        .eq("quotation_id", quotationToDelete.id);
 
       if (itemsError) throw itemsError;
 
-      // Then delete the invoice
+      // Then delete the quotation
       const { error } = await supabase
-        .from("billing_invoices")
+        .from("quotations")
         .delete()
-        .eq("id", invoiceToDelete.id);
+        .eq("id", quotationToDelete.id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Invoice deleted successfully",
+        description: "Quotation deleted successfully",
       });
 
-      setInvoices(invoices.filter((inv) => inv.id !== invoiceToDelete.id));
+      setQuotations(quotations.filter((inv) => inv.id !== quotationToDelete.id));
     } catch (error: any) {
       toast({
         title: "Error",
@@ -128,26 +128,26 @@ const InvoiceList = () => {
       });
     } finally {
       setDeleteDialogOpen(false);
-      setInvoiceToDelete(null);
+      setQuotationToDelete(null);
     }
   };
 
-  const handleEdit = (invoice: Invoice) => {
-    navigate(`/billing?edit=${invoice.id}`);
+  const handleEdit = (quotation: Quotation) => {
+    navigate(`/billing?edit=${quotation.id}`);
   };
 
-  const confirmDelete = (invoice: Invoice) => {
-    setInvoiceToDelete(invoice);
+  const confirmDelete = (quotation: Quotation) => {
+    setQuotationToDelete(quotation);
     setDeleteDialogOpen(true);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Invoices</h1>
+        <h1 className="text-3xl font-bold">Quotations</h1>
         <Button onClick={() => navigate("/billing")}>
           <Plus className="h-4 w-4 mr-2" />
-          Create Invoice
+          Create Quotation
         </Button>
       </div>
 
@@ -155,7 +155,7 @@ const InvoiceList = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Invoice List
+            Quotation List
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -163,7 +163,7 @@ const InvoiceList = () => {
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by invoice no, customer name, GSTIN..."
+                placeholder="Search by quotation no, customer name, GSTIN..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -172,10 +172,10 @@ const InvoiceList = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-8">Loading invoices...</div>
-          ) : filteredInvoices.length === 0 ? (
+            <div className="text-center py-8">Loading quotations...</div>
+          ) : filteredQuotations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? "No invoices found matching your search" : "No invoices created yet"}
+              {searchQuery ? "No quotations found matching your search" : "No quotations created yet"}
             </div>
           ) : (
             <>
@@ -183,7 +183,7 @@ const InvoiceList = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice No</TableHead>
+                      <TableHead>Quotation No</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Customer Name</TableHead>
                       <TableHead>GSTIN</TableHead>
@@ -192,18 +192,18 @@ const InvoiceList = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedItems.map((invoice) => (
-                      <TableRow key={invoice.id}>
+                    {paginatedItems.map((quotation) => (
+                      <TableRow key={quotation.id}>
                         <TableCell className="font-medium">
-                          {invoice.invoice_number}
+                          {quotation.quotation_number}
                         </TableCell>
                         <TableCell>
-                          {format(new Date(invoice.invoice_date), "dd/MM/yyyy")}
+                          {format(new Date(quotation.quotation_date), "dd/MM/yyyy")}
                         </TableCell>
-                        <TableCell>{invoice.customer_name || "-"}</TableCell>
-                        <TableCell>{invoice.customer_gstin || "-"}</TableCell>
+                        <TableCell>{quotation.customer_name || "-"}</TableCell>
+                        <TableCell>{quotation.customer_gstin || "-"}</TableCell>
                         <TableCell className="text-right">
-                          ₹{(invoice.total_amount || 0).toLocaleString("en-IN", {
+                          ₹{(quotation.total_amount || 0).toLocaleString("en-IN", {
                             minimumFractionDigits: 2,
                           })}
                         </TableCell>
@@ -212,14 +212,14 @@ const InvoiceList = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleEdit(invoice)}
+                              onClick={() => handleEdit(quotation)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => confirmDelete(invoice)}
+                              onClick={() => confirmDelete(quotation)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -247,9 +247,9 @@ const InvoiceList = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+            <AlertDialogTitle>Delete Quotation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete invoice "{invoiceToDelete?.invoice_number}"? 
+              Are you sure you want to delete quotation "{quotationToDelete?.quotation_number}"? 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -265,4 +265,4 @@ const InvoiceList = () => {
   );
 };
 
-export default InvoiceList;
+export default QuotationList;
