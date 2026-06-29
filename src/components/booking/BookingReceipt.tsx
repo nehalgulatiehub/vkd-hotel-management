@@ -64,7 +64,7 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <p className="text-sm text-gray-500 mb-4">{new Date(booking.created_at).toLocaleDateString('en-GB')}</p>
+          <p className="text-sm text-gray-500 mb-2">{new Date(booking.created_at).toLocaleDateString('en-GB')}</p>
           <h1 className="text-3xl font-bold mb-1">YOUR HOTEL NAME</h1>
           <p className="text-sm text-gray-600">This is your receipt</p>
         </div>
