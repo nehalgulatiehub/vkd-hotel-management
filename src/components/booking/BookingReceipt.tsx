@@ -114,11 +114,11 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Property name</p>
                 <p className="text-sm font-semibold">{hotel.own_hotels?.name || hotel.another_hotels?.name}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Room type</p>
                 <p className="text-sm">{hotel.room_type}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of rooms</p>
                 <p className="text-sm">{hotel.number_of_rooms}</p>
               </div>
