@@ -836,7 +836,8 @@ export default function Billing() {
     wsData.push(['Accommodation', '', '', '', '', '', '', '', '', '']);
 
     // Table Header
-    wsData.push(['Date', 'BILLING PARTICULARS', '', 'Rate', 'QTY/No. Of Rooms', 'Total Amount', 'Taxable Amount', 'Rate CGST', 'CGST', 'Rate SGST', 'SGST']);
+    wsData.push(['Date', 'BILLING PARTICULARS', '', 'Rate', 'QTY/No. Of Nights', 'Total Amount', 'Taxable Amount', 'Rate CGST', 'CGST', 'Rate SGST', 'SGST']);
+
 
     // Billing Items
     billingItems.forEach(item => {
