@@ -401,32 +401,29 @@ export default function Billing() {
     hotels.forEach(hotel => {
       const checkIn = new Date(hotel.check_in_date);
       const checkOut = new Date(hotel.check_out_date);
-      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-      for (let i = 0; i < nights; i++) {
-        const date = new Date(checkIn);
-        date.setDate(date.getDate() + i);
-        const ratePerRoom = (hotel.room_rate || 0) / nights;
-        const totalAmount = ratePerRoom * (hotel.number_of_rooms || 1);
-        const taxableAmount = totalAmount / (1 + accommodationGstRate / 100);
-        const cgst = taxableAmount * 0.06;
-        const sgst = taxableAmount * 0.06;
-        items.push({
-          id: `hotel_${hotel.id}_${i}`,
-          date: date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
-          particulars: `Accommodation`,
-          rate: ratePerRoom,
-          qty: hotel.number_of_rooms || 1,
-          totalAmount: totalAmount,
-          taxableAmount: taxableAmount,
-          cgstRate: "6%",
-          cgstAmount: cgst,
-          sgstRate: "6%",
-          sgstAmount: sgst,
-          isCustom: false,
-          gstPercent: accommodationGstRate
-        });
-      }
+      const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
+      const totalAmount = hotel.room_rate || 0;
+      const ratePerNight = totalAmount / nights;
+      const taxableAmount = totalAmount / (1 + accommodationGstRate / 100);
+      const cgst = taxableAmount * 0.06;
+      const sgst = taxableAmount * 0.06;
+      items.push({
+        id: `hotel_${hotel.id}`,
+        date: checkIn.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }),
+        particulars: `Accommodation`,
+        rate: ratePerNight,
+        qty: nights,
+        totalAmount: totalAmount,
+        taxableAmount: taxableAmount,
+        cgstRate: "6%",
+        cgstAmount: cgst,
+        sgstRate: "6%",
+        sgstAmount: sgst,
+        isCustom: false,
+        gstPercent: accommodationGstRate
+      });
     });
+
 
     volvos.forEach(volvo => {
       const totalAmount = volvo.total_amount || 0;
