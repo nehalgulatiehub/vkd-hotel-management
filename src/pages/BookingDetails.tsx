@@ -401,6 +401,7 @@ export default function BookingDetails() {
           </Card>
         )}
       </main>
+      </div>
       
       {/* Print Receipt */}
       {showPrint && id && <BookingReceipt bookingId={id} />}
