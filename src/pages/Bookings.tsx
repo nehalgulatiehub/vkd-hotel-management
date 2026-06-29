@@ -3239,6 +3239,7 @@ export default function Bookings() {
           </AlertDialogContent>
         </AlertDialog>
       </main>
+      </div>
 
       {/* Print Receipt - Hidden on screen, visible when printing */}
       {printBookingId && <BookingReceipt bookingId={printBookingId} />}
