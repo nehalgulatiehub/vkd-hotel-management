@@ -893,7 +893,32 @@ export default function Billing() {
   };
 
   const handlePrint = () => {
-    window.print();
+    const node = printRef.current;
+    if (!node) {
+      window.print();
+      return;
+    }
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+    const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map((el) => el.outerHTML)
+      .join("\n");
+    printWindow.document.open();
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Quotation</title>${stylesheets}
+      <style>
+        @page { size: A4; margin: 10mm; }
+        body { background: white; color: black; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .print-root { padding: 0; }
+        table { border-collapse: collapse; width: 100%; }
+        .print\\:hidden { display: none !important; }
+      </style>
+    </head><body><div class="print-root">${node.innerHTML}</div>
+    <script>window.onload = function(){ setTimeout(function(){ window.focus(); window.print(); window.close(); }, 300); };</script>
+    </body></html>`);
+    printWindow.document.close();
   };
 
   const filteredBookings = bookings.filter(
