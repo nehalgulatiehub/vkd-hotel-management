@@ -1806,6 +1806,194 @@ export type Database = {
           },
         ]
       }
+      quotation_items: {
+        Row: {
+          amount: number | null
+          cgst_amount: number | null
+          cgst_percent: number | null
+          created_at: string
+          hsn_code: string | null
+          id: string
+          is_custom: boolean | null
+          item_date: string | null
+          particulars: string | null
+          quantity: number | null
+          quotation_id: string
+          rate: number | null
+          sgst_amount: number | null
+          sgst_percent: number | null
+          sr_no: number | null
+          total: number | null
+        }
+        Insert: {
+          amount?: number | null
+          cgst_amount?: number | null
+          cgst_percent?: number | null
+          created_at?: string
+          hsn_code?: string | null
+          id?: string
+          is_custom?: boolean | null
+          item_date?: string | null
+          particulars?: string | null
+          quantity?: number | null
+          quotation_id: string
+          rate?: number | null
+          sgst_amount?: number | null
+          sgst_percent?: number | null
+          sr_no?: number | null
+          total?: number | null
+        }
+        Update: {
+          amount?: number | null
+          cgst_amount?: number | null
+          cgst_percent?: number | null
+          created_at?: string
+          hsn_code?: string | null
+          id?: string
+          is_custom?: boolean | null
+          item_date?: string | null
+          particulars?: string | null
+          quantity?: number | null
+          quotation_id?: string
+          rate?: number | null
+          sgst_amount?: number | null
+          sgst_percent?: number | null
+          sr_no?: number | null
+          total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotation_templates: {
+        Row: {
+          account_no: string | null
+          address: string | null
+          bank_name: string | null
+          branch_name: string | null
+          company_name: string | null
+          contact_no: string | null
+          created_at: string
+          gstin: string | null
+          hsn_code: string | null
+          id: string
+          ifsc_code: string | null
+          is_default: boolean | null
+          logo_url: string | null
+          pan_no: string | null
+          sub_title: string | null
+          template_name: string
+          terms_conditions: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_no?: string | null
+          address?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          company_name?: string | null
+          contact_no?: string | null
+          created_at?: string
+          gstin?: string | null
+          hsn_code?: string | null
+          id?: string
+          ifsc_code?: string | null
+          is_default?: boolean | null
+          logo_url?: string | null
+          pan_no?: string | null
+          sub_title?: string | null
+          template_name: string
+          terms_conditions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_no?: string | null
+          address?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          company_name?: string | null
+          contact_no?: string | null
+          created_at?: string
+          gstin?: string | null
+          hsn_code?: string | null
+          id?: string
+          ifsc_code?: string | null
+          is_default?: boolean | null
+          logo_url?: string | null
+          pan_no?: string | null
+          sub_title?: string | null
+          template_name?: string
+          terms_conditions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quotations: {
+        Row: {
+          amount_in_words: string | null
+          booking_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_address: string | null
+          customer_gstin: string | null
+          customer_name: string | null
+          customer_pan: string | null
+          id: string
+          notes: string | null
+          quotation_date: string
+          quotation_number: string
+          subtotal: number | null
+          total_amount: number | null
+          total_cgst: number | null
+          total_sgst: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_in_words?: string | null
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_gstin?: string | null
+          customer_name?: string | null
+          customer_pan?: string | null
+          id?: string
+          notes?: string | null
+          quotation_date?: string
+          quotation_number: string
+          subtotal?: number | null
+          total_amount?: number | null
+          total_cgst?: number | null
+          total_sgst?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_in_words?: string | null
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_gstin?: string | null
+          customer_name?: string | null
+          customer_pan?: string | null
+          id?: string
+          notes?: string | null
+          quotation_date?: string
+          quotation_number?: string
+          subtotal?: number | null
+          total_amount?: number | null
+          total_cgst?: number | null
+          total_sgst?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quotes: {
         Row: {
           author: string | null
