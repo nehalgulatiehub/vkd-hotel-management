@@ -165,12 +165,12 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Vehicle type</p>
                 <p className="text-sm">{vehicle.vehicle_type}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Transporter</p>
                 <p className="text-sm">{vehicle.transporters?.name || "N/A"}</p>
               </div>
               {vehicle.pickup_date && (
-                <div className="grid grid-cols-2 mt-2">
+                <div className="grid grid-cols-2">
                   <p className="text-sm text-gray-600">Pickup date</p>
                   <p className="text-sm">{new Date(vehicle.pickup_date).toLocaleDateString('en-GB')}</p>
                 </div>
