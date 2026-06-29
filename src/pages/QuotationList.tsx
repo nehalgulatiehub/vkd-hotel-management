@@ -133,7 +133,7 @@ const QuotationList = () => {
   };
 
   const handleEdit = (quotation: Quotation) => {
-    navigate(`/billing?edit=${quotation.id}`);
+    navigate(`/quotations/create?edit=${quotation.id}`);
   };
 
   const confirmDelete = (quotation: Quotation) => {
@@ -145,7 +145,7 @@ const QuotationList = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Quotations</h1>
-        <Button onClick={() => navigate("/billing")}>
+        <Button onClick={() => navigate("/quotations/create")}>
           <Plus className="h-4 w-4 mr-2" />
           Create Quotation
         </Button>
