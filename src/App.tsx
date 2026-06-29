@@ -735,6 +735,10 @@ const App = () => (
           <Route path="/admin/billing" element={<AdminLayout><AdminBilling /></AdminLayout>} />
           <Route path="/admin/invoices" element={<AdminLayout><AdminInvoiceList /></AdminLayout>} />
           <Route path="/admin/invoice-templates" element={<AdminLayout><AdminInvoiceTemplates /></AdminLayout>} />
+          <Route path="/admin/quotations/create" element={<AdminLayout><Quotation /></AdminLayout>} />
+          <Route path="/admin/quotations" element={<AdminLayout><QuotationList /></AdminLayout>} />
+          <Route path="/admin/quotation-templates" element={<AdminLayout><QuotationTemplates /></AdminLayout>} />
+
           
           {/* Admin Restaurant Routes */}
           <Route path="/admin/restaurant/tables" element={<AdminLayout><RestaurantTables /></AdminLayout>} />
