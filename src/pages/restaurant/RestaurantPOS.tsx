@@ -482,7 +482,7 @@ const RestaurantPOS = () => {
                                 <div className="flex flex-col">
                                   <span className="font-medium">{booking.booking_number}</span>
                                   <span className="text-xs text-muted-foreground">
-                                    {booking.customer_name || "Guest"} • {booking.check_in_date} to {booking.check_out_date}
+                                    {booking.customer_name || "Guest"} • {new Date(booking.check_in_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, ' / ')} to {new Date(booking.check_out_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, ' / ')}
                                   </span>
                                 </div>
                               </CommandItem>
