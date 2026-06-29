@@ -125,6 +125,7 @@ export default function Bookings() {
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentCityId, setPaymentCityId] = useState("");
   const [paymentType, setPaymentType] = useState("");
+  const [paymentOtherNote, setPaymentOtherNote] = useState("");
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [cancellationCharge, setCancellationCharge] = useState("");
@@ -1211,6 +1212,7 @@ export default function Bookings() {
     setPaymentReference("");
     setPaymentCityId("");
     setPaymentType("");
+    setPaymentOtherNote("");
     setShowPaymentDialog(true);
   };
 
@@ -1245,7 +1247,8 @@ export default function Bookings() {
           reference_number: paymentReference,
           payment_date: new Date().toISOString().split('T')[0],
           city_id: paymentCityId || null,
-          payment_type: paymentType || null
+          payment_type: paymentType || null,
+          notes: paymentType === "other" ? (paymentOtherNote || null) : null,
         });
 
       if (paymentError) throw paymentError;
@@ -3072,6 +3075,17 @@ export default function Bookings() {
                   </SelectContent>
                 </Select>
               </div>
+              {paymentType === "other" && (
+                <div className="space-y-2">
+                  <Label>Please specify <span className="text-red-500">*</span></Label>
+                  <Input
+                    value={paymentOtherNote}
+                    onChange={(e) => setPaymentOtherNote(e.target.value)}
+                    placeholder="Enter payment description"
+                    maxLength={200}
+                  />
+                </div>
+              )}
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowPaymentDialog(false)} disabled={isSubmittingPayment}>Cancel</Button>
                 <Button onClick={submitPayment} disabled={isSubmittingPayment}>
