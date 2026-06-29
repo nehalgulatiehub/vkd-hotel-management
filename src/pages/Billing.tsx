@@ -1278,7 +1278,7 @@ export default function Billing() {
 
                           <th className="border border-black p-2 text-right">Rate</th>
                           <th className="border border-black p-2 text-right">
-                            QTY/No.<br />Of Rooms
+                            QTY/No.<br />Of Nights
                           </th>
                           <th className="border border-black p-2 text-right">
                             Total<br />Amount
