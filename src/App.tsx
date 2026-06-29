@@ -589,6 +589,10 @@ const App = () => (
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
           <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
           <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
+          <Route path="/quotations/create" element={<DashboardLayout><Quotation /></DashboardLayout>} />
+          <Route path="/quotations" element={<DashboardLayout><QuotationList /></DashboardLayout>} />
+          <Route path="/quotation-templates" element={<DashboardLayout><QuotationTemplates /></DashboardLayout>} />
+
           
           {/* Purchase Module Routes */}
           <Route path="/purchase/vendors" element={<DashboardLayout><Vendors /></DashboardLayout>} />
