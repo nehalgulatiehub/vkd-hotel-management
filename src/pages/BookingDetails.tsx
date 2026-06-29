@@ -137,8 +137,9 @@ export default function BookingDetails() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Booking Details" />
-      <main className="p-6 print:hidden">
+      <div className="print:hidden">
+        <Header title="Booking Details" />
+        <main className="p-6">
         <div className="flex justify-between items-center mb-6">
           <Button variant="outline" onClick={() => navigate(isAdminRoute ? "/admin/bookings" : "/bookings")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
