@@ -131,11 +131,11 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Volvo route</p>
                 <p className="text-sm">{volvo.route}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of seats</p>
                 <p className="text-sm">{volvo.number_of_seats}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Travel date</p>
                 <p className="text-sm">{new Date(volvo.travel_date).toLocaleDateString('en-GB')}</p>
               </div>
