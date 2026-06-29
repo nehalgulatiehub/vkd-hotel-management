@@ -2532,7 +2532,8 @@ export default function Bookings() {
                               <div style={{ fontSize: 10 }}>
                                 <div><strong>Booking Price:</strong> Rs. {booking.total_amount || 0}/-</div>
                                 <div><strong>Total Received:</strong> Rs. {booking.paid_amount || 0}/-</div>
-                                <div><strong>Payment:</strong> Rs. {booking.paid_amount || 0}/-</div>
+                                
+
                                 <div style={{ color: "#c00" }}><strong>Due Payment:</strong> Rs. {booking.due_amount || 0}/-</div>
                               </div>
                             </td>
