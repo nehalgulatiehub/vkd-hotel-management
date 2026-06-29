@@ -1030,6 +1030,30 @@ export default function Bookings() {
     setShowEditPaymentDialog(true);
   };
 
+  const recalcBookingTotals = async (bookingId: string) => {
+    try {
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("total_amount")
+        .eq("id", bookingId)
+        .maybeSingle();
+      const { data: pays } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("booking_id", bookingId);
+      const totalPaid = (pays || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+      const totalAmount = Number(booking?.total_amount || 0);
+      const due = totalAmount - totalPaid;
+      const status = totalPaid <= 0 ? "pending" : due <= 0 ? "paid" : "partial";
+      await supabase
+        .from("bookings")
+        .update({ paid_amount: totalPaid, due_amount: due, payment_status: status })
+        .eq("id", bookingId);
+    } catch (e) {
+      console.error("Recalc booking totals failed:", e);
+    }
+  };
+
   const handleEditPaymentSave = async () => {
     if (!editingPayment || !editPaymentAmount || !editPaymentMode) {
       toast.error("Please fill in required fields");
@@ -1049,14 +1073,17 @@ export default function Bookings() {
 
       if (error) throw error;
 
+      const bookingId = editingPayment.booking_id || selectedBooking?.id;
+      if (bookingId) await recalcBookingTotals(bookingId);
+
       toast.success("Payment updated successfully");
       setShowEditPaymentDialog(false);
       setEditingPayment(null);
-      
-      // Refresh payments
+
       if (selectedBooking?.id) {
         await fetchBookingPayments(selectedBooking.id);
       }
+      fetchBookings();
     } catch (error) {
       console.error("Error updating payment:", error);
       toast.error("Failed to update payment");
@@ -1069,6 +1096,7 @@ export default function Bookings() {
     }
 
     try {
+      const bookingId = selectedBooking?.id;
       const { error } = await supabase
         .from("payments")
         .delete()
@@ -1076,17 +1104,20 @@ export default function Bookings() {
 
       if (error) throw error;
 
+      if (bookingId) await recalcBookingTotals(bookingId);
+
       toast.success("Payment deleted successfully");
-      
-      // Refresh payments
-      if (selectedBooking?.id) {
-        await fetchBookingPayments(selectedBooking.id);
+
+      if (bookingId) {
+        await fetchBookingPayments(bookingId);
       }
+      fetchBookings();
     } catch (error) {
       console.error("Error deleting payment:", error);
       toast.error("Failed to delete payment");
     }
   };
+
 
   const handleViewPayment = async (booking: any) => {
     // Use the same service-wise payment dialog for both admin and user panels
