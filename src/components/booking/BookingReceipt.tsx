@@ -76,9 +76,9 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
       </div>
 
       {/* YOUR DETAILS */}
-      <div className="mb-8">
-        <h2 className="text-sm font-bold mb-4 uppercase">Your Details</h2>
-        <div className="space-y-3">
+      <div className="mb-4">
+        <h2 className="text-sm font-bold mb-2 uppercase">Your Details</h2>
+        <div className="space-y-1">
           <div className="grid grid-cols-2">
             <p className="text-sm text-gray-600">Name</p>
             <p className="text-sm">{booking.customer_name || "-"}</p>
