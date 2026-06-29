@@ -1275,6 +1275,7 @@ export default function Billing() {
                         <tr className="bg-gray-100">
                           <th className="border border-black p-2 text-left w-16">Date</th>
                           <th className="border border-black p-2 text-left">BILLING PARTICULARS</th>
+
                           <th className="border border-black p-2 text-right">Rate</th>
                           <th className="border border-black p-2 text-right">
                             QTY/No.<br />Of Rooms
