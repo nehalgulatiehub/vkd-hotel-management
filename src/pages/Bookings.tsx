@@ -1328,8 +1328,9 @@ export default function Bookings() {
 
   return (
     <div className="min-h-screen bg-background">
-      {!isAdminRoute && <Header title="Booking Management" />}
-      <main className="p-3 print:hidden">
+      <div className="print:hidden">
+        {!isAdminRoute && <Header title="Booking Management" />}
+        <main className="p-3">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-sm font-semibold">
             {showForm ? (editingBookingId ? "Edit Booking" : "Create Booking") : "View Booking"}
