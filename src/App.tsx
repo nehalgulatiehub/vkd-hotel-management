@@ -69,6 +69,10 @@ import RestaurantReports from "./pages/restaurant/RestaurantReports";
 import Billing from "./pages/Billing";
 import InvoiceList from "./pages/InvoiceList";
 import InvoiceTemplates from "./pages/InvoiceTemplates";
+import Quotation from "./pages/Quotation";
+import QuotationList from "./pages/QuotationList";
+import QuotationTemplates from "./pages/QuotationTemplates";
+
 import UserManagement from "./pages/UserManagement";
 import Vendors from "./pages/purchase/Vendors";
 import ItemMaster from "./pages/purchase/ItemMaster";
