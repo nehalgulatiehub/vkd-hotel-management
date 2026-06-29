@@ -59,10 +59,10 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
   if (!booking) return null;
 
   return (
-    <div className="fixed inset-0 bg-white z-[9999] hidden print:block overflow-auto">
-      <div className="p-8 bg-white text-black max-w-4xl mx-auto">
+    <div className="fixed inset-0 bg-white z-[9999] hidden print:static print:block w-full overflow-auto">
+      <div className="p-4 bg-white text-black max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-start mb-4">
         <div>
           <p className="text-sm text-gray-500 mb-4">{new Date(booking.created_at).toLocaleDateString('en-GB')}</p>
           <h1 className="text-3xl font-bold mb-1">YOUR HOTEL NAME</h1>
