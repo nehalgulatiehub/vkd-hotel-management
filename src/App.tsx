@@ -69,6 +69,10 @@ import RestaurantReports from "./pages/restaurant/RestaurantReports";
 import Billing from "./pages/Billing";
 import InvoiceList from "./pages/InvoiceList";
 import InvoiceTemplates from "./pages/InvoiceTemplates";
+import Quotation from "./pages/Quotation";
+import QuotationList from "./pages/QuotationList";
+import QuotationTemplates from "./pages/QuotationTemplates";
+
 import UserManagement from "./pages/UserManagement";
 import Vendors from "./pages/purchase/Vendors";
 import ItemMaster from "./pages/purchase/ItemMaster";
@@ -585,6 +589,10 @@ const App = () => (
           <Route path="/billing" element={<DashboardLayout><Billing /></DashboardLayout>} />
           <Route path="/invoices" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
           <Route path="/invoice-templates" element={<DashboardLayout><InvoiceTemplates /></DashboardLayout>} />
+          <Route path="/quotations/create" element={<DashboardLayout><Quotation /></DashboardLayout>} />
+          <Route path="/quotations" element={<DashboardLayout><QuotationList /></DashboardLayout>} />
+          <Route path="/quotation-templates" element={<DashboardLayout><QuotationTemplates /></DashboardLayout>} />
+
           
           {/* Purchase Module Routes */}
           <Route path="/purchase/vendors" element={<DashboardLayout><Vendors /></DashboardLayout>} />
@@ -727,6 +735,10 @@ const App = () => (
           <Route path="/admin/billing" element={<AdminLayout><AdminBilling /></AdminLayout>} />
           <Route path="/admin/invoices" element={<AdminLayout><AdminInvoiceList /></AdminLayout>} />
           <Route path="/admin/invoice-templates" element={<AdminLayout><AdminInvoiceTemplates /></AdminLayout>} />
+          <Route path="/admin/quotations/create" element={<AdminLayout><Quotation /></AdminLayout>} />
+          <Route path="/admin/quotations" element={<AdminLayout><QuotationList /></AdminLayout>} />
+          <Route path="/admin/quotation-templates" element={<AdminLayout><QuotationTemplates /></AdminLayout>} />
+
           
           {/* Admin Restaurant Routes */}
           <Route path="/admin/restaurant/tables" element={<AdminLayout><RestaurantTables /></AdminLayout>} />

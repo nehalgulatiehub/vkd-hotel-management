@@ -278,6 +278,16 @@ const adminMenuItems: MenuItem[] = [
     ] 
   },
   { 
+    title: "Quotation Manager", 
+    color: "#7E57C2", 
+    submenu: [
+      { title: "Create Quotation", url: "/admin/quotations/create" },
+      { title: "Saved Quotations", url: "/admin/quotations" },
+      { title: "Quotation Templates", url: "/admin/quotation-templates" },
+    ] 
+  },
+
+  { 
     title: "Purchase Manager", 
     color: "#26A69A", 
     submenu: [

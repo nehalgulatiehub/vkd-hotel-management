@@ -247,6 +247,16 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    title: "Quotation",
+    icon: Receipt,
+    submenu: [
+      { title: "Create Quotation", url: "/quotations/create", menuKey: "quotation_create" },
+      { title: "Saved Quotations", url: "/quotations", menuKey: "quotation_list" },
+      { title: "Quotation Templates", url: "/quotation-templates", menuKey: "quotation_templates" },
+    ]
+  },
+
+  {
     title: "Purchase",
     icon: ShoppingCart,
     submenu: [
