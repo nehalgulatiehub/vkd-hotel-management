@@ -155,6 +155,14 @@ export const ADMIN_USER_MENU_ITEMS: AdminUserMenuGroup[] = [
     ],
   },
   {
+    category: "Quotation",
+    items: [
+      { key: "quotation_create", label: "Create Quotation" },
+      { key: "quotation_list", label: "Saved Quotations" },
+      { key: "quotation_templates", label: "Quotation Templates" },
+    ],
+  },
+  {
     category: "Purchase Management",
     items: [
       { key: "purchase_vendors", label: "Vendors" },
