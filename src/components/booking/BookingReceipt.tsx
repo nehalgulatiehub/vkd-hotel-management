@@ -59,12 +59,12 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
   if (!booking) return null;
 
   return (
-    <div className="fixed inset-0 bg-white z-[9999] hidden print:block overflow-auto">
-      <div className="p-8 bg-white text-black max-w-4xl mx-auto">
+    <div className="fixed inset-0 bg-white z-[9999] hidden print:static print:block w-full overflow-auto">
+      <div className="p-4 bg-white text-black max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <p className="text-sm text-gray-500 mb-4">{new Date(booking.created_at).toLocaleDateString('en-GB')}</p>
+          <p className="text-sm text-gray-500 mb-2">{new Date(booking.created_at).toLocaleDateString('en-GB')}</p>
           <h1 className="text-3xl font-bold mb-1">YOUR HOTEL NAME</h1>
           <p className="text-sm text-gray-600">This is your receipt</p>
         </div>
@@ -76,9 +76,9 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
       </div>
 
       {/* YOUR DETAILS */}
-      <div className="mb-8">
-        <h2 className="text-sm font-bold mb-4 uppercase">Your Details</h2>
-        <div className="space-y-3">
+      <div className="mb-4">
+        <h2 className="text-sm font-bold mb-2 uppercase">Your Details</h2>
+        <div className="space-y-1">
           <div className="grid grid-cols-2">
             <p className="text-sm text-gray-600">Name</p>
             <p className="text-sm">{booking.customer_name || "-"}</p>
@@ -105,20 +105,20 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
       </div>
 
       {/* BOOKING DETAILS */}
-      <div className="mb-8">
-        <h2 className="text-sm font-bold mb-4 uppercase">Booking Details</h2>
-        <div className="space-y-3">
+      <div className="mb-4">
+        <h2 className="text-sm font-bold mb-2 uppercase">Booking Details</h2>
+        <div className="space-y-1">
           {hotelBookings.map((hotel, idx) => (
             <div key={idx}>
               <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Property name</p>
                 <p className="text-sm font-semibold">{hotel.own_hotels?.name || hotel.another_hotels?.name}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Room type</p>
                 <p className="text-sm">{hotel.room_type}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of rooms</p>
                 <p className="text-sm">{hotel.number_of_rooms}</p>
               </div>
@@ -131,11 +131,11 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Volvo route</p>
                 <p className="text-sm">{volvo.route}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of seats</p>
                 <p className="text-sm">{volvo.number_of_seats}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Travel date</p>
                 <p className="text-sm">{new Date(volvo.travel_date).toLocaleDateString('en-GB')}</p>
               </div>
@@ -148,11 +148,11 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Safari name</p>
                 <p className="text-sm">{safari.safari_name}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of persons</p>
                 <p className="text-sm">{safari.number_of_persons}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Safari date</p>
                 <p className="text-sm">{new Date(safari.safari_date).toLocaleDateString('en-GB')}</p>
               </div>
@@ -165,12 +165,12 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Vehicle type</p>
                 <p className="text-sm">{vehicle.vehicle_type}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Transporter</p>
                 <p className="text-sm">{vehicle.transporters?.name || "N/A"}</p>
               </div>
               {vehicle.pickup_date && (
-                <div className="grid grid-cols-2 mt-2">
+                <div className="grid grid-cols-2">
                   <p className="text-sm text-gray-600">Pickup date</p>
                   <p className="text-sm">{new Date(vehicle.pickup_date).toLocaleDateString('en-GB')}</p>
                 </div>
@@ -178,7 +178,7 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
             </div>
           ))}
 
-          <div className="grid grid-cols-2 mt-4">
+          <div className="grid grid-cols-2 mt-2">
             <p className="text-sm text-gray-600">Booking number</p>
             <p className="text-sm">{booking.booking_number}</p>
           </div>
