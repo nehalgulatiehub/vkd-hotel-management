@@ -320,7 +320,7 @@ export default function Billing() {
   const generateNextQuotationNumber = async () => {
     const year = new Date().getFullYear();
     const nextYear = (year + 1).toString().slice(-2);
-    const prefix = `INV/${year}-${nextYear}/`;
+    const prefix = `QUO/${year}-${nextYear}/`;
     
     // Get the latest quotation number for this year
     const { data, error } = await supabase
