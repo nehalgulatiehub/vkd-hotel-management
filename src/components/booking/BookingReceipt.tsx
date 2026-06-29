@@ -105,9 +105,9 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
       </div>
 
       {/* BOOKING DETAILS */}
-      <div className="mb-8">
-        <h2 className="text-sm font-bold mb-4 uppercase">Booking Details</h2>
-        <div className="space-y-3">
+      <div className="mb-4">
+        <h2 className="text-sm font-bold mb-2 uppercase">Booking Details</h2>
+        <div className="space-y-1">
           {hotelBookings.map((hotel, idx) => (
             <div key={idx}>
               <div className="grid grid-cols-2">
