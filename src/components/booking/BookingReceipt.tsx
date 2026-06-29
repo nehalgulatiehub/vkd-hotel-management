@@ -148,11 +148,11 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
                 <p className="text-sm text-gray-600">Safari name</p>
                 <p className="text-sm">{safari.safari_name}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of persons</p>
                 <p className="text-sm">{safari.number_of_persons}</p>
               </div>
-              <div className="grid grid-cols-2 mt-2">
+              <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Safari date</p>
                 <p className="text-sm">{new Date(safari.safari_date).toLocaleDateString('en-GB')}</p>
               </div>
