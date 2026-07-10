@@ -94,15 +94,29 @@ export default function AdminUserList() {
 
   const bulkAction = async (action: "activate" | "deactivate" | "delete") => {
     if (selectedIds.size === 0) { toast.error("Select users first"); return; }
-    if (action === "delete" && !confirm(`Delete ${selectedIds.size} user(s)?`)) return;
-    for (const id of selectedIds) {
-      if (action === "delete") await supabase.from("profiles").delete().eq("id", id);
-      else await supabase.from("profiles").update({ is_active: action === "activate" }).eq("id", id);
+    if (action === "delete" && !confirm(`Delete ${selectedIds.size} user(s)? This cannot be undone.`)) return;
+    try {
+      for (const id of selectedIds) {
+        if (action === "delete") {
+          const { data, error } = await supabase.functions.invoke("create-user", {
+            body: { action: "delete-user", userId: id },
+          });
+          if (error) throw new Error(error.message);
+          if (data?.error) throw new Error(data.error);
+        } else {
+          const { error } = await supabase.from("profiles").update({ is_active: action === "activate" }).eq("id", id);
+          if (error) throw error;
+        }
+      }
+      toast.success(action === "delete" ? "Users deleted" : `Users ${action}d`);
+      setSelectedIds(new Set());
+      fetchUsers();
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Action failed");
     }
-    toast.success(action === "delete" ? "Users deleted" : `Users ${action}d`);
-    setSelectedIds(new Set());
-    fetchUsers();
   };
+
 
   const handleEditUser = (user: UserData) => {
     setSelectedUser(user);
