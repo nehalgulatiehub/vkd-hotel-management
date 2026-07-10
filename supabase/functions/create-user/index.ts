@@ -87,6 +87,57 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    if (action === "list-users") {
+      const { data: list, error: listError } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+      if (listError) {
+        return new Response(JSON.stringify({ error: listError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify({ users: list.users.map((u) => ({ id: u.id, email: u.email })) }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "delete-user") {
+      const { userId } = body;
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "User ID is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (userId === callerId) {
+        return new Response(JSON.stringify({ error: "You cannot delete your own account" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Clean up dependent rows first
+      await adminClient.from("user_menu_permissions").delete().eq("user_id", userId);
+      await adminClient.from("user_roles").delete().eq("user_id", userId);
+      await adminClient.from("profiles").delete().eq("id", userId);
+
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId);
+      if (deleteError) {
+        console.error("Delete user failed", { userId, message: deleteError.message });
+        return new Response(JSON.stringify({ error: deleteError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+
+
     if (action === "reset-password") {
       const { userId, newPassword } = body;
 
