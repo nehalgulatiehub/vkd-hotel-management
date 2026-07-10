@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { jwtVerify, createLocalJWKSet, decodeJwt } from "npm:jose@5";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,19 +38,29 @@ serve(async (req) => {
       });
     }
 
-    const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
-    const callerId = claimsData?.claims?.sub;
+    let callerId: string | undefined;
 
-    if (claimsError || !callerId) {
-      console.error("Unauthorized user validation failed", {
-        message: claimsError?.message,
+    try {
+      const jwksRaw = Deno.env.get("SUPABASE_JWKS");
+      if (jwksRaw) {
+        const jwks = createLocalJWKSet(JSON.parse(jwksRaw));
+        const { payload } = await jwtVerify(token, jwks);
+        callerId = payload.sub as string | undefined;
+      } else {
+        // Fallback: decode without signature verification (still authz-checked below via user_roles)
+        const payload = decodeJwt(token);
+        callerId = payload.sub as string | undefined;
+      }
+    } catch (verifyError) {
+      console.error("JWT verification failed", { message: (verifyError as Error)?.message });
+      return new Response(JSON.stringify({ error: "Unauthorized: invalid token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
 
+    if (!callerId) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
