@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface BookingConfirmationVoucherProps {
   bookingId: string;
@@ -79,7 +81,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
     <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:block" id="voucher-container">
       <div ref={voucherRef} className="max-w-3xl mx-auto p-8 bg-white text-black" id="voucher-content">
         {/* Header */}
-        <div className="text-center mb-6 border-b-2 border-gray-800 pb-4">
+        <div data-pdf-section className="text-center mb-6 border-b-2 border-gray-800 pb-4">
           {companySettings?.logo_url && (
             <img src={companySettings.logo_url} alt={companyName} className="h-16 mx-auto mb-2" />
           )}
@@ -89,20 +91,20 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </div>
 
         {/* Resort Address */}
-        <div className="text-center mb-4 text-sm">
+        <div data-pdf-section className="text-center mb-4 text-sm">
           <p className="font-semibold">Resort Address - {companyAddress}</p>
           <p>Contact number - {companyContact}</p>
         </div>
 
         {/* Greeting */}
-        <div className="mb-6 text-sm bg-gray-50 p-4 rounded border">
+        <div data-pdf-section className="mb-6 text-sm bg-gray-50 p-4 rounded border">
           <p className="font-semibold mb-2">Dear {booking.customer_name || "Sir/Ma'am"},</p>
           <p className="mb-2">Namaskar!!!</p>
           <p>Thank you for choosing {companyName}. We are pleased to confirm your reservation as per the details below:-</p>
         </div>
 
         {/* Booking Details Table */}
-        <div className="mb-6">
+        <div data-pdf-section className="mb-6">
           <table className="w-full border-collapse border border-gray-400 text-sm">
             <tbody>
               <tr className="bg-gray-100">
@@ -155,13 +157,13 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
         {/* Billing Instruction */}
         {booking.notes && (
-          <div className="mb-6 text-sm">
+          <div data-pdf-section className="mb-6 text-sm">
             <p><span className="font-semibold">Billing Instruction:</span> {booking.notes}</p>
           </div>
         )}
 
         {/* Inclusions */}
-        <div className="mb-6 text-sm">
+        <div data-pdf-section className="mb-6 text-sm">
           <h3 className="font-bold mb-2 underline">Inclusions:</h3>
           <ul className="list-disc ml-6 space-y-1">
             <li>Welcome drink (Non-alcoholic) on arrival</li>
@@ -177,7 +179,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
         {/* Bank Details */}
         {companySettings && (companySettings.bank_name || companySettings.account_no) && (
-          <div className="mb-6">
+          <div data-pdf-section className="mb-6">
             <h3 className="font-bold mb-2 text-sm underline">BANK DETAILS</h3>
             <table className="w-full border-collapse border border-gray-400 text-sm">
               <tbody>
@@ -212,24 +214,24 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         )}
 
         {/* Special Requests */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1">SPECIAL REQUESTS</h3>
           <p>Requests for anything not included above will be subject to availability and to be intimated at the time of check-in</p>
         </div>
 
         {/* Contact Info */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <p>Please share <span className="font-bold">Front Office Number: {companyContact}</span> with your guest and share his number to us too, for us to share the location and to coordinate.</p>
         </div>
 
         {/* Check-In/Check-Out Policy */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1">CHECK-IN/CHECK-OUT POLICY</h3>
           <p><span className="font-bold">Our check-in time is 1 pm and our check-out time is 10 am.</span> If you want to check-in early and check-out late, we will be happy to oblige, subject to availability and at a nominal additional charge.</p>
         </div>
 
         {/* Payment Policy */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1 underline">Payment Policy</h3>
           <ul className="list-disc ml-6 space-y-1">
             <li>Need 50% of the Total Amount at the time of Confirmation</li>
@@ -239,7 +241,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </div>
 
         {/* Cancellation Policy */}
-        <div className="mb-6 text-sm">
+        <div data-pdf-section className="mb-6 text-sm">
           <h3 className="font-bold mb-1 underline">Cancellation/Refund Policy:</h3>
           <ul className="list-disc ml-6 space-y-1">
             <li>100% of the total amount be refunded if Cancellation made before 21 days of check in</li>
@@ -251,7 +253,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </div>
 
         {/* Footer */}
-        <div className="text-sm border-t border-gray-300 pt-4">
+        <div data-pdf-section className="text-sm border-t border-gray-300 pt-4">
           <p className="font-semibold">Thanks & Regards,</p>
           <p>{companyName}</p>
           {companyAddress && <p className="text-gray-600">{companyAddress}</p>}
@@ -262,8 +264,70 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       {/* Action Buttons - hidden during print */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex justify-center gap-4 print:hidden z-[10000]">
         <button
-          onClick={() => {
-            window.print();
+          onClick={async () => {
+            const container = voucherRef.current;
+            if (!container) return;
+            const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
+            if (sections.length === 0) return;
+
+            const A4_W = 210, A4_H = 297, MARGIN = 12;
+            const CONTENT_W = A4_W - MARGIN * 2;
+            const CONTENT_H = A4_H - MARGIN * 2;
+            const GAP = 3;
+
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            let cursorY = MARGIN;
+
+            for (const section of sections) {
+              const canvas = await html2canvas(section, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+              });
+              const imgW = CONTENT_W;
+              let imgH = (canvas.height * imgW) / canvas.width;
+
+              // If a single section is taller than a page, slice it across pages
+              if (imgH > CONTENT_H) {
+                const pxPerMm = canvas.width / imgW;
+                const sliceHeightPx = Math.floor(CONTENT_H * pxPerMm);
+                let offsetY = 0;
+                while (offsetY < canvas.height) {
+                  const remainingPx = canvas.height - offsetY;
+                  const thisSlicePx = Math.min(sliceHeightPx, remainingPx);
+                  const sliceCanvas = document.createElement('canvas');
+                  sliceCanvas.width = canvas.width;
+                  sliceCanvas.height = thisSlicePx;
+                  const ctx = sliceCanvas.getContext('2d');
+                  if (!ctx) break;
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+                  ctx.drawImage(canvas, 0, -offsetY);
+                  const sliceH = thisSlicePx / pxPerMm;
+                  if (cursorY + sliceH > A4_H - MARGIN && cursorY > MARGIN) {
+                    pdf.addPage();
+                    cursorY = MARGIN;
+                  }
+                  pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, cursorY, imgW, sliceH);
+                  cursorY += sliceH + GAP;
+                  offsetY += thisSlicePx;
+                  if (offsetY < canvas.height) {
+                    pdf.addPage();
+                    cursorY = MARGIN;
+                  }
+                }
+              } else {
+                if (cursorY + imgH > A4_H - MARGIN && cursorY > MARGIN) {
+                  pdf.addPage();
+                  cursorY = MARGIN;
+                }
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, cursorY, imgW, imgH);
+                cursorY += imgH + GAP;
+              }
+            }
+
+            pdf.save(`Booking_${booking.booking_number || bookingId}.pdf`);
           }}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
         >
