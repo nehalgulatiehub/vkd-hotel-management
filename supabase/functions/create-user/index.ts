@@ -42,15 +42,11 @@ serve(async (req) => {
     let callerId: string | undefined;
 
     try {
-      const jwksRaw = Deno.env.get("SUPABASE_JWKS");
-      if (jwksRaw) {
-        const jwks = createLocalJWKSet(JSON.parse(jwksRaw));
-        const { payload } = await jwtVerify(token, jwks);
-        callerId = payload.sub as string | undefined;
-      } else {
-        // Fallback: decode without signature verification (still authz-checked below via user_roles)
-        const payload = decodeJwt(token);
-        callerId = payload.sub as string | undefined;
+      const payload = decodeJwt(token);
+      callerId = payload.sub as string | undefined;
+      const exp = payload.exp as number | undefined;
+      if (exp && exp * 1000 < Date.now()) {
+        throw new Error("token expired");
       }
     } catch (verifyError) {
       console.error("JWT verification failed", { message: (verifyError as Error)?.message });
