@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface BookingConfirmationVoucherProps {
   bookingId: string;
