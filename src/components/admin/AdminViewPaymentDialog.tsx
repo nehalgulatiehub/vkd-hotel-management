@@ -172,26 +172,10 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         groupedPayments["Safari"] = mapPaymentsToRecords(safariPayments);
       }
 
-      // Process Hotel payments - split into own hotel vs another hotel
-      const ownHotelData = (hotelRes.data || []).filter((h: any) => h.own_hotels);
+      // Process only extra/another hotel rows here. Own hotel is already included in Booking totals.
       const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
 
-      const ownHotelPayments = (payments || []).filter(p => p.payment_type === "hotel");
-      const ownHotelTotal = ownHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
-      const ownHotelReceived = ownHotelPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
-      if (ownHotelData.length > 0 || ownHotelPayments.length > 0) {
-        summaries.push({
-          type: "Hotel",
-          customerName: bookingData.customer_name || "N/A",
-          totalPayment: ownHotelTotal,
-          totalReceived: ownHotelReceived,
-          date: ownHotelData[0]?.check_in_date || bookingData.check_in_date,
-          totalDue: Math.max(0, ownHotelTotal - ownHotelReceived)
-        });
-        groupedPayments["Hotel"] = mapPaymentsToRecords(ownHotelPayments);
-      }
-
-      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
+      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel" || p.payment_type === "hotel");
       const anotherHotelTotal = anotherHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
       const anotherHotelReceived = anotherHotelPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (anotherHotelData.length > 0 || anotherHotelPayments.length > 0) {

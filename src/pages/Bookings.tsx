@@ -3088,7 +3088,7 @@ export default function Bookings() {
                     <SelectItem value="safari">Safari Payment</SelectItem>
                     <SelectItem value="delhi_manali">D-M Volvo Payment</SelectItem>
                     <SelectItem value="manali_delhi">M-D Volvo Payment</SelectItem>
-                    <SelectItem value="hotel">Another Hotel Payment</SelectItem>
+                    <SelectItem value="another_hotel">Another Hotel Payment</SelectItem>
                     <SelectItem value="vehicle">Vehicle Payment</SelectItem>
                     <SelectItem value="final">Final Payment</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
