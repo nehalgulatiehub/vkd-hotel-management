@@ -264,8 +264,70 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       {/* Action Buttons - hidden during print */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex justify-center gap-4 print:hidden z-[10000]">
         <button
-          onClick={() => {
-            window.print();
+          onClick={async () => {
+            const container = voucherRef.current;
+            if (!container) return;
+            const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
+            if (sections.length === 0) return;
+
+            const A4_W = 210, A4_H = 297, MARGIN = 12;
+            const CONTENT_W = A4_W - MARGIN * 2;
+            const CONTENT_H = A4_H - MARGIN * 2;
+            const GAP = 3;
+
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            let cursorY = MARGIN;
+
+            for (const section of sections) {
+              const canvas = await html2canvas(section, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+              });
+              const imgW = CONTENT_W;
+              let imgH = (canvas.height * imgW) / canvas.width;
+
+              // If a single section is taller than a page, slice it across pages
+              if (imgH > CONTENT_H) {
+                const pxPerMm = canvas.width / imgW;
+                const sliceHeightPx = Math.floor(CONTENT_H * pxPerMm);
+                let offsetY = 0;
+                while (offsetY < canvas.height) {
+                  const remainingPx = canvas.height - offsetY;
+                  const thisSlicePx = Math.min(sliceHeightPx, remainingPx);
+                  const sliceCanvas = document.createElement('canvas');
+                  sliceCanvas.width = canvas.width;
+                  sliceCanvas.height = thisSlicePx;
+                  const ctx = sliceCanvas.getContext('2d');
+                  if (!ctx) break;
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+                  ctx.drawImage(canvas, 0, -offsetY);
+                  const sliceH = thisSlicePx / pxPerMm;
+                  if (cursorY + sliceH > A4_H - MARGIN && cursorY > MARGIN) {
+                    pdf.addPage();
+                    cursorY = MARGIN;
+                  }
+                  pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, cursorY, imgW, sliceH);
+                  cursorY += sliceH + GAP;
+                  offsetY += thisSlicePx;
+                  if (offsetY < canvas.height) {
+                    pdf.addPage();
+                    cursorY = MARGIN;
+                  }
+                }
+              } else {
+                if (cursorY + imgH > A4_H - MARGIN && cursorY > MARGIN) {
+                  pdf.addPage();
+                  cursorY = MARGIN;
+                }
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, cursorY, imgW, imgH);
+                cursorY += imgH + GAP;
+              }
+            }
+
+            pdf.save(`Booking_${booking.booking_number || bookingId}.pdf`);
           }}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
         >
