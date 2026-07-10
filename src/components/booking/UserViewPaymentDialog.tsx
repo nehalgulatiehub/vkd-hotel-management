@@ -257,6 +257,38 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
     }
   };
 
+  const recalcBookingTotals = async () => {
+    if (!bookingId) return;
+
+    try {
+      const { data: bookingData } = await supabase
+        .from("bookings")
+        .select("total_amount")
+        .eq("id", bookingId)
+        .maybeSingle();
+
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("booking_id", bookingId);
+
+      const totalPayment = Number(bookingData?.total_amount || 0);
+      const totalReceived = (payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+      const totalDue = Math.max(0, totalPayment - totalReceived);
+
+      await supabase
+        .from("bookings")
+        .update({
+          paid_amount: totalReceived,
+          due_amount: totalDue,
+          payment_status: totalReceived <= 0 ? "pending" : totalDue <= 0 ? "paid" : "partial",
+        })
+        .eq("id", bookingId);
+    } catch (error) {
+      console.error("Error recalculating booking totals:", error);
+    }
+  };
+
   const handleEditPayment = (payment: PaymentRecord) => {
     setEditingPayment(payment);
     setEditPaymentAmount(String(payment.payment));
@@ -285,6 +317,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       toast.success("Payment updated successfully");
       setEditDialogOpen(false);
       setEditingPayment(null);
+      await recalcBookingTotals();
       fetchPaymentData();
       onPaymentUpdated?.();
     } catch (error) {
@@ -307,6 +340,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       toast.success("Payment deleted successfully");
       setDeleteDialogOpen(false);
       setDeletingPaymentId(null);
+      await recalcBookingTotals();
       fetchPaymentData();
       onPaymentUpdated?.();
     } catch (error) {

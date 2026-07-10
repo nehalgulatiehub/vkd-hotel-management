@@ -1284,20 +1284,7 @@ export default function Bookings() {
 
       if (paymentError) throw paymentError;
 
-      // Update booking paid and due amounts
-      const newPaidAmount = (selectedBooking.paid_amount || 0) + amount;
-      const newDueAmount = (selectedBooking.total_amount || 0) - newPaidAmount;
-
-      const { error: updateError } = await supabase
-        .from("bookings")
-        .update({
-          paid_amount: newPaidAmount,
-          due_amount: newDueAmount,
-          payment_status: newDueAmount <= 0 ? "paid" : "partial"
-        })
-        .eq("id", selectedBooking.id);
-
-      if (updateError) throw updateError;
+      await recalcBookingTotals(selectedBooking.id);
 
       toast.success("Payment added successfully");
       setShowPaymentDialog(false);
