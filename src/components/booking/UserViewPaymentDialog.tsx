@@ -112,23 +112,19 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       // Group payments by type
       const groupedPayments: Record<string, PaymentRecord[]> = {};
       const summaries: ServiceSummary[] = [];
+      const toAmount = (value: unknown) => {
+        const amount = Number(value ?? 0);
+        return Number.isFinite(amount) ? amount : 0;
+      };
 
-      // Calculate service-specific totals first
-      const safariTotal = safariRes.data?.reduce((sum, s) => sum + (s.total_amount || 0), 0) || 0;
-      const hotelTotal = hotelRes.data?.reduce((sum, h) => sum + (h.total_amount || 0), 0) || 0;
-      const vehicleTotal = vehicleRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
-      const dmTotal = volvoDMData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-      const mdTotal = volvoMDData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-      const servicesTotal = safariTotal + hotelTotal + vehicleTotal + dmTotal + mdTotal;
-      
-      // Booking amount is total minus service-specific amounts
-      const bookingOnlyAmount = Math.max(0, (bookingData.total_amount || 0) - servicesTotal);
+      // Booking row is the full booking amount, not total minus services.
+      const bookingTotal = toAmount(bookingData.total_amount);
 
       // Helper function to map payments to records
       const mapPaymentsToRecords = (paymentList: any[]) => paymentList.map(p => ({
         id: p.id,
         customer: bookingData.customer_name || "N/A",
-        payment: p.amount,
+        payment: toAmount(p.amount),
         date: p.payment_date || "",
         mode: p.payment_mode || "",
         paymentDetail: p.notes || p.reference_number || "",
@@ -138,23 +134,23 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         referenceNumber: p.reference_number || ""
       }));
 
-      // Process Booking payments (general) - Always show
-      const bookingPayments = (payments || []).filter(p => !p.payment_type || p.payment_type === "booking");
-      const bookingReceived = bookingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      // Process Booking payments (overall) - Always show the full booking total.
+      const bookingPayments = payments || [];
+      const bookingReceived = bookingPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       summaries.push({
         type: "Booking",
         customerName: bookingData.customer_name || "N/A",
-        totalPayment: bookingOnlyAmount,
+        totalPayment: bookingTotal,
         totalReceived: bookingReceived,
         date: bookingData.check_in_date,
-        totalDue: Math.max(0, bookingOnlyAmount - bookingReceived)
+        totalDue: Math.max(0, bookingTotal - bookingReceived)
       });
       groupedPayments["Booking"] = mapPaymentsToRecords(bookingPayments);
 
       // Process Delhi-Manali Volvo payments
       const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
-      const dmBookingTotal = volvoDMData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-      const dmReceived = dmPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const dmBookingTotal = volvoDMData.reduce((sum, v) => sum + toAmount(v.total_amount), 0);
+      const dmReceived = dmPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (volvoDMData.length > 0 || dmPayments.length > 0) {
         summaries.push({
           type: "Delhi - Manali",
@@ -169,8 +165,8 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
       // Process Manali-Delhi Volvo payments
       const mdPayments = (payments || []).filter(p => p.payment_type === "manali_delhi");
-      const mdBookingTotal = volvoMDData.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-      const mdReceived = mdPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const mdBookingTotal = volvoMDData.reduce((sum, v) => sum + toAmount(v.total_amount), 0);
+      const mdReceived = mdPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (volvoMDData.length > 0 || mdPayments.length > 0) {
         summaries.push({
           type: "Manali - Delhi",
@@ -185,8 +181,8 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
       // Process Safari payments
       const safariPayments = (payments || []).filter(p => p.payment_type === "safari");
-      const safariBookingTotal = safariRes.data?.reduce((sum, s) => sum + (s.total_amount || 0), 0) || 0;
-      const safariReceived = safariPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const safariBookingTotal = safariRes.data?.reduce((sum, s) => sum + toAmount(s.total_amount), 0) || 0;
+      const safariReceived = safariPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (safariRes.data?.length > 0 || safariPayments.length > 0) {
         summaries.push({
           type: "Safari",
@@ -199,30 +195,13 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         groupedPayments["Safari"] = mapPaymentsToRecords(safariPayments);
       }
 
-      // Process Hotel payments - split into own hotel vs another hotel
-      const ownHotelData = (hotelRes.data || []).filter((h: any) => h.own_hotels);
+      // Process only extra/another hotel rows here. Own hotel is already included in Booking totals.
       const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
-
-      // Own hotel section
-      const ownHotelPayments = (payments || []).filter(p => p.payment_type === "hotel");
-      const ownHotelTotal = ownHotelData.reduce((sum: number, h: any) => sum + (h.total_amount || 0), 0);
-      const ownHotelReceived = ownHotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      if (ownHotelData.length > 0 || ownHotelPayments.length > 0) {
-        summaries.push({
-          type: "Hotel",
-          customerName: bookingData.customer_name || "N/A",
-          totalPayment: ownHotelTotal,
-          totalReceived: ownHotelReceived,
-          date: ownHotelData[0]?.check_in_date || bookingData.check_in_date,
-          totalDue: Math.max(0, ownHotelTotal - ownHotelReceived)
-        });
-        groupedPayments["Hotel"] = mapPaymentsToRecords(ownHotelPayments);
-      }
 
       // Another hotel section
       const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
-      const anotherHotelTotal = anotherHotelData.reduce((sum: number, h: any) => sum + (h.total_amount || 0), 0);
-      const anotherHotelReceived = anotherHotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const anotherHotelTotal = anotherHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
+      const anotherHotelReceived = anotherHotelPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (anotherHotelData.length > 0 || anotherHotelPayments.length > 0) {
         summaries.push({
           type: "Another Hotel",
@@ -238,8 +217,8 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
       // Process Vehicle payments
       const vehiclePayments = (payments || []).filter(p => p.payment_type === "vehicle");
-      const vehicleBookingTotal = vehicleRes.data?.reduce((sum, v) => sum + (v.total_amount || 0), 0) || 0;
-      const vehicleReceived = vehiclePayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const vehicleBookingTotal = vehicleRes.data?.reduce((sum, v) => sum + toAmount(v.total_amount), 0) || 0;
+      const vehicleReceived = vehiclePayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (vehicleRes.data?.length > 0 || vehiclePayments.length > 0) {
         summaries.push({
           type: "Additional Vehicle",
@@ -258,6 +237,38 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       console.error("Error fetching payment data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const recalcBookingTotals = async () => {
+    if (!bookingId) return;
+
+    try {
+      const { data: bookingData } = await supabase
+        .from("bookings")
+        .select("total_amount")
+        .eq("id", bookingId)
+        .maybeSingle();
+
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("booking_id", bookingId);
+
+      const totalPayment = Number(bookingData?.total_amount || 0);
+      const totalReceived = (payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+      const totalDue = Math.max(0, totalPayment - totalReceived);
+
+      await supabase
+        .from("bookings")
+        .update({
+          paid_amount: totalReceived,
+          due_amount: totalDue,
+          payment_status: totalReceived <= 0 ? "pending" : totalDue <= 0 ? "paid" : "partial",
+        })
+        .eq("id", bookingId);
+    } catch (error) {
+      console.error("Error recalculating booking totals:", error);
     }
   };
 
@@ -289,6 +300,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       toast.success("Payment updated successfully");
       setEditDialogOpen(false);
       setEditingPayment(null);
+      await recalcBookingTotals();
       fetchPaymentData();
       onPaymentUpdated?.();
     } catch (error) {
@@ -311,6 +323,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       toast.success("Payment deleted successfully");
       setDeleteDialogOpen(false);
       setDeletingPaymentId(null);
+      await recalcBookingTotals();
       fetchPaymentData();
       onPaymentUpdated?.();
     } catch (error) {
