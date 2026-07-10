@@ -134,18 +134,28 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         referenceNumber: p.reference_number || ""
       }));
 
-      // Process Booking payments (overall) - Always show the full booking total.
-      const bookingPayments = payments || [];
-      const bookingReceived = bookingPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
-      summaries.push({
-        type: "Booking",
-        customerName: bookingData.customer_name || "N/A",
-        totalPayment: bookingTotal,
-        totalReceived: bookingReceived,
-        date: bookingData.check_in_date,
-        totalDue: Math.max(0, bookingTotal - bookingReceived)
-      });
-      groupedPayments["Booking"] = mapPaymentsToRecords(bookingPayments);
+      // Determine hotel context
+      const hasOwnHotel = (hotelRes.data || []).some((h: any) => h.own_hotels);
+      const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
+      const hasAnotherHotel = anotherHotelData.length > 0;
+      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
+      // When the booking is on an another_hotel (not our own), skip the generic "Booking" row
+      // and show only the "Another Hotel" section. Otherwise show the Booking row as usual.
+      const showBookingRow = !(hasAnotherHotel && !hasOwnHotel);
+
+      if (showBookingRow) {
+        const bookingPayments = payments || [];
+        const bookingReceived = bookingPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
+        summaries.push({
+          type: "Booking",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: bookingTotal,
+          totalReceived: bookingReceived,
+          date: bookingData.check_in_date,
+          totalDue: Math.max(0, bookingTotal - bookingReceived)
+        });
+        groupedPayments["Booking"] = mapPaymentsToRecords(bookingPayments);
+      }
 
       // Process Delhi-Manali Volvo payments
       const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
@@ -195,14 +205,16 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         groupedPayments["Safari"] = mapPaymentsToRecords(safariPayments);
       }
 
-      // Process only extra/another hotel rows here. Own hotel is already included in Booking totals.
-      const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
-
-      // Another hotel section
-      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
-      const anotherHotelTotal = anotherHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
-      const anotherHotelReceived = anotherHotelPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
-      if (anotherHotelData.length > 0 || anotherHotelPayments.length > 0) {
+      // Another hotel section - if the booking is on another_hotel we show all payments here,
+      // otherwise only the payments explicitly tagged as another_hotel.
+      const anotherHotelDisplayPayments = (hasAnotherHotel && !hasOwnHotel)
+        ? (payments || [])
+        : anotherHotelPayments;
+      const anotherHotelTotal = hasAnotherHotel && !hasOwnHotel
+        ? bookingTotal
+        : anotherHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
+      const anotherHotelReceived = anotherHotelDisplayPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
+      if (hasAnotherHotel || anotherHotelPayments.length > 0) {
         summaries.push({
           type: "Another Hotel",
           customerName: bookingData.customer_name || "N/A",
@@ -211,8 +223,9 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
           date: anotherHotelData[0]?.check_in_date || bookingData.check_in_date,
           totalDue: Math.max(0, anotherHotelTotal - anotherHotelReceived)
         });
-        groupedPayments["Another Hotel"] = mapPaymentsToRecords(anotherHotelPayments);
+        groupedPayments["Another Hotel"] = mapPaymentsToRecords(anotherHotelDisplayPayments);
       }
+
 
 
       // Process Vehicle payments
