@@ -81,7 +81,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
     <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:block" id="voucher-container">
       <div ref={voucherRef} className="max-w-3xl mx-auto p-8 bg-white text-black" id="voucher-content">
         {/* Header */}
-        <div className="text-center mb-6 border-b-2 border-gray-800 pb-4">
+        <div data-pdf-section className="text-center mb-6 border-b-2 border-gray-800 pb-4">
           {companySettings?.logo_url && (
             <img src={companySettings.logo_url} alt={companyName} className="h-16 mx-auto mb-2" />
           )}
@@ -91,20 +91,20 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </div>
 
         {/* Resort Address */}
-        <div className="text-center mb-4 text-sm">
+        <div data-pdf-section className="text-center mb-4 text-sm">
           <p className="font-semibold">Resort Address - {companyAddress}</p>
           <p>Contact number - {companyContact}</p>
         </div>
 
         {/* Greeting */}
-        <div className="mb-6 text-sm bg-gray-50 p-4 rounded border">
+        <div data-pdf-section className="mb-6 text-sm bg-gray-50 p-4 rounded border">
           <p className="font-semibold mb-2">Dear {booking.customer_name || "Sir/Ma'am"},</p>
           <p className="mb-2">Namaskar!!!</p>
           <p>Thank you for choosing {companyName}. We are pleased to confirm your reservation as per the details below:-</p>
         </div>
 
         {/* Booking Details Table */}
-        <div className="mb-6">
+        <div data-pdf-section className="mb-6">
           <table className="w-full border-collapse border border-gray-400 text-sm">
             <tbody>
               <tr className="bg-gray-100">
@@ -157,13 +157,13 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
         {/* Billing Instruction */}
         {booking.notes && (
-          <div className="mb-6 text-sm">
+          <div data-pdf-section className="mb-6 text-sm">
             <p><span className="font-semibold">Billing Instruction:</span> {booking.notes}</p>
           </div>
         )}
 
         {/* Inclusions */}
-        <div className="mb-6 text-sm">
+        <div data-pdf-section className="mb-6 text-sm">
           <h3 className="font-bold mb-2 underline">Inclusions:</h3>
           <ul className="list-disc ml-6 space-y-1">
             <li>Welcome drink (Non-alcoholic) on arrival</li>
@@ -179,7 +179,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
         {/* Bank Details */}
         {companySettings && (companySettings.bank_name || companySettings.account_no) && (
-          <div className="mb-6">
+          <div data-pdf-section className="mb-6">
             <h3 className="font-bold mb-2 text-sm underline">BANK DETAILS</h3>
             <table className="w-full border-collapse border border-gray-400 text-sm">
               <tbody>
@@ -214,24 +214,24 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         )}
 
         {/* Special Requests */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1">SPECIAL REQUESTS</h3>
           <p>Requests for anything not included above will be subject to availability and to be intimated at the time of check-in</p>
         </div>
 
         {/* Contact Info */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <p>Please share <span className="font-bold">Front Office Number: {companyContact}</span> with your guest and share his number to us too, for us to share the location and to coordinate.</p>
         </div>
 
         {/* Check-In/Check-Out Policy */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1">CHECK-IN/CHECK-OUT POLICY</h3>
           <p><span className="font-bold">Our check-in time is 1 pm and our check-out time is 10 am.</span> If you want to check-in early and check-out late, we will be happy to oblige, subject to availability and at a nominal additional charge.</p>
         </div>
 
         {/* Payment Policy */}
-        <div className="mb-4 text-sm">
+        <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1 underline">Payment Policy</h3>
           <ul className="list-disc ml-6 space-y-1">
             <li>Need 50% of the Total Amount at the time of Confirmation</li>
@@ -241,7 +241,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </div>
 
         {/* Cancellation Policy */}
-        <div className="mb-6 text-sm">
+        <div data-pdf-section className="mb-6 text-sm">
           <h3 className="font-bold mb-1 underline">Cancellation/Refund Policy:</h3>
           <ul className="list-disc ml-6 space-y-1">
             <li>100% of the total amount be refunded if Cancellation made before 21 days of check in</li>
@@ -253,7 +253,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </div>
 
         {/* Footer */}
-        <div className="text-sm border-t border-gray-300 pt-4">
+        <div data-pdf-section className="text-sm border-t border-gray-300 pt-4">
           <p className="font-semibold">Thanks & Regards,</p>
           <p>{companyName}</p>
           {companyAddress && <p className="text-gray-600">{companyAddress}</p>}
