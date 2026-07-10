@@ -199,21 +199,42 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         groupedPayments["Safari"] = mapPaymentsToRecords(safariPayments);
       }
 
-      // Process Hotel payments
-      const hotelPayments = (payments || []).filter(p => p.payment_type === "hotel" || p.payment_type === "another_hotel");
-      const hotelBookingTotal = hotelRes.data?.reduce((sum, h) => sum + (h.total_amount || 0), 0) || 0;
-      const hotelReceived = hotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      if (hotelRes.data?.length > 0 || hotelPayments.length > 0) {
+      // Process Hotel payments - split into own hotel vs another hotel
+      const ownHotelData = (hotelRes.data || []).filter((h: any) => h.own_hotels);
+      const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
+
+      // Own hotel section
+      const ownHotelPayments = (payments || []).filter(p => p.payment_type === "hotel");
+      const ownHotelTotal = ownHotelData.reduce((sum: number, h: any) => sum + (h.total_amount || 0), 0);
+      const ownHotelReceived = ownHotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (ownHotelData.length > 0 || ownHotelPayments.length > 0) {
+        summaries.push({
+          type: "Hotel",
+          customerName: bookingData.customer_name || "N/A",
+          totalPayment: ownHotelTotal,
+          totalReceived: ownHotelReceived,
+          date: ownHotelData[0]?.check_in_date || bookingData.check_in_date,
+          totalDue: Math.max(0, ownHotelTotal - ownHotelReceived)
+        });
+        groupedPayments["Hotel"] = mapPaymentsToRecords(ownHotelPayments);
+      }
+
+      // Another hotel section
+      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
+      const anotherHotelTotal = anotherHotelData.reduce((sum: number, h: any) => sum + (h.total_amount || 0), 0);
+      const anotherHotelReceived = anotherHotelPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (anotherHotelData.length > 0 || anotherHotelPayments.length > 0) {
         summaries.push({
           type: "Another Hotel",
           customerName: bookingData.customer_name || "N/A",
-          totalPayment: hotelBookingTotal,
-          totalReceived: hotelReceived,
-          date: hotelRes.data?.[0]?.check_in_date || bookingData.check_in_date,
-          totalDue: Math.max(0, hotelBookingTotal - hotelReceived)
+          totalPayment: anotherHotelTotal,
+          totalReceived: anotherHotelReceived,
+          date: anotherHotelData[0]?.check_in_date || bookingData.check_in_date,
+          totalDue: Math.max(0, anotherHotelTotal - anotherHotelReceived)
         });
-        groupedPayments["Another Hotel"] = mapPaymentsToRecords(hotelPayments);
+        groupedPayments["Another Hotel"] = mapPaymentsToRecords(anotherHotelPayments);
       }
+
 
       // Process Vehicle payments
       const vehiclePayments = (payments || []).filter(p => p.payment_type === "vehicle");
