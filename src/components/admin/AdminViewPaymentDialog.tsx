@@ -175,7 +175,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       // Process only extra/another hotel rows here. Own hotel is already included in Booking totals.
       const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
 
-      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel" || p.payment_type === "hotel");
+      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
       const anotherHotelTotal = anotherHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
       const anotherHotelReceived = anotherHotelPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (anotherHotelData.length > 0 || anotherHotelPayments.length > 0) {
