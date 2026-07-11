@@ -67,14 +67,5 @@ export default function CancelledBookings() {
     </AdminPageShell>
   );
 
-  if (!isAdminRoute) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header title="Cancelled Bookings" />
-        <main className="p-6">{content}</main>
-      </div>
-    );
-  }
-
   return content;
 }
