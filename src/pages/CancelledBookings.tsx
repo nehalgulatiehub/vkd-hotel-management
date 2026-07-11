@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
-import { Header } from "@/components/layout/Header";
+
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
@@ -66,15 +66,6 @@ export default function CancelledBookings() {
       </ThemedTable>
     </AdminPageShell>
   );
-
-  if (!isAdminRoute) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header title="Cancelled Bookings" />
-        <main className="p-6">{content}</main>
-      </div>
-    );
-  }
 
   return content;
 }
