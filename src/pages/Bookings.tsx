@@ -360,6 +360,7 @@ export default function Bookings() {
     const { data, error } = await supabase
       .from("bookings")
       .select("*, agents(name), guests(first_name, last_name)")
+      .neq("status", "cancelled")
       .order("created_at", { ascending: false });
     
     if (error) {
