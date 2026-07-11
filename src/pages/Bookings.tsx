@@ -1298,15 +1298,7 @@ export default function Bookings() {
   };
 
   const submitCancellation = async () => {
-    if (!cancellationPaymentMode) {
-      toast.error("Please select a payment mode");
-      return;
-    }
 
-    if (cancellationPaymentMode === "cheque" && !cancellationChequeNo) {
-      toast.error("Please provide cheque number");
-      return;
-    }
 
     try {
       const charges = parseFloat(cancellationCharge) || 0;
@@ -3183,7 +3175,6 @@ export default function Bookings() {
               <AlertDialogTitle className="text-base font-semibold">Cancel Booking</AlertDialogTitle>
             </AlertDialogHeader>
             <div className="bg-destructive/10 border border-destructive/30 rounded p-4">
-              <p className="text-xs text-right text-destructive mb-3">* - Required Fields</p>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Customer Name :</Label>
@@ -3192,7 +3183,6 @@ export default function Bookings() {
                     disabled
                     className="flex-1 bg-background"
                   />
-                  <span className="text-destructive">*</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Booking Price :</Label>
@@ -3201,7 +3191,6 @@ export default function Bookings() {
                     disabled
                     className="flex-1 bg-background"
                   />
-                  <span className="text-destructive">*</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Cancellation Charge :</Label>
@@ -3212,7 +3201,6 @@ export default function Bookings() {
                     className="flex-1"
                     placeholder="0"
                   />
-                  <span className="text-destructive">*</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Payment Mode :</Label>
@@ -3228,7 +3216,6 @@ export default function Bookings() {
                       <SelectItem value="cheque">Cheque</SelectItem>
                     </SelectContent>
                   </Select>
-                  <span className="text-destructive">*</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Cheque No :</Label>
@@ -3238,9 +3225,7 @@ export default function Bookings() {
                     className="flex-1"
                     disabled={cancellationPaymentMode !== "cheque"}
                   />
-                  <span className="text-destructive">*</span>
                 </div>
-                <p className="text-xs text-center text-muted-foreground">If Payment by cheque Then cheque No.</p>
               </div>
             </div>
             <AlertDialogFooter className="mt-4">
