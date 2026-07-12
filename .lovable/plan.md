@@ -1,72 +1,41 @@
 
+# Prep the project for GitHub showcase
 
-# Admin Panel Design Consistency Overhaul
+Two things to do: strip visible Lovable references and replace the default README with a polished one describing your Hotel Management System.
 
-## Problem
+## 1. Remove Lovable branding from the app
 
-The admin panel currently uses **3+ different design patterns** across its pages:
+- **`index.html`** — currently has Lovable defaults in `<title>`, meta description, `og:*`, `twitter:*`, favicon reference (`/favicon.ico` = Lovable icon), and the `gpteng.co` script tag. Replace with your app's real title (e.g. "Mukut Hotels — Hotel Management System"), description, and social tags. Remove the `gptengineer.js` script.
+- **Hide the "Edit with Lovable" badge** on the published site via `set_badge_visibility` (requires paid plan). This only affects the hosted `.lovable.app` URL, but doing it keeps things consistent.
+- **`package.json`** — rename `"name"` from the Lovable-generated slug to something like `mukut-hms`. Remove `lovable-tagger` dev dependency.
+- **`vite.config.ts`** — remove the `componentTagger()` plugin and its import (tied to `lovable-tagger`).
+- **Favicon** — replace `public/favicon.ico` reference; you already have `src/assets/mukut-logo.webp`, we can point the favicon link to a proper icon (or leave a placeholder note in README).
 
-1. **Pattern A** (Card-based): `AdminAgents`, `AdminCities`, `AdminTransporters`, `AdminOwnHotels` -- Uses shadcn Card components, `<Table>` components, modern Search input with icon, `h1` title as plain text
-2. **Pattern B** (Themed table): `AdminAnotherHotels`, `AdminManageHotels`, `ViewDueAmount`, Money Detail pages -- Uses raw `<table>` elements, `#1e6e99` blue header bar, `#D4A59A` table headers, `#F5E6E0` row backgrounds, `#8B1538` maroon search headers, compact filter dropdowns
-3. **Pattern C** (AdminPaymentPageLayout): Payment pages -- Uses `AdminHeader` component with gradient, 5-row filter section, themed styling
+Note: I will NOT touch the Supabase project URL or any functional code — only branding/meta.
 
-**Target**: Standardize ALL admin pages to use **Pattern B** (the themed table design) since it's the most complete and matches the established brand identity (blue headers, maroon search bars, peach rows).
+## 2. Replace `README.md`
 
-## What Changes
+New README will include:
+- Project title + one-line tagline (Hotel Management System for Mukut Hotels)
+- Feature list grouped by module: Bookings & Enquiries, Payments (Booking / Safari / Hotel / Vehicle / Volvo), Hotel & Room Management, Agents / Transporters / Cities, Restaurant POS, Billing & Invoices, Purchase & Inventory, Quotations, Admin & Account panels with RBAC
+- Tech stack: React 18 + Vite + TypeScript, Tailwind + shadcn/ui, Supabase (Postgres + Auth + Edge Functions + RLS), React Router, TanStack Query
+- Screenshots section (placeholder — you drop images later)
+- Getting started: clone, `npm i`, `.env` variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`), `npm run dev`
+- Project structure overview
+- Deployment notes (Vercel / any static host — `vercel.json` + `_redirects` already present)
+- License placeholder (MIT suggested)
 
-### Step 1: Create a reusable `AdminPageShell` component
-A wrapper component that provides:
-- Blue gradient page header (`#1e6e99`) with title + optional action buttons (Add, Export, Back)
-- Maroon search section header (`#8B1538`) with "Search" label
-- Filter area with consistent styling (peach background `#F5E6E0`, `text-xs` dropdowns)
-- Table wrapper with `#D4A59A` header rows and alternating `#F5E6E0` body rows
-- Integrated `TablePagination` at footer
+## Files touched
 
-### Step 2: Convert Card-based pages (~6 pages)
-Refactor these pages to use the themed table design:
-- `AdminAgents.tsx` -- Replace Card/Table with themed raw table, add maroon Search header
-- `AdminCities.tsx` -- Same conversion
-- `AdminTransporters.tsx` -- Same conversion
-- `AdminOwnHotels.tsx` -- Same conversion
-- `AdminUserList.tsx` -- Same conversion
-- `AdminQuotes.tsx` -- Check and convert if needed
+- `index.html` (edit)
+- `package.json` (edit)
+- `vite.config.ts` (edit)
+- `README.md` (rewrite)
+- Publish settings: hide badge (tool call)
 
-### Step 3: Normalize existing themed pages (~8 pages)
-Ensure consistent spacing, font sizes, filter layout across:
-- `AdminAnotherHotels.tsx` -- Already themed, minor alignment fixes
-- `AdminManageHotels.tsx` -- Already themed, minor alignment fixes
-- `ViewDueAmount.tsx`, `ViewHotelDue.tsx`, `ViewSafariDue.tsx`, `ViewVehicleDue.tsx`, `ViewDelhiManaliDue.tsx`, `ViewManaliDelhiDue.tsx` -- Ensure consistent filter row layout
-- Money Detail pages (`AdminSafariMoneyDetail`, `AdminAnotherHotelMoneyDetail`, etc.) -- Ensure same filter styling
-- Payment pages via `AdminPaymentPageLayout` -- Already consistent within themselves, just ensure header matches
+## Not touched
 
-### Step 4: Ensure `AdminHeader` is used consistently
-All pages should use the blue gradient `AdminHeader` component at the top, followed by the maroon search section where filters exist.
+- Any business logic, DB schema, migrations, or routes
+- `.lovable/` internal folder (harmless; can be gitignored if you prefer — say the word)
 
-## Consistent Design Spec
-
-```text
-+--------------------------------------------------+
-| [Blue Gradient Header #1e6e99]  Title    [Actions]|
-+--------------------------------------------------+
-| [Maroon #8B1538] Search                           |
-|--------------------------------------------------|
-| [#F5E6E0 bg] Filter row 1: Date, Search toggle  |
-| [#F5E6E0 bg] Filter row 2: Dropdowns, Search btn|
-+--------------------------------------------------+
-| [#D4A59A] S.no | Col1 | Col2 | ... | Actions    |
-|--------------------------------------------------|
-| [#F5E6E0] 1    | ...  | ...  | ... | Edit/Del   |
-| [white]   2    | ...  | ...  | ... | Edit/Del   |
-| [#F5E6E0] 3    | ...  | ...  | ... | Edit/Del   |
-+--------------------------------------------------+
-| [Pagination] Showing 1-10 of 50    < 1 2 3 4 > |
-+--------------------------------------------------+
-```
-
-## Files to Edit (~15-20 files)
-
-- **New**: `src/components/admin/AdminPageShell.tsx` (reusable wrapper)
-- **Major rewrites**: `AdminAgents.tsx`, `AdminCities.tsx`, `AdminTransporters.tsx`, `AdminOwnHotels.tsx`, `AdminUserList.tsx`
-- **Minor fixes**: `AdminAnotherHotels.tsx`, `AdminManageHotels.tsx`, `ViewDueAmount.tsx`, and other View/Due pages for spacing/font consistency
-- **Update**: `AdminHeader.tsx` if needed for action button slots
-
+Confirm and I'll apply it.
