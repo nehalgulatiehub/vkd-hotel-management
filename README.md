@@ -2,6 +2,7 @@
 
 A full-stack Hotel Management System built for a multi-property hospitality business. It handles the entire operational flow — enquiries, bookings, room inventory, payments across multiple verticals (own hotels, partner hotels, safaris, vehicles, Volvo transport), restaurant POS, billing, purchase & inventory, and role-based admin/account panels.
 
+Live Link - http://vkddelhi.com/
 > Production app powering day-to-day operations for Mukut Hotels.
 
 ---
