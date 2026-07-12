@@ -1,73 +1,149 @@
-# Welcome to your Lovable project
+# Mukut HMS — Hotel Management System
 
-## Project info
+A full-stack Hotel Management System built for a multi-property hospitality business. It handles the entire operational flow — enquiries, bookings, room inventory, payments across multiple verticals (own hotels, partner hotels, safaris, vehicles, Volvo transport), restaurant POS, billing, purchase & inventory, and role-based admin/account panels.
 
-**URL**: https://lovable.dev/projects/e257ac39-ece9-425b-9d78-65fb63dd6af8
+> Production app powering day-to-day operations for Mukut Hotels.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## ✨ Features
 
-**Use Lovable**
+### Bookings & Enquiries
+- Generate, view and export enquiries
+- Booking availability calendar
+- Hold bookings, confirmed bookings, cancellations with refund tracking
+- Auto-generated booking confirmation vouchers & receipts (PDF)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e257ac39-ece9-425b-9d78-65fb63dd6af8) and start prompting.
+### Payments (multi-vertical)
+- **Booking payments** — receive, due, room-wise
+- **Safari** — detail, due, payments
+- **Another Hotel** — booking detail, due, hotel payouts
+- **Vehicle** — detail, due, transporter payouts
+- **Volvo** — Delhi↔Manali round-trip tracking, due & payments
+- Approvals workflow (pending / approved) on the admin side
 
-Changes made via Lovable will be committed automatically to this repo.
+### Property & Partner Management
+- Own Hotels, Rooms and Room Types
+- Another (partner) Hotels — add, view, export
+- Cities, Agents, Transporters — CRUD + exports
 
-**Use your preferred IDE**
+### Restaurant (POS)
+- Tables, Food Menu, POS order entry
+- Order history, KOT/invoice, sales reports
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Billing, Invoices & Quotations
+- Create invoices from bookings
+- Saved invoices & reusable invoice templates
+- Full quotation module with templates
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Purchase & Inventory
+- Vendors, Item Master, Purchase Orders, Purchase Invoices
+- Goods receipt, inventory tracking, purchase reports & approvals
 
-Follow these steps:
+### Access Control
+- Three surfaces: **User panel**, **Account panel**, **Admin panel**
+- Role-based menu access, protected routes, per-menu permissions
+- Change-password flow for each role
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠️ Tech Stack
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Frontend:** React 18, Vite 5, TypeScript 5, React Router v6
+- **UI:** Tailwind CSS + shadcn/ui + Radix primitives, Lucide icons
+- **State/Data:** TanStack Query, React Hook Form + Zod
+- **Backend:** Supabase (PostgreSQL, Auth, Row-Level Security, Edge Functions)
+- **PDF/Export:** jsPDF, html2canvas, xlsx
+- **Charts:** Recharts
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- A Supabase project (free tier works)
+
+### Install
+```bash
+git clone <your-repo-url>
+cd mukut-hms
+npm install
 ```
 
-**Edit a file directly in GitHub**
+### Environment
+Create a `.env` file in the project root:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```env
+VITE_SUPABASE_URL=https://<your-project>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
+VITE_SUPABASE_PROJECT_ID=<your-project-id>
+```
 
-**Use GitHub Codespaces**
+Run the SQL migrations from `supabase/migrations/` against your Supabase project (via the Supabase CLI or SQL editor) so the schema, policies and grants are in place.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Develop
+```bash
+npm run dev
+```
+App runs at `http://localhost:8080`.
 
-## What technologies are used for this project?
+### Build
+```bash
+npm run build
+npm run preview
+```
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📁 Project Structure
 
-## How can I deploy this project?
+```
+src/
+├── components/       # Reusable UI + feature components
+│   ├── admin/        # Admin-panel dialogs & shells
+│   ├── booking/      # Booking dialogs, vouchers, receipts
+│   ├── layout/       # Sidebars, headers, layouts (user/admin/account)
+│   ├── payment/      # Payment dialogs
+│   └── ui/           # shadcn/ui primitives
+├── contexts/         # Auth context & providers
+├── hooks/            # Reusable hooks (auth, pagination, etc.)
+├── integrations/
+│   └── supabase/     # Supabase client + generated types
+├── pages/            # Route components
+│   ├── admin/        # Admin-only routes
+│   ├── account/      # Account-role routes
+│   ├── purchase/     # Purchase module
+│   └── restaurant/   # Restaurant / POS module
+└── utils/            # Helpers (payment sync, formatters)
+supabase/
+├── functions/        # Edge functions (e.g. create-user)
+└── migrations/       # SQL migrations
+```
 
-Simply open [Lovable](https://lovable.dev/projects/e257ac39-ece9-425b-9d78-65fb63dd6af8) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## 🌐 Deployment
 
-Yes, you can!
+The app is a standard Vite SPA and ships with:
+- `vercel.json` — SPA rewrites for Vercel
+- `public/_redirects` — SPA fallback for Netlify
+- `public/.htaccess` — SPA fallback for Apache
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Deploy to any static host (Vercel / Netlify / Cloudflare Pages / your own server) and point the `VITE_SUPABASE_*` env vars at your Supabase project. Edge functions in `supabase/functions/` deploy via the Supabase CLI:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```bash
+supabase functions deploy create-user
+```
+
+---
+
+## 📸 Screenshots
+
+_Add screenshots of the Dashboard, Booking flow, Payments and Admin panel here._
+
+---
+
+## 📄 License
+
+MIT — see `LICENSE` for details.
