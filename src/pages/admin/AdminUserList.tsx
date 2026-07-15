@@ -303,6 +303,46 @@ export default function AdminUserList() {
     }
   };
 
+  const handleOpenChangeEmail = (user: UserData) => {
+    setSelectedUser(user);
+    setNewEmailValue(user.email || "");
+    setActionUser(null);
+    setIsEmailDialogOpen(true);
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!selectedUser || !newEmailValue) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmailValue)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    setUpdatingEmail(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("No active session. Please sign in again.");
+
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: { action: "update-email", userId: selectedUser.id, newEmail: newEmailValue.trim() },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (error) throw new Error(error.message || "Failed to update email");
+      if (data?.error) throw new Error(data.error);
+      if (!data?.success) throw new Error("Failed to update email");
+
+      toast.success("Email updated successfully");
+      setIsEmailDialogOpen(false);
+      fetchUsers();
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Failed to update email");
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+
   if (authLoading || loading)
     return <div style={{ padding: 24, textAlign: "center", color: "#888", fontFamily: "Arial" }}>Loading...</div>;
   if (!canManage)
