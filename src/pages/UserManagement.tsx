@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Shield, Settings2, Pencil, Plus, Ban, CheckCircle, Eye, EyeOff, Search, KeyRound } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ADMIN_USER_MENU_ITEMS } from "@/components/admin/adminUserMenuItems";
+import { ACCOUNT_PANEL_MENU_ITEMS, ADMIN_USER_MENU_ITEMS } from "@/components/admin/adminUserMenuItems";
 
 
 interface UserWithPermissions {
@@ -24,6 +24,7 @@ interface UserWithPermissions {
   is_active: boolean;
   menuPermissions: string[];
   isAdmin: boolean;
+  isAccount: boolean;
   plain_password: string | null;
 }
 
@@ -97,6 +98,7 @@ export default function UserManagement() {
             .filter((m) => m.user_id === profile.id)
             .map((m) => m.menu_key),
           isAdmin: userRoles.includes('admin'),
+          isAccount: userRoles.includes('account'),
           plain_password: (profile as any).plain_password || null,
         };
       });
@@ -347,9 +349,14 @@ export default function UserManagement() {
     }
   };
 
+  const getAssignableMenuItems = (user: UserWithPermissions | null) =>
+    user?.isAccount ? ACCOUNT_PANEL_MENU_ITEMS : MENU_ITEMS;
+
+  const getAssignableMenuKeys = (user: UserWithPermissions | null) =>
+    getAssignableMenuItems(user).flatMap((cat) => cat.items.map((i) => i.key));
+
   const selectAllMenus = () => {
-    const allKeys = MENU_ITEMS.flatMap(cat => cat.items.map(i => i.key));
-    setSelectedMenuKeys(allKeys);
+    setSelectedMenuKeys(getAssignableMenuKeys(selectedUser));
   };
 
   const clearAllMenus = () => {
@@ -664,7 +671,7 @@ export default function UserManagement() {
 
             <ScrollArea className="h-[55vh] pr-4 border rounded-md p-3">
               <div className="space-y-4">
-                {MENU_ITEMS.map((category) => (
+                {getAssignableMenuItems(selectedUser).map((category) => (
                   <div key={category.category} className="border-b pb-3 last:border-0">
                     <div className="flex items-center space-x-2 mb-2">
                       <Checkbox
