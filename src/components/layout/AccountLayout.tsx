@@ -12,14 +12,18 @@ interface AccountLayoutProps {
 export function AccountLayout({ children }: AccountLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasMenuAccess, isAccount, isAdmin, loading, user } = useAuthContext();
+  const { isAccount, isAdmin, loading, menuPermissions, user } = useAuthContext();
 
   const adminUser = isAdmin();
   const accountUser = isAccount();
+  const hasAccountMenuAccess = (menuKey: string) => {
+    if (accountUser) return menuPermissions.includes(menuKey);
+    return adminUser;
+  };
   const currentMenuItem = getAccountMenuItemForPath(location.pathname);
-  const firstAccessibleRoute = getFirstAccessibleAccountRoute(hasMenuAccess);
+  const firstAccessibleRoute = getFirstAccessibleAccountRoute(hasAccountMenuAccess);
   const accountRouteAllowed =
-    adminUser || (currentMenuItem?.menuKey ? hasMenuAccess(currentMenuItem.menuKey) : false);
+    currentMenuItem?.menuKey ? hasAccountMenuAccess(currentMenuItem.menuKey) : false;
 
   useEffect(() => {
     if (!loading && !user) {
