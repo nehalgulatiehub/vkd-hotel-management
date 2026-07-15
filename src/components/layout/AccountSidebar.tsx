@@ -168,8 +168,13 @@ export const getFirstAccessibleAccountRoute = (hasAccess: (menuKey: string) => b
 
 export function AccountSidebar() {
   const navigate = useNavigate();
-  const { hasMenuAccess } = useAuthContext();
+  const { isAccount, isAdmin, menuPermissions } = useAuthContext();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["Home"]);
+
+  const hasAccountMenuAccess = (menuKey: string) => {
+    if (isAccount()) return menuPermissions.includes(menuKey);
+    return isAdmin();
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -189,7 +194,7 @@ export function AccountSidebar() {
   const visibleItems = accountMenuItems
     .map((item) => ({
       ...item,
-      submenu: item.submenu?.filter((s) => !s.menuKey || hasMenuAccess(s.menuKey)),
+      submenu: item.submenu?.filter((s) => !s.menuKey || hasAccountMenuAccess(s.menuKey)),
     }))
     .filter((item) => !item.submenu || item.submenu.length > 0);
 
