@@ -136,11 +136,9 @@ export default function CancelledBookings() {
                 <ThemedTD>Rs. {booking.paid_amount?.toLocaleString() || 0}/-</ThemedTD>
                 <ThemedTD>{booking.cancellations?.[0]?.cancellation_reason || "-"}</ThemedTD>
                 <ThemedTD>
-                  {booking.paid_amount > 0 && (
-                    <ThemedActionLink onClick={() => navigate(isAdminRoute ? `/admin/refund-payments?id=${booking.id}` : `/refunds?id=${booking.id}`)}>
-                      Process Refund
-                    </ThemedActionLink>
-                  )}
+                  <ThemedActionLink onClick={() => navigate(isAdminRoute ? `/admin/refund-payments?id=${booking.id}` : `/refunds?id=${booking.id}`)}>
+                    {booking.paid_amount > 0 ? "Process Refund" : "View"}
+                  </ThemedActionLink>
                 </ThemedTD>
               </ThemedTR>
             ))
