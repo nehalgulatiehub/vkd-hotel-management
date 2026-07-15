@@ -89,6 +89,7 @@ export default function PaymentApprovals() {
           approval_status,
           reference_number,
           created_by,
+          city:cities(name),
           booking:bookings(
             id,
             booking_number, 
