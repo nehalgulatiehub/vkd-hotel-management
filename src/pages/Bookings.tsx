@@ -131,6 +131,7 @@ export default function Bookings() {
   const [cancellationCharge, setCancellationCharge] = useState("");
   const [cancellationPaymentMode, setCancellationPaymentMode] = useState("");
   const [cancellationChequeNo, setCancellationChequeNo] = useState("");
+  const [cancellationBookingPrice, setCancellationBookingPrice] = useState("");
   const [printBookingId, setPrintBookingId] = useState<string | null>(null);
   const [voucherBookingId, setVoucherBookingId] = useState<string | null>(null);
   const [cities, setCities] = useState<any[]>([]);
