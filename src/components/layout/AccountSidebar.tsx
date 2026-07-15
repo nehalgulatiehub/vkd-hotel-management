@@ -33,8 +33,8 @@ const accountMenuItems: MenuItem[] = [
     title: "User Manager",
     color: "#4CAF50",
     submenu: [
-      { title: "Add User", url: "/admin/users/add" },
-      { title: "Manage User", url: "/admin/users" },
+      { title: "Add User", url: "/account/users/add" },
+      { title: "Manage User", url: "/account/users" },
     ]
   },
   {
