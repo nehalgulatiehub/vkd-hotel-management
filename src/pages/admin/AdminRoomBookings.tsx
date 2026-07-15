@@ -103,7 +103,8 @@ export default function AdminRoomBookings() {
     setLoading(true);
 
     try {
-      // Fetch hotel bookings within date range with booking and hotel details
+      // Fetch hotel bookings that OVERLAP the date range
+      // A booking overlaps [from, to] if check_in <= to AND check_out >= from
       let query = supabase
         .from("hotel_bookings")
         .select(`
@@ -117,8 +118,8 @@ export default function AdminRoomBookings() {
           own_hotels(id, name)
         `)
         .in("bookings.status", ["confirmed", "completed", "hold"])
-        .gte("check_in_date", format(fromDate, "yyyy-MM-dd"))
-        .lte("check_in_date", format(toDate, "yyyy-MM-dd"));
+        .lte("check_in_date", format(toDate, "yyyy-MM-dd"))
+        .gte("check_out_date", format(fromDate, "yyyy-MM-dd"));
 
       // Filter by selected hotel if specified
       if (selectedHotel) {
@@ -178,8 +179,14 @@ export default function AdminRoomBookings() {
         }
       });
 
+      // Generate every date in the requested range, always shown even with 0 bookings
+      const allDatesInRange = eachDayOfInterval({ start: fromDate, end: toDate })
+        .map(d => format(d, "yyyy-MM-dd"));
+
       // Group by DATE
       const dateMap: Record<string, Record<string, Record<string, number>>> = {};
+      allDatesInRange.forEach(d => { dateMap[d] = {}; });
+
       // Group by USER (across all dates)
       const userMap: Record<string, Record<string, Record<string, number>>> = {};
 
@@ -190,64 +197,73 @@ export default function AdminRoomBookings() {
         }
 
         const checkInDate = booking.check_in_date;
+        const checkOutDate = booking.check_out_date || booking.check_in_date;
         const createdBy = booking.bookings?.created_by;
         const userName = createdBy ? (profilesMap[createdBy] || "Unknown User") : "Unknown User";
         const hotelName = booking.own_hotels.name;
         const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
         const roomCount = booking.number_of_rooms || 1;
 
-        // Group by date -> hotel -> room
-        if (!dateMap[checkInDate]) {
-          dateMap[checkInDate] = {};
+        // Count this booking on every occupied night that falls inside the requested range
+        // Occupied nights = [check_in, check_out) — checkout day is not counted
+        try {
+          const ci = parse(checkInDate, "yyyy-MM-dd", new Date());
+          const co = parse(checkOutDate, "yyyy-MM-dd", new Date());
+          const lastNight = new Date(co);
+          lastNight.setDate(lastNight.getDate() - 1);
+          if (lastNight < ci) lastNight.setTime(ci.getTime());
+
+          const nights = eachDayOfInterval({ start: ci, end: lastNight }).map(d => format(d, "yyyy-MM-dd"));
+          nights.forEach(dStr => {
+            if (!dateMap[dStr]) return; // outside requested range
+            if (!dateMap[dStr][hotelName]) dateMap[dStr][hotelName] = {};
+            dateMap[dStr][hotelName][roomName] =
+              (dateMap[dStr][hotelName][roomName] || 0) + roomCount;
+          });
+        } catch {
+          // fallback: single day
+          if (dateMap[checkInDate]) {
+            if (!dateMap[checkInDate][hotelName]) dateMap[checkInDate][hotelName] = {};
+            dateMap[checkInDate][hotelName][roomName] =
+              (dateMap[checkInDate][hotelName][roomName] || 0) + roomCount;
+          }
         }
-        if (!dateMap[checkInDate][hotelName]) {
-          dateMap[checkInDate][hotelName] = {};
-        }
-        dateMap[checkInDate][hotelName][roomName] = 
-          (dateMap[checkInDate][hotelName][roomName] || 0) + roomCount;
 
         // Group by user -> hotel -> room (aggregate across all dates)
-        if (!userMap[userName]) {
-          userMap[userName] = {};
-        }
-        if (!userMap[userName][hotelName]) {
-          userMap[userName][hotelName] = {};
-        }
-        userMap[userName][hotelName][roomName] = 
+        if (!userMap[userName]) userMap[userName] = {};
+        if (!userMap[userName][hotelName]) userMap[userName][hotelName] = {};
+        userMap[userName][hotelName][roomName] =
           (userMap[userName][hotelName][roomName] || 0) + roomCount;
       });
 
-      // Convert DATE map to array with all room types shown
+      // Convert DATE map to array with all room types shown (always include every date)
       const relevantHotels = selectedHotel 
         ? hotels.filter(h => h.id === selectedHotel)
         : hotels;
 
-      const dateResults: DateBooking[] = Object.entries(dateMap)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([dateStr, hotelData]) => {
-          const hotelsArray: HotelBookingData[] = relevantHotels.map(hotel => {
-            const hotelBookings = hotelData[hotel.name] || {};
-            const allRoomTypes = hotelRoomsMap[hotel.name] || [];
-            
-            const roomsWithCounts = allRoomTypes.map(roomName => ({
-              roomName,
-              count: hotelBookings[roomName] || 0
-            }));
+      const dateResults: DateBooking[] = allDatesInRange.map(dateStr => {
+        const hotelData = dateMap[dateStr] || {};
+        const hotelsArray: HotelBookingData[] = relevantHotels.map(hotel => {
+          const hotelBookings = hotelData[hotel.name] || {};
+          const allRoomTypes = hotelRoomsMap[hotel.name] || [];
 
-            const totalRooms = roomsWithCounts.reduce((sum, r) => sum + r.count, 0);
+          const roomsWithCounts = allRoomTypes.map(roomName => ({
+            roomName,
+            count: hotelBookings[roomName] || 0
+          }));
 
-            return {
-              hotelName: hotel.name,
-              rooms: roomsWithCounts,
-              totalRooms
-            };
-          }).filter(h => h.rooms.length > 0);
+          const totalRooms = roomsWithCounts.reduce((sum, r) => sum + r.count, 0);
 
           return {
-            date: dateStr,
-            hotels: hotelsArray
+            hotelName: hotel.name,
+            rooms: roomsWithCounts,
+            totalRooms
           };
-        });
+        }).filter(h => h.rooms.length > 0);
+
+        return { date: dateStr, hotels: hotelsArray };
+      });
+
 
       // Convert USER map to array with all room types shown
       const userResults: UserBooking[] = Object.entries(userMap)
