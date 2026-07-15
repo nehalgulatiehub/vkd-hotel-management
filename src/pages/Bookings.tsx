@@ -131,6 +131,7 @@ export default function Bookings() {
   const [cancellationCharge, setCancellationCharge] = useState("");
   const [cancellationPaymentMode, setCancellationPaymentMode] = useState("");
   const [cancellationChequeNo, setCancellationChequeNo] = useState("");
+  const [cancellationBookingPrice, setCancellationBookingPrice] = useState("");
   const [printBookingId, setPrintBookingId] = useState<string | null>(null);
   const [voucherBookingId, setVoucherBookingId] = useState<string | null>(null);
   const [cities, setCities] = useState<any[]>([]);
@@ -1254,6 +1255,7 @@ export default function Bookings() {
     setCancellationCharge("0");
     setCancellationPaymentMode("");
     setCancellationChequeNo("");
+    setCancellationBookingPrice(String(booking?.total_amount ?? 0));
     setShowCancelDialog(true);
   };
 
@@ -1303,7 +1305,8 @@ export default function Bookings() {
 
     try {
       const charges = parseFloat(cancellationCharge) || 0;
-      const bookingTotal = selectedBooking?.total_amount || 0;
+      const editedPrice = parseFloat(cancellationBookingPrice);
+      const bookingTotal = isNaN(editedPrice) ? (selectedBooking?.total_amount || 0) : editedPrice;
       const refundAmount = Math.max(0, (selectedBooking?.paid_amount || 0) - charges);
 
       // Create cancellation record
@@ -1318,11 +1321,12 @@ export default function Bookings() {
 
       if (cancellationError) throw cancellationError;
 
-      // Update booking status
+      // Update booking status and (possibly edited) total amount
       const { error: updateError } = await supabase
         .from("bookings")
         .update({
-          status: "cancelled"
+          status: "cancelled",
+          total_amount: bookingTotal,
         })
         .eq("id", selectedBooking.id);
 
@@ -3188,8 +3192,9 @@ export default function Bookings() {
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Booking Price :</Label>
                   <Input 
-                    value={selectedBooking?.total_amount || 0}
-                    disabled
+                    type="number"
+                    value={cancellationBookingPrice}
+                    onChange={(e) => setCancellationBookingPrice(e.target.value)}
                     className="flex-1 bg-background"
                   />
                 </div>
