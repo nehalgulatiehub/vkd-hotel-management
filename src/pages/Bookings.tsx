@@ -3190,8 +3190,9 @@ export default function Bookings() {
                 <div className="flex items-center gap-2">
                   <Label className="w-36 text-right text-xs">Booking Price :</Label>
                   <Input 
-                    value={selectedBooking?.total_amount || 0}
-                    disabled
+                    type="number"
+                    value={cancellationBookingPrice}
+                    onChange={(e) => setCancellationBookingPrice(e.target.value)}
                     className="flex-1 bg-background"
                   />
                 </div>
