@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, eachDayOfInterval } from "date-fns";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 interface Hotel {
