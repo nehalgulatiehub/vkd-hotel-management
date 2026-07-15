@@ -1255,6 +1255,7 @@ export default function Bookings() {
     setCancellationCharge("0");
     setCancellationPaymentMode("");
     setCancellationChequeNo("");
+    setCancellationBookingPrice(String(booking?.total_amount ?? 0));
     setShowCancelDialog(true);
   };
 
