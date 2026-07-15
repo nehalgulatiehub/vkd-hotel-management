@@ -178,6 +178,9 @@ export default function UserManagement() {
   const handleSaveMenuPermissions = async () => {
     if (!selectedUser) return;
 
+    const allowedKeys = new Set(getAssignableMenuKeys(selectedUser));
+    const keysToSave = selectedMenuKeys.filter((key) => allowedKeys.has(key));
+
     try {
       // Delete existing menu permissions
       await supabase
@@ -186,9 +189,9 @@ export default function UserManagement() {
         .eq("user_id", selectedUser.id);
 
       // Insert new permissions
-      if (selectedMenuKeys.length > 0) {
+      if (keysToSave.length > 0) {
         const { error } = await supabase.from("user_menu_permissions").insert(
-          selectedMenuKeys.map((menu_key) => ({
+          keysToSave.map((menu_key) => ({
             user_id: selectedUser.id,
             menu_key,
           }))
@@ -254,7 +257,8 @@ export default function UserManagement() {
 
   const openMenuDialog = (user: UserWithPermissions) => {
     setSelectedUser(user);
-    setSelectedMenuKeys(user.menuPermissions);
+    const allowedKeys = new Set(getAssignableMenuKeys(user));
+    setSelectedMenuKeys(user.menuPermissions.filter((key) => allowedKeys.has(key)));
     setIsMenuDialogOpen(true);
   };
 
@@ -354,6 +358,11 @@ export default function UserManagement() {
 
   const getAssignableMenuKeys = (user: UserWithPermissions | null) =>
     getAssignableMenuItems(user).flatMap((cat) => cat.items.map((i) => i.key));
+
+  const getAssignedModuleCount = (user: UserWithPermissions) => {
+    const allowedKeys = new Set(getAssignableMenuKeys(user));
+    return user.menuPermissions.filter((key) => allowedKeys.has(key)).length;
+  };
 
   const selectAllMenus = () => {
     setSelectedMenuKeys(getAssignableMenuKeys(selectedUser));
@@ -478,11 +487,11 @@ export default function UserManagement() {
                           <TableCell>
                             {user.isAdmin ? (
                               <Badge className="bg-blue-600">Full Access (Admin)</Badge>
-                            ) : user.menuPermissions.length === 0 ? (
+                            ) : getAssignedModuleCount(user) === 0 ? (
                               <span className="text-muted-foreground text-sm">No access</span>
                             ) : (
                               <Badge variant="secondary">
-                                {user.menuPermissions.length} modules
+                                {getAssignedModuleCount(user)} modules
                               </Badge>
                             )}
                           </TableCell>

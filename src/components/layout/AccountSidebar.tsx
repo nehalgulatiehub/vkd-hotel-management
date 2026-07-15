@@ -155,6 +155,16 @@ export const accountMenuItems: MenuItem[] = [
   },
 ];
 
+export const getFirstAccessibleAccountRoute = (hasAccess: (menuKey: string) => boolean) => {
+  for (const group of accountMenuItems) {
+    for (const item of group.submenu || []) {
+      if (!item.menuKey || hasAccess(item.menuKey)) return item.url;
+    }
+  }
+
+  return null;
+};
+
 
 export function AccountSidebar() {
   const navigate = useNavigate();
