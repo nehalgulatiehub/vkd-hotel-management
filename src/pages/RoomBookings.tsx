@@ -90,7 +90,7 @@ export default function RoomBookings() {
     setLoading(true);
 
     try {
-      // Fetch hotel bookings within date range with booking and hotel details
+      // Fetch hotel bookings that OVERLAP the range: check_in <= to AND check_out >= from
       let query = supabase
         .from("hotel_bookings")
         .select(`
@@ -104,8 +104,8 @@ export default function RoomBookings() {
           own_hotels(id, name)
         `)
         .in("bookings.status", ["confirmed", "completed", "hold"])
-        .gte("check_in_date", format(fromDate, "yyyy-MM-dd"))
-        .lte("check_in_date", format(toDate, "yyyy-MM-dd"));
+        .lte("check_in_date", format(toDate, "yyyy-MM-dd"))
+        .gte("check_out_date", format(fromDate, "yyyy-MM-dd"));
 
       // Filter by selected hotel if specified
       if (selectedHotel) {
@@ -124,15 +124,11 @@ export default function RoomBookings() {
 
       // Get all dates in the range
       const allDates = eachDayOfInterval({ start: fromDate, end: toDate });
+      const allDateStrs = allDates.map(d => format(d, "yyyy-MM-dd"));
 
       // Group bookings by date -> hotel -> room
       const dateMap: Record<string, Record<string, Record<string, number>>> = {};
-
-      // Initialize all dates
-      allDates.forEach(date => {
-        const dateStr = format(date, "yyyy-MM-dd");
-        dateMap[dateStr] = {};
-      });
+      allDateStrs.forEach(d => { dateMap[d] = {}; });
 
       (bookingsData || []).forEach((booking: any) => {
         // Skip bookings without own_hotel_id (only show own hotels)
@@ -141,23 +137,33 @@ export default function RoomBookings() {
         }
 
         const checkInDate = booking.check_in_date;
+        const checkOutDate = booking.check_out_date || booking.check_in_date;
         const hotelName = booking.own_hotels.name;
         const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
         const roomCount = booking.number_of_rooms || 1;
 
-        // Initialize date if not exists
-        if (!dateMap[checkInDate]) {
-          dateMap[checkInDate] = {};
-        }
+        // Occupied nights = [check_in, check_out)
+        try {
+          const ci = parse(checkInDate, "yyyy-MM-dd", new Date());
+          const co = parse(checkOutDate, "yyyy-MM-dd", new Date());
+          const lastNight = new Date(co);
+          lastNight.setDate(lastNight.getDate() - 1);
+          if (lastNight < ci) lastNight.setTime(ci.getTime());
 
-        // Initialize hotel if not exists
-        if (!dateMap[checkInDate][hotelName]) {
-          dateMap[checkInDate][hotelName] = {};
+          const nights = eachDayOfInterval({ start: ci, end: lastNight }).map(d => format(d, "yyyy-MM-dd"));
+          nights.forEach(dStr => {
+            if (!dateMap[dStr]) return;
+            if (!dateMap[dStr][hotelName]) dateMap[dStr][hotelName] = {};
+            dateMap[dStr][hotelName][roomName] =
+              (dateMap[dStr][hotelName][roomName] || 0) + roomCount;
+          });
+        } catch {
+          if (dateMap[checkInDate]) {
+            if (!dateMap[checkInDate][hotelName]) dateMap[checkInDate][hotelName] = {};
+            dateMap[checkInDate][hotelName][roomName] =
+              (dateMap[checkInDate][hotelName][roomName] || 0) + roomCount;
+          }
         }
-
-        // Add room count
-        dateMap[checkInDate][hotelName][roomName] = 
-          (dateMap[checkInDate][hotelName][roomName] || 0) + roomCount;
       });
 
       // Get all rooms for each hotel to show all room types (even with 0 count)
@@ -175,10 +181,9 @@ export default function RoomBookings() {
         }
       });
 
-      // Convert to array format
-      const results: DateBooking[] = Object.entries(dateMap)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([dateStr, hotelData]) => {
+      // Always render every date in the range (even with 0 bookings)
+      const results: DateBooking[] = allDateStrs.map(dateStr => {
+          const hotelData = dateMap[dateStr] || {};
           // Get all hotels that should be displayed (either selected or all)
           const relevantHotels = selectedHotel 
             ? hotels.filter(h => h.id === selectedHotel)
@@ -207,6 +212,7 @@ export default function RoomBookings() {
             hotels: hotelsArray
           };
         });
+
 
       setDateBookings(results);
     } catch (error) {
