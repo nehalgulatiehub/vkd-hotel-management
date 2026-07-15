@@ -121,10 +121,14 @@ export function useAuth() {
   );
 
   const canApprovePayment = useCallback(
-    (paymentMode: string) => {
+    (paymentMode: string, cityName?: string | null) => {
       if (authState.roles.includes("admin")) return true;
-      // Account users can approve all payment modes; city-based cash restriction is handled in the UI
-      if (authState.roles.includes("account")) return true;
+      if (authState.roles.includes("account")) {
+        // Account can approve all payments except cash where the city is Delhi
+        const isCash = (paymentMode || "").toLowerCase() === "cash";
+        const isDelhi = (cityName || "").toLowerCase() === "delhi";
+        return !(isCash && isDelhi);
+      }
       return false;
     },
     [authState.roles]
