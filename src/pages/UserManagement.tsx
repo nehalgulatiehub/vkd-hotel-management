@@ -96,7 +96,7 @@ export default function UserManagement() {
           menuPermissions: (menuData || [])
             .filter((m) => m.user_id === profile.id)
             .map((m) => m.menu_key),
-          isAdmin: userRoles.includes('admin') || userRoles.includes('account'),
+          isAdmin: userRoles.includes('admin'),
           plain_password: (profile as any).plain_password || null,
         };
       });
