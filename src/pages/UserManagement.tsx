@@ -183,10 +183,12 @@ export default function UserManagement() {
 
     try {
       // Delete existing menu permissions
-      await supabase
+      const { error: deleteError } = await supabase
         .from("user_menu_permissions")
         .delete()
         .eq("user_id", selectedUser.id);
+
+      if (deleteError) throw deleteError;
 
       // Insert new permissions
       if (keysToSave.length > 0) {
