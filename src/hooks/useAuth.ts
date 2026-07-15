@@ -111,14 +111,19 @@ export function useAuth() {
 
   const hasMenuAccess = useCallback(
     (menuKey: string) => {
-      // Admin and Account have access to all menus
-      if (authState.roles.includes("admin") || authState.roles.includes("account")) {
-        return true;
+      // Admin has access to all menus
+      if (authState.roles.includes("admin")) return true;
+      // Account users: if no permissions assigned yet, grant all (backward compat).
+      // Once admin assigns any permission, filter strictly.
+      if (authState.roles.includes("account")) {
+        if (authState.menuPermissions.length === 0) return true;
+        return authState.menuPermissions.includes(menuKey);
       }
       return authState.menuPermissions.includes(menuKey);
     },
     [authState.roles, authState.menuPermissions]
   );
+
 
   const canApprovePayment = useCallback(
     (paymentMode: string, cityName?: string | null) => {
