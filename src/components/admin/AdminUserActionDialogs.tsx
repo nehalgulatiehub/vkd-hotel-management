@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ADMIN_USER_MENU_ITEMS } from "@/components/admin/adminUserMenuItems";
+import { ADMIN_USER_MENU_ITEMS, AdminUserMenuGroup } from "@/components/admin/adminUserMenuItems";
 
 interface UsernameDialogProps {
   open: boolean;
@@ -24,6 +24,7 @@ interface MenuAccessDialogProps {
   onClearAll: () => void;
   onSave: () => void;
   loading: boolean;
+  menuGroups?: AdminUserMenuGroup[];
 }
 
 interface PasswordDialogProps {
@@ -92,7 +93,7 @@ export function AdminUserActionDialogs({
               <div className="text-sm text-muted-foreground">Loading module access...</div>
             ) : (
               <div className="space-y-5">
-                {ADMIN_USER_MENU_ITEMS.map((group) => (
+                {(menuAccessDialog.menuGroups || ADMIN_USER_MENU_ITEMS).map((group) => (
                   <div key={group.category} className="space-y-2">
                     <h3 className="text-sm font-semibold">{group.category}</h3>
                     <div className="grid gap-2 sm:grid-cols-2">

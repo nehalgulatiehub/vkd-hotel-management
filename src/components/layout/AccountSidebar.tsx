@@ -20,23 +20,23 @@ interface MenuItem {
   submenu?: SubMenuItem[];
 }
 
-const accountMenuItems: MenuItem[] = [
-  { title: "Home", color: "#00C853", submenu: [{ title: "Account Home", url: "/account" }] },
+export const accountMenuItems: MenuItem[] = [
+  { title: "Home", color: "#00C853", submenu: [{ title: "Account Home", url: "/account", menuKey: "acc_home" }] },
   {
     title: "Account User Module",
     color: "#FFEB3B",
     textColor: "#000",
     submenu: [
-      { title: "Account Email", url: "/account/email" },
-      { title: "Change Password", url: "/account/change-password" },
+      { title: "Account Email", url: "/account/email", menuKey: "acc_email" },
+      { title: "Change Password", url: "/account/change-password", menuKey: "acc_change_password" },
     ]
   },
   {
     title: "User Manager",
     color: "#4CAF50",
     submenu: [
-      { title: "Add User", url: "/account/users/add" },
-      { title: "Manage User", url: "/account/users" },
+      { title: "Add User", url: "/account/users/add", menuKey: "acc_user_add" },
+      { title: "Manage User", url: "/account/users", menuKey: "acc_user_manage" },
     ]
   },
   {
@@ -155,6 +155,16 @@ const accountMenuItems: MenuItem[] = [
   },
 ];
 
+export const getFirstAccessibleAccountRoute = (hasAccess: (menuKey: string) => boolean) => {
+  for (const group of accountMenuItems) {
+    for (const item of group.submenu || []) {
+      if (!item.menuKey || hasAccess(item.menuKey)) return item.url;
+    }
+  }
+
+  return null;
+};
+
 
 export function AccountSidebar() {
   const navigate = useNavigate();
@@ -246,3 +256,10 @@ export function AccountSidebar() {
     </div>
   );
 }
+
+export const getAccountMenuItemForPath = (pathname: string) => {
+  const items = accountMenuItems.flatMap((group) => group.submenu || []);
+  return items
+    .sort((a, b) => b.url.length - a.url.length)
+    .find((item) => item.url === "/account" ? pathname === item.url : pathname === item.url || pathname.startsWith(`${item.url}/`));
+};

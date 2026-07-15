@@ -8,6 +8,124 @@ export interface AdminUserMenuGroup {
   items: AdminUserMenuItem[];
 }
 
+export const ACCOUNT_PANEL_MENU_ITEMS: AdminUserMenuGroup[] = [
+  {
+    category: "Account Panel - Home",
+    items: [{ key: "acc_home", label: "Account Home" }],
+  },
+  {
+    category: "Account Panel - Account User Module",
+    items: [
+      { key: "acc_email", label: "Account Email" },
+      { key: "acc_change_password", label: "Change Password" },
+    ],
+  },
+  {
+    category: "Account Panel - User Manager",
+    items: [
+      { key: "acc_user_add", label: "Add User" },
+      { key: "acc_user_manage", label: "Manage User" },
+    ],
+  },
+  {
+    category: "Account Panel - Booking Manager",
+    items: [
+      { key: "acc_booking_view", label: "View Booking" },
+      { key: "acc_room_booking_view", label: "View Room Booking" },
+      { key: "acc_pending_payment", label: "View Pending Payment" },
+      { key: "acc_approved_payment", label: "View Approved Payment" },
+      { key: "acc_due_amount", label: "Due Amount" },
+    ],
+  },
+  {
+    category: "Account Panel - Safari Manager",
+    items: [
+      { key: "acc_safari_details", label: "View Safari Detail" },
+      { key: "acc_safari_pending", label: "View Pending Payment" },
+      { key: "acc_safari_approved", label: "View Approved Payment" },
+      { key: "acc_safari_due", label: "Due Amount" },
+    ],
+  },
+  {
+    category: "Account Panel - Safari Payment Manager",
+    items: [
+      { key: "acc_safari_money", label: "View Safari Money Detail" },
+      { key: "acc_safari_payment_add", label: "Add Safari Payment" },
+      { key: "acc_safari_payment_view", label: "View Safari Payment" },
+    ],
+  },
+  {
+    category: "Account Panel - D-M Volvo Manager",
+    items: [
+      { key: "acc_dm_volvo_details", label: "View D - M Volvo Detail" },
+      { key: "acc_dm_volvo_pending", label: "View Pending Payment" },
+      { key: "acc_dm_volvo_approved", label: "View Approved Payment" },
+      { key: "acc_dm_volvo_due", label: "Due Amount" },
+    ],
+  },
+  {
+    category: "Account Panel - M-D Volvo Manager",
+    items: [
+      { key: "acc_md_volvo_details", label: "View M - D Volvo Detail" },
+      { key: "acc_md_volvo_pending", label: "View Pending Payment" },
+      { key: "acc_md_volvo_approved", label: "View Approved Payment" },
+      { key: "acc_md_volvo_due", label: "Due Amount" },
+    ],
+  },
+  {
+    category: "Account Panel - Transport Payment Manager",
+    items: [
+      { key: "acc_dm_transporter_money", label: "View D - M Transporter Money Detail" },
+      { key: "acc_md_transporter_money", label: "View M - D Transporter Money Detail" },
+      { key: "acc_transporter_payment_add", label: "Add Transporter Payment" },
+      { key: "acc_transporter_payment_view", label: "View Transporter Payment" },
+    ],
+  },
+  {
+    category: "Account Panel - Another Hotel Manager",
+    items: [
+      { key: "acc_another_hotel_details", label: "View Another Hotel Detail" },
+      { key: "acc_another_hotel_pending", label: "View Pending Payment" },
+      { key: "acc_another_hotel_approved", label: "View Approved Payment" },
+      { key: "acc_another_hotel_due", label: "Due Amount" },
+    ],
+  },
+  {
+    category: "Account Panel - Another Hotel Payment Manager",
+    items: [
+      { key: "acc_another_hotel_money", label: "View Another Hotel Money Detail" },
+      { key: "acc_another_hotel_payment_add", label: "Add Another Hotel Payment" },
+      { key: "acc_another_hotel_payment_view", label: "View Another Hotel Payment" },
+    ],
+  },
+  {
+    category: "Account Panel - Additional Vehicle Manager",
+    items: [
+      { key: "acc_vehicle_details", label: "View Additional Vehicle Detail" },
+      { key: "acc_vehicle_pending", label: "View Pending Payment" },
+      { key: "acc_vehicle_approved", label: "View Approved Payment" },
+      { key: "acc_vehicle_due", label: "Due Amount" },
+    ],
+  },
+  {
+    category: "Account Panel - Vehicle Transport Payment Manager",
+    items: [
+      { key: "acc_vehicle_transporter_money", label: "View Another Vehicle Transporter Money Detail" },
+      { key: "acc_vehicle_transporter_payment_add", label: "Add Another Vehicle Transporter Payment" },
+      { key: "acc_vehicle_transporter_payment_view", label: "View Another Vehicle Transporter Payment" },
+      { key: "acc_group_expenses", label: "View Group Expense" },
+    ],
+  },
+  {
+    category: "Account Panel - Refund Payment Manager",
+    items: [
+      { key: "acc_book_return_payments", label: "View Book Return Payment" },
+      { key: "acc_paid_payments", label: "View Paid Payment" },
+      { key: "acc_receive_payments", label: "View Receive Payment" },
+    ],
+  },
+];
+
 export const ADMIN_USER_MENU_ITEMS: AdminUserMenuGroup[] = [
   { category: "Dashboard", items: [{ key: "dashboard", label: "Dashboard" }] },
   {
@@ -175,51 +293,5 @@ export const ADMIN_USER_MENU_ITEMS: AdminUserMenuGroup[] = [
       { key: "purchase_reports", label: "Reports" },
     ],
   },
-  {
-    category: "Account Panel (for Account role users)",
-    items: [
-      { key: "acc_booking_view", label: "Booking Manager - View Booking" },
-      { key: "acc_room_booking_view", label: "Booking Manager - View Room Booking" },
-      { key: "acc_pending_payment", label: "Booking Manager - View Pending Payment" },
-      { key: "acc_approved_payment", label: "Booking Manager - View Approved Payment" },
-      { key: "acc_due_amount", label: "Booking Manager - Due Amount" },
-      { key: "acc_safari_details", label: "Safari - View Safari Detail" },
-      { key: "acc_safari_pending", label: "Safari - View Pending Payment" },
-      { key: "acc_safari_approved", label: "Safari - View Approved Payment" },
-      { key: "acc_safari_due", label: "Safari - Due Amount" },
-      { key: "acc_safari_money", label: "Safari Payment - Money Detail" },
-      { key: "acc_safari_payment_add", label: "Safari Payment - Add Payment" },
-      { key: "acc_safari_payment_view", label: "Safari Payment - View Payment" },
-      { key: "acc_dm_volvo_details", label: "D-M Volvo - View Detail" },
-      { key: "acc_dm_volvo_pending", label: "D-M Volvo - Pending Payment" },
-      { key: "acc_dm_volvo_approved", label: "D-M Volvo - Approved Payment" },
-      { key: "acc_dm_volvo_due", label: "D-M Volvo - Due Amount" },
-      { key: "acc_md_volvo_details", label: "M-D Volvo - View Detail" },
-      { key: "acc_md_volvo_pending", label: "M-D Volvo - Pending Payment" },
-      { key: "acc_md_volvo_approved", label: "M-D Volvo - Approved Payment" },
-      { key: "acc_md_volvo_due", label: "M-D Volvo - Due Amount" },
-      { key: "acc_dm_transporter_money", label: "Transport Payment - D-M Money Detail" },
-      { key: "acc_md_transporter_money", label: "Transport Payment - M-D Money Detail" },
-      { key: "acc_transporter_payment_add", label: "Transport Payment - Add Payment" },
-      { key: "acc_transporter_payment_view", label: "Transport Payment - View Payment" },
-      { key: "acc_another_hotel_details", label: "Another Hotel - View Detail" },
-      { key: "acc_another_hotel_pending", label: "Another Hotel - Pending Payment" },
-      { key: "acc_another_hotel_approved", label: "Another Hotel - Approved Payment" },
-      { key: "acc_another_hotel_due", label: "Another Hotel - Due Amount" },
-      { key: "acc_another_hotel_money", label: "Another Hotel Payment - Money Detail" },
-      { key: "acc_another_hotel_payment_add", label: "Another Hotel Payment - Add Payment" },
-      { key: "acc_another_hotel_payment_view", label: "Another Hotel Payment - View Payment" },
-      { key: "acc_vehicle_details", label: "Additional Vehicle - View Detail" },
-      { key: "acc_vehicle_pending", label: "Additional Vehicle - Pending Payment" },
-      { key: "acc_vehicle_approved", label: "Additional Vehicle - Approved Payment" },
-      { key: "acc_vehicle_due", label: "Additional Vehicle - Due Amount" },
-      { key: "acc_vehicle_transporter_money", label: "Vehicle Transport - Money Detail" },
-      { key: "acc_vehicle_transporter_payment_add", label: "Vehicle Transport - Add Payment" },
-      { key: "acc_vehicle_transporter_payment_view", label: "Vehicle Transport - View Payment" },
-      { key: "acc_group_expenses", label: "Vehicle Transport - View Group Expense" },
-      { key: "acc_book_return_payments", label: "Refund - Book Return Payment" },
-      { key: "acc_paid_payments", label: "Refund - Paid Payment" },
-      { key: "acc_receive_payments", label: "Refund - Receive Payment" },
-    ],
-  },
+  ...ACCOUNT_PANEL_MENU_ITEMS,
 ];

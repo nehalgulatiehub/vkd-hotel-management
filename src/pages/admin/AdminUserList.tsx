@@ -4,7 +4,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminUserActionDialogs } from "@/components/admin/AdminUserActionDialogs";
-import { ADMIN_USER_MENU_ITEMS } from "@/components/admin/adminUserMenuItems";
+import { ACCOUNT_PANEL_MENU_ITEMS, ADMIN_USER_MENU_ITEMS } from "@/components/admin/adminUserMenuItems";
 
 interface UserData {
   id: string;
@@ -15,6 +15,8 @@ interface UserData {
   plain_password: string | null;
   is_active: boolean;
   email: string | null;
+  roles: string[];
+  isAccount: boolean;
 }
 
 export default function AdminUserList() {
@@ -39,7 +41,6 @@ export default function AdminUserList() {
 
 
   const canManage = isAdmin() || isAccount();
-  const allMenuKeys = ADMIN_USER_MENU_ITEMS.flatMap((group) => group.items.map((item) => item.key));
 
   useEffect(() => {
     if (!authLoading && canManage) fetchUsers();
@@ -53,6 +54,11 @@ export default function AdminUserList() {
         .select("id, first_name, last_name, username, phone, plain_password, is_active");
       if (error) throw error;
 
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+      if (rolesError) throw rolesError;
+
       let emailMap: Record<string, string> = {};
       try {
         const res = await supabase.functions.invoke("create-user", {
@@ -64,16 +70,22 @@ export default function AdminUserList() {
       } catch {}
 
       setUsers(
-        (profiles || []).map((p) => ({
-          id: p.id,
-          first_name: p.first_name,
-          last_name: p.last_name,
-          username: p.username,
-          phone: p.phone,
-          plain_password: p.plain_password,
-          is_active: p.is_active !== false,
-          email: emailMap[p.id] || null,
-        }))
+        (profiles || []).map((p) => {
+          const roles = (rolesData || []).filter((role) => role.user_id === p.id).map((role) => role.role as string);
+
+          return {
+            id: p.id,
+            first_name: p.first_name,
+            last_name: p.last_name,
+            username: p.username,
+            phone: p.phone,
+            plain_password: p.plain_password,
+            is_active: p.is_active !== false,
+            email: emailMap[p.id] || null,
+            roles,
+            isAccount: roles.includes("account"),
+          };
+        })
       );
     } catch (e) {
       console.error(e);
@@ -176,7 +188,8 @@ export default function AdminUserList() {
 
       if (error) throw error;
 
-      setSelectedMenuKeys((data || []).map((item) => item.menu_key));
+      const allowedKeys = new Set(getAssignableMenuKeys(user));
+      setSelectedMenuKeys((data || []).map((item) => item.menu_key).filter((key) => allowedKeys.has(key)));
       setIsMenuDialogOpen(true);
     } catch (error) {
       console.error(error);
@@ -190,8 +203,17 @@ export default function AdminUserList() {
     setSelectedMenuKeys((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]));
   };
 
+  const getAssignableMenuGroups = (user: UserData | null) =>
+    user?.isAccount ? ACCOUNT_PANEL_MENU_ITEMS : ADMIN_USER_MENU_ITEMS;
+
+  const getAssignableMenuKeys = (user: UserData | null) =>
+    getAssignableMenuGroups(user).flatMap((group) => group.items.map((item) => item.key));
+
   const handleSaveMenuPermissions = async () => {
     if (!selectedUser) return;
+
+    const allowedKeys = new Set(getAssignableMenuKeys(selectedUser));
+    const keysToSave = selectedMenuKeys.filter((key) => allowedKeys.has(key));
 
     try {
       const { error: deleteError } = await supabase
@@ -201,9 +223,9 @@ export default function AdminUserList() {
 
       if (deleteError) throw deleteError;
 
-      if (selectedMenuKeys.length > 0) {
+      if (keysToSave.length > 0) {
         const { error: insertError } = await supabase.from("user_menu_permissions").insert(
-          selectedMenuKeys.map((menu_key) => ({
+          keysToSave.map((menu_key) => ({
             user_id: selectedUser.id,
             menu_key,
           }))
@@ -494,10 +516,11 @@ export default function AdminUserList() {
           userLabel: selectedUser?.username || selectedUser?.first_name || "User",
           selectedKeys: selectedMenuKeys,
           onToggleKey: toggleMenuKey,
-          onSelectAll: () => setSelectedMenuKeys(allMenuKeys),
+          onSelectAll: () => setSelectedMenuKeys(getAssignableMenuKeys(selectedUser)),
           onClearAll: () => setSelectedMenuKeys([]),
           onSave: handleSaveMenuPermissions,
           loading: loadingMenuAccess,
+          menuGroups: getAssignableMenuGroups(selectedUser),
         }}
         passwordDialog={{
           open: isResetPasswordDialogOpen,

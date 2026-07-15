@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { AccountSidebar } from "./AccountSidebar";
+import { AccountSidebar, getAccountMenuItemForPath, getFirstAccessibleAccountRoute } from "./AccountSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import mukutLogo from "@/assets/mukut-logo.webp";
 
@@ -11,15 +11,25 @@ interface AccountLayoutProps {
 
 export function AccountLayout({ children }: AccountLayoutProps) {
   const navigate = useNavigate();
-  const { isAccount, isAdmin, loading, user } = useAuthContext();
+  const location = useLocation();
+  const { hasMenuAccess, isAccount, isAdmin, loading, user } = useAuthContext();
+
+  const adminUser = isAdmin();
+  const accountUser = isAccount();
+  const currentMenuItem = getAccountMenuItemForPath(location.pathname);
+  const firstAccessibleRoute = getFirstAccessibleAccountRoute(hasMenuAccess);
+  const accountRouteAllowed =
+    adminUser || (currentMenuItem?.menuKey ? hasMenuAccess(currentMenuItem.menuKey) : false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/account/login");
-    } else if (!loading && user && !isAccount() && !isAdmin()) {
+    } else if (!loading && user && !accountUser && !adminUser) {
       navigate("/account/login");
+    } else if (!loading && user && accountUser && !adminUser && !accountRouteAllowed && firstAccessibleRoute) {
+      navigate(firstAccessibleRoute, { replace: true });
     }
-  }, [loading, user, isAccount, isAdmin, navigate]);
+  }, [accountRouteAllowed, accountUser, adminUser, firstAccessibleRoute, loading, navigate, user]);
 
   if (loading) {
     return (
@@ -29,7 +39,19 @@ export function AccountLayout({ children }: AccountLayoutProps) {
     );
   }
 
-  if (!user || (!isAccount() && !isAdmin())) {
+  if (!user || (!accountUser && !adminUser)) {
+    return null;
+  }
+
+  if (accountUser && !adminUser && !firstAccessibleRoute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "rgb(253, 246, 246)" }}>
+        <div className="text-sm font-semibold text-destructive">No account modules assigned.</div>
+      </div>
+    );
+  }
+
+  if (accountUser && !adminUser && !accountRouteAllowed) {
     return null;
   }
 
