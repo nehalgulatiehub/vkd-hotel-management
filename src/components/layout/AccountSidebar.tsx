@@ -158,6 +158,7 @@ const accountMenuItems: MenuItem[] = [
 
 export function AccountSidebar() {
   const navigate = useNavigate();
+  const { hasMenuAccess } = useAuthContext();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["Home"]);
 
   const handleLogout = async () => {
@@ -175,11 +176,19 @@ export function AccountSidebar() {
     );
   };
 
+  const visibleItems = accountMenuItems
+    .map((item) => ({
+      ...item,
+      submenu: item.submenu?.filter((s) => !s.menuKey || hasMenuAccess(s.menuKey)),
+    }))
+    .filter((item) => !item.submenu || item.submenu.length > 0);
+
   return (
     <div className="w-56 bg-background border-r flex flex-col h-screen print:hidden">
       <ScrollArea className="flex-1">
         <div className="p-1">
-          {accountMenuItems.map((item) => (
+          {visibleItems.map((item) => (
+
             <div key={item.title} className="mb-0.5">
               <button
                 onClick={() => toggleGroup(item.title)}
