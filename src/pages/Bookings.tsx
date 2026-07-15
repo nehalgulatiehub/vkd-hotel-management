@@ -1305,7 +1305,8 @@ export default function Bookings() {
 
     try {
       const charges = parseFloat(cancellationCharge) || 0;
-      const bookingTotal = selectedBooking?.total_amount || 0;
+      const editedPrice = parseFloat(cancellationBookingPrice);
+      const bookingTotal = isNaN(editedPrice) ? (selectedBooking?.total_amount || 0) : editedPrice;
       const refundAmount = Math.max(0, (selectedBooking?.paid_amount || 0) - charges);
 
       // Create cancellation record
@@ -1320,11 +1321,12 @@ export default function Bookings() {
 
       if (cancellationError) throw cancellationError;
 
-      // Update booking status
+      // Update booking status and (possibly edited) total amount
       const { error: updateError } = await supabase
         .from("bookings")
         .update({
-          status: "cancelled"
+          status: "cancelled",
+          total_amount: bookingTotal,
         })
         .eq("id", selectedBooking.id);
 
