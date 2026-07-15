@@ -511,6 +511,32 @@ export default function AdminUserList() {
           saving: resettingPassword,
         }}
       />
+
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Email — {selectedUser?.username || selectedUser?.first_name || "User"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <label className="text-xs text-gray-600">New Email Address</label>
+            <input
+              type="email"
+              value={newEmailValue}
+              onChange={(e) => setNewEmailValue(e.target.value)}
+              placeholder="user@example.com"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleUpdateEmail}
+              disabled={updatingEmail || !newEmailValue}
+              className="w-full bg-[#b44a50] text-white text-sm py-2 rounded disabled:opacity-50"
+            >
+              {updatingEmail ? "Updating..." : "Update Email"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
