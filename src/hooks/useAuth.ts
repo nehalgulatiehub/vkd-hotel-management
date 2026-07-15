@@ -113,12 +113,7 @@ export function useAuth() {
     (menuKey: string) => {
       // Admin has access to all menus
       if (authState.roles.includes("admin")) return true;
-      // Account users: if no permissions assigned yet, grant all (backward compat).
-      // Once admin assigns any permission, filter strictly.
-      if (authState.roles.includes("account")) {
-        if (authState.menuPermissions.length === 0) return true;
-        return authState.menuPermissions.includes(menuKey);
-      }
+      // Account users: strictly filtered by assigned permissions
       return authState.menuPermissions.includes(menuKey);
     },
     [authState.roles, authState.menuPermissions]
