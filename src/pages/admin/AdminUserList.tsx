@@ -33,6 +33,10 @@ export default function AdminUserList() {
   const [resetPasswordValue, setResetPasswordValue] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [newEmailValue, setNewEmailValue] = useState("");
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+
 
   const canManage = isAdmin() || isAccount();
   const allMenuKeys = ADMIN_USER_MENU_ITEMS.flatMap((group) => group.items.map((item) => item.key));
