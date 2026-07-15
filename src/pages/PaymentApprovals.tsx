@@ -42,6 +42,7 @@ interface PendingPayment {
   hotel_name?: string;
   room_type?: string;
   created_by_name?: string;
+  city_name?: string | null;
 }
 
 export default function PaymentApprovals() {
