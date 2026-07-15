@@ -242,9 +242,12 @@ export default function PaymentApprovals() {
         });
       });
 
-      // Filter out cash payments for account users (they can't approve them)
+      // Account users cannot approve cash payments where city is Delhi — hide those from the list
       const filteredPayments = isAccount() && !isAdmin()
-        ? allPayments.filter(p => p.payment_mode.toLowerCase() !== "cash")
+        ? allPayments.filter(p => !(
+            (p.payment_mode || "").toLowerCase() === "cash" &&
+            (p.city_name || "").toLowerCase() === "delhi"
+          ))
         : allPayments;
 
       setPayments(filteredPayments);
