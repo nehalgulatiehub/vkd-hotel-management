@@ -757,6 +757,8 @@ const App = () => (
           <Route path="/account" element={<AccountLayout><AccountHome /></AccountLayout>} />
           <Route path="/account/email" element={<AccountLayout><AdminEmail /></AccountLayout>} />
           <Route path="/account/change-password" element={<AccountLayout><AccountChangePassword /></AccountLayout>} />
+          <Route path="/account/users" element={<AccountLayout><AdminUserList /></AccountLayout>} />
+          <Route path="/account/users/add" element={<AccountLayout><UserManagement /></AccountLayout>} />
           
           {/* Account Booking Manager */}
           <Route path="/account/bookings" element={<AccountLayout><Bookings /></AccountLayout>} />
