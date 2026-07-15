@@ -144,6 +144,41 @@ serve(async (req) => {
     }
 
 
+    if (action === "update-email") {
+      const { userId, newEmail } = body;
+      if (!userId || !newEmail) {
+        return new Response(JSON.stringify({ error: "User ID and new email are required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        return new Response(JSON.stringify({ error: "Invalid email address" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: updateEmailError } = await adminClient.auth.admin.updateUserById(userId, {
+        email: newEmail,
+        email_confirm: true,
+      });
+
+      if (updateEmailError) {
+        console.error("Update email failed", { userId, message: updateEmailError.message });
+        return new Response(JSON.stringify({ error: updateEmailError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Email updated successfully" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
     if (action === "reset-password") {
       const { userId, newPassword } = body;
