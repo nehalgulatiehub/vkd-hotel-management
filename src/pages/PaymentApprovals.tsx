@@ -175,6 +175,7 @@ export default function PaymentApprovals() {
           hotel_name: hotelInfo.hotel_name,
           room_type: hotelInfo.room_type,
           created_by_name: creatorProfile?.username || creatorProfile?.first_name || null,
+          city_name: p.city?.name || null,
         });
       });
 
