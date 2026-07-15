@@ -468,6 +468,13 @@ export default function AdminUserList() {
             >
               Change Password
             </button>
+            <button
+              className="text-left text-xs px-3 py-2 hover:bg-gray-100"
+              onClick={() => actionUser && handleOpenChangeEmail(actionUser)}
+            >
+              Change Email
+            </button>
+
           </div>
         </DialogContent>
       </Dialog>
