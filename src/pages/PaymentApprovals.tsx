@@ -530,10 +530,10 @@ export default function PaymentApprovals() {
                                       variant="outline"
                                       className="h-7 w-7 text-green-600 hover:text-green-700"
                                       onClick={() => handleApproval(payment, "approved")}
-                                      disabled={!canApprovePayment(payment.payment_mode)}
+                                      disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
                                       title={
-                                        !canApprovePayment(payment.payment_mode)
-                                          ? "Account users cannot approve cash payments"
+                                        !canApprovePayment(payment.payment_mode, payment.city_name)
+                                          ? "Account users cannot approve cash payments in Delhi"
                                           : "Approve payment"
                                       }
                                     >
@@ -544,7 +544,7 @@ export default function PaymentApprovals() {
                                       variant="outline"
                                       className="h-7 w-7 text-red-600 hover:text-red-700"
                                       onClick={() => handleApproval(payment, "rejected")}
-                                      disabled={!canApprovePayment(payment.payment_mode)}
+                                      disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
                                     >
                                       <XCircle className="h-3 w-3" />
                                     </Button>
