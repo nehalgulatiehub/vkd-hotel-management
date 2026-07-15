@@ -260,8 +260,8 @@ export default function PaymentApprovals() {
   };
 
   const handleApproval = async (payment: PendingPayment, status: "approved" | "rejected") => {
-    if (!canApprovePayment(payment.payment_mode)) {
-      toast.error("You cannot approve cash payments");
+    if (!canApprovePayment(payment.payment_mode, payment.city_name)) {
+      toast.error("Account users cannot approve cash payments in Delhi");
       return;
     }
 
