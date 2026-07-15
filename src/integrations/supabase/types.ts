@@ -2863,10 +2863,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_approve_payment: {
-        Args: { _payment_mode: string; _user_id: string }
-        Returns: boolean
-      }
+      can_approve_payment:
+        | {
+            Args: { _payment_mode: string; _user_id: string }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _city_name?: string
+              _payment_mode: string
+              _user_id: string
+            }
+            Returns: boolean
+          }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       has_menu_access: {
         Args: { _menu_key: string; _user_id: string }

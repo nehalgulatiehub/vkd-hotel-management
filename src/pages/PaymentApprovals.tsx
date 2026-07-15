@@ -42,6 +42,7 @@ interface PendingPayment {
   hotel_name?: string;
   room_type?: string;
   created_by_name?: string;
+  city_name?: string | null;
 }
 
 export default function PaymentApprovals() {
@@ -88,6 +89,7 @@ export default function PaymentApprovals() {
           approval_status,
           reference_number,
           created_by,
+          city:cities(name),
           booking:bookings(
             id,
             booking_number, 
@@ -173,6 +175,7 @@ export default function PaymentApprovals() {
           hotel_name: hotelInfo.hotel_name,
           room_type: hotelInfo.room_type,
           created_by_name: creatorProfile?.username || creatorProfile?.first_name || null,
+          city_name: p.city?.name || null,
         });
       });
 
@@ -239,9 +242,12 @@ export default function PaymentApprovals() {
         });
       });
 
-      // Filter out cash payments for account users (they can't approve them)
+      // Account users cannot approve cash payments where city is Delhi — hide those from the list
       const filteredPayments = isAccount() && !isAdmin()
-        ? allPayments.filter(p => p.payment_mode.toLowerCase() !== "cash")
+        ? allPayments.filter(p => !(
+            (p.payment_mode || "").toLowerCase() === "cash" &&
+            (p.city_name || "").toLowerCase() === "delhi"
+          ))
         : allPayments;
 
       setPayments(filteredPayments);
@@ -254,8 +260,8 @@ export default function PaymentApprovals() {
   };
 
   const handleApproval = async (payment: PendingPayment, status: "approved" | "rejected") => {
-    if (!canApprovePayment(payment.payment_mode)) {
-      toast.error("You cannot approve cash payments");
+    if (!canApprovePayment(payment.payment_mode, payment.city_name)) {
+      toast.error("Account users cannot approve cash payments in Delhi");
       return;
     }
 
@@ -524,10 +530,10 @@ export default function PaymentApprovals() {
                                       variant="outline"
                                       className="h-7 w-7 text-green-600 hover:text-green-700"
                                       onClick={() => handleApproval(payment, "approved")}
-                                      disabled={!canApprovePayment(payment.payment_mode)}
+                                      disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
                                       title={
-                                        !canApprovePayment(payment.payment_mode)
-                                          ? "Account users cannot approve cash payments"
+                                        !canApprovePayment(payment.payment_mode, payment.city_name)
+                                          ? "Account users cannot approve cash payments in Delhi"
                                           : "Approve payment"
                                       }
                                     >
@@ -538,7 +544,7 @@ export default function PaymentApprovals() {
                                       variant="outline"
                                       className="h-7 w-7 text-red-600 hover:text-red-700"
                                       onClick={() => handleApproval(payment, "rejected")}
-                                      disabled={!canApprovePayment(payment.payment_mode)}
+                                      disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
                                     >
                                       <XCircle className="h-3 w-3" />
                                     </Button>

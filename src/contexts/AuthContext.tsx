@@ -13,7 +13,7 @@ interface AuthContextType {
   isAdmin: () => boolean;
   isAccount: () => boolean;
   hasMenuAccess: (menuKey: string) => boolean;
-  canApprovePayment: (paymentMode: string) => boolean;
+  canApprovePayment: (paymentMode: string, cityName?: string | null) => boolean;
   refreshPermissions: () => Promise<void>;
 }
 
