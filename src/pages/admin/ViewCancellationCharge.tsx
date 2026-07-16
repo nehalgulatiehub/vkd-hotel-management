@@ -85,7 +85,7 @@ export default function ViewCancellationCharge() {
               <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
               <ThemedTD>{c.booking?.booking_number || "N/A"}</ThemedTD>
               <ThemedTD>{c.booking?.customer_name || "N/A"}</ThemedTD>
-              <ThemedTD>{c.cancellation_date ? format(new Date(c.cancellation_date), "dd-MMM-yyyy") : "N/A"}</ThemedTD>
+              <ThemedTD>{c.cancellation_date ? format(new Date(c.cancellation_date), "dd/MM/yyyy") : "N/A"}</ThemedTD>
               <ThemedTD>Rs. {c.booking?.total_amount?.toLocaleString() || 0}/-</ThemedTD>
               <ThemedTD>Rs. {c.cancellation_charges?.toLocaleString() || 0}/-</ThemedTD>
               <ThemedTD>Rs. {c.refund_amount?.toLocaleString() || 0}/-</ThemedTD>

@@ -59,7 +59,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
   const formatDate = (dateStr: string) => {
     try {
-      return format(new Date(dateStr), "dd MMM yyyy");
+      return format(new Date(dateStr), "dd/MM/yyyy");
     } catch {
       return dateStr;
     }

@@ -50,7 +50,7 @@ export default function ViewBookReturnPayment() {
                 <ThemedTD>{startIndex + index + 1}</ThemedTD>
                 <ThemedTD>{refund.booking?.booking_number || "N/A"}</ThemedTD>
                 <ThemedTD>{refund.booking?.customer_name || "N/A"}</ThemedTD>
-                <ThemedTD>{refund.refund_date ? format(new Date(refund.refund_date), "dd-MMM-yyyy") : "N/A"}</ThemedTD>
+                <ThemedTD>{refund.refund_date ? format(new Date(refund.refund_date), "dd/MM/yyyy") : "N/A"}</ThemedTD>
                 <ThemedTD>Rs. {refund.booking?.total_amount?.toLocaleString() || 0}/-</ThemedTD>
                 <ThemedTD>Rs. {refund.refund_amount?.toLocaleString() || 0}/-</ThemedTD>
                 <ThemedTD>{refund.refund_mode || "N/A"}</ThemedTD>

@@ -262,7 +262,7 @@ export default function CancellingPayments() {
                     <div>Pay Mode: {refund.refund_mode || "-"}</div>
                   </td>
                   <td className="border border-[#c99] px-3 py-2 align-top">
-                    rs {refund.refund_amount?.toLocaleString("en-IN")} paid from icici mukut on {refund.refund_date ? format(new Date(refund.refund_date), "dd MMM yy") : "-"} by ref no {refund.reference_number || "-"}
+                    rs {refund.refund_amount?.toLocaleString("en-IN")} paid from icici mukut on {refund.refund_date ? format(new Date(refund.refund_date), "dd/MM/yyyy") : "-"} by ref no {refund.reference_number || "-"}
                   </td>
                   <td className="border border-[#c99] px-3 py-2 align-top">
                     <div className="flex flex-col gap-1">

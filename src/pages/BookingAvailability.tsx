@@ -76,7 +76,7 @@ export default function BookingAvailability() {
   const [roomBlocks, setRoomBlocks] = useState<RoomBlock[]>([]);
   const [startDate, setStartDate] = useState(startOfDay(new Date()));
   const [loading, setLoading] = useState(true);
-  const [searchDate, setSearchDate] = useState(format(new Date(), "dd-MM-yyyy"));
+  const [searchDate, setSearchDate] = useState(format(new Date(), "dd/MM/yyyy"));
   const [selectedHotelFilter, setSelectedHotelFilter] = useState<string>("all");
 
   // Bulk Update Modal State
@@ -181,7 +181,7 @@ export default function BookingAvailability() {
   };
 
   const handleSearch = () => {
-    const parsed = parse(searchDate, "dd-MM-yyyy", new Date());
+    const parsed = parse(searchDate, "dd/MM/yyyy", new Date());
     if (isValid(parsed)) {
       setStartDate(startOfDay(parsed));
     }
@@ -232,7 +232,7 @@ export default function BookingAvailability() {
 
         dates.forEach((date) => {
           const stats = getStats(room, date);
-          const dateKey = format(date, "dd-MMM");
+          const dateKey = format(date, "dd/MM");
           if (rowType === "Available") row[dateKey] = stats.available;
           else if (rowType === "Booked") row[dateKey] = stats.booked;
           else row[dateKey] = stats.blocked;
@@ -376,7 +376,7 @@ export default function BookingAvailability() {
               <span className="text-sm text-muted-foreground">Search</span>
               <Input
                 type="text"
-                placeholder="dd-MM-yyyy"
+                placeholder="dd/MM/yyyy"
                 value={searchDate}
                 onChange={(e) => setSearchDate(e.target.value)}
                 onKeyDown={handleKeyDown}

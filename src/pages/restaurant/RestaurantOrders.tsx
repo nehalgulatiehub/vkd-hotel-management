@@ -151,7 +151,7 @@ const RestaurantOrders = () => {
                   <div>
                     <CardTitle className="text-lg">{order.order_number}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(order.created_at), "dd MMM yyyy, hh:mm a")}
+                      {format(new Date(order.created_at), "dd/MM/yyyy, hh:mm a")}
                     </p>
                   </div>
                   <Badge className={statusConfig[order.status]?.color}>

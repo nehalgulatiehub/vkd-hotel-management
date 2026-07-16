@@ -121,7 +121,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loading, setLoading] = useState(true);
   const { hasMenuAccess, isAdmin, isAccount } = useAuthContext();
 
-  const currentDate = format(new Date(), "dd MMMM, yyyy");
+  const currentDate = format(new Date(), "dd/MM/yyyy");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
