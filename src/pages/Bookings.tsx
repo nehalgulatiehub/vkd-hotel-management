@@ -1378,8 +1378,8 @@ export default function Bookings() {
         </div>
 
         {showForm ? (
-          <div className="flex justify-center">
-          <Card className="w-full max-w-xl border-[#d9a89a]" style={{ backgroundColor: '#F5E6E0' }}>
+          <div className="flex justify-center px-4">
+          <Card className="w-full max-w-7xl border-[#d9a89a]" style={{ backgroundColor: '#F5E6E0' }}>
             <CardHeader className="py-2 px-4">
               <p className="text-[10px] text-red-500 text-right m-0">*  - Required fields</p>
             </CardHeader>
