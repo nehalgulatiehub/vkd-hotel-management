@@ -2271,14 +2271,15 @@ export default function Bookings() {
                   />
                 </CompactFormRow>
 
-                <div className="flex gap-2 pt-2 ml-28">
-                  <Button type="submit" size="sm" className="bg-gradient-primary">
-                    {editingBookingId ? "Update" : "Create Booking"}
+                <div className="flex justify-center gap-4 pt-4">
+                  <Button type="submit" variant="outline" size="sm" className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6">
+                    {editingBookingId ? "Update" : "Create"}
                   </Button>
                   <Button 
                     type="button" 
                     variant="outline"
                     size="sm"
+                    className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6"
                     onClick={() => {
                       setEditingBookingId(null);
                       setFormData({
@@ -2346,7 +2347,6 @@ export default function Bookings() {
                         group_expense_amount: "",
                         group_expense_details: ""
                       });
-                      // Reset another hotels list
                       setAnotherHotelsList([{
                         hotel_id: "",
                         num_rooms: "",
@@ -2365,7 +2365,9 @@ export default function Bookings() {
               </form>
             </CardContent>
           </Card>
+          </div>
         ) : (
+
           <>
             {isAdminRoute ? (
               <div style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
