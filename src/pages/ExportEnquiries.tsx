@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -91,8 +92,7 @@ export default function ExportEnquiries() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label>From Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={dateFrom}
                   onChange={(e) => {
                     setDateFrom(e.target.value);
@@ -102,8 +102,7 @@ export default function ExportEnquiries() {
               </div>
               <div>
                 <Label>To Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={dateTo}
                   onChange={(e) => {
                     setDateTo(e.target.value);

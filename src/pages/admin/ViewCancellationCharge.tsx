@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -63,11 +64,11 @@ export default function ViewCancellationCharge() {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         <span>From :</span>
-        <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={filterInputStyle} />
+        <DateInput value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={filterInputStyle} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         <span>To :</span>
-        <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={filterInputStyle} />
+        <DateInput value={toDate} onChange={(e) => setToDate(e.target.value)} style={filterInputStyle} />
       </div>
       <div style={{ marginLeft: "auto", fontWeight: "bold", fontSize: 11 }}>Total Charges: Rs. {totalCharges.toLocaleString()}/-</div>
     </div>

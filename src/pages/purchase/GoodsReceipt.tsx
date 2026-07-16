@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -400,8 +401,7 @@ export default function GoodsReceipt() {
                   </div>
                   <div className="space-y-2">
                     <Label>Receipt Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={receiptDate}
                       onChange={(e) => setReceiptDate(e.target.value)}
                     />

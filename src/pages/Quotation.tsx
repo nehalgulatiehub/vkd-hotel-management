@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
@@ -1107,8 +1108,7 @@ export default function Billing() {
                 </div>
                 <div>
                   <Label className="text-xs">Quotation Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={quotationDate}
                     onChange={e => setQuotationDate(e.target.value)}
                     className="h-8 text-sm"
@@ -1135,8 +1135,7 @@ export default function Billing() {
                   <div className="space-y-2 p-3 border rounded-lg bg-muted/50">
                     <div>
                       <Label className="text-xs">Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={newRowDate}
                         onChange={e => setNewRowDate(e.target.value)}
                         className="h-8 text-sm"

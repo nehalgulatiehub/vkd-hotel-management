@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,8 @@ export function DateRangeFilter({
       </div>
       <div className="flex items-center gap-2">
         <Label htmlFor="fromDate" className="text-sm text-muted-foreground">From:</Label>
-        <Input
+        <DateInput
           id="fromDate"
-          type="date"
           value={fromDate}
           onChange={(e) => onFromDateChange(e.target.value)}
           className="w-auto h-8 text-sm"
@@ -39,9 +39,8 @@ export function DateRangeFilter({
       </div>
       <div className="flex items-center gap-2">
         <Label htmlFor="toDate" className="text-sm text-muted-foreground">To:</Label>
-        <Input
+        <DateInput
           id="toDate"
-          type="date"
           value={toDate}
           onChange={(e) => onToDateChange(e.target.value)}
           className="w-auto h-8 text-sm"

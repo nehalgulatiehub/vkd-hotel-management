@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,13 +146,11 @@ const RestaurantReports = () => {
           </Select>
           {dateRange === "custom" && (
             <div className="flex gap-2">
-              <Input
-                type="date"
+              <DateInput
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
               />
-              <Input
-                type="date"
+              <DateInput
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
               />

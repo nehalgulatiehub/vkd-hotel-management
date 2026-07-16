@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -393,15 +394,13 @@ export default function PurchaseReports() {
                 className="pl-10"
               />
             </div>
-            <Input
-              type="date"
+            <DateInput
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               className="w-[160px]"
               placeholder="From Date"
             />
-            <Input
-              type="date"
+            <DateInput
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               className="w-[160px]"

@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -333,8 +334,7 @@ export default function PurchaseInvoices() {
                   </div>
                   <div className="space-y-2">
                     <Label>Invoice Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={invoiceDate}
                       onChange={(e) => setInvoiceDate(e.target.value)}
                     />
@@ -343,8 +343,7 @@ export default function PurchaseInvoices() {
 
                 <div className="space-y-2">
                   <Label>Due Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                   />

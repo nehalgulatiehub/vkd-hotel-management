@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -788,8 +789,7 @@ export default function Enquiries() {
 
                   <div>
                     <Label>Check-in Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={formData.check_in_date}
                       onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
                     />
@@ -797,8 +797,7 @@ export default function Enquiries() {
 
                   <div>
                     <Label>Check-out Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={formData.check_out_date}
                       onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
                     />
@@ -1001,8 +1000,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>From Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.booking_from}
                         onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
                       />
@@ -1010,8 +1008,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>To Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.booking_to}
                         onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
                       />
@@ -1067,8 +1064,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Journey Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.dm_journey_date}
                         onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
                       />
@@ -1135,8 +1131,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Journey Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.md_journey_date}
                         onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
                       />
@@ -1185,8 +1180,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Safari Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.safari_journey_date}
                         onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
                       />
@@ -1272,8 +1266,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Check-in Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.another_hotel_check_in}
                         onChange={(e) => setFormData({ ...formData, another_hotel_check_in: e.target.value })}
                       />
@@ -1281,8 +1274,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Check-out Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.another_hotel_check_out}
                         onChange={(e) => setFormData({ ...formData, another_hotel_check_out: e.target.value })}
                       />
@@ -1358,8 +1350,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Pickup Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.vehicle_booking_date}
                         onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
                       />
@@ -1367,8 +1358,7 @@ export default function Enquiries() {
 
                     <div>
                       <Label>Journey Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={formData.vehicle_journey_date}
                         onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
                       />
