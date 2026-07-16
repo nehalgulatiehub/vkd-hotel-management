@@ -1378,12 +1378,13 @@ export default function Bookings() {
         </div>
 
         {showForm ? (
-          <Card className="max-w-2xl">
-            <CardHeader className="py-2 px-3">
-              <CardTitle className="text-sm">{editingBookingId ? "Edit Booking" : "Create New Booking"}</CardTitle>
-              <p className="text-[10px] text-muted-foreground text-right">* Required fields</p>
+          <div className="flex justify-center">
+          <Card className="w-full max-w-xl border-[#d9a89a]" style={{ backgroundColor: '#F5E6E0' }}>
+            <CardHeader className="py-2 px-4">
+              <p className="text-[10px] text-red-500 text-right m-0">*  - Required fields</p>
             </CardHeader>
-            <CardContent className="p-3">
+            <CardContent className="p-4 [&_input]:bg-white [&_input]:border-[#d9a89a] [&_textarea]:bg-white [&_textarea]:border-[#d9a89a] [&_button[role=combobox]]:bg-white [&_button[role=combobox]]:border-[#d9a89a]">
+
               <form onSubmit={handleSubmit} className="space-y-1">
                 {/* Type */}
                 <CompactFormRow label="Type" required>
@@ -2270,14 +2271,15 @@ export default function Bookings() {
                   />
                 </CompactFormRow>
 
-                <div className="flex gap-2 pt-2 ml-28">
-                  <Button type="submit" size="sm" className="bg-gradient-primary">
-                    {editingBookingId ? "Update" : "Create Booking"}
+                <div className="flex justify-center gap-4 pt-4">
+                  <Button type="submit" variant="outline" size="sm" className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6">
+                    {editingBookingId ? "Update" : "Create"}
                   </Button>
                   <Button 
                     type="button" 
                     variant="outline"
                     size="sm"
+                    className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6"
                     onClick={() => {
                       setEditingBookingId(null);
                       setFormData({
@@ -2345,7 +2347,6 @@ export default function Bookings() {
                         group_expense_amount: "",
                         group_expense_details: ""
                       });
-                      // Reset another hotels list
                       setAnotherHotelsList([{
                         hotel_id: "",
                         num_rooms: "",
@@ -2364,7 +2365,9 @@ export default function Bookings() {
               </form>
             </CardContent>
           </Card>
+          </div>
         ) : (
+
           <>
             {isAdminRoute ? (
               <div style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
