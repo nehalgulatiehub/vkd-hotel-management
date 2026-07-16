@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +24,6 @@ import { Search, Download, Package, IndianRupee, ShoppingCart, TrendingUp } from
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
-import { DateInput } from "@/components/ui/DateInput";
 
 interface VendorReport {
   vendor_id: string;

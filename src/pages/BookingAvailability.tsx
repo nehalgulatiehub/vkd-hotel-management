@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
@@ -34,7 +35,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { DateInput } from "@/components/ui/DateInput";
 
 interface Hotel {
   id: string;

@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +35,6 @@ import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { DateInput } from "@/components/ui/DateInput";
 
 export default function Bookings() {
   const navigate = useNavigate();

@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/ui/DateInput";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +9,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { DateInput } from "@/components/ui/DateInput";
 
 export default function ExportEnquiries() {
   const [enquiries, setEnquiries] = useState<any[]>([]);
