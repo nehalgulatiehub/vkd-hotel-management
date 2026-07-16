@@ -45,7 +45,8 @@ export default function CreateHoldBooking() {
     include_another_hotel: false,
     include_additional_vehicle: false,
     include_group_expenses: false,
-    agent_commission: ""
+    agent_commission: "",
+    cheque_no: ""
   });
 
   useEffect(() => {
@@ -80,7 +81,8 @@ export default function CreateHoldBooking() {
       include_another_hotel: false,
       include_additional_vehicle: false,
       include_group_expenses: false,
-      agent_commission: ""
+      agent_commission: "",
+      cheque_no: ""
     });
   };
 
@@ -442,6 +444,18 @@ export default function CreateHoldBooking() {
                   onChange={(e) => setFormData({ ...formData, agent_commission: e.target.value })}
                 />
               </div>
+
+              {/* Cheque No */}
+              <div className="flex items-center gap-2">
+                <Label className="w-40 text-right text-xs shrink-0">Cheque No. :</Label>
+                <Input
+                  className="bg-white flex-1 h-7 text-xs"
+                  value={formData.cheque_no}
+                  onChange={(e) => setFormData({ ...formData, cheque_no: e.target.value })}
+                />
+              </div>
+
+
 
               {/* Buttons */}
               <div className="flex justify-center gap-4 pt-4">
