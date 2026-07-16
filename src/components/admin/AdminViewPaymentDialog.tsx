@@ -4,8 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 interface ServiceSummary {
   type: string;
@@ -222,12 +222,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
 
   const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}/-`;
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return "N/A";
-    try {
-      return format(new Date(dateStr), "yyyy-MM-dd");
-    } catch {
-      return dateStr;
-    }
+    return formatDisplayDate(dateStr, "N/A");
   };
 
   return (

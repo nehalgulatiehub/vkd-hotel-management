@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 export default function ViewTotalPax() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -51,8 +52,8 @@ export default function ViewTotalPax() {
                 <ThemedTD>{booking.booking_number}</ThemedTD>
                 <ThemedTD>{booking.customer_name || "N/A"}</ThemedTD>
                 <ThemedTD>{booking.agent?.name || "Direct"}</ThemedTD>
-                <ThemedTD>{booking.check_in_date}</ThemedTD>
-                <ThemedTD>{booking.check_out_date}</ThemedTD>
+                <ThemedTD>{formatDisplayDate(booking.check_in_date)}</ThemedTD>
+                <ThemedTD>{formatDisplayDate(booking.check_out_date)}</ThemedTD>
                 <ThemedTD>{booking.adults || 0}</ThemedTD>
                 <ThemedTD>{booking.children || 0}</ThemedTD>
                 <ThemedTD>{(booking.adults || 0) + (booking.children || 0)}</ThemedTD>

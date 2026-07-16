@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, ArrowLeft } from "lucide-react";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 export default function BookingPayments() {
   const [searchParams] = useSearchParams();
@@ -229,11 +230,11 @@ export default function BookingPayments() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Check-in</p>
-                  <p className="font-semibold">{booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</p>
+                  <p className="font-semibold">{formatDisplayDate(booking.check_in_date)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Check-out</p>
-                  <p className="font-semibold">{booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}</p>
+                  <p className="font-semibold">{formatDisplayDate(booking.check_out_date)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Guests</p>
@@ -321,7 +322,7 @@ export default function BookingPayments() {
                       payments.map((payment, index) => (
                         <tr key={payment.id} className="border-t hover:bg-muted/50">
                           <td className="p-3">{index + 1}</td>
-                          <td className="p-3">{new Date(payment.payment_date).toLocaleDateString()}</td>
+                          <td className="p-3">{formatDisplayDate(payment.payment_date)}</td>
                           {!bookingId && <td className="p-3">{payment.bookings?.booking_number || "-"}</td>}
                           {!bookingId && <td className="p-3">{payment.bookings?.customer_name || "-"}</td>}
                           <td className="p-3 font-semibold">Rs. {payment.amount?.toFixed(2) || "0.00"}/-</td>
