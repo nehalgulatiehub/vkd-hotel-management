@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 interface PaymentWithBooking {
   id: string;
@@ -416,7 +417,7 @@ export default function Payments() {
                   <td className="border border-border p-2">{startIndex + index}</td>
                   <td className="border border-border p-2">{payment.amount?.toLocaleString() || "-"}</td>
                   <td className="border border-border p-2">
-                    {payment.payment_date ? new Date(payment.payment_date).toISOString().split("T")[0] : "-"}
+                    {formatDisplayDate(payment.payment_date)}
                   </td>
                   <td className="border border-border p-2">{payment.payment_type || "Booking"}</td>
                   <td className="border border-border p-2">
@@ -525,7 +526,7 @@ export default function Payments() {
                           <td className="border border-border p-2">{index + 1}</td>
                           <td className="border border-border p-2">Rs. {bp.amount?.toLocaleString() || 0}/-</td>
                           <td className="border border-border p-2">
-                            {bp.payment_date ? new Date(bp.payment_date).toLocaleDateString("en-GB") : "-"}
+                            {formatDisplayDate(bp.payment_date)}
                           </td>
                           <td className="border border-border p-2">
                             {bp.payment_mode || "N/A"} Code={bp.reference_number ? `[${bp.reference_number}]` : "[]"}

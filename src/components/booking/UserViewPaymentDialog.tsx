@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 interface ServiceSummary {
   type: string;
@@ -347,12 +347,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
   const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}/-`;
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return "N/A";
-    try {
-      return format(new Date(dateStr), "yyyy-MM-dd");
-    } catch {
-      return dateStr;
-    }
+    return formatDisplayDate(dateStr, "N/A");
   };
 
   return (

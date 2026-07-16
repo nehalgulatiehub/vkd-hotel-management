@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 export default function ViewReferenceList() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -46,7 +47,7 @@ export default function ViewReferenceList() {
             {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={8} message="No bookings with references found" /> : paginatedItems.map((booking, index) => (
               <ThemedTR key={booking.id} index={index}>
                 <ThemedTD>{startIndex + index + 1}</ThemedTD>
-                <ThemedTD><div>{booking.booking_number}</div><div>{booking.check_in_date} - {booking.check_out_date}</div></ThemedTD>
+                <ThemedTD><div>{booking.booking_number}</div><div>{formatDisplayDate(booking.check_in_date)} - {formatDisplayDate(booking.check_out_date)}</div></ThemedTD>
                 <ThemedTD>{booking.booking_type || "Agent"}</ThemedTD>
                 <ThemedTD><div>{booking.customer_name || "N/A"}</div><div>Contact: {booking.contact_no || "N/A"}</div></ThemedTD>
                 <ThemedTD><div>{booking.reference || "N/A"}</div>{booking.reference_email && <div>{booking.reference_email}</div>}</ThemedTD>

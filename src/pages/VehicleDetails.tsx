@@ -8,6 +8,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { formatDisplayDate } from "@/utils/dateFormat";
 
 const MAROON_LIGHT = "#c47a7e";
 const ROW_ALT = "#f6f0f0";
@@ -71,7 +72,7 @@ export default function VehicleDetails() {
                   <td style={tdStyle}>
                     <div><strong>Vehicle :</strong> {booking.vehicle_type || "-"}</div>
                     <div><strong>Transporter :</strong> {booking.transporters?.name || "-"}</div>
-                    <div><strong>Journey Date :</strong> {booking.pickup_date ? format(new Date(booking.pickup_date), "yyyy-MM-dd") : "-"}</div>
+                    <div><strong>Journey Date :</strong> {formatDisplayDate(booking.pickup_date)}</div>
                     <div><strong>Booking Price :</strong> Rs. {(booking.rate || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')} /-</div>
