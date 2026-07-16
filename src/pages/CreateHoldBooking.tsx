@@ -45,7 +45,8 @@ export default function CreateHoldBooking() {
     include_another_hotel: false,
     include_additional_vehicle: false,
     include_group_expenses: false,
-    agent_commission: ""
+    agent_commission: "",
+    cheque_no: ""
   });
 
   useEffect(() => {
