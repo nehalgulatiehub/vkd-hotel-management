@@ -1,6 +1,10 @@
-import { format } from "date-fns";
-
 export const DISPLAY_DATE_FORMAT = "dd/MM/yyyy";
+
+const padDatePart = (value: number) => String(value).padStart(2, "0");
+
+function formatUtcDate(date: Date) {
+  return `${padDatePart(date.getUTCDate())}/${padDatePart(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
+}
 
 export function parseDisplayDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
@@ -39,7 +43,7 @@ export function parseDisplayDate(value: string | Date | null | undefined): Date 
 
 export function formatDisplayDate(value: string | Date | null | undefined, fallback = "-") {
   const parsed = parseDisplayDate(value);
-  return parsed ? format(parsed, DISPLAY_DATE_FORMAT) : fallback;
+  return parsed ? formatUtcDate(parsed) : fallback;
 }
 
 export function replaceIsoDatesInText(text: string) {
@@ -50,6 +54,12 @@ export function replaceIsoDatesInText(text: string) {
 
 export function startIsoDateAutoFormatter() {
   if (typeof window === "undefined" || typeof MutationObserver === "undefined") return;
+
+  const originalToLocaleDateString = Date.prototype.toLocaleDateString;
+  Date.prototype.toLocaleDateString = function patchedToLocaleDateString() {
+    const parsed = parseDisplayDate(this as Date);
+    return parsed ? formatUtcDate(parsed) : originalToLocaleDateString.call(this, "en-GB");
+  };
 
   const shouldSkip = (node: Node) => {
     const parent = node.parentElement;
