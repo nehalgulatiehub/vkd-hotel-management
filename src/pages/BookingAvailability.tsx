@@ -34,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface Hotel {
   id: string;
@@ -567,16 +568,14 @@ export default function BookingAvailability() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>From Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={bulkFromDate}
                   onChange={(e) => setBulkFromDate(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label>To Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={bulkToDate}
                   onChange={(e) => setBulkToDate(e.target.value)}
                 />

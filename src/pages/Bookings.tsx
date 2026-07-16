@@ -34,6 +34,7 @@ import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { DateInput } from "@/components/ui/DateInput";
 
 export default function Bookings() {
   const navigate = useNavigate();
@@ -1627,16 +1628,14 @@ export default function Bookings() {
 
                     <div className="flex gap-2">
                       <CompactFormRow label="From" className="!w-auto">
-                        <Input
-                          type="date"
+                        <DateInput
                           value={formData.booking_from}
                           onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
                           className="w-32"
                         />
                       </CompactFormRow>
                       <CompactFormRow label="To" className="!w-auto">
-                        <Input
-                          type="date"
+                        <DateInput
                           value={formData.booking_to}
                           onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
                           className="w-32"
@@ -1709,16 +1708,14 @@ export default function Bookings() {
                         </CompactFormRow>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.dm_booking_date}
                               onChange={(e) => setFormData({ ...formData, dm_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.dm_journey_date}
                               onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
                               className="w-32"
@@ -1813,16 +1810,14 @@ export default function Bookings() {
                         </CompactFormRow>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.md_booking_date}
                               onChange={(e) => setFormData({ ...formData, md_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.md_journey_date}
                               onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
                               className="w-32"
@@ -1903,16 +1898,14 @@ export default function Bookings() {
                         </CompactFormRow>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.safari_booking_date}
                               onChange={(e) => setFormData({ ...formData, safari_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.safari_journey_date}
                               onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
                               className="w-32"
@@ -2069,16 +2062,14 @@ export default function Bookings() {
                               </CompactFormRow>
                               <div className="flex gap-2">
                                 <CompactFormRow label="Check In" className="!w-auto">
-                                  <Input
-                                    type="date"
+                                  <DateInput
                                     value={hotel.check_in}
                                     onChange={(e) => updateHotel('check_in', e.target.value)}
                                     className="w-32"
                                   />
                                 </CompactFormRow>
                                 <CompactFormRow label="Check Out" className="!w-auto">
-                                  <Input
-                                    type="date"
+                                  <DateInput
                                     value={hotel.check_out}
                                     onChange={(e) => updateHotel('check_out', e.target.value)}
                                     className="w-32"
@@ -2188,16 +2179,14 @@ export default function Bookings() {
                         </div>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.vehicle_booking_date}
                               onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <Input
-                              type="date"
+                            <DateInput
                               value={formData.vehicle_journey_date}
                               onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
                               className="w-32"

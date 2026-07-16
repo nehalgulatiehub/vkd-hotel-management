@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Download, TrendingUp, IndianRupee, Receipt, Utensils } from "lucide-react";
+import { DateInput } from "@/components/ui/DateInput";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))"];
 
@@ -145,13 +146,11 @@ const RestaurantReports = () => {
           </Select>
           {dateRange === "custom" && (
             <div className="flex gap-2">
-              <Input
-                type="date"
+              <DateInput
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
               />
-              <Input
-                type="date"
+              <DateInput
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
               />

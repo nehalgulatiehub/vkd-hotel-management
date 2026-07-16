@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface GRN {
   id: string;
@@ -400,8 +401,7 @@ export default function GoodsReceipt() {
                   </div>
                   <div className="space-y-2">
                     <Label>Receipt Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={receiptDate}
                       onChange={(e) => setReceiptDate(e.target.value)}
                     />

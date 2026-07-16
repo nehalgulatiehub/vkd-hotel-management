@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
+import { DateInput } from "@/components/ui/DateInput";
 
 type PaymentStatus = "pending" | "partially_paid" | "paid";
 
@@ -333,8 +334,7 @@ export default function PurchaseInvoices() {
                   </div>
                   <div className="space-y-2">
                     <Label>Invoice Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={invoiceDate}
                       onChange={(e) => setInvoiceDate(e.target.value)}
                     />
@@ -343,8 +343,7 @@ export default function PurchaseInvoices() {
 
                 <div className="space-y-2">
                   <Label>Due Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                   />

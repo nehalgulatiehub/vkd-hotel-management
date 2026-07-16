@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
+import { DateInput } from "@/components/ui/DateInput";
 
 type PoStatus = "pending" | "approved" | "rejected" | "created" | "sent_to_vendor" | "partially_received" | "closed" | "cancelled";
 
@@ -608,8 +609,7 @@ export default function PurchaseOrders() {
                   </div>
                   <div className="space-y-2">
                     <Label>Expected Delivery Date</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={expectedDate}
                       onChange={(e) => setExpectedDate(e.target.value)}
                     />

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle } from "@/components/admin/AdminPageShell";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface CancellationWithDetails {
   id: string;
@@ -63,11 +64,11 @@ export default function ViewCancellationCharge() {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         <span>From :</span>
-        <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={filterInputStyle} />
+        <DateInput value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={filterInputStyle} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         <span>To :</span>
-        <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={filterInputStyle} />
+        <DateInput value={toDate} onChange={(e) => setToDate(e.target.value)} style={filterInputStyle} />
       </div>
       <div style={{ marginLeft: "auto", fontWeight: "bold", fontSize: 11 }}>Total Charges: Rs. {totalCharges.toLocaleString()}/-</div>
     </div>

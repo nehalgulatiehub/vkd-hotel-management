@@ -23,6 +23,7 @@ import { Search, Download, Package, IndianRupee, ShoppingCart, TrendingUp } from
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface VendorReport {
   vendor_id: string;
@@ -393,15 +394,13 @@ export default function PurchaseReports() {
                 className="pl-10"
               />
             </div>
-            <Input
-              type="date"
+            <DateInput
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               className="w-[160px]"
               placeholder="From Date"
             />
-            <Input
-              type="date"
+            <DateInput
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               className="w-[160px]"

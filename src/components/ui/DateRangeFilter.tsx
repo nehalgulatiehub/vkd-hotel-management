@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Calendar, X } from "lucide-react";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface DateRangeFilterProps {
   fromDate: string;
@@ -29,9 +30,8 @@ export function DateRangeFilter({
       </div>
       <div className="flex items-center gap-2">
         <Label htmlFor="fromDate" className="text-sm text-muted-foreground">From:</Label>
-        <Input
+        <DateInput
           id="fromDate"
-          type="date"
           value={fromDate}
           onChange={(e) => onFromDateChange(e.target.value)}
           className="w-auto h-8 text-sm"
@@ -39,9 +39,8 @@ export function DateRangeFilter({
       </div>
       <div className="flex items-center gap-2">
         <Label htmlFor="toDate" className="text-sm text-muted-foreground">To:</Label>
-        <Input
+        <DateInput
           id="toDate"
-          type="date"
           value={toDate}
           onChange={(e) => onToDateChange(e.target.value)}
           className="w-auto h-8 text-sm"

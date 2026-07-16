@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+import { DateInput } from "@/components/ui/DateInput";
   Select,
   SelectContent,
   SelectItem,
@@ -1082,8 +1083,7 @@ export default function Billing() {
                 </div>
                 <div>
                   <Label className="text-xs">Invoice Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={invoiceDate}
                     onChange={e => setInvoiceDate(e.target.value)}
                     className="h-8 text-sm"
@@ -1110,8 +1110,7 @@ export default function Billing() {
                   <div className="space-y-2 p-3 border rounded-lg bg-muted/50">
                     <div>
                       <Label className="text-xs">Date</Label>
-                      <Input
-                        type="date"
+                      <DateInput
                         value={newRowDate}
                         onChange={e => setNewRowDate(e.target.value)}
                         className="h-8 text-sm"

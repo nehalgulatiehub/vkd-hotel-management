@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { DateInput } from "@/components/ui/DateInput";
 
 export default function ExportEnquiries() {
   const [enquiries, setEnquiries] = useState<any[]>([]);
@@ -91,8 +92,7 @@ export default function ExportEnquiries() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label>From Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={dateFrom}
                   onChange={(e) => {
                     setDateFrom(e.target.value);
@@ -102,8 +102,7 @@ export default function ExportEnquiries() {
               </div>
               <div>
                 <Label>To Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={dateTo}
                   onChange={(e) => {
                     setDateTo(e.target.value);
