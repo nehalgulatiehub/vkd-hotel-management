@@ -83,6 +83,7 @@ export default function CreateHoldBooking() {
       include_group_expenses: false,
       agent_commission: "",
       cheque_no: ""
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
