@@ -73,7 +73,7 @@ export default function Auth() {
     }
   };
 
-  const currentDate = format(new Date(), "dd MMMM, yyyy");
+  const currentDate = format(new Date(), "dd/MM/yyyy");
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

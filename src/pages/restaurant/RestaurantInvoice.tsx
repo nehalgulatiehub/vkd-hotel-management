@@ -288,7 +288,7 @@ const RestaurantInvoice = () => {
             </div>
             <div className="flex justify-between">
               <span>Date:</span>
-              <span>{format(new Date(order.created_at), "dd/MM/yy HH:mm")}</span>
+              <span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm")}</span>
             </div>
             <div className="flex justify-between">
               <span>Type:</span>

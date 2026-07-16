@@ -117,7 +117,7 @@ export default function Dashboard() {
       {/* Top Bar */}
       <div style={{ background: "#b44a50", color: "#fff", padding: "8px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontWeight: "bold", fontSize: 13 }}>Dashboard</span>
-        <span style={{ fontSize: 11 }}>{format(new Date(), "dd-MMM-yyyy, EEEE")}</span>
+        <span style={{ fontSize: 11 }}>{format(new Date(), "dd/MM/yyyy, EEEE")}</span>
       </div>
 
       {/* Summary Cards */}

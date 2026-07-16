@@ -582,7 +582,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                       {approvalStatus === "approved"
                         ? (payment.approved_at ? format(new Date(payment.approved_at), "yyyy-MM-dd") : "N/A")
-                        : (payment.payment_date ? format(new Date(payment.payment_date), "dd-MMM-yyyy") : "N/A")
+                        : (payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "N/A")
                       }
                     </td>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{payment.created_by_profile?.username || payment.created_by_profile?.first_name || "N/A"}</td>

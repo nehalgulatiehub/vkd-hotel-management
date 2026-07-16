@@ -62,7 +62,7 @@ export default function ViewPaidPayment() {
                 <ThemedTD>{startIndex + index + 1}</ThemedTD>
                 <ThemedTD>{payment.booking?.booking_number || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.booking?.customer_name || "N/A"}</ThemedTD>
-                <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd-MMM-yyyy") : "N/A"}</ThemedTD>
+                <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "N/A"}</ThemedTD>
                 <ThemedTD>Rs. {payment.amount?.toLocaleString() || 0}/-</ThemedTD>
                 <ThemedTD>{payment.payment_mode || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.payment_type || "N/A"}</ThemedTD>
