@@ -1,4 +1,5 @@
 import { DateInput } from "@/components/ui/DateInput";
+import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1629,14 +1630,14 @@ export default function Bookings() {
 
                     <div className="flex gap-2">
                       <CompactFormRow label="From" className="!w-auto">
-                        <DateInput
+                        <LegacyDatePicker
                           value={formData.booking_from}
                           onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
                           className="w-32"
                         />
                       </CompactFormRow>
                       <CompactFormRow label="To" className="!w-auto">
-                        <DateInput
+                        <LegacyDatePicker
                           value={formData.booking_to}
                           onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
                           className="w-32"
@@ -1709,14 +1710,14 @@ export default function Bookings() {
                         </CompactFormRow>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.dm_booking_date}
                               onChange={(e) => setFormData({ ...formData, dm_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.dm_journey_date}
                               onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
                               className="w-32"
@@ -1811,14 +1812,14 @@ export default function Bookings() {
                         </CompactFormRow>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.md_booking_date}
                               onChange={(e) => setFormData({ ...formData, md_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.md_journey_date}
                               onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
                               className="w-32"
@@ -1899,14 +1900,14 @@ export default function Bookings() {
                         </CompactFormRow>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.safari_booking_date}
                               onChange={(e) => setFormData({ ...formData, safari_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.safari_journey_date}
                               onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
                               className="w-32"
@@ -2063,14 +2064,14 @@ export default function Bookings() {
                               </CompactFormRow>
                               <div className="flex gap-2">
                                 <CompactFormRow label="Check In" className="!w-auto">
-                                  <DateInput
+                                  <LegacyDatePicker
                                     value={hotel.check_in}
                                     onChange={(e) => updateHotel('check_in', e.target.value)}
                                     className="w-32"
                                   />
                                 </CompactFormRow>
                                 <CompactFormRow label="Check Out" className="!w-auto">
-                                  <DateInput
+                                  <LegacyDatePicker
                                     value={hotel.check_out}
                                     onChange={(e) => updateHotel('check_out', e.target.value)}
                                     className="w-32"
@@ -2180,14 +2181,14 @@ export default function Bookings() {
                         </div>
                         <div className="flex gap-2">
                           <CompactFormRow label="Booking Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.vehicle_booking_date}
                               onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
-                            <DateInput
+                            <LegacyDatePicker
                               value={formData.vehicle_journey_date}
                               onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
                               className="w-32"
