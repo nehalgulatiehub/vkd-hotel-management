@@ -339,7 +339,7 @@ export default function PurchaseOrders() {
 
       const itemsToInsert = poItems.map((item) => ({
         po_id: editingPO.id,
-        pr_id: item.pr_id,
+        pr_id: item.pr_id || null,
         item_id: item.item_id,
         quantity: item.quantity,
         rate: item.rate,
