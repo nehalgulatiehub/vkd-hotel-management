@@ -478,11 +478,17 @@ export default function Enquiries() {
     setEditingEnquiryId(null);
   };
 
-  const filteredEnquiries = enquiries.filter(enquiry =>
-    enquiry.enquiry_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    enquiry.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    enquiry.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEnquiries = enquiries.filter(enquiry => {
+    const q = searchTerm.toLowerCase();
+    return (
+      enquiry.enquiry_number?.toLowerCase().includes(q) ||
+      enquiry.customer_name?.toLowerCase().includes(q) ||
+      enquiry.agents?.name?.toLowerCase().includes(q) ||
+      enquiry.contact_no?.toLowerCase().includes(q) ||
+      enquiry.email?.toLowerCase().includes(q) ||
+      enquiry.reference_email?.toLowerCase().includes(q)
+    );
+  });
 
   const pagination = usePagination(filteredEnquiries);
   
