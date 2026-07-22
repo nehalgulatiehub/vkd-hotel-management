@@ -155,6 +155,8 @@ export default function Bookings() {
     reference: "",
     user: "",
     chequeNo: "",
+    contact: "",
+    email: "",
     searchWithDate: false
   });
   
@@ -842,6 +844,14 @@ export default function Bookings() {
 
     // User filter
     const matchesUser = !filters.user || booking.created_by === filters.user;
+
+    // Contact filter
+    const matchesContact = !filters.contact ||
+      booking.contact_no?.toLowerCase().includes(filters.contact.toLowerCase());
+
+    // Email filter
+    const matchesEmail = !filters.email ||
+      booking.email?.toLowerCase().includes(filters.email.toLowerCase());
     
     // Date filter
     let matchesDate = true;
@@ -857,7 +867,8 @@ export default function Bookings() {
     }
     
     return matchesSearch && matchesType && matchesAgent && matchesCustomer && 
-           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser;
+           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser &&
+           matchesContact && matchesEmail;
   });
 
   const pagination = usePagination(filteredBookings);
@@ -2375,34 +2386,24 @@ export default function Bookings() {
                 <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
                   <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Search</span>
-                    <span onClick={() => setFilters({ fromMonth: "", fromDay: "", fromYear: "", toMonth: "", toDay: "", toYear: "", type: "", agentName: "", hotel: "", room: "", package: "", customer: "", reference: "", user: "", chequeNo: "", searchWithDate: false })} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
+                    <span onClick={() => setFilters({ fromMonth: "", fromDay: "", fromYear: "", toMonth: "", toDay: "", toYear: "", type: "", agentName: "", hotel: "", room: "", package: "", customer: "", reference: "", user: "", chequeNo: "", contact: "", email: "", searchWithDate: false })} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
                   </div>
                   <div style={{ backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box", fontSize: 11 }}>
                     {/* Row 1: Date */}
                     <div style={{ display: "grid", gridTemplateColumns: "auto auto 1fr", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>From :</label>
-                        <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 60 }}>
-                          <option value="">Mon</option>
-                          {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                        </select>
-                        <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 48 }}>
-                          <option value="">1</option>
-                          {days.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 54 }} />
+                        <LegacyDatePicker
+                          value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
+                        />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>To :</label>
-                        <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 60 }}>
-                          <option value="">Mon</option>
-                          {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                        </select>
-                        <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 48 }}>
-                          <option value="">1</option>
-                          {days.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 54 }} />
+                        <LegacyDatePicker
+                          value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
+                        />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <label style={{ fontSize: 11 }}>Search with Date :</label>
@@ -2437,7 +2438,18 @@ export default function Bookings() {
                         </select>
                       </div>
                     </div>
-                    {/* Row 3: Hotel, Room, Package, Customer, Search */}
+                    {/* Row 3: Contact, Email */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
+                        <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Contact No :</label>
+                        <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
+                        <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Email :</label>
+                        <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }} />
+                      </div>
+                    </div>
+                    {/* Row 4: Hotel, Room, Package, Customer, Search */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto", gap: "6px 16px", padding: "4px 10px", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Hotel :</label>
@@ -2559,27 +2571,17 @@ export default function Bookings() {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">From :</span>
-                  <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">Jan</option>
-                    {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                  </select>
-                  <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">1</option>
-                    {days.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                  <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                  <LegacyDatePicker
+                    value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
+                  />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">To :</span>
-                  <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">Jan</option>
-                    {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                  </select>
-                  <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">1</option>
-                    {days.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                  <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                  <LegacyDatePicker
+                    value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
+                  />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">Search with Date :</span>
@@ -2611,6 +2613,16 @@ export default function Bookings() {
                     <option value="">--Select--</option>
                     {users.map(u => (<option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>))}
                   </select>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-muted-foreground">Contact No :</span>
+                  <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-muted-foreground">Email :</span>
+                  <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} className="h-5 w-48 text-[11px] border border-input bg-background px-1 rounded-sm" />
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
