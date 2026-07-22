@@ -87,8 +87,9 @@ export default function Agents() {
     const matchesCity = !filters.cityId || agent.city_id === filters.cityId;
     const matchesContact = !filters.contactNo || 
       agent.phone?.includes(filters.contactNo);
+    const matchesUser = !filters.user || agent.created_by === filters.user;
     
-    return matchesName && matchesEmail && matchesCity && matchesContact;
+    return matchesName && matchesEmail && matchesCity && matchesContact && matchesUser;
   });
 
   const {
