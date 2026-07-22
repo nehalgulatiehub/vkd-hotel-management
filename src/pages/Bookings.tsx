@@ -956,19 +956,26 @@ export default function Bookings() {
         numberOfPersons: sb.number_of_persons || 0,
         ratePerPerson: sb.rate_per_person || 0,
         totalAmount: sb.total_amount || 0,
+        notes: sb.notes || "",
         createdAt: booking.created_at
       })));
     }
 
     if (vehicleRes.data) {
-      setViewDetailVehicleInfo(vehicleRes.data.map((vb: any) => ({
-        vehicleType: vb.vehicle_type || "-",
-        transporter: vb.transporters?.name || "-",
-        pickupDate: vb.pickup_date,
-        rate: vb.rate || 0,
-        totalAmount: vb.total_amount || 0,
-        createdAt: booking.created_at
-      })));
+      setViewDetailVehicleInfo(vehicleRes.data.map((vb: any) => {
+        const [vehicleDetails, ...noteParts] = String(vb.notes || "").split("\n");
+        const vehicleNote = noteParts.join("\n").trim();
+
+        return {
+          vehicleType: vehicleDetails?.trim() || vb.vehicle_type || "-",
+          transporter: vb.transporters?.name || "-",
+          pickupDate: vb.pickup_date,
+          rate: vb.rate || 0,
+          totalAmount: vb.total_amount || 0,
+          notes: vehicleNote,
+          createdAt: booking.created_at
+        };
+      }));
     }
 
     const normalizeRoute = (route: unknown) =>
@@ -1003,6 +1010,7 @@ export default function Bookings() {
         travelDate: vb.travel_date,
         ratePerSeat: vb.rate_per_seat || 0,
         totalAmount: vb.total_amount || 0,
+          notes: vb.notes || "",
         createdAt: booking.created_at,
       };
     };
@@ -2769,13 +2777,17 @@ export default function Bookings() {
                     <table className="w-full">
                       <tbody>
                         <tr><td className="pr-4 py-0.5" style={{ width: '45%' }}>Type :</td><td className="py-0.5 capitalize">{selectedBooking.booking_type === "agent" ? "Agent" : "Direct"}</td></tr>
-                        <tr><td className="pr-4 py-0.5">Reference :</td><td className="py-0.5">{selectedBooking.reference || selectedBooking.notes || "-"}</td></tr>
+                        <tr><td className="pr-4 py-0.5">Reference :</td><td className="py-0.5">{selectedBooking.reference || "-"}</td></tr>
+                        <tr><td className="pr-4 py-0.5">Reference Email :</td><td className="py-0.5">{selectedBooking.reference_email || "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Email-Id :</td><td className="py-0.5">{selectedBooking.email || "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Customer Name :</td><td className="py-0.5">{selectedBooking.customer_name || "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Contact No :</td><td className="py-0.5">{selectedBooking.contact_no || "-"}</td></tr>
+                        <tr><td className="pr-4 py-0.5">Address :</td><td className="py-0.5 whitespace-pre-wrap">{selectedBooking.address || "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">No. of People :</td><td className="py-0.5">{selectedBooking.adults || 0} Adult {selectedBooking.children || 0} Children</td></tr>
                         <tr><td className="pr-4 py-0.5">Booking From :</td><td className="py-0.5">{selectedBooking.check_in_date ? new Date(selectedBooking.check_in_date).toLocaleDateString("en-GB") : "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Booking To :</td><td className="py-0.5">{selectedBooking.check_out_date ? new Date(selectedBooking.check_out_date).toLocaleDateString("en-GB") : "-"}</td></tr>
+                        {selectedBooking.cheque_no && <tr><td className="pr-4 py-0.5">Cheque No :</td><td className="py-0.5">{selectedBooking.cheque_no}</td></tr>}
+                        {selectedBooking.special_requests && <tr><td className="pr-4 py-0.5">Special Requests :</td><td className="py-0.5 whitespace-pre-wrap">{selectedBooking.special_requests}</td></tr>}
                         
                         {/* Own Hotel Section (Hotel) */}
                         {viewDetailOwnHotelInfo.length > 0 && viewDetailOwnHotelInfo.map((hotel, idx) => (
@@ -2787,6 +2799,7 @@ export default function Bookings() {
                             <tr><td className="pr-4 py-0.5">Hotel Check In :</td><td className="py-0.5">{hotel.checkIn ? new Date(hotel.checkIn).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                            {hotel.notes && <tr><td className="pr-4 py-0.5">Package / Notes :</td><td className="py-0.5 whitespace-pre-wrap">{hotel.notes}</td></tr>}
                           </React.Fragment>
                         ))}
                         
@@ -2802,6 +2815,7 @@ export default function Bookings() {
                             <tr><td className="pr-4 py-0.5">Hotel Check Out :</td><td className="py-0.5">{hotel.checkOut ? new Date(hotel.checkOut).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Room Booking Price :</td><td className="py-0.5">Rs. {(hotel.roomRate || 0).toLocaleString('en-IN')}/-</td></tr>
                             <tr><td className="pr-4 py-0.5">Room Selling Price :</td><td className="py-0.5">Rs. {(hotel.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                            {hotel.notes && <tr><td className="pr-4 py-0.5">Package / Notes :</td><td className="py-0.5 whitespace-pre-wrap">{hotel.notes}</td></tr>}
                           </React.Fragment>
                         ))}
                         
@@ -2815,6 +2829,7 @@ export default function Bookings() {
                             <tr><td className="pr-4 py-0.5">No of Safari :</td><td className="py-0.5">{safari.numberOfPersons}</td></tr>
                             <tr><td className="pr-4 py-0.5">Safari Booking Price :</td><td className="py-0.5">Rs. {(safari.ratePerPerson || 0).toLocaleString('en-IN')}/-</td></tr>
                             <tr><td className="pr-4 py-0.5">Safari Selling Price :</td><td className="py-0.5">Rs. {(safari.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                            {safari.notes && <tr><td className="pr-4 py-0.5">Safari Notes :</td><td className="py-0.5 whitespace-pre-wrap">{safari.notes}</td></tr>}
                           </React.Fragment>
                         ))}
                         
@@ -2832,6 +2847,7 @@ export default function Bookings() {
                                 <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
                                 <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
                                 <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                                {volvo.notes && <tr><td className="pr-4 py-0.5">Volvo Notes :</td><td className="py-0.5 whitespace-pre-wrap">{volvo.notes}</td></tr>}
                               </React.Fragment>
                             ))
                           ) : (
@@ -2856,6 +2872,7 @@ export default function Bookings() {
                                 <tr><td className="pr-4 py-0.5">Volvo Journey Date :</td><td className="py-0.5">{volvo.travelDate ? new Date(volvo.travelDate).toLocaleDateString("en-GB") : "-"}</td></tr>
                                 <tr><td className="pr-4 py-0.5">Volvo Booking Price :</td><td className="py-0.5">Rs. {(volvo.ratePerSeat || 0).toLocaleString('en-IN')}/-</td></tr>
                                 <tr><td className="pr-4 py-0.5">Volvo Selling Price :</td><td className="py-0.5">Rs. {(volvo.totalAmount || 0).toLocaleString('en-IN')}/-</td></tr>
+                                {volvo.notes && <tr><td className="pr-4 py-0.5">Volvo Notes :</td><td className="py-0.5 whitespace-pre-wrap">{volvo.notes}</td></tr>}
                               </React.Fragment>
                             ))
                           ) : (
@@ -2876,9 +2893,11 @@ export default function Bookings() {
                             <tr><td className="pr-4 py-0.5">Transporter :</td><td className="py-0.5">{vehicle.transporter}</td></tr>
                             <tr><td className="pr-4 py-0.5">Vehicle Booking Date :</td><td className="py-0.5">{vehicle.createdAt ? new Date(vehicle.createdAt).toLocaleDateString("en-GB") : "-"}</td></tr>
                             <tr><td className="pr-4 py-0.5">Vehicle Journey Date :</td><td className="py-0.5">{vehicle.pickupDate ? new Date(vehicle.pickupDate).toLocaleDateString("en-GB") : "-"}</td></tr>
+                            {vehicle.notes && <tr><td className="pr-4 py-0.5">Vehicle Notes :</td><td className="py-0.5 whitespace-pre-wrap">{vehicle.notes}</td></tr>}
                           </React.Fragment>
                         ))}
                         
+                        {selectedBooking.notes && <tr><td className="pr-4 py-0.5 pt-3">Booking Notes :</td><td className="py-0.5 pt-3 whitespace-pre-wrap">{selectedBooking.notes}</td></tr>}
                         <tr><td className="pr-4 py-0.5 pt-3">Date :</td><td className="py-0.5 pt-3">{selectedBooking.created_at ? new Date(selectedBooking.created_at).toLocaleDateString("en-GB") : "-"}</td></tr>
                       </tbody>
                     </table>
