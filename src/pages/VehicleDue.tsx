@@ -39,6 +39,8 @@ export default function VehicleDue() {
     user: "",
     transporter: "",
     customer: "",
+    contactNo: "",
+    email: "",
     vehicle: "",
     reference: "",
     searchWithDate: false
