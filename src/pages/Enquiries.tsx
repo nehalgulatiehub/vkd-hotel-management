@@ -540,7 +540,7 @@ export default function Enquiries() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by enquiry number, customer name, or agent..."
+                    placeholder="Search by enquiry no, customer, agent, contact no or email..."
                     className="pl-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
