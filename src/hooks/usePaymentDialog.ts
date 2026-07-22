@@ -83,8 +83,29 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
 
       if (paymentError) throw paymentError;
 
-      // NOTE: We do NOT update booking.paid_amount or service table amounts here.
-      // This happens when the payment is APPROVED by an admin via syncServiceTableOnApproval.
+      // Recalculate booking totals so the received/due amounts reflect the new payment
+      // immediately on the bookings list (regardless of approval status).
+      try {
+        const { data: bookingData } = await supabase
+          .from("bookings")
+          .select("total_amount")
+          .eq("id", selectedBooking.id)
+          .maybeSingle();
+        const { data: allPays } = await supabase
+          .from("payments")
+          .select("amount")
+          .eq("booking_id", selectedBooking.id);
+        const totalPaid = (allPays || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+        const totalAmount = Number(bookingData?.total_amount || 0);
+        const due = Math.max(0, totalAmount - totalPaid);
+        const status = totalPaid <= 0 ? "pending" : due <= 0 ? "paid" : "partial";
+        await supabase
+          .from("bookings")
+          .update({ paid_amount: totalPaid, due_amount: due, payment_status: status })
+          .eq("id", selectedBooking.id);
+      } catch (e) {
+        console.error("Recalc booking totals after payment failed:", e);
+      }
 
       toast.success("Payment added successfully (pending approval)");
       setShowPaymentDialog(false);
