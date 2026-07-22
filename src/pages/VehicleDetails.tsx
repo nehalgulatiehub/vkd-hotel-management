@@ -43,6 +43,8 @@ export default function VehicleDetails() {
     if (filters.transporterId && booking.transporter_id !== filters.transporterId) return false;
     if (filters.vehicle && !booking.vehicle_type?.toLowerCase().includes(filters.vehicle.toLowerCase()) && !booking.vehicle_number?.toLowerCase().includes(filters.vehicle.toLowerCase())) return false;
     if (filters.reference && !booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
+    if (filters.contact && !booking.bookings?.contact_no?.toLowerCase().includes(filters.contact.toLowerCase())) return false;
+    if (filters.email && !booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
     return true;
   });
 

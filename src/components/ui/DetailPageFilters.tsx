@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface FilterOptions {
   showType?: boolean;
@@ -13,6 +14,7 @@ interface FilterOptions {
   showVehicle?: boolean;
   showTicketNo?: boolean;
   showNoOfSafari?: boolean;
+  showContactEmail?: boolean;
 }
 
 interface FilterValues {
@@ -34,6 +36,8 @@ interface FilterValues {
   vehicle: string;
   ticketNo: string;
   noOfSafari: string;
+  contact: string;
+  email: string;
 }
 
 interface DetailPageFiltersProps {
@@ -166,25 +170,34 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
       <div style={{ ...rowStyle, gridTemplateColumns: "auto auto 1fr" }}>
         <div style={fieldStyle}>
           <span style={labelStyle}>From :</span>
-          <select style={{ ...selectStyle, width: 60 }} value={filters.fromMonth} onChange={(e) => updateFilter("fromMonth", e.target.value)}>
-            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select style={{ ...selectStyle, width: 48 }} value={filters.fromDay} onChange={(e) => updateFilter("fromDay", e.target.value)}>
-            {days.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <input type="text" style={{ ...inputStyle, width: 54 }} value={filters.fromYear} onChange={(e) => updateFilter("fromYear", e.target.value)} />
+          <div style={{ width: 150 }}>
+            <DateInput
+              value={`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`}
+              onChange={(e) => {
+                const iso = e.target.value;
+                const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (m) onFilterChange({ ...filters, fromYear: m[1], fromMonth: m[2], fromDay: m[3] });
+              }}
+              style={{ height: 22, fontSize: 11, padding: "2px 4px" }}
+            />
+          </div>
         </div>
 
         <div style={fieldStyle}>
           <span style={labelStyle}>To :</span>
-          <select style={{ ...selectStyle, width: 60 }} value={filters.toMonth} onChange={(e) => updateFilter("toMonth", e.target.value)}>
-            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select style={{ ...selectStyle, width: 48 }} value={filters.toDay} onChange={(e) => updateFilter("toDay", e.target.value)}>
-            {days.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <input type="text" style={{ ...inputStyle, width: 54 }} value={filters.toYear} onChange={(e) => updateFilter("toYear", e.target.value)} />
+          <div style={{ width: 150 }}>
+            <DateInput
+              value={`${filters.toYear}-${filters.toMonth}-${filters.toDay}`}
+              onChange={(e) => {
+                const iso = e.target.value;
+                const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (m) onFilterChange({ ...filters, toYear: m[1], toMonth: m[2], toDay: m[3] });
+              }}
+              style={{ height: 22, fontSize: 11, padding: "2px 4px" }}
+            />
+          </div>
         </div>
+
 
         <div style={{ ...fieldStyle, justifyContent: "flex-start" }}>
           <span style={labelStyle}>Search with Date :</span>
@@ -296,6 +309,20 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
           </div>
         )}
 
+        {options.showContactEmail !== false && (
+          <>
+            <div style={fieldStyle}>
+              <span style={labelStyle}>Contact No :</span>
+              <input type="text" style={{ ...inputStyle, flex: 1 }} value={filters.contact} onChange={(e) => updateFilter("contact", e.target.value)} />
+            </div>
+            <div style={fieldStyle}>
+              <span style={labelStyle}>Email :</span>
+              <input type="text" style={{ ...inputStyle, flex: 1 }} value={filters.email} onChange={(e) => updateFilter("email", e.target.value)} />
+            </div>
+          </>
+        )}
+
+
         <button
           onClick={onSearch}
           style={{
@@ -336,6 +363,8 @@ export const getDefaultFilters = (): FilterValues => {
     vehicle: "",
     ticketNo: "",
     noOfSafari: "",
+    contact: "",
+    email: "",
   };
 };
 
