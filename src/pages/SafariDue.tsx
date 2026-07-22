@@ -89,6 +89,10 @@ export default function SafariDue() {
     const matchesAgent = !filters.agentName || booking.bookings?.agent_id === filters.agentName;
     const matchesCustomer = !filters.customer || 
       booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
+    const matchesContact = !filters.contactNo ||
+      booking.bookings?.contact_no?.toLowerCase().includes(filters.contactNo.toLowerCase());
+    const matchesEmail = !filters.email ||
+      booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase());
     
     let matchesDate = true;
     if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
