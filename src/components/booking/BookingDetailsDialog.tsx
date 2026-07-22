@@ -197,14 +197,20 @@ export function BookingDetailsDialog({
               <table className="w-full">
                 <tbody>
                   {renderRow("Type :", booking.booking_type === "agent" ? "Agent" : "Direct")}
-                  {renderRow("Reference :", booking.reference || booking.notes)}
+                  {renderRow("Reference :", booking.reference)}
+                  {renderRow("Reference Email :", booking.reference_email)}
                   {renderRow("Email-Id :", booking.email)}
                   {renderRow("Customer Name :", booking.customer_name)}
                   {renderRow("Contact No :", booking.contact_no)}
+                  {renderRow("Address :", booking.address)}
                   {renderRow("No. of People :", `${booking.adults || 0} Adult ${booking.children || 0} Children`)}
                   {renderRow("Booking From :", formatDate(booking.check_in_date))}
                   {renderRow("Booking To :", formatDate(booking.check_out_date))}
+                  {booking.cheque_no && renderRow("Cheque No :", booking.cheque_no)}
                   {renderServiceDetails()}
+                  {serviceData?.notes && renderRow("Package / Notes :", serviceData.notes)}
+                  {booking.special_requests && renderRow("Special Requests :", booking.special_requests)}
+                  {booking.notes && renderRow("Booking Notes :", booking.notes)}
                   {renderRow("Date :", formatDate(booking.created_at))}
                 </tbody>
               </table>
