@@ -97,6 +97,10 @@ export default function VehicleDue() {
     const matchesType = !filters.type || booking.bookings?.booking_type === filters.type;
     const matchesCustomer = !filters.customer || 
       booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
+    const matchesContact = !filters.contactNo ||
+      booking.bookings?.contact_no?.toLowerCase().includes(filters.contactNo.toLowerCase());
+    const matchesEmail = !filters.email ||
+      booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase());
     const matchesTransporter = !filters.transporter || booking.transporter_id === filters.transporter;
     const matchesUser = !filters.user || booking.bookings?.created_by === filters.user;
     const matchesVehicle = !filters.vehicle || 
