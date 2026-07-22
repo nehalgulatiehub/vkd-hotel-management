@@ -41,6 +41,8 @@ export default function BookingDue() {
     room: "",
     package: "",
     customer: "",
+    contactNo: "",
+    email: "",
     reference: "",
     user: "",
     chequeNo: "",
@@ -148,7 +150,15 @@ export default function BookingDue() {
     // Customer filter
     const matchesCustomer = !filters.customer || 
       booking.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
-    
+
+    // Contact No filter
+    const matchesContact = !filters.contactNo ||
+      booking.contact_no?.toLowerCase().includes(filters.contactNo.toLowerCase());
+
+    // Email filter
+    const matchesEmail = !filters.email ||
+      booking.email?.toLowerCase().includes(filters.email.toLowerCase());
+
     // Reference filter
     const matchesReference = !filters.reference || 
       booking.reference?.toLowerCase().includes(filters.reference.toLowerCase());
@@ -179,7 +189,7 @@ export default function BookingDue() {
       }
     }
     
-    return matchesType && matchesAgent && matchesCustomer && 
+    return matchesType && matchesAgent && matchesCustomer && matchesContact && matchesEmail &&
            matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser;
   });
 
@@ -476,6 +486,22 @@ export default function BookingDue() {
                   value={filters.customer} 
                   onChange={(e) => setFilters({...filters, customer: e.target.value})} 
                   className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" 
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Contact No :</span>
+                <input
+                  value={filters.contactNo}
+                  onChange={(e) => setFilters({...filters, contactNo: e.target.value})}
+                  className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Email :</span>
+                <input
+                  value={filters.email}
+                  onChange={(e) => setFilters({...filters, email: e.target.value})}
+                  className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm"
                 />
               </div>
               <div className="flex items-center gap-1">

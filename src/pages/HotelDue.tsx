@@ -39,6 +39,8 @@ export default function HotelDue() {
     user: "",
     hotel: "",
     customer: "",
+    contactNo: "",
+    email: "",
     reference: "",
     searchWithDate: false
   });
@@ -101,6 +103,10 @@ const fetchHotels = async () => {
     const matchesAgent = !filters.agentName || booking.bookings?.agent_id === filters.agentName;
     const matchesCustomer = !filters.customer || 
       booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
+    const matchesContact = !filters.contactNo ||
+      booking.bookings?.contact_no?.toLowerCase().includes(filters.contactNo.toLowerCase());
+    const matchesEmail = !filters.email ||
+      booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase());
     const matchesHotel = !filters.hotel || booking.hotel_id === filters.hotel;
     const matchesUser = !filters.user || booking.bookings?.created_by === filters.user;
     
@@ -116,7 +122,7 @@ const fetchHotels = async () => {
       }
     }
     
-    return matchesType && matchesAgent && matchesCustomer && matchesHotel && matchesUser && matchesDate;
+    return matchesType && matchesAgent && matchesCustomer && matchesContact && matchesEmail && matchesHotel && matchesUser && matchesDate;
   });
 
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
@@ -289,6 +295,14 @@ const fetchHotels = async () => {
               <div className="flex items-center gap-1">
                 <span className="text-[11px] text-muted-foreground">Customer :</span>
                 <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Contact No :</span>
+                <input value={filters.contactNo} onChange={(e) => setFilters({...filters, contactNo: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Email :</span>
+                <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm" />
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-[11px] text-muted-foreground">Hotel Name :</span>

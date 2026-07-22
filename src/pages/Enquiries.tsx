@@ -478,11 +478,17 @@ export default function Enquiries() {
     setEditingEnquiryId(null);
   };
 
-  const filteredEnquiries = enquiries.filter(enquiry =>
-    enquiry.enquiry_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    enquiry.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    enquiry.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEnquiries = enquiries.filter(enquiry => {
+    const q = searchTerm.toLowerCase();
+    return (
+      enquiry.enquiry_number?.toLowerCase().includes(q) ||
+      enquiry.customer_name?.toLowerCase().includes(q) ||
+      enquiry.agents?.name?.toLowerCase().includes(q) ||
+      enquiry.contact_no?.toLowerCase().includes(q) ||
+      enquiry.email?.toLowerCase().includes(q) ||
+      enquiry.reference_email?.toLowerCase().includes(q)
+    );
+  });
 
   const pagination = usePagination(filteredEnquiries);
   
@@ -534,7 +540,7 @@ export default function Enquiries() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by enquiry number, customer name, or agent..."
+                    placeholder="Search by enquiry no, customer, agent, contact no or email..."
                     className="pl-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
