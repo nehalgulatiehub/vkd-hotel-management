@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { DateInput } from "@/components/ui/DateInput";
 
 interface FilterOptions {
   showType?: boolean;
