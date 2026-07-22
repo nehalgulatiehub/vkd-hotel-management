@@ -14,6 +14,7 @@ interface FilterOptions {
   showVehicle?: boolean;
   showTicketNo?: boolean;
   showNoOfSafari?: boolean;
+  showContactEmail?: boolean;
 }
 
 interface FilterValues {
@@ -35,6 +36,8 @@ interface FilterValues {
   vehicle: string;
   ticketNo: string;
   noOfSafari: string;
+  contact: string;
+  email: string;
 }
 
 interface DetailPageFiltersProps {
