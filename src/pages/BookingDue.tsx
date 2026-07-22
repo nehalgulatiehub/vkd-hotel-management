@@ -150,7 +150,15 @@ export default function BookingDue() {
     // Customer filter
     const matchesCustomer = !filters.customer || 
       booking.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
-    
+
+    // Contact No filter
+    const matchesContact = !filters.contactNo ||
+      booking.contact_no?.toLowerCase().includes(filters.contactNo.toLowerCase());
+
+    // Email filter
+    const matchesEmail = !filters.email ||
+      booking.email?.toLowerCase().includes(filters.email.toLowerCase());
+
     // Reference filter
     const matchesReference = !filters.reference || 
       booking.reference?.toLowerCase().includes(filters.reference.toLowerCase());
