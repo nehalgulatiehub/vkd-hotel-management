@@ -461,9 +461,13 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                                   </TableCell>
                                   <TableCell className="border-r text-center">{payment.place || "-"}</TableCell>
                                   <TableCell className="border-r text-center">
-                                    <span className={payment.status === "approved" ? "text-green-600" : "text-orange-600"}>
-                                      {payment.status === "approved" ? "Approved" : "Pending"}
-                                    </span>
+                                    {summary.totalDue <= 0 && summary.totalReceived > 0 ? (
+                                      <span className="text-green-600">Paid</span>
+                                    ) : (
+                                      <span className={payment.status === "approved" ? "text-green-600" : "text-orange-600"}>
+                                        {payment.status === "approved" ? "Approved" : "Pending"}
+                                      </span>
+                                    )}
                                   </TableCell>
                                   <TableCell className="text-center">
                                     <div className="flex items-center justify-center gap-1">
