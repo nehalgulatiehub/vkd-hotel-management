@@ -2777,6 +2777,9 @@ export default function Bookings() {
                     <table className="w-full">
                       <tbody>
                         <tr><td className="pr-4 py-0.5" style={{ width: '45%' }}>Type :</td><td className="py-0.5 capitalize">{selectedBooking.booking_type === "agent" ? "Agent" : "Direct"}</td></tr>
+                        {selectedBooking.booking_type === "agent" && (
+                          <tr><td className="pr-4 py-0.5">Agent Name :</td><td className="py-0.5">{selectedBooking.agents?.name || "-"}</td></tr>
+                        )}
                         <tr><td className="pr-4 py-0.5">Reference :</td><td className="py-0.5">{selectedBooking.reference || "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Reference Email :</td><td className="py-0.5">{selectedBooking.reference_email || "-"}</td></tr>
                         <tr><td className="pr-4 py-0.5">Email-Id :</td><td className="py-0.5">{selectedBooking.email || "-"}</td></tr>

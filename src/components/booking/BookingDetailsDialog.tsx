@@ -197,6 +197,7 @@ export function BookingDetailsDialog({
               <table className="w-full">
                 <tbody>
                   {renderRow("Type :", booking.booking_type === "agent" ? "Agent" : "Direct")}
+                  {booking.booking_type === "agent" && renderRow("Agent Name :", booking.agents?.name)}
                   {renderRow("Reference :", booking.reference)}
                   {renderRow("Reference Email :", booking.reference_email)}
                   {renderRow("Email-Id :", booking.email)}
