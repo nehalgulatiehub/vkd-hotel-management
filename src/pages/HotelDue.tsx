@@ -297,6 +297,14 @@ const fetchHotels = async () => {
                 <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
               </div>
               <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Contact No :</span>
+                <input value={filters.contactNo} onChange={(e) => setFilters({...filters, contactNo: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground">Email :</span>
+                <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              </div>
+              <div className="flex items-center gap-1">
                 <span className="text-[11px] text-muted-foreground">Hotel Name :</span>
                 <select value={filters.hotel} onChange={(e) => setFilters({...filters, hotel: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[140px] rounded-sm">
                   <option value="">-------Select-------</option>
