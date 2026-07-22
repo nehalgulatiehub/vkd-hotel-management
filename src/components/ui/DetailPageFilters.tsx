@@ -363,6 +363,8 @@ export const getDefaultFilters = (): FilterValues => {
     vehicle: "",
     ticketNo: "",
     noOfSafari: "",
+    contact: "",
+    email: "",
   };
 };
 
