@@ -106,7 +106,7 @@ export default function SafariDue() {
       }
     }
     
-    return matchesType && matchesAgent && matchesCustomer && matchesDate;
+    return matchesType && matchesAgent && matchesCustomer && matchesContact && matchesEmail && matchesDate;
   });
 
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
