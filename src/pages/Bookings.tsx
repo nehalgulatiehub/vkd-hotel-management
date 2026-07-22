@@ -2386,7 +2386,7 @@ export default function Bookings() {
                 <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
                   <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Search</span>
-                    <span onClick={() => setFilters({ fromMonth: "", fromDay: "", fromYear: "", toMonth: "", toDay: "", toYear: "", type: "", agentName: "", hotel: "", room: "", package: "", customer: "", reference: "", user: "", chequeNo: "", searchWithDate: false })} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
+                    <span onClick={() => setFilters({ fromMonth: "", fromDay: "", fromYear: "", toMonth: "", toDay: "", toYear: "", type: "", agentName: "", hotel: "", room: "", package: "", customer: "", reference: "", user: "", chequeNo: "", contact: "", email: "", searchWithDate: false })} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
                   </div>
                   <div style={{ backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box", fontSize: 11 }}>
                     {/* Row 1: Date */}
