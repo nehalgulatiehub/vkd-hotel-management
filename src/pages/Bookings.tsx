@@ -155,6 +155,8 @@ export default function Bookings() {
     reference: "",
     user: "",
     chequeNo: "",
+    contact: "",
+    email: "",
     searchWithDate: false
   });
   
@@ -842,6 +844,14 @@ export default function Bookings() {
 
     // User filter
     const matchesUser = !filters.user || booking.created_by === filters.user;
+
+    // Contact filter
+    const matchesContact = !filters.contact ||
+      booking.contact_no?.toLowerCase().includes(filters.contact.toLowerCase());
+
+    // Email filter
+    const matchesEmail = !filters.email ||
+      booking.email?.toLowerCase().includes(filters.email.toLowerCase());
     
     // Date filter
     let matchesDate = true;
@@ -857,7 +867,8 @@ export default function Bookings() {
     }
     
     return matchesSearch && matchesType && matchesAgent && matchesCustomer && 
-           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser;
+           matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser &&
+           matchesContact && matchesEmail;
   });
 
   const pagination = usePagination(filteredBookings);
