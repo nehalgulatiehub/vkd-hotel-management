@@ -118,7 +118,7 @@ export default function VehicleDue() {
       }
     }
     
-    return matchesType && matchesCustomer && matchesTransporter && matchesUser && matchesVehicle && matchesDate;
+    return matchesType && matchesCustomer && matchesContact && matchesEmail && matchesTransporter && matchesUser && matchesVehicle && matchesDate;
   });
 
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
