@@ -122,7 +122,7 @@ const fetchHotels = async () => {
       }
     }
     
-    return matchesType && matchesAgent && matchesCustomer && matchesHotel && matchesUser && matchesDate;
+    return matchesType && matchesAgent && matchesCustomer && matchesContact && matchesEmail && matchesHotel && matchesUser && matchesDate;
   });
 
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
