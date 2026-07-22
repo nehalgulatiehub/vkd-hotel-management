@@ -39,6 +39,8 @@ export default function HotelDue() {
     user: "",
     hotel: "",
     customer: "",
+    contactNo: "",
+    email: "",
     reference: "",
     searchWithDate: false
   });
