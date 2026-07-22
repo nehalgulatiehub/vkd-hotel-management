@@ -309,6 +309,20 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
           </div>
         )}
 
+        {options.showContactEmail !== false && (
+          <>
+            <div style={fieldStyle}>
+              <span style={labelStyle}>Contact No :</span>
+              <input type="text" style={{ ...inputStyle, flex: 1 }} value={filters.contact} onChange={(e) => updateFilter("contact", e.target.value)} />
+            </div>
+            <div style={fieldStyle}>
+              <span style={labelStyle}>Email :</span>
+              <input type="text" style={{ ...inputStyle, flex: 1 }} value={filters.email} onChange={(e) => updateFilter("email", e.target.value)} />
+            </div>
+          </>
+        )}
+
+
         <button
           onClick={onSearch}
           style={{
