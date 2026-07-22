@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Staff can manage cancellations" ON public.cancellations;
+CREATE POLICY "Authenticated users can manage cancellations" ON public.cancellations FOR ALL TO authenticated USING (true) WITH CHECK (true);
