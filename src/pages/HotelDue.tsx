@@ -103,6 +103,10 @@ const fetchHotels = async () => {
     const matchesAgent = !filters.agentName || booking.bookings?.agent_id === filters.agentName;
     const matchesCustomer = !filters.customer || 
       booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
+    const matchesContact = !filters.contactNo ||
+      booking.bookings?.contact_no?.toLowerCase().includes(filters.contactNo.toLowerCase());
+    const matchesEmail = !filters.email ||
+      booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase());
     const matchesHotel = !filters.hotel || booking.hotel_id === filters.hotel;
     const matchesUser = !filters.user || booking.bookings?.created_by === filters.user;
     
