@@ -2393,27 +2393,17 @@ export default function Bookings() {
                     <div style={{ display: "grid", gridTemplateColumns: "auto auto 1fr", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>From :</label>
-                        <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 60 }}>
-                          <option value="">Mon</option>
-                          {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                        </select>
-                        <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 48 }}>
-                          <option value="">1</option>
-                          {days.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 54 }} />
+                        <LegacyDatePicker
+                          value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
+                        />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>To :</label>
-                        <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 60 }}>
-                          <option value="">Mon</option>
-                          {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                        </select>
-                        <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 48 }}>
-                          <option value="">1</option>
-                          {days.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, width: 54 }} />
+                        <LegacyDatePicker
+                          value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
+                        />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <label style={{ fontSize: 11 }}>Search with Date :</label>
@@ -2448,7 +2438,18 @@ export default function Bookings() {
                         </select>
                       </div>
                     </div>
-                    {/* Row 3: Hotel, Room, Package, Customer, Search */}
+                    {/* Row 3: Contact, Email */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
+                        <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Contact No :</label>
+                        <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
+                        <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Email :</label>
+                        <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }} />
+                      </div>
+                    </div>
+                    {/* Row 4: Hotel, Room, Package, Customer, Search */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto", gap: "6px 16px", padding: "4px 10px", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Hotel :</label>
