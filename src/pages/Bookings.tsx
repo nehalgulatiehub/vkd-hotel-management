@@ -2571,27 +2571,17 @@ export default function Bookings() {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">From :</span>
-                  <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">Jan</option>
-                    {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                  </select>
-                  <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">1</option>
-                    {days.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                  <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                  <LegacyDatePicker
+                    value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
+                  />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">To :</span>
-                  <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">Jan</option>
-                    {months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}
-                  </select>
-                  <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
-                    <option value="">1</option>
-                    {days.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                  <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} className="h-5 w-12 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                  <LegacyDatePicker
+                    value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
+                  />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] text-muted-foreground">Search with Date :</span>
@@ -2623,6 +2613,16 @@ export default function Bookings() {
                     <option value="">--Select--</option>
                     {users.map(u => (<option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>))}
                   </select>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-muted-foreground">Contact No :</span>
+                  <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-muted-foreground">Email :</span>
+                  <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} className="h-5 w-48 text-[11px] border border-input bg-background px-1 rounded-sm" />
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
