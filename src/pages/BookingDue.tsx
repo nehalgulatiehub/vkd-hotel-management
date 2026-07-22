@@ -189,7 +189,7 @@ export default function BookingDue() {
       }
     }
     
-    return matchesType && matchesAgent && matchesCustomer && 
+    return matchesType && matchesAgent && matchesCustomer && matchesContact && matchesEmail &&
            matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser;
   });
 
