@@ -41,6 +41,8 @@ export default function BookingDue() {
     room: "",
     package: "",
     customer: "",
+    contactNo: "",
+    email: "",
     reference: "",
     user: "",
     chequeNo: "",
