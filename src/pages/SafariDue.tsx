@@ -37,6 +37,8 @@ export default function SafariDue() {
     agentName: "",
     user: "",
     customer: "",
+    contactNo: "",
+    email: "",
     reference: "",
     searchWithDate: false
   });
