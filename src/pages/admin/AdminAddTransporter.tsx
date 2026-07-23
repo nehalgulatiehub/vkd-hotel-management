@@ -4,13 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { filterInputStyle, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 
+interface City {
+  id: string;
+  name: string;
+}
+
 export default function AdminAddTransporter() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
-  const [cities, setCities] = useState<any[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", city_id: "", notes: "" });
 
   useEffect(() => { fetchCities(); if (editId) fetchTransporterData(editId); }, [editId]);
