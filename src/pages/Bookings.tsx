@@ -235,7 +235,6 @@ export default function Bookings() {
   });
 
   useEffect(() => {
-    fetchAgents();
     fetchOwnHotels();
     fetchHotels();
     fetchAnotherHotels();
@@ -244,6 +243,10 @@ export default function Bookings() {
     fetchCities();
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (user?.id || isAdmin() || isAccount()) fetchAgents();
+  }, [user?.id]);
 
   const fetchUsers = async () => {
     const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
