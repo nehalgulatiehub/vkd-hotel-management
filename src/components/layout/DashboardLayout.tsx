@@ -167,10 +167,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (!item.menuKey) return true;
-    return hasMenuAccess(item.menuKey);
-  });
+  const filteredMenuItems = menuItems
+    .map((item) => {
+      if (item.submenu) {
+        const accessibleSubItems = item.submenu.filter((sub) => {
+          if (!sub.menuKey) return true;
+          return hasMenuAccess(sub.menuKey);
+        });
+        if (accessibleSubItems.length === 0) return null;
+        return { ...item, submenu: accessibleSubItems };
+      }
+      if (!item.menuKey) return item;
+      return hasMenuAccess(item.menuKey) ? item : null;
+    })
+    .filter(Boolean) as MenuItem[];
 
   if (loading) {
     return (
