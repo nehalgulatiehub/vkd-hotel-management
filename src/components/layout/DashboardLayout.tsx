@@ -68,12 +68,12 @@ const menuItems: MenuItem[] = [
     icon: PlusCircle,
     menuKey: "add_items",
     submenu: [
+      { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
       { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
       { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
       { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
     ],
   },
-  { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
   { title: "View City", url: "/cities", menuKey: "cities_view" },
   { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
   { title: "View Agent", url: "/agents", menuKey: "agents_view" },
