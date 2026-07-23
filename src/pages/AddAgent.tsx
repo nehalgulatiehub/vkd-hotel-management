@@ -17,7 +17,10 @@ export default function AddAgent() {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
-  
+  const { isAdmin, isAccount } = useAuthContext();
+  const canReassign = isAdmin() || isAccount();
+  const { profiles } = useProfilesMap();
+
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -27,6 +30,7 @@ export default function AddAgent() {
     city_id: "",
     commission_rate: 0,
     notes: "", // Used for Contact Person with Contact Details
+    created_by: "",
   });
 
   useEffect(() => {
