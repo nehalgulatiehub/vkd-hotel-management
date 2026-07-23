@@ -243,7 +243,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                               to={sub.url}
                               className={({ isActive }) =>
                                 cn(
-                                  "sidebar-pill sidebar-pill--sub",
+                                  "sidebar-pill",
                                   getSidebarModuleClass(sub.menuKey),
                                   isActive && "sidebar-pill--active"
                                 )
