@@ -858,26 +858,35 @@ export default function Bookings() {
     const matchesEmail = !filters.email ||
       booking.email?.toLowerCase().includes(filters.email.toLowerCase());
     
-    // Date filter — filter by Booking Date (created_at), inclusive range
+    // Date filter — filter by Booking From date (check_in_date), inclusive range
     let matchesDate = true;
     const hasFrom = filters.fromYear && filters.fromMonth && filters.fromDay;
     const hasTo = filters.toYear && filters.toMonth && filters.toDay;
     if (filters.searchWithDate && (hasFrom || hasTo)) {
-      const rawBookingDate = booking.created_at || booking.check_in_date;
-      const bookingDate = rawBookingDate ? new Date(rawBookingDate) : null;
+      // Prefer first hotel_bookings check-in (actual Booking From), fall back to booking's check_in_date
+      const firstHotelCheckIn = booking.hotel_bookings?.[0]?.check_in_date;
+      const rawBookingDate = firstHotelCheckIn || booking.check_in_date;
+      // Parse as local date (YYYY-MM-DD) to avoid timezone shifts
+      let bookingDate: Date | null = null;
+      if (rawBookingDate) {
+        const dateStr = String(rawBookingDate).slice(0, 10);
+        const [y, m, d] = dateStr.split('-').map(Number);
+        if (y && m && d) bookingDate = new Date(y, m - 1, d);
+      }
       if (!bookingDate || isNaN(bookingDate.getTime())) {
         matchesDate = false;
       } else {
         if (hasFrom) {
-          const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth.padStart(2, '0')}-${filters.fromDay.padStart(2, '0')}T00:00:00`);
+          const fromDate = new Date(Number(filters.fromYear), Number(filters.fromMonth) - 1, Number(filters.fromDay));
           matchesDate = matchesDate && bookingDate >= fromDate;
         }
         if (hasTo) {
-          const toDate = new Date(`${filters.toYear}-${filters.toMonth.padStart(2, '0')}-${filters.toDay.padStart(2, '0')}T23:59:59.999`);
+          const toDate = new Date(Number(filters.toYear), Number(filters.toMonth) - 1, Number(filters.toDay), 23, 59, 59, 999);
           matchesDate = matchesDate && bookingDate <= toDate;
         }
       }
     }
+
     
     return matchesSearch && matchesType && matchesAgent && matchesCustomer && 
            matchesReference && matchesCheque && matchesDate && matchesHotel && matchesRoom && matchesUser &&
