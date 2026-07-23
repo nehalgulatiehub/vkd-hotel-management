@@ -102,6 +102,7 @@ export default function AddAgent() {
       city_id: "",
       commission_rate: 0,
       notes: "",
+      created_by: "",
     });
   };
 
