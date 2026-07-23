@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
-import { formatDate } from "@/utils/dateFormat";
+import { formatDisplayDate } from "@/utils/dateFormat";
 import * as XLSX from "xlsx";
 
 export default function ExportBookings() {
@@ -66,8 +66,8 @@ export default function ExportBookings() {
       "Email": b.email || "-",
       "Type": b.booking_type || "-",
       "Agent": b.agent?.name || "-",
-      "Check-in": b.check_in_date ? formatDate(b.check_in_date) : "-",
-      "Check-out": b.check_out_date ? formatDate(b.check_out_date) : "-",
+      "Check-in": b.check_in_date ? formatDisplayDate(b.check_in_date) : "-",
+      "Check-out": b.check_out_date ? formatDisplayDate(b.check_out_date) : "-",
       "Adults": b.adults ?? 0,
       "Children": b.children ?? 0,
       "Total": b.total_amount ?? 0,
@@ -76,7 +76,7 @@ export default function ExportBookings() {
       "Payment Status": b.payment_status || "-",
       "Status": b.status || "-",
       "Created By": b.created_by ? getUserName(b.created_by) : "-",
-      "Created": b.created_at ? formatDate(b.created_at) : "-",
+      "Created": b.created_at ? formatDisplayDate(b.created_at) : "-",
       "Notes": b.notes || "-",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -179,8 +179,8 @@ export default function ExportBookings() {
                         <td className="p-3">{b.booking_number}</td>
                         <td className="p-3">{b.customer_name || "-"}</td>
                         <td className="p-3">{b.agent?.name || "-"}</td>
-                        <td className="p-3">{b.check_in_date ? formatDate(b.check_in_date) : "-"}</td>
-                        <td className="p-3">{b.check_out_date ? formatDate(b.check_out_date) : "-"}</td>
+                        <td className="p-3">{b.check_in_date ? formatDisplayDate(b.check_in_date) : "-"}</td>
+                        <td className="p-3">{b.check_out_date ? formatDisplayDate(b.check_out_date) : "-"}</td>
                         <td className="p-3 text-right">{b.total_amount ?? 0}</td>
                         <td className="p-3 text-right">{b.paid_amount ?? 0}</td>
                         <td className="p-3 text-right">{b.due_amount ?? 0}</td>
