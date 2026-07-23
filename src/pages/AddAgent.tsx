@@ -67,10 +67,14 @@ export default function AddAgent() {
     e.preventDefault();
     
     // Prepare data, converting empty strings to null for UUID fields
-    const submitData = {
+    const submitData: any = {
       ...formData,
       city_id: formData.city_id || null,
     };
+    if (!canReassign || !submitData.created_by) {
+      delete submitData.created_by;
+    }
+    
     
     if (isEditMode && editId) {
       const { error } = await supabase.from("agents").update(submitData).eq("id", editId);
