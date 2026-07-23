@@ -38,19 +38,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <SidebarProvider>
       <div className="flex flex-col min-h-screen w-full" style={{ backgroundColor: "rgb(253, 246, 246)" }}>
         {/* Pink Header with Logo */}
-        <header className="py-4 px-6 print:hidden" style={{ backgroundColor: "rgb(248, 216, 217)" }}>
-          <img src={mukutLogo} alt="Mukut Hotels" className="h-16" />
+        <header
+          className="py-3 px-4 md:py-4 md:px-6 print:hidden flex items-center gap-3 sticky top-0 z-40"
+          style={{ backgroundColor: "rgb(248, 216, 217)" }}
+        >
+          <SidebarTrigger className="md:hidden text-[#8B1538]" />
+          <img src={mukutLogo} alt="Mukut Hotels" className="h-10 md:h-16" />
         </header>
 
         {/* Secured Admin Panel Label */}
-        <div className="px-6 py-1 print:hidden">
-          <span className="text-[#8B1538] font-bold text-xs tracking-widest uppercase">Secured Admin Panel V1.0</span>
+        <div className="px-4 md:px-6 py-1 print:hidden">
+          <span className="text-[#8B1538] font-bold text-[10px] md:text-xs tracking-widest uppercase">Secured Admin Panel V1.0</span>
         </div>
 
         {/* Sidebar + Content */}
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-w-0">
           <AdminSidebar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 min-w-0 overflow-x-auto">
             {children}
           </main>
         </div>
