@@ -61,6 +61,7 @@ const categoryLabels: Record<ItemCategory, string> = {
 
 const unitLabels: Record<ItemUnit, string> = {
   kg: "Kilogram (kg)",
+  gram: "Gram (g)",
   liter: "Liter",
   piece: "Piece",
   box: "Box",
