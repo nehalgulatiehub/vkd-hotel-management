@@ -10,7 +10,6 @@ import mukutLogo from "@/assets/mukut-logo.webp";
 import { cn } from "@/lib/utils";
 import { PlusCircle, ChevronDown, Menu, X } from "lucide-react";
 
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -69,12 +68,12 @@ const menuItems: MenuItem[] = [
     menuKey: "add_items",
     submenu: [
       { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
+      { title: "View City", url: "/cities", menuKey: "cities_view" },
       { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
       { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
-      { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
-      { title: "View City", url: "/cities", menuKey: "cities_view" },
-      { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
       { title: "View Agent", url: "/agents", menuKey: "agents_view" },
+      { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
+      { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
       { title: "View Transporter", url: "/transporters", menuKey: "transporters_view" },
       { title: "Export Transporter", url: "/transporters/export", menuKey: "transporters_export" },
     ],
@@ -238,10 +237,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Mobile Drawer */}
         {mobileNavOpen && (
           <div className="md:hidden fixed inset-0 z-50 flex print:hidden">
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setMobileNavOpen(false)}
-            />
+            <div className="absolute inset-0 bg-black/50" onClick={() => setMobileNavOpen(false)} />
             <aside
               className="relative w-72 max-w-[85vw] h-full shadow-xl overflow-hidden flex flex-col"
               style={{ backgroundColor: "rgb(253, 246, 246)" }}
@@ -291,11 +287,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 }
 
-function renderMenu(
-  items: MenuItem[],
-  openDropdown: string | null,
-  setOpenDropdown: (v: string | null) => void,
-) {
+function renderMenu(items: MenuItem[], openDropdown: string | null, setOpenDropdown: (v: string | null) => void) {
   return items.map((item) => {
     if (item.submenu && item.submenu.length > 0) {
       const isOpen = openDropdown === item.title;
@@ -303,10 +295,7 @@ function renderMenu(
         <div key={item.title} className="space-y-1">
           <button
             onClick={() => setOpenDropdown(isOpen ? null : item.title)}
-            className={cn(
-              "sidebar-pill w-full flex items-center justify-between",
-              getSidebarModuleClass(item.menuKey),
-            )}
+            className={cn("sidebar-pill w-full flex items-center justify-between", getSidebarModuleClass(item.menuKey))}
           >
             <span className="flex items-center gap-1.5">
               {item.icon && <item.icon className="h-3 w-3" />}
