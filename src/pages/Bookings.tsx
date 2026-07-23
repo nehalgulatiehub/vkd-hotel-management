@@ -2547,22 +2547,22 @@ export default function Bookings() {
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top" }}>
-                              {(booking.created_by === user?.id || isAdmin()) ? (
-                                [
-                                  { label: "View Booking", fn: () => handleViewDetails(booking) },
-                                  { label: "Print Booking", fn: () => handlePrintBooking(booking) },
-                                  { label: "Booking Voucher", fn: () => setVoucherBookingId(booking.id) },
-                                  { label: "View Payment", fn: () => handleViewPayment(booking) },
-                                  { label: "View Refund Payment", fn: () => handleRefundPayment(booking) },
-                                  { label: "Edit Booking", fn: () => handleEditBooking(booking) },
-                                  { label: "Add Payment", fn: () => handleAddPayment(booking) },
-                                  { label: "Cancel", fn: () => handleCancelBooking(booking) },
-                                ].map((a, i) => (
+                              {(() => {
+                                const isOwner = booking.created_by === user?.id || isAdmin();
+                                const actions = [
+                                  { label: "View Booking", fn: () => handleViewDetails(booking), always: true },
+                                  { label: "Print Booking", fn: () => handlePrintBooking(booking), always: true },
+                                  { label: "Booking Voucher", fn: () => setVoucherBookingId(booking.id), always: true },
+                                  { label: "View Payment", fn: () => handleViewPayment(booking), always: true },
+                                  { label: "View Refund Payment", fn: () => handleRefundPayment(booking), always: true },
+                                  { label: "Edit Booking", fn: () => handleEditBooking(booking), always: false },
+                                  { label: "Add Payment", fn: () => handleAddPayment(booking), always: false },
+                                  { label: "Cancel", fn: () => handleCancelBooking(booking), always: false },
+                                ].filter(a => isOwner || a.always);
+                                return actions.map((a, i) => (
                                   <span key={i} onClick={a.fn} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10, display: "block" }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>{a.label}</span>
-                                ))
-                              ) : (
-                                <span style={{ color: "#999", fontSize: 10 }}>—</span>
-                              )}
+                                ));
+                              })()}
                             </td>
 
                           </tr>
@@ -2731,20 +2731,25 @@ export default function Bookings() {
                             </td>
                             <td className="border border-border px-3 py-2">
                               <div className="flex flex-col gap-1">
-                                {(booking.created_by === user?.id || isAdmin()) ? (
-                                  <>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
-                                  </>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">—</span>
-                                )}
+                                {(() => {
+                                  const isOwner = booking.created_by === user?.id || isAdmin();
+                                  return (
+                                    <>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
+                                      {isOwner && (
+                                        <>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
+                                        </>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </td>
 
