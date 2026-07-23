@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { AccountSidebar, getAccountMenuItemForPath, getFirstAccessibleAccountRoute } from "./AccountSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import mukutLogo from "@/assets/mukut-logo.webp";
 
 interface AccountLayoutProps {
