@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
 
 export default function AddAgent() {
   const navigate = useNavigate();
