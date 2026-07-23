@@ -65,18 +65,23 @@ export default function AddAnotherHotel() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const payload = {
+      ...formData,
+      city_id: formData.city_id || null,
+    };
+    
     if (isEditMode && editId) {
-      const { error } = await supabase.from("another_hotels").update(formData).eq("id", editId);
+      const { error } = await supabase.from("another_hotels").update(payload).eq("id", editId);
       if (error) {
-        toast.error("Error updating hotel");
+        toast.error("Error updating hotel: " + error.message);
       } else {
         toast.success("Hotel updated successfully");
         navigate("/hotels");
       }
     } else {
-      const { error } = await supabase.from("another_hotels").insert([formData]);
+      const { error } = await supabase.from("another_hotels").insert([payload]);
       if (error) {
-        toast.error("Error adding hotel");
+        toast.error("Error adding hotel: " + error.message);
       } else {
         toast.success("Hotel added successfully");
         navigate("/hotels");
