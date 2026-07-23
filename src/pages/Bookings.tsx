@@ -858,16 +858,24 @@ export default function Bookings() {
     const matchesEmail = !filters.email ||
       booking.email?.toLowerCase().includes(filters.email.toLowerCase());
     
-    // Date filter
+    // Date filter — filter by Booking Date (created_at), inclusive range
     let matchesDate = true;
-    if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
-      const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth.padStart(2, '0')}-${filters.fromDay.padStart(2, '0')}`);
-      const bookingDate = new Date(booking.check_in_date);
-      matchesDate = bookingDate >= fromDate;
-      
-      if (filters.toYear && filters.toMonth && filters.toDay) {
-        const toDate = new Date(`${filters.toYear}-${filters.toMonth.padStart(2, '0')}-${filters.toDay.padStart(2, '0')}`);
-        matchesDate = matchesDate && bookingDate <= toDate;
+    const hasFrom = filters.fromYear && filters.fromMonth && filters.fromDay;
+    const hasTo = filters.toYear && filters.toMonth && filters.toDay;
+    if (filters.searchWithDate && (hasFrom || hasTo)) {
+      const rawBookingDate = booking.created_at || booking.check_in_date;
+      const bookingDate = rawBookingDate ? new Date(rawBookingDate) : null;
+      if (!bookingDate || isNaN(bookingDate.getTime())) {
+        matchesDate = false;
+      } else {
+        if (hasFrom) {
+          const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth.padStart(2, '0')}-${filters.fromDay.padStart(2, '0')}T00:00:00`);
+          matchesDate = matchesDate && bookingDate >= fromDate;
+        }
+        if (hasTo) {
+          const toDate = new Date(`${filters.toYear}-${filters.toMonth.padStart(2, '0')}-${filters.toDay.padStart(2, '0')}T23:59:59.999`);
+          matchesDate = matchesDate && bookingDate <= toDate;
+        }
       }
     }
     
