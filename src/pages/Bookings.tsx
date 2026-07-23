@@ -313,11 +313,13 @@ export default function Bookings() {
   };
 
   const fetchAgents = async () => {
-    const { data, error } = await supabase
-      .from("agents")
-      .select("*")
-      .order("name");
-    
+    let query = supabase.from("agents").select("*").order("name");
+    // Restrict: non-admin/non-account users only see agents they created
+    if (!isAdmin() && !isAccount() && user?.id) {
+      query = query.eq("created_by", user.id);
+    }
+    const { data, error } = await query;
+
     if (error) {
       toast.error("Failed to load agents");
     } else {
