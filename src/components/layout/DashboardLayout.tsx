@@ -8,7 +8,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import mukutLogo from "@/assets/mukut-logo.webp";
 import { cn } from "@/lib/utils";
-import { PlusCircle, ChevronDown } from "lucide-react";
+import { PlusCircle, ChevronDown, Menu, X } from "lucide-react";
 
 
 interface DashboardLayoutProps {
