@@ -4,13 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { filterInputStyle, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 
+interface City {
+  id: string;
+  name: string;
+}
+
 export default function AdminAddTransporter() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
 
-  const [cities, setCities] = useState<any[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", city_id: "", notes: "" });
 
   useEffect(() => { fetchCities(); if (editId) fetchTransporterData(editId); }, [editId]);
@@ -25,11 +30,12 @@ export default function AdminAddTransporter() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = { ...formData, city_id: formData.city_id || null };
     if (isEditMode && editId) {
-      const { error } = await supabase.from("transporters").update(formData).eq("id", editId);
+      const { error } = await supabase.from("transporters").update(payload).eq("id", editId);
       if (error) { toast.error("Error updating transporter"); } else { toast.success("Transporter updated successfully"); navigate("/admin/transporters"); }
     } else {
-      const { error } = await supabase.from("transporters").insert([formData]);
+      const { error } = await supabase.from("transporters").insert([payload]);
       if (error) { toast.error("Error adding transporter"); } else { toast.success("Transporter added successfully"); navigate("/admin/transporters"); }
     }
   };

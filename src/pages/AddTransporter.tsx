@@ -10,13 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 
+interface City {
+  id: string;
+  name: string;
+}
+
 export default function AddTransporter() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
   
-  const [cities, setCities] = useState<any[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -56,9 +61,13 @@ export default function AddTransporter() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      city_id: formData.city_id || null,
+    };
     
     if (isEditMode && editId) {
-      const { error } = await supabase.from("transporters").update(formData).eq("id", editId);
+      const { error } = await supabase.from("transporters").update(payload).eq("id", editId);
       if (error) {
         toast.error("Error updating transporter");
       } else {
@@ -66,7 +75,7 @@ export default function AddTransporter() {
         navigate("/transporters");
       }
     } else {
-      const { error } = await supabase.from("transporters").insert([formData]);
+      const { error } = await supabase.from("transporters").insert([payload]);
       if (error) {
         toast.error("Error adding transporter");
       } else {
