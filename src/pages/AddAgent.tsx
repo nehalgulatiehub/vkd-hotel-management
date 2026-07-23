@@ -56,6 +56,7 @@ export default function AddAgent() {
         city_id: data.city_id || "",
         commission_rate: data.commission_rate || 0,
         notes: data.notes || "",
+        created_by: data.created_by || "",
       });
     } else {
       toast.error("Failed to load agent data");
