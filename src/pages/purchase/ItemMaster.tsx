@@ -35,7 +35,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 
 type ItemCategory = "kitchen_items" | "housekeeping_items" | "linen" | "toiletries" | "maintenance" | "other";
-type ItemUnit = "kg" | "liter" | "piece" | "box" | "packet" | "dozen" | "meter" | "set";
+type ItemUnit = "kg" | "gram" | "liter" | "piece" | "box" | "packet" | "dozen" | "meter" | "set";
 
 interface PurchaseItem {
   id: string;
@@ -61,6 +61,7 @@ const categoryLabels: Record<ItemCategory, string> = {
 
 const unitLabels: Record<ItemUnit, string> = {
   kg: "Kilogram (kg)",
+  gram: "Gram (g)",
   liter: "Liter",
   piece: "Piece",
   box: "Box",
