@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { AdminSidebar } from "./AdminSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { format } from "date-fns";
 import mukutLogo from "@/assets/mukut-logo.webp";
 
