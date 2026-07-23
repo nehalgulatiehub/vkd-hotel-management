@@ -253,7 +253,7 @@ export default function Dashboard() {
       </div>
 
       {/* Today's Check-in & Check-out */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 8, marginBottom: 12 }}>
         <div style={{ background: "#fff", border: "1px solid #ccc" }}>
           <div style={{ background: "#2e7d32", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
             <span>Today's Check-In</span>
