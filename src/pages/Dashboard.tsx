@@ -195,7 +195,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 8, marginBottom: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 8, marginBottom: 12 }}>
         <div style={{ background: "#fff", border: "1px solid #ccc" }}>
           <div style={{ background: "#b44a50", color: "#fff", padding: "6px 12px", fontWeight: "bold", fontSize: 12 }}>
             Booking Trend (Last 30 Days)
