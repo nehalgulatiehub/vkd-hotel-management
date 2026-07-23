@@ -8,6 +8,8 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import mukutLogo from "@/assets/mukut-logo.webp";
 import { cn } from "@/lib/utils";
+import { PlusCircle, ChevronDown } from "lucide-react";
+
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,8 +23,10 @@ interface SubMenuItem {
 
 interface MenuItem {
   title: string;
-  url: string;
+  url?: string;
+  icon?: React.ComponentType<{ className?: string }>;
   menuKey?: string;
+  submenu?: SubMenuItem[];
 }
 
 // Module-based colors (actual HSL palette lives in src/index.css)
@@ -59,15 +63,22 @@ const getSidebarModuleClass = (menuKey?: string): string => {
 
 const menuItems: MenuItem[] = [
   { title: "Home", url: "/dashboard", menuKey: "dashboard" },
+  {
+    title: "Add Items",
+    icon: PlusCircle,
+    menuKey: "add_items",
+    submenu: [
+      { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
+      { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
+      { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
+    ],
+  },
   { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
   { title: "View City", url: "/cities", menuKey: "cities_view" },
-  { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
   { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
   { title: "View Agent", url: "/agents", menuKey: "agents_view" },
-  { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
   { title: "View Transporter", url: "/transporters", menuKey: "transporters_view" },
   { title: "Export Transporter", url: "/transporters/export", menuKey: "transporters_export" },
-  { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
   { title: "View Another Hotel", url: "/hotels", menuKey: "another_hotels_view" },
   { title: "Export Another Hotel", url: "/hotels/export", menuKey: "another_hotels_export" },
   { title: "Generate Enquiry", url: "/enquiries/add", menuKey: "enquiries_add" },
@@ -121,6 +132,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const { hasMenuAccess, isAdmin, isAccount } = useAuthContext();
 
   const currentDate = format(new Date(), "dd/MM/yyyy");
@@ -155,10 +167,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (!item.menuKey) return true;
-    return hasMenuAccess(item.menuKey);
-  });
+  const filteredMenuItems = menuItems
+    .map((item) => {
+      if (item.submenu) {
+        const accessibleSubItems = item.submenu.filter((sub) => {
+          if (!sub.menuKey) return true;
+          return hasMenuAccess(sub.menuKey);
+        });
+        if (accessibleSubItems.length === 0) return null;
+        return { ...item, submenu: accessibleSubItems };
+      }
+      if (!item.menuKey) return item;
+      return hasMenuAccess(item.menuKey) ? item : null;
+    })
+    .filter(Boolean) as MenuItem[];
 
   if (loading) {
     return (
@@ -190,17 +212,63 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <aside className="w-48 flex-shrink-0 print:hidden">
           <ScrollArea className="h-[calc(100vh-140px)]">
             <nav className="space-y-1 pr-2">
-              {filteredMenuItems.map((item) => (
-                <NavLink
-                  key={item.url + item.title}
-                  to={item.url}
-                  className={({ isActive }) =>
-                    cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
-                  }
-                >
-                  {item.title}
-                </NavLink>
-              ))}
+              {filteredMenuItems.map((item) => {
+                if (item.submenu && item.submenu.length > 0) {
+                  const isOpen = openDropdown === item.title;
+                  return (
+                    <div key={item.title} className="space-y-1">
+                      <button
+                        onClick={() => setOpenDropdown(isOpen ? null : item.title)}
+                        className={cn(
+                          "sidebar-pill w-full flex items-center justify-between",
+                          getSidebarModuleClass(item.menuKey)
+                        )}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          {item.icon && <item.icon className="h-3 w-3" />}
+                          {item.title}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transition-transform",
+                            isOpen && "rotate-180"
+                          )}
+                        />
+                      </button>
+                      {isOpen && (
+                        <div className="pl-3 space-y-1">
+                          {item.submenu.map((sub) => (
+                            <NavLink
+                              key={sub.url + sub.title}
+                              to={sub.url}
+                              className={({ isActive }) =>
+                                cn(
+                                  "sidebar-pill",
+                                  getSidebarModuleClass(sub.menuKey),
+                                  isActive && "sidebar-pill--active"
+                                )
+                              }
+                            >
+                              {sub.title}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <NavLink
+                    key={item.url + item.title}
+                    to={item.url!}
+                    className={({ isActive }) =>
+                      cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
+                    }
+                  >
+                    {item.title}
+                  </NavLink>
+                );
+              })}
               <button
                 onClick={handleLogout}
                 className="block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors bg-[#f8d8d9] text-[#8B1538] border-[#c9a0a5] hover:bg-red-100 hover:border-red-400 hover:text-red-600"
