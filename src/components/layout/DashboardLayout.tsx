@@ -33,10 +33,12 @@ const getSidebarModuleClass = (menuKey?: string): string => {
   if (menuKey.startsWith("agents_")) return "sidebar-pill--agent";
   if (menuKey.startsWith("transporters_")) return "sidebar-pill--transporter";
 
-  if (menuKey.startsWith("another_hotels_") || menuKey.startsWith("payments_hotel")) return "sidebar-pill--another-hotel";
+  if (menuKey.startsWith("another_hotels_") || menuKey.startsWith("payments_hotel"))
+    return "sidebar-pill--another-hotel";
   if (menuKey.startsWith("enquiries_")) return "sidebar-pill--enquiry";
 
-  if (menuKey.startsWith("bookings_") || menuKey.startsWith("payments_booking") || menuKey === "payments_view") return "sidebar-pill--booking";
+  if (menuKey.startsWith("bookings_") || menuKey.startsWith("payments_booking") || menuKey === "payments_view")
+    return "sidebar-pill--booking";
 
   if (menuKey.startsWith("payments_safari")) return "sidebar-pill--safari";
   if (menuKey.startsWith("payments_vehicle")) return "sidebar-pill--vehicle";
@@ -71,11 +73,11 @@ const menuItems: MenuItem[] = [
   { title: "Generate Enquiry", url: "/enquiries/add", menuKey: "enquiries_add" },
   { title: "View Enquiry", url: "/enquiries", menuKey: "enquiries_view" },
   { title: "Export Enquiry", url: "/enquiries/export", menuKey: "enquiries_export" },
-  { title: "Booking Availability", url: "/bookings/availability", menuKey: "bookings_availability" },
   { title: "Create Hold Booking", url: "/bookings/hold", menuKey: "bookings_hold_create" },
   { title: "View Hold Booking", url: "/bookings/hold-list", menuKey: "bookings_hold_view" },
   { title: "Create Booking", url: "/bookings/add", menuKey: "bookings_add" },
   { title: "View Booking", url: "/bookings", menuKey: "bookings_view" },
+  { title: "Booking Availability", url: "/bookings/availability", menuKey: "bookings_availability" },
   { title: "View Payment", url: "/payments", menuKey: "payments_view" },
   { title: "Booking Due Amount", url: "/payments/booking-due", menuKey: "payments_booking_due" },
   { title: "View Booking Payment", url: "/payments/booking", menuKey: "payments_booking_view" },
@@ -193,11 +195,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.url + item.title}
                   to={item.url}
                   className={({ isActive }) =>
-                    cn(
-                      "sidebar-pill",
-                      getSidebarModuleClass(item.menuKey),
-                      isActive && "sidebar-pill--active",
-                    )
+                    cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
                   }
                 >
                   {item.title}
