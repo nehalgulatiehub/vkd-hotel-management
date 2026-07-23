@@ -23,8 +23,10 @@ interface SubMenuItem {
 
 interface MenuItem {
   title: string;
-  url: string;
+  url?: string;
+  icon?: React.ComponentType<{ className?: string }>;
   menuKey?: string;
+  submenu?: SubMenuItem[];
 }
 
 // Module-based colors (actual HSL palette lives in src/index.css)
