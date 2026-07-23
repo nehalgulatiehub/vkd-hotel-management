@@ -112,16 +112,19 @@ export default function Dashboard() {
 
   const s: React.CSSProperties = { fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 };
 
+  const grid4: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 12 };
+  const grid3: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 12 };
+
   return (
     <div style={{ ...s, padding: 12, background: "#f5f5f5", minHeight: "100vh" }}>
       {/* Top Bar */}
-      <div style={{ background: "#b44a50", color: "#fff", padding: "8px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "#b44a50", color: "#fff", padding: "8px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
         <span style={{ fontWeight: "bold", fontSize: 13 }}>Dashboard</span>
         <span style={{ fontSize: 11 }}>{format(new Date(), "dd/MM/yyyy, EEEE")}</span>
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+      <div style={grid4}>
         {[
           { label: "Today's Bookings", val: stats.todayBookings },
           { label: "Total Bookings", val: stats.totalBookings },
@@ -136,7 +139,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+      <div style={grid4}>
         {[
           { label: "Confirmed", val: stats.confirmedBookings, color: "#2e7d32" },
           { label: "Cancelled", val: stats.cancelledBookings, color: "#c62828" },
@@ -151,7 +154,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Links */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
+      <div style={grid3}>
         {[
           { label: "Agents", val: stats.totalAgents, link: "/agents" },
           { label: "Hotels", val: stats.totalHotels, link: "/hotels" },
