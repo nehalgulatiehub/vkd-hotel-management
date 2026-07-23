@@ -1,0 +1,1 @@
+ALTER TYPE public.item_unit ADD VALUE IF NOT EXISTS 'gram';

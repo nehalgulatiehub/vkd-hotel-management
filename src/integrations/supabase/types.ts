@@ -2929,6 +2929,7 @@ export type Database = {
         | "dozen"
         | "meter"
         | "set"
+        | "gram"
       payment_status: "pending" | "partial" | "paid" | "refunded"
       po_status:
         | "created"
@@ -3103,6 +3104,7 @@ export const Constants = {
         "dozen",
         "meter",
         "set",
+        "gram",
       ],
       payment_status: ["pending", "partial", "paid", "refunded"],
       po_status: [
