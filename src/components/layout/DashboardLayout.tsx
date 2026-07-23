@@ -132,6 +132,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const { hasMenuAccess, isAdmin, isAccount } = useAuthContext();
 
   const currentDate = format(new Date(), "dd/MM/yyyy");
