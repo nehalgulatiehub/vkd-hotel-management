@@ -2547,22 +2547,22 @@ export default function Bookings() {
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, verticalAlign: "top" }}>
-                              {(booking.created_by === user?.id || isAdmin()) ? (
-                                [
-                                  { label: "View Booking", fn: () => handleViewDetails(booking) },
-                                  { label: "Print Booking", fn: () => handlePrintBooking(booking) },
-                                  { label: "Booking Voucher", fn: () => setVoucherBookingId(booking.id) },
-                                  { label: "View Payment", fn: () => handleViewPayment(booking) },
-                                  { label: "View Refund Payment", fn: () => handleRefundPayment(booking) },
-                                  { label: "Edit Booking", fn: () => handleEditBooking(booking) },
-                                  { label: "Add Payment", fn: () => handleAddPayment(booking) },
-                                  { label: "Cancel", fn: () => handleCancelBooking(booking) },
-                                ].map((a, i) => (
+                              {(() => {
+                                const isOwner = booking.created_by === user?.id || isAdmin();
+                                const actions = [
+                                  { label: "View Booking", fn: () => handleViewDetails(booking), always: true },
+                                  { label: "Print Booking", fn: () => handlePrintBooking(booking), always: true },
+                                  { label: "Booking Voucher", fn: () => setVoucherBookingId(booking.id), always: true },
+                                  { label: "View Payment", fn: () => handleViewPayment(booking), always: true },
+                                  { label: "View Refund Payment", fn: () => handleRefundPayment(booking), always: true },
+                                  { label: "Edit Booking", fn: () => handleEditBooking(booking), always: false },
+                                  { label: "Add Payment", fn: () => handleAddPayment(booking), always: false },
+                                  { label: "Cancel", fn: () => handleCancelBooking(booking), always: false },
+                                ].filter(a => isOwner || a.always);
+                                return actions.map((a, i) => (
                                   <span key={i} onClick={a.fn} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10, display: "block" }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>{a.label}</span>
-                                ))
-                              ) : (
-                                <span style={{ color: "#999", fontSize: 10 }}>—</span>
-                              )}
+                                ));
+                              })()}
                             </td>
 
                           </tr>
