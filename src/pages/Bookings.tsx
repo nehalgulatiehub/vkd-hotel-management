@@ -2731,20 +2731,25 @@ export default function Bookings() {
                             </td>
                             <td className="border border-border px-3 py-2">
                               <div className="flex flex-col gap-1">
-                                {(booking.created_by === user?.id || isAdmin()) ? (
-                                  <>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
-                                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
-                                  </>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">—</span>
-                                )}
+                                {(() => {
+                                  const isOwner = booking.created_by === user?.id || isAdmin();
+                                  return (
+                                    <>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
+                                      {isOwner && (
+                                        <>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
+                                        </>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </td>
 
