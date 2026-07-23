@@ -63,15 +63,22 @@ const getSidebarModuleClass = (menuKey?: string): string => {
 
 const menuItems: MenuItem[] = [
   { title: "Home", url: "/dashboard", menuKey: "dashboard" },
+  {
+    title: "Add Items",
+    icon: PlusCircle,
+    menuKey: "add_items",
+    submenu: [
+      { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
+      { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
+      { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
+    ],
+  },
   { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
   { title: "View City", url: "/cities", menuKey: "cities_view" },
-  { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
   { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
   { title: "View Agent", url: "/agents", menuKey: "agents_view" },
-  { title: "Add Transporter", url: "/transporters/add", menuKey: "transporters_add" },
   { title: "View Transporter", url: "/transporters", menuKey: "transporters_view" },
   { title: "Export Transporter", url: "/transporters/export", menuKey: "transporters_export" },
-  { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
   { title: "View Another Hotel", url: "/hotels", menuKey: "another_hotels_view" },
   { title: "Export Another Hotel", url: "/hotels/export", menuKey: "another_hotels_export" },
   { title: "Generate Enquiry", url: "/enquiries/add", menuKey: "enquiries_add" },
