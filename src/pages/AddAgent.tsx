@@ -9,13 +9,18 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
 
 export default function AddAgent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
-  
+  const { isAdmin, isAccount } = useAuthContext();
+  const canReassign = isAdmin() || isAccount();
+  const { profiles } = useProfilesMap();
+
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -25,6 +30,7 @@ export default function AddAgent() {
     city_id: "",
     commission_rate: 0,
     notes: "", // Used for Contact Person with Contact Details
+    created_by: "",
   });
 
   useEffect(() => {
@@ -50,6 +56,7 @@ export default function AddAgent() {
         city_id: data.city_id || "",
         commission_rate: data.commission_rate || 0,
         notes: data.notes || "",
+        created_by: data.created_by || "",
       });
     } else {
       toast.error("Failed to load agent data");
@@ -60,10 +67,14 @@ export default function AddAgent() {
     e.preventDefault();
     
     // Prepare data, converting empty strings to null for UUID fields
-    const submitData = {
+    const submitData: any = {
       ...formData,
       city_id: formData.city_id || null,
     };
+    if (!canReassign || !submitData.created_by) {
+      delete submitData.created_by;
+    }
+    
     
     if (isEditMode && editId) {
       const { error } = await supabase.from("agents").update(submitData).eq("id", editId);
@@ -95,6 +106,7 @@ export default function AddAgent() {
       city_id: "",
       commission_rate: 0,
       notes: "",
+      created_by: "",
     });
   };
 
@@ -205,6 +217,30 @@ export default function AddAgent() {
                   className="bg-white flex-1"
                 />
               </div>
+
+              {/* Created By (admin/account only) */}
+              {canReassign && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="created_by" className="w-56 text-right text-xs whitespace-nowrap">Created By :</Label>
+                  <Select
+                    value={formData.created_by || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, created_by: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger className="bg-white flex-1">
+                      <SelectValue placeholder="-User-" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-Unassigned-</SelectItem>
+                      {profiles.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.username || `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Unknown"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
 
               {/* Buttons */}
               <div className="flex justify-center gap-2 pt-4">
