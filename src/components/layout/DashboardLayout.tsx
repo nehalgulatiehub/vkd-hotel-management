@@ -69,7 +69,6 @@ const menuItems: MenuItem[] = [
     submenu: [
       { title: "Add City", url: "/cities/add", menuKey: "cities_add" },
       { title: "View City", url: "/cities", menuKey: "cities_view" },
-      { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
       { title: "Add Agent", url: "/agents/add", menuKey: "agents_add" },
       { title: "View Agent", url: "/agents", menuKey: "agents_view" },
       { title: "Export Agent", url: "/agents/export", menuKey: "agents_export" },
@@ -78,6 +77,7 @@ const menuItems: MenuItem[] = [
       { title: "Export Transporter", url: "/transporters/export", menuKey: "transporters_export" },
     ],
   },
+  { title: "Add Another Hotel", url: "/hotels/add", menuKey: "another_hotels_add" },
   { title: "View Another Hotel", url: "/hotels", menuKey: "another_hotels_view" },
   { title: "Export Another Hotel", url: "/hotels/export", menuKey: "another_hotels_export" },
   { title: "Generate Enquiry", url: "/enquiries/add", menuKey: "enquiries_add" },
