@@ -212,17 +212,63 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <aside className="w-48 flex-shrink-0 print:hidden">
           <ScrollArea className="h-[calc(100vh-140px)]">
             <nav className="space-y-1 pr-2">
-              {filteredMenuItems.map((item) => (
-                <NavLink
-                  key={item.url + item.title}
-                  to={item.url}
-                  className={({ isActive }) =>
-                    cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
-                  }
-                >
-                  {item.title}
-                </NavLink>
-              ))}
+              {filteredMenuItems.map((item) => {
+                if (item.submenu && item.submenu.length > 0) {
+                  const isOpen = openDropdown === item.title;
+                  return (
+                    <div key={item.title} className="space-y-1">
+                      <button
+                        onClick={() => setOpenDropdown(isOpen ? null : item.title)}
+                        className={cn(
+                          "sidebar-pill w-full flex items-center justify-between",
+                          getSidebarModuleClass(item.menuKey)
+                        )}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          {item.icon && <item.icon className="h-3 w-3" />}
+                          {item.title}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transition-transform",
+                            isOpen && "rotate-180"
+                          )}
+                        />
+                      </button>
+                      {isOpen && (
+                        <div className="pl-3 space-y-1">
+                          {item.submenu.map((sub) => (
+                            <NavLink
+                              key={sub.url + sub.title}
+                              to={sub.url}
+                              className={({ isActive }) =>
+                                cn(
+                                  "sidebar-pill sidebar-pill--sub",
+                                  getSidebarModuleClass(sub.menuKey),
+                                  isActive && "sidebar-pill--active"
+                                )
+                              }
+                            >
+                              {sub.title}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <NavLink
+                    key={item.url + item.title}
+                    to={item.url!}
+                    className={({ isActive }) =>
+                      cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
+                    }
+                  >
+                    {item.title}
+                  </NavLink>
+                );
+              })}
               <button
                 onClick={handleLogout}
                 className="block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors bg-[#f8d8d9] text-[#8B1538] border-[#c9a0a5] hover:bg-red-100 hover:border-red-400 hover:text-red-600"
