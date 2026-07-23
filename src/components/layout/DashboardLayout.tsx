@@ -198,78 +198,33 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "rgb(253, 246, 246)" }}>
       {/* Pink Header */}
-      <header className="py-4 px-6 print:hidden" style={{ backgroundColor: "rgb(248, 216, 217)" }}>
-        <img src={mukutLogo} alt="Mukut Hotels" className="h-16" />
+      <header
+        className="py-3 px-4 md:py-4 md:px-6 print:hidden flex items-center justify-between gap-3 sticky top-0 z-40"
+        style={{ backgroundColor: "rgb(248, 216, 217)" }}
+      >
+        <img src={mukutLogo} alt="Mukut Hotels" className="h-10 md:h-16" />
+        <button
+          type="button"
+          aria-label="Open menu"
+          onClick={() => setMobileNavOpen(true)}
+          className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md bg-[#8B1538] text-white active:scale-95 transition"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
       </header>
 
       {/* Date */}
-      <div className="px-6 py-2 print:hidden">
-        <span className="text-[#8B1538] font-medium text-base italic">{currentDate}</span>
+      <div className="px-4 md:px-6 py-2 print:hidden">
+        <span className="text-[#8B1538] font-medium text-sm md:text-base italic">{currentDate}</span>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 px-4 pb-4 gap-4">
-        {/* Left Sidebar */}
-        <aside className="w-48 flex-shrink-0 print:hidden">
+      <div className="flex flex-1 px-2 md:px-4 pb-4 gap-4">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:block w-48 flex-shrink-0 print:hidden">
           <ScrollArea className="h-[calc(100vh-140px)]">
             <nav className="space-y-1 pr-2">
-              {filteredMenuItems.map((item) => {
-                if (item.submenu && item.submenu.length > 0) {
-                  const isOpen = openDropdown === item.title;
-                  return (
-                    <div key={item.title} className="space-y-1">
-                      <button
-                        onClick={() => setOpenDropdown(isOpen ? null : item.title)}
-                        className={cn(
-                          "sidebar-pill w-full flex items-center justify-between",
-                          getSidebarModuleClass(item.menuKey)
-                        )}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          {item.icon && <item.icon className="h-3 w-3" />}
-                          {item.title}
-                        </span>
-                        <ChevronDown
-                          className={cn(
-                            "h-3 w-3 transition-transform",
-                            isOpen && "rotate-180"
-                          )}
-                        />
-                      </button>
-                      {isOpen && (
-                        <div className="pl-3 space-y-1">
-                          {item.submenu.map((sub) => (
-                            <NavLink
-                              key={sub.url + sub.title}
-                              to={sub.url}
-                              className={({ isActive }) =>
-                                cn(
-                                  "sidebar-pill",
-                                  getSidebarModuleClass(sub.menuKey),
-                                  isActive && "sidebar-pill--active"
-                                )
-                              }
-                            >
-                              {sub.title}
-                            </NavLink>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-                return (
-                  <NavLink
-                    key={item.url + item.title}
-                    to={item.url!}
-                    className={({ isActive }) =>
-                      cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
-                    }
-                  >
-                    {item.title}
-                  </NavLink>
-                );
-              })}
+              {renderMenu(filteredMenuItems, openDropdown, setOpenDropdown)}
               <button
                 onClick={handleLogout}
                 className="block w-full text-center py-1.5 px-2 text-xs border-2 rounded transition-colors bg-[#f8d8d9] text-[#8B1538] border-[#c9a0a5] hover:bg-red-100 hover:border-red-400 hover:text-red-600"
@@ -280,9 +235,113 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </ScrollArea>
         </aside>
 
+        {/* Mobile Drawer */}
+        {mobileNavOpen && (
+          <div className="md:hidden fixed inset-0 z-50 flex print:hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setMobileNavOpen(false)}
+            />
+            <aside
+              className="relative w-72 max-w-[85vw] h-full shadow-xl overflow-hidden flex flex-col"
+              style={{ backgroundColor: "rgb(253, 246, 246)" }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-3"
+                style={{ backgroundColor: "rgb(248, 216, 217)" }}
+              >
+                <img src={mukutLogo} alt="Mukut Hotels" className="h-10" />
+                <button
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="inline-flex items-center justify-center h-9 w-9 rounded-md bg-[#8B1538] text-white active:scale-95 transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <ScrollArea className="flex-1">
+                <nav
+                  className="space-y-1 p-3"
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest("a")) setMobileNavOpen(false);
+                  }}
+                >
+                  {renderMenu(filteredMenuItems, openDropdown, setOpenDropdown)}
+                  <button
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      handleLogout();
+                    }}
+                    className="block w-full text-center py-2 px-2 text-sm border-2 rounded transition-colors bg-[#f8d8d9] text-[#8B1538] border-[#c9a0a5]"
+                  >
+                    Logout
+                  </button>
+                </nav>
+              </ScrollArea>
+            </aside>
+          </div>
+        )}
+
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 min-w-0 overflow-x-auto">{children}</main>
       </div>
     </div>
   );
+}
+
+function renderMenu(
+  items: MenuItem[],
+  openDropdown: string | null,
+  setOpenDropdown: (v: string | null) => void,
+) {
+  return items.map((item) => {
+    if (item.submenu && item.submenu.length > 0) {
+      const isOpen = openDropdown === item.title;
+      return (
+        <div key={item.title} className="space-y-1">
+          <button
+            onClick={() => setOpenDropdown(isOpen ? null : item.title)}
+            className={cn(
+              "sidebar-pill w-full flex items-center justify-between",
+              getSidebarModuleClass(item.menuKey),
+            )}
+          >
+            <span className="flex items-center gap-1.5">
+              {item.icon && <item.icon className="h-3 w-3" />}
+              {item.title}
+            </span>
+            <ChevronDown className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")} />
+          </button>
+          {isOpen && (
+            <div className="pl-3 space-y-1">
+              {item.submenu.map((sub) => (
+                <NavLink
+                  key={sub.url + sub.title}
+                  to={sub.url}
+                  className={({ isActive }) =>
+                    cn("sidebar-pill", getSidebarModuleClass(sub.menuKey), isActive && "sidebar-pill--active")
+                  }
+                >
+                  {sub.title}
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <NavLink
+        key={item.url + item.title}
+        to={item.url!}
+        className={({ isActive }) =>
+          cn("sidebar-pill", getSidebarModuleClass(item.menuKey), isActive && "sidebar-pill--active")
+        }
+      >
+        {item.title}
+      </NavLink>
+    );
+  });
 }
