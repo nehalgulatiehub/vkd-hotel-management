@@ -218,6 +218,30 @@ export default function AddAgent() {
                 />
               </div>
 
+              {/* Created By (admin/account only) */}
+              {canReassign && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="created_by" className="w-56 text-right text-xs whitespace-nowrap">Created By :</Label>
+                  <Select
+                    value={formData.created_by || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, created_by: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger className="bg-white flex-1">
+                      <SelectValue placeholder="-User-" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-Unassigned-</SelectItem>
+                      {profiles.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.username || `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Unknown"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+
               {/* Buttons */}
               <div className="flex justify-center gap-2 pt-4">
                 <Button type="submit" variant="outline" className="px-6 bg-gray-100 border-gray-400 text-black hover:bg-gray-200">
