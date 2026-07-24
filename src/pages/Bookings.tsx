@@ -459,7 +459,8 @@ export default function Bookings() {
       formData.check_in_date ||
       formData.vehicle_booking_date ||
       formData.vehicle_journey_date ||
-      formData.safari_date ||
+      formData.safari_journey_date ||
+      formData.safari_booking_date ||
       formData.dm_journey_date ||
       formData.md_journey_date ||
       "";
@@ -469,7 +470,8 @@ export default function Bookings() {
       formData.check_out_date ||
       formData.vehicle_journey_date ||
       formData.vehicle_booking_date ||
-      formData.safari_date ||
+      formData.safari_journey_date ||
+      formData.safari_booking_date ||
       formData.dm_journey_date ||
       formData.md_journey_date ||
       "";
