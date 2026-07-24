@@ -371,6 +371,9 @@ export default function Bookings() {
       .from("bookings")
       .select("*, agents(name), guests(first_name, last_name)")
       .neq("status", "cancelled")
+      // Only show bookings that include a hotel component here.
+      // Vehicle-only / safari-only / volvo-only bookings are visible on their own detail pages.
+      .or("include_booking.eq.true,include_another_hotel.eq.true")
       .order("created_at", { ascending: false });
     
     if (error) {
@@ -452,12 +455,33 @@ export default function Bookings() {
     // 3. Otherwise fall back to the main check-in/check-out dates.
     const firstAnotherHotelCheckIn = anotherHotelsList[0]?.check_in || "";
     const firstAnotherHotelCheckOut = anotherHotelsList[0]?.check_out || "";
-    const effectiveCheckIn = formData.booking_from || firstAnotherHotelCheckIn || formData.check_in_date;
-    const effectiveCheckOut = formData.booking_to || firstAnotherHotelCheckOut || formData.check_out_date;
+    // Fall back through all service dates so non-hotel bookings (vehicle-only, safari-only, volvo-only) are allowed.
+    const effectiveCheckIn =
+      formData.booking_from ||
+      firstAnotherHotelCheckIn ||
+      formData.check_in_date ||
+      formData.vehicle_booking_date ||
+      formData.vehicle_journey_date ||
+      formData.safari_journey_date ||
+      formData.safari_booking_date ||
+      formData.dm_journey_date ||
+      formData.md_journey_date ||
+      "";
+    const effectiveCheckOut =
+      formData.booking_to ||
+      firstAnotherHotelCheckOut ||
+      formData.check_out_date ||
+      formData.vehicle_journey_date ||
+      formData.vehicle_booking_date ||
+      formData.safari_journey_date ||
+      formData.safari_booking_date ||
+      formData.dm_journey_date ||
+      formData.md_journey_date ||
+      "";
 
-    // Required fields validation (prevents Postgres "invalid input syntax for type date: \"\"" errors)
+    // Require at least one date somewhere in the form
     if (!effectiveCheckIn || !effectiveCheckOut) {
-      toast.error("Please select check-in and check-out dates.");
+      toast.error("Please select at least one date (booking, journey, or safari).");
       return;
     }
 
