@@ -371,6 +371,9 @@ export default function Bookings() {
       .from("bookings")
       .select("*, agents(name), guests(first_name, last_name)")
       .neq("status", "cancelled")
+      // Only show bookings that include a hotel component here.
+      // Vehicle-only / safari-only / volvo-only bookings are visible on their own detail pages.
+      .or("include_booking.eq.true,include_another_hotel.eq.true")
       .order("created_at", { ascending: false });
     
     if (error) {
