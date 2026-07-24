@@ -420,6 +420,60 @@ All colors MUST be HSL.
   html, body, #root { overflow-x: hidden; }
   /* Sticky headers less tall */
   header.sticky { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+
+  /* Filter panels: inputs and dropdowns stretch to full width */
+  .filter-panel input,
+  .filter-panel select,
+  .filter-panel [role="combobox"],
+  .filter-panel button[role="combobox"],
+  .filter-panel [data-radix-select-trigger] {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  /* Any obvious filter row: labels stack above controls */
+  .filter-panel label,
+  .filter-row label {
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* Dialog form grids collapse (grid-cols-2 already handled above; catch inline flex pairs) */
+  [role="dialog"] .grid { grid-template-columns: 1fr !important; }
+  [role="dialog"] .flex.gap-4 > * { flex: 1 1 100% !important; min-width: 0 !important; }
+
+  /* Page action bars: keep buttons full width when they wrap alone */
+  .page-actions > button,
+  .page-actions > a {
+    flex: 1 1 auto;
+  }
+
+  /* Table: allow cells to wrap for very long text where nowrap isn't desired */
+  main table td.wrap-cell, main table th.wrap-cell {
+    white-space: normal !important;
+  }
+
+  /* Constrain wide sticky columns so they don't eat the viewport */
+  main table th.sticky, main table td.sticky {
+    max-width: 120px;
+  }
+
+  /* Ensure top toolbar rows wrap and stretch children */
+  main > * > .flex.justify-between,
+  main .flex.items-center.justify-between {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Card content tighter padding */
+  [class*="card"] .p-4, [class*="Card"] .p-4 { padding: 0.75rem !important; }
+
+  /* Tabs: allow horizontal scroll */
+  [role="tablist"] {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  [role="tablist"] [role="tab"] { flex-shrink: 0; }
 }
 
 /* Print styles */
