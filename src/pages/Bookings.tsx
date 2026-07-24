@@ -1385,7 +1385,7 @@ export default function Bookings() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bookings-page min-h-screen bg-background">
       <div className="print:hidden">
         {!isAdminRoute && <Header title="Booking Management" />}
         <main className="p-3">
