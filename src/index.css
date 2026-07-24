@@ -353,16 +353,20 @@ All colors MUST be HSL.
 /* Mobile-friendly globals */
 @media (max-width: 767px) {
   /* Horizontal scroll for wide tables */
-  main table {
+  main table, .table-wrapper table {
     display: block;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
   }
+  main table th, main table td {
+    padding: 0.4rem 0.5rem !important;
+    font-size: 12px !important;
+  }
   /* Larger touch targets */
   button, [role="button"], a.sidebar-pill, .sidebar-pill {
-    min-height: 36px;
+    min-height: 40px;
   }
   /* Prevent iOS zoom on input focus */
   input, select, textarea {
@@ -370,13 +374,52 @@ All colors MUST be HSL.
   }
   /* Dialogs full-screen-ish on mobile */
   [role="dialog"] {
-    max-width: 100vw !important;
+    max-width: 96vw !important;
+    width: 96vw !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    padding: 1rem !important;
   }
   /* Cards / forms breathe less */
   main {
-    padding-left: 0.25rem;
-    padding-right: 0.25rem;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
   }
+  main > div, main > section {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  /* Collapse multi-column grids into single column */
+  .grid.grid-cols-2,
+  .grid.grid-cols-3,
+  .grid.grid-cols-4,
+  .grid.grid-cols-5,
+  .grid.grid-cols-6,
+  .grid.md\:grid-cols-2,
+  .grid.md\:grid-cols-3,
+  .grid.md\:grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  /* Compact headings */
+  h1 { font-size: 1.25rem !important; }
+  h2 { font-size: 1.125rem !important; }
+  h3 { font-size: 1rem !important; }
+  /* Filter/action rows wrap */
+  .flex.items-center.gap-2,
+  .flex.items-center.gap-4,
+  .flex.justify-between {
+    flex-wrap: wrap !important;
+  }
+  /* Force fixed-width containers to be fluid */
+  .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl, .max-w-2xl {
+    max-width: 100% !important;
+  }
+  /* Cards padding */
+  [class*="Card"] .p-6 { padding: 1rem !important; }
+  /* Prevent x-overflow on the page */
+  html, body, #root { overflow-x: hidden; }
+  /* Sticky headers less tall */
+  header.sticky { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
 }
 
 /* Print styles */
