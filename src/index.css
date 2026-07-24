@@ -548,6 +548,9 @@ All colors MUST be HSL.
 
   /* Table cells: allow wrap on customer/package columns */
   .bookings-page main table td { white-space: normal !important; }
+}
+
+
 
 
 /* Print styles */
