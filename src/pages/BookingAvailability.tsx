@@ -343,23 +343,23 @@ export default function BookingAvailability() {
       <Header title="Booking Availability" />
       <main className="p-4">
         {/* Top Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadInventory}>
+        <div className="flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2 flex-1 md:flex-none" onClick={handleDownloadInventory}>
               <Download className="h-4 w-4" />
-              Download Inventory
+              <span className="whitespace-nowrap">Download Inventory</span>
             </Button>
-            <Button variant="default" size="sm" className="gap-2" onClick={() => setBulkUpdateOpen(true)}>
+            <Button variant="default" size="sm" className="gap-2 flex-1 md:flex-none" onClick={() => setBulkUpdateOpen(true)}>
               <Upload className="h-4 w-4" />
               Bulk Update
             </Button>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             {/* Hotel Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Hotel</span>
+              <span className="text-sm text-muted-foreground shrink-0">Hotel</span>
               <Select value={selectedHotelFilter} onValueChange={setSelectedHotelFilter}>
-                <SelectTrigger className="w-40 h-8 text-sm">
+                <SelectTrigger className="flex-1 sm:w-40 h-9 text-sm">
                   <SelectValue placeholder="All Hotels" />
                 </SelectTrigger>
                 <SelectContent>
@@ -374,14 +374,14 @@ export default function BookingAvailability() {
             </div>
             {/* Date Search */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Search</span>
+              <span className="text-sm text-muted-foreground shrink-0">Search</span>
               <Input
                 type="text"
                 placeholder="dd/MM/yyyy"
                 value={searchDate}
                 onChange={(e) => setSearchDate(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-32 h-8 text-sm"
+                className="flex-1 sm:w-32 h-9 text-sm"
               />
               <Button size="sm" variant="outline" onClick={handleSearch}>
                 Go
