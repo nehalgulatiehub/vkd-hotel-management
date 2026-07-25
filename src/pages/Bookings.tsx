@@ -245,8 +245,10 @@ export default function Bookings() {
   }, []);
 
   useEffect(() => {
-    if (user?.id || isAdmin() || isAccount()) fetchAgents();
-  }, [user?.id]);
+    // Wait until auth + roles are loaded so admin/account users don't get filtered to created_by only
+    if (authLoading) return;
+    if (user?.id) fetchAgents();
+  }, [authLoading, user?.id, roles]);
 
   const fetchUsers = async () => {
     const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
