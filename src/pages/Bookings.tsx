@@ -880,9 +880,11 @@ export default function Bookings() {
     const matchesContact = !filters.contact ||
       booking.contact_no?.toLowerCase().includes(filters.contact.toLowerCase());
 
-    // Email filter
-    const matchesEmail = !filters.email ||
-      booking.email?.toLowerCase().includes(filters.email.toLowerCase());
+    // Email filter — match either primary email or reference email
+    const emailQ = filters.email?.toLowerCase().trim();
+    const matchesEmail = !emailQ ||
+      booking.email?.toLowerCase().includes(emailQ) ||
+      booking.reference_email?.toLowerCase().includes(emailQ);
     
     // Date filter — filter by Booking From date (check_in_date), inclusive range
     let matchesDate = true;
