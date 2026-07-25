@@ -1,0 +1,1 @@
+CREATE TRIGGER set_created_by_agents BEFORE INSERT ON public.agents FOR EACH ROW EXECUTE FUNCTION public.set_created_by();
