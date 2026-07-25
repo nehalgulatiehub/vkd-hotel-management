@@ -40,7 +40,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 export default function Bookings() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasMenuAccess, isAdmin, isAccount, user } = useAuthContext();
+  const { hasMenuAccess, isAdmin, isAccount, user, loading: authLoading, roles } = useAuthContext();
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/account");
   const isAddRoute = location.pathname === "/bookings/add";
   
