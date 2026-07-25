@@ -40,7 +40,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 export default function Bookings() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasMenuAccess, isAdmin, isAccount, user } = useAuthContext();
+  const { hasMenuAccess, isAdmin, isAccount, user, loading: authLoading, roles } = useAuthContext();
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/account");
   const isAddRoute = location.pathname === "/bookings/add";
   
@@ -245,8 +245,10 @@ export default function Bookings() {
   }, []);
 
   useEffect(() => {
-    if (user?.id || isAdmin() || isAccount()) fetchAgents();
-  }, [user?.id]);
+    // Wait until auth + roles are loaded so admin/account users don't get filtered to created_by only
+    if (authLoading) return;
+    if (user?.id) fetchAgents();
+  }, [authLoading, user?.id, roles]);
 
   const fetchUsers = async () => {
     const { data } = await supabase.from("profiles").select("id, username, first_name, last_name").order("username");
@@ -878,9 +880,11 @@ export default function Bookings() {
     const matchesContact = !filters.contact ||
       booking.contact_no?.toLowerCase().includes(filters.contact.toLowerCase());
 
-    // Email filter
-    const matchesEmail = !filters.email ||
-      booking.email?.toLowerCase().includes(filters.email.toLowerCase());
+    // Email filter — match either primary email or reference email
+    const emailQ = filters.email?.toLowerCase().trim();
+    const matchesEmail = !emailQ ||
+      booking.email?.toLowerCase().includes(emailQ) ||
+      booking.reference_email?.toLowerCase().includes(emailQ);
     
     // Date filter — filter by Booking From date (check_in_date), inclusive range
     let matchesDate = true;
