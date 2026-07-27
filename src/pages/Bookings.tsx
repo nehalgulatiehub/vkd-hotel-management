@@ -85,6 +85,7 @@ export default function Bookings() {
     }
   }, [isAddRoute, location.pathname, location.search]);
   const [agents, setAgents] = useState<any[]>([]);
+  const [allAgents, setAllAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
