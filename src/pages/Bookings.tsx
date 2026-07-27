@@ -315,17 +315,19 @@ export default function Bookings() {
   };
 
   const fetchAgents = async () => {
-    let query = supabase.from("agents").select("*").order("name");
-    // Restrict: non-admin/non-account users only see agents they created
-    if (!isAdmin() && !isAccount() && user?.id) {
-      query = query.eq("created_by", user.id);
-    }
-    const { data, error } = await query;
-
-    if (error) {
+    // Load all agents for the search filter dropdown (visible to everyone)
+    const { data: allData, error: allErr } = await supabase.from("agents").select("*").order("name");
+    if (allErr) {
       toast.error("Failed to load agents");
+      return;
+    }
+    setAllAgents(allData || []);
+
+    // For the create form: non-admin/non-account users only see agents they created
+    if (!isAdmin() && !isAccount() && user?.id) {
+      setAgents((allData || []).filter((a: any) => a.created_by === user.id));
     } else {
-      setAgents(data || []);
+      setAgents(allData || []);
     }
   };
 
