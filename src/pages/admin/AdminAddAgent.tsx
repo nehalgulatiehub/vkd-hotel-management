@@ -19,7 +19,7 @@ export default function AdminAddAgent() {
   const isEditMode = !!editId;
   
   const [cities, setCities] = useState<any[]>([]);
-  const { profiles } = useProfilesMap();
+  const { profiles, profilesMap } = useProfilesMap();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
