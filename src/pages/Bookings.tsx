@@ -236,6 +236,10 @@ export default function Bookings() {
   });
 
   useEffect(() => {
+    // Wait for auth to hydrate — otherwise RLS-protected queries can return empty
+    // when navigating back to this page before the session is ready.
+    if (authLoading) return;
+    if (!user?.id) return;
     fetchOwnHotels();
     fetchHotels();
     fetchAnotherHotels();
@@ -243,7 +247,8 @@ export default function Bookings() {
     fetchBookings();
     fetchCities();
     fetchUsers();
-  }, []);
+  }, [authLoading, user?.id]);
+
 
   useEffect(() => {
     // Wait until auth + roles are loaded so admin/account users don't get filtered to created_by only
