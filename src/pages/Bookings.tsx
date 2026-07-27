@@ -2484,7 +2484,7 @@ export default function Bookings() {
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Agent Name :</label>
                         <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }}>
                           <option value="">--Select--</option>
-                          {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                          {allAgents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
