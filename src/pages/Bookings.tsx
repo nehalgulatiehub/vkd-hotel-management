@@ -851,7 +851,11 @@ export default function Bookings() {
     const matchesSearch = !searchTerm || 
       booking.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.reference?.toLowerCase().includes(searchTerm.toLowerCase());
+      booking.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.agents?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.contact_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
     
     // Type filter
     const matchesType = !filters.type || booking.booking_type === filters.type;
