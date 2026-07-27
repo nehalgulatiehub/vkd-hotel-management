@@ -19,7 +19,7 @@ export default function AddAgent() {
   const isEditMode = !!editId;
   const { isAdmin, isAccount } = useAuthContext();
   const canReassign = isAdmin() || isAccount();
-  const { profiles } = useProfilesMap();
+  const { profiles, profilesMap } = useProfilesMap();
 
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
