@@ -19,7 +19,7 @@ export default function AddAgent() {
   const isEditMode = !!editId;
   const { isAdmin, isAccount } = useAuthContext();
   const canReassign = isAdmin() || isAccount();
-  const { profiles } = useProfilesMap();
+  const { profiles, profilesMap } = useProfilesMap();
 
   const [cities, setCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -227,7 +227,9 @@ export default function AddAgent() {
                     onValueChange={(value) => setFormData({ ...formData, created_by: value === "none" ? "" : value })}
                   >
                     <SelectTrigger className="bg-white flex-1">
-                      <SelectValue placeholder="-User-" />
+                      <SelectValue placeholder="-User-">
+                        {formData.created_by ? (profilesMap[formData.created_by] || "Unknown User") : "-Unassigned-"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">-Unassigned-</SelectItem>
