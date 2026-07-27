@@ -219,11 +219,14 @@ export default function AdminAddAgent() {
             {/* User */}
             <div className="flex items-center gap-2">
               <Label htmlFor="user" className="w-56 text-right text-xs whitespace-nowrap">User :</Label>
-              <Select value={formData.created_by} onValueChange={(value) => setFormData({ ...formData, created_by: value })}>
+              <Select value={formData.created_by || "none"} onValueChange={(value) => setFormData({ ...formData, created_by: value === "none" ? "" : value })}>
                 <SelectTrigger className="bg-white flex-1">
-                  <SelectValue placeholder="--Select--" />
+                  <SelectValue placeholder="--Select--">
+                    {formData.created_by ? (profilesMap[formData.created_by] || "Unknown User") : "-Unassigned-"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">-Unassigned-</SelectItem>
                   {profiles.map((profile) => (
                     <SelectItem key={profile.id} value={profile.id}>{getDisplayName(profile)}</SelectItem>
                   ))}
