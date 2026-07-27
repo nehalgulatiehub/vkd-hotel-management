@@ -2661,7 +2661,7 @@ export default function Bookings() {
                   <span className="text-[11px] text-muted-foreground">Agent Name :</span>
                   <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
                     <option value="">--Select--</option>
-                    {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
+                    {allAgents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
                   </select>
                 </div>
                 <div className="flex items-center gap-1">
