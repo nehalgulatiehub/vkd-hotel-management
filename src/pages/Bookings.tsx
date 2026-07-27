@@ -528,11 +528,12 @@ export default function Bookings() {
       let bookingId: string;
       
       if (isEditing) {
-        // Update existing booking
+        // Update existing booking — stamp booking date with current date on edit
         const { error: bookingError } = await supabase
           .from("bookings")
-          .update(bookingData)
+          .update({ ...bookingData, created_at: new Date().toISOString() })
           .eq("id", editingBookingId);
+
 
         if (bookingError) throw bookingError;
         bookingId = editingBookingId;
