@@ -85,6 +85,7 @@ export default function Bookings() {
     }
   }, [isAddRoute, location.pathname, location.search]);
   const [agents, setAgents] = useState<any[]>([]);
+  const [allAgents, setAllAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
@@ -315,17 +316,19 @@ export default function Bookings() {
   };
 
   const fetchAgents = async () => {
-    let query = supabase.from("agents").select("*").order("name");
-    // Restrict: non-admin/non-account users only see agents they created
-    if (!isAdmin() && !isAccount() && user?.id) {
-      query = query.eq("created_by", user.id);
-    }
-    const { data, error } = await query;
-
-    if (error) {
+    // Load all agents for the search filter dropdown (visible to everyone)
+    const { data: allData, error: allErr } = await supabase.from("agents").select("*").order("name");
+    if (allErr) {
       toast.error("Failed to load agents");
+      return;
+    }
+    setAllAgents(allData || []);
+
+    // For the create form: non-admin/non-account users only see agents they created
+    if (!isAdmin() && !isAccount() && user?.id) {
+      setAgents((allData || []).filter((a: any) => a.created_by === user.id));
     } else {
-      setAgents(data || []);
+      setAgents(allData || []);
     }
   };
 
@@ -2481,7 +2484,7 @@ export default function Bookings() {
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Agent Name :</label>
                         <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }}>
                           <option value="">--Select--</option>
-                          {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                          {allAgents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
@@ -2658,7 +2661,7 @@ export default function Bookings() {
                   <span className="text-[11px] text-muted-foreground">Agent Name :</span>
                   <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
                     <option value="">--Select--</option>
-                    {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
+                    {allAgents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
                   </select>
                 </div>
                 <div className="flex items-center gap-1">
