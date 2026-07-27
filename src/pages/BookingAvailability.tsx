@@ -109,20 +109,26 @@ export default function BookingAvailability() {
       .select("id, room_number, room_type, total_quantity, base_price, hotel_id")
       .order("room_type");
 
-    // Fetch all hotel bookings (from confirmed/completed/hold bookings only, exclude cancelled)
-    const { data: bookingsData } = await supabase
+    // Fetch all hotel bookings, then exclude those tied to cancelled bookings
+    const { data: rawBookingsData } = await supabase
       .from("hotel_bookings")
       .select(`
         id, own_hotel_id, room_type, check_in_date, check_out_date, number_of_rooms,
-        bookings!inner(status)
+        booking_id, bookings(status)
       `)
-      .not("own_hotel_id", "is", null)
-      .in("bookings.status", ["confirmed", "completed", "hold"]);
+      .not("own_hotel_id", "is", null);
+
+    const bookingsData = (rawBookingsData || []).filter((hb: any) => {
+      const status = hb.bookings?.status;
+      // Keep only active bookings; drop cancelled or orphaned rows
+      return status && status !== "cancelled";
+    });
 
     // Fetch all room blocks
     const { data: blocksData } = await supabase
       .from("room_blocks")
       .select("id, room_id, block_date, blocked_quantity, reason");
+
 
     // Map hotel names to rooms
     const hotelsMap = (hotelsData || []).reduce((acc, hotel) => {
