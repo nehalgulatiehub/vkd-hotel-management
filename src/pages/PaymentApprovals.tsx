@@ -51,6 +51,7 @@ export default function PaymentApprovals() {
   const { isAdmin, isAccount, canApprovePayment, user, loading: authLoading } = useAuthContext();
   const navigate = useNavigate();
   const [payments, setPayments] = useState<PendingPayment[]>([]);
+  const { roomName } = useRoomNames();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
   const [searchCustomer, setSearchCustomer] = useState("");
