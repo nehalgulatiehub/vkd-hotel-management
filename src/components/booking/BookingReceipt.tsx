@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 interface BookingReceiptProps {
   bookingId: string;
@@ -7,6 +8,7 @@ interface BookingReceiptProps {
 
 export function BookingReceipt({ bookingId }: BookingReceiptProps) {
   const [booking, setBooking] = useState<any>(null);
+  const { roomName } = useRoomNames();
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const [volvoBookings, setVolvoBookings] = useState<any[]>([]);
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
@@ -116,7 +118,7 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
               </div>
               <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Room type</p>
-                <p className="text-sm">{hotel.room_type}</p>
+                <p className="text-sm">{roomName(hotel.room_type)}</p>
               </div>
               <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Number of rooms</p>

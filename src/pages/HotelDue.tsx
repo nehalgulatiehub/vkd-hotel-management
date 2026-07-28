@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 export default function HotelDue() {
   const navigate = useNavigate();
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
+  const { roomName } = useRoomNames();
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);

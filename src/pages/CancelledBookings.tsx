@@ -6,6 +6,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { Header } from "@/components/layout/Header";
 import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function CancelledBookings() {
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const { roomName } = useRoomNames();
 
   const today = new Date().toISOString().slice(0, 10);
   const [filters, setFilters] = useState({
@@ -57,9 +59,8 @@ export default function CancelledBookings() {
     setHotels(data || []);
   };
   const fetchRooms = async () => {
-    const { data } = await supabase.from("rooms").select("room_type").order("room_type");
-    const unique = Array.from(new Set((data || []).map((r: any) => r.room_type).filter(Boolean)));
-    setRooms(unique.map((r) => ({ room_type: r })));
+    const { data } = await supabase.from("rooms").select("id, room_type, room_number").order("room_type");
+    setRooms((data || []).map((r: any) => ({ id: r.id, room_type: r.room_type || r.room_number })));
   };
 
   const filteredBookings = useMemo(() => {
@@ -76,7 +77,7 @@ export default function CancelledBookings() {
       }
       if (filters.roomType) {
         const hb = b.hotel_bookings || [];
-        if (!hb.some((h: any) => h.room_type === filters.roomType)) return false;
+        if (!hb.some((h: any) => h.room_type === filters.roomType || roomName(h.room_type, "") === filters.roomType)) return false;
       }
       if (filters.searchWithDate && filters.from && filters.to) {
         const d = (b.updated_at || b.check_in_date || "").slice(0, 10);
@@ -97,7 +98,7 @@ export default function CancelledBookings() {
     const hb = b.hotel_bookings?.[0];
     return hb?.own_hotels?.name || hb?.another_hotels?.name || "";
   };
-  const getRoomName = (b: any) => b.hotel_bookings?.[0]?.room_type || "";
+  const getRoomName = (b: any) => roomName(b.hotel_bookings?.[0]?.room_type, "");
   const getRoomsCount = (b: any) =>
     (b.hotel_bookings || []).reduce((s: number, h: any) => s + (h.number_of_rooms || 0), 0);
 
@@ -179,7 +180,7 @@ export default function CancelledBookings() {
               <span className={labelStyle}>Room :</span>
               <select value={filters.roomType} onChange={(e) => setFilters({ ...filters, roomType: e.target.value })} className={`${smallSelect} min-w-[180px]`}>
                 <option value="">--Select--</option>
-                {rooms.map((r, i) => <option key={i} value={r.room_type}>{r.room_type}</option>)}
+                {rooms.map((r, i) => <option key={r.id || i} value={r.id}>{r.room_type}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-2">
