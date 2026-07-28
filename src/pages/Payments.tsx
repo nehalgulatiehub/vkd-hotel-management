@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 
 interface PaymentWithBooking {
   id: string;
@@ -298,32 +299,7 @@ export default function Payments() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-2 py-1.5 border-b border-border text-[11px]">
             <div className="flex items-center gap-1">
               <span>From :</span>
-              <select value={filters.fromMonth} onChange={(e) => setFilters({ ...filters, fromMonth: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px]">
-                {months.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={filters.fromDay} onChange={(e) => setFilters({ ...filters, fromDay: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px] w-12">
-                {days.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={filters.fromYear} onChange={(e) => setFilters({ ...filters, fromYear: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px]">
-                {years.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>To :</span>
-              <select value={filters.toMonth} onChange={(e) => setFilters({ ...filters, toMonth: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px]">
-                {months.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={filters.toDay} onChange={(e) => setFilters({ ...filters, toDay: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px] w-12">
-                {days.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={filters.toYear} onChange={(e) => setFilters({ ...filters, toYear: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px]">
-                {years.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>Search with Date :</span>
-              <label className="flex items-center gap-0.5">
-                <input type="radio" name="searchDate" value="YES" checked={filters.searchWithDate === "YES"} onChange={() => setFilters({ ...filters, searchWithDate: "YES" })} className="w-3 h-3" />
+              <PartsDatePicker month={filters.fromMonth} day={filters.fromDay} year={filters.fromYear} onChange={(p) => setFilters({...filters, fromMonth: p.month, fromDay: p.day, fromYear: p.year})} />
                 <span>YES</span>
               </label>
               <label className="flex items-center gap-0.5">
