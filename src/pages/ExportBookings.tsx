@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -14,6 +15,7 @@ export default function ExportBookings() {
   const [hotelId, setHotelId] = useState("all");
   const [hotels, setHotels] = useState<any[]>([]);
   const [exporting, setExporting] = useState(false);
+  const { roomName } = useRoomNames();
 
   useEffect(() => {
     (async () => {
@@ -73,7 +75,7 @@ export default function ExportBookings() {
           "Booking From": b.check_in_date || "",
           "Booking To": b.check_out_date || "",
           Package: ownHotel?.notes || b.notes || "",
-          Room: ownHotel?.room_type || "",
+          Room: roomName(ownHotel?.room_type, ""),
           "No.of Room": ownHotel?.number_of_rooms ?? 0,
           Hotel: ownHotel?.own_hotel?.name || "",
           "Booking Price": ownHotel?.total_amount ?? 0,
@@ -101,7 +103,7 @@ export default function ExportBookings() {
           "Safari Selling Price": safari?.total_amount ?? 0,
           "Another Hotel Name": anotherHotel?.hotel?.name || "",
           "No of Rooms": anotherHotel?.number_of_rooms ?? 0,
-          "Room Type": anotherHotel?.room_type || "",
+          "Room Type": roomName(anotherHotel?.room_type, ""),
           "Booking From ": anotherHotel?.check_in_date || "",
           "Hotel Booking Date": anotherHotel?.created_at
             ? String(anotherHotel.created_at).split("T")[0]

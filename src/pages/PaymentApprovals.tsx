@@ -45,10 +45,13 @@ interface PendingPayment {
   city_name?: string | null;
 }
 
+import { useRoomNames } from "@/hooks/useRoomNames";
+
 export default function PaymentApprovals() {
   const { isAdmin, isAccount, canApprovePayment, user, loading: authLoading } = useAuthContext();
   const navigate = useNavigate();
   const [payments, setPayments] = useState<PendingPayment[]>([]);
+  const { roomName } = useRoomNames();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
   const [searchCustomer, setSearchCustomer] = useState("");
@@ -478,7 +481,7 @@ export default function PaymentApprovals() {
                               <div className="text-xs space-y-1">
                                 <div>Agent: {payment.agent_name || "Direct"}</div>
                                 <div>Hotel: {payment.hotel_name || "-"}</div>
-                                <div>Room: {payment.room_type || "-"}</div>
+                                <div>Room: {roomName(payment.room_type)}</div>
                               </div>
                             </TableCell>
                             <TableCell>
