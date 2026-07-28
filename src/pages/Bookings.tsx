@@ -1717,6 +1717,23 @@ export default function Bookings() {
                       </RadioGroup>
                     </CompactFormRow>
 
+                    {formData.booking_package_type === "select" && (
+                      <CompactFormRow label="Package" className="!w-auto">
+                        <select
+                          value={formData.booking_selected_package}
+                          onChange={(e) => setFormData({ ...formData, booking_selected_package: e.target.value })}
+                          className="h-6 text-[11px] border border-input bg-background px-1 rounded-sm w-48"
+                        >
+                          <option value="">--Select Package--</option>
+                          <option value="EP">EP (Room Only)</option>
+                          <option value="CP">CP (Room + Breakfast)</option>
+                          <option value="MAP">MAP (Breakfast + Dinner)</option>
+                          <option value="AP">AP (All Meals)</option>
+                        </select>
+                      </CompactFormRow>
+                    )}
+
+
                     {formData.booking_package_type === "custom" && (
                       <CompactFormRow label="Package Note" className="!w-auto">
                         <Textarea
