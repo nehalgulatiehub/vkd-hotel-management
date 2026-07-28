@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Eye, ArrowLeft } from "lucide-react";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 export default function BookingPayments() {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,7 @@ export default function BookingPayments() {
   const [payments, setPayments] = useState<any[]>([]);
   const [booking, setBooking] = useState<any>(null);
   const [hotelInfo, setHotelInfo] = useState<any>(null);
+  const { roomName } = useRoomNames();
   const [loading, setLoading] = useState(true);
   
   // View Payment Dialog state
@@ -254,7 +256,7 @@ export default function BookingPayments() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Room Type</p>
-                    <p className="font-semibold">{hotelInfo.room_type}</p>
+                    <p className="font-semibold">{roomName(hotelInfo.room_type)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">No. of Rooms</p>

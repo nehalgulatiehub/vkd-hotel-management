@@ -8,6 +8,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 const MAROON_LIGHT = "#c47a7e";
 const ROW_ALT = "#f6f0f0";
@@ -17,6 +18,7 @@ const actionStyle: React.CSSProperties = { color: "#c00", cursor: "pointer", fon
 
 export default function HotelDetails() {
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
+  const { roomName } = useRoomNames();
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
   const paymentDialog = usePaymentDialog(() => fetchHotelBookings());
@@ -74,7 +76,7 @@ export default function HotelDetails() {
                     <div><strong>Hotel Name :</strong> {booking.another_hotels?.name || "-"}</div>
                     <div><strong>City :</strong> <span style={{ color: "#c00", fontWeight: "bold" }}>{booking.another_hotels?.cities?.name?.toUpperCase() || "-"}</span></div>
                     <div><strong>No of Rooms :</strong> {booking.number_of_rooms || 0}</div>
-                    <div><strong>Room Type :</strong> {booking.room_type || "-"}</div>
+                    <div><strong>Room Type :</strong> {roomName(booking.room_type)}</div>
                     <div><strong>Booking Price :</strong> Rs. {(booking.room_rate || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')} /-</div>

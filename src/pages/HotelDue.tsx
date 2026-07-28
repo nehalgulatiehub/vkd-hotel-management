@@ -358,7 +358,7 @@ const fetchHotels = async () => {
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div><strong>Hotel Name :</strong> {booking.another_hotels?.name || "-"}</div>
                           <div><strong>No of Rooms :</strong> {booking.number_of_rooms || 1}</div>
-                          <div><strong>Room Type :</strong> {booking.room_type || "-"}</div>
+                          <div><strong>Room Type :</strong> {roomName(booking.room_type)}</div>
                           <div><strong>Booking Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
                           <div><strong>Selling Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
                           <div><strong>Total Received Payment :</strong> Rs. {booking.paid_amount?.toLocaleString("en-IN") || 0}/-</div>
