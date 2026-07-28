@@ -1,199 +1,207 @@
 import { Header } from "@/components/layout/Header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DateInput } from "@/components/ui/DateInput";
-import { Download, Search } from "lucide-react";
+import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useProfilesMap } from "@/hooks/useProfilesMap";
-import { formatDisplayDate } from "@/utils/dateFormat";
 import * as XLSX from "xlsx";
 
+const today = new Date().toISOString().split("T")[0];
+
 export default function ExportBookings() {
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [userFilter, setUserFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-  const { profiles, getUserName } = useProfilesMap();
-
-  const fetchBookings = async () => {
-    setLoading(true);
-    let query = supabase
-      .from("bookings")
-      .select("*, agent:agents(name)")
-      .neq("status", "cancelled")
-      .order("created_at", { ascending: false });
-
-    if (dateFrom) query = query.gte("check_in_date", dateFrom);
-    if (dateTo) query = query.lte("check_in_date", dateTo);
-
-    const { data, error } = await query;
-    if (error) toast.error("Failed to load bookings");
-    else setBookings(data || []);
-    setLoading(false);
-  };
+  const [dateFrom, setDateFrom] = useState(today);
+  const [dateTo, setDateTo] = useState(today);
+  const [searchWithDate, setSearchWithDate] = useState<"yes" | "no">("yes");
+  const [hotelId, setHotelId] = useState("all");
+  const [hotels, setHotels] = useState<any[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    fetchBookings();
-  }, [dateFrom, dateTo]);
+    (async () => {
+      const { data } = await supabase.from("own_hotels").select("id, name").order("name");
+      setHotels(data || []);
+      if (data?.length) setHotelId(data[0].id);
+    })();
+  }, []);
 
-  const filtered = bookings.filter((b) => {
-    const q = searchTerm.toLowerCase();
-    const matchesSearch =
-      !q ||
-      b.booking_number?.toLowerCase().includes(q) ||
-      b.customer_name?.toLowerCase().includes(q) ||
-      b.contact_no?.includes(searchTerm) ||
-      b.email?.toLowerCase().includes(q) ||
-      b.agent?.name?.toLowerCase().includes(q);
-    const matchesStatus = statusFilter === "all" || b.payment_status === statusFilter;
-    const matchesUser = userFilter === "all" || b.created_by === userFilter;
-    return matchesSearch && matchesStatus && matchesUser;
-  });
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      let query = supabase
+        .from("bookings")
+        .select(
+          "*, agent:agents(name), hotel_bookings(*, own_hotel:own_hotels(name), hotel:another_hotels(name)), volvo_bookings(*), safari_bookings(*), vehicle_bookings(*, transporter:transporters(name))"
+        )
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: false });
 
-  const handleExport = () => {
-    if (!filtered.length) return;
-    const rows = filtered.map((b) => ({
-      "Booking No": b.booking_number,
-      "Customer": b.customer_name || "-",
-      "Contact": b.contact_no || "-",
-      "Email": b.email || "-",
-      "Type": b.booking_type || "-",
-      "Agent": b.agent?.name || "-",
-      "Check-in": b.check_in_date ? formatDisplayDate(b.check_in_date) : "-",
-      "Check-out": b.check_out_date ? formatDisplayDate(b.check_out_date) : "-",
-      "Adults": b.adults ?? 0,
-      "Children": b.children ?? 0,
-      "Total": b.total_amount ?? 0,
-      "Paid": b.paid_amount ?? 0,
-      "Due": b.due_amount ?? 0,
-      "Payment Status": b.payment_status || "-",
-      "Status": b.status || "-",
-      "Created By": b.created_by ? getUserName(b.created_by) : "-",
-      "Created": b.created_at ? formatDisplayDate(b.created_at) : "-",
-      "Notes": b.notes || "-",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Bookings");
-    XLSX.writeFile(wb, `bookings_${new Date().toISOString().split("T")[0]}.xlsx`);
-    toast.success("Bookings exported successfully");
+      if (searchWithDate === "yes") {
+        if (dateFrom) query = query.gte("check_in_date", dateFrom);
+        if (dateTo) query = query.lte("check_in_date", dateTo);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      let rowsData = data || [];
+      if (hotelId !== "all") {
+        rowsData = rowsData.filter((b: any) =>
+          (b.hotel_bookings || []).some((h: any) => h.own_hotel_id === hotelId)
+        );
+      }
+
+      if (!rowsData.length) {
+        toast.error("No bookings found for the selected filters");
+        return;
+      }
+
+      const rows = rowsData.map((b: any, i: number) => {
+        const ownHotel = (b.hotel_bookings || []).find((h: any) => h.own_hotel_id);
+        const anotherHotel = (b.hotel_bookings || []).find((h: any) => h.hotel_id);
+        const dm = (b.volvo_bookings || []).find((v: any) =>
+          (v.route || "").toLowerCase().includes("delhi-manali") ||
+          (v.route || "").toLowerCase().startsWith("delhi")
+        );
+        const md = (b.volvo_bookings || []).find((v: any) => v !== dm);
+        const safari = (b.safari_bookings || [])[0];
+        const vehicle = (b.vehicle_bookings || [])[0];
+
+        return {
+          "S.No.": i + 1,
+          Type: b.booking_type || "",
+          Agent: b.agent?.name || "",
+          "Customer Name": b.customer_name || "",
+          "Booking From": b.check_in_date || "",
+          "Booking To": b.check_out_date || "",
+          Package: ownHotel?.notes || b.notes || "",
+          Room: ownHotel?.room_type || "",
+          "No.of Room": ownHotel?.number_of_rooms ?? 0,
+          Hotel: ownHotel?.own_hotel?.name || "",
+          "Booking Price": ownHotel?.total_amount ?? 0,
+          "D-M No. of Tickets": dm?.number_of_seats ?? 0,
+          "D-M Ticket No.": "",
+          "D-M Seat No.": "",
+          "D-M Transporter": "",
+          "D-M Volvo Booking Date": dm?.created_at ? String(dm.created_at).split("T")[0] : "",
+          "D-M Volvo Journey Date": dm?.travel_date || "",
+          "D-M Volvo Booking Price": dm?.rate_per_seat ?? 0,
+          "D-M Volvo Selling Price": dm?.total_amount ?? 0,
+          "M-D No.of Tickets": md?.number_of_seats ?? 0,
+          "M-D Ticket No.": "",
+          "M-D Seat No.": "",
+          "M-D Transporter": "",
+          "M-D Volvo Booking Date": md?.created_at ? String(md.created_at).split("T")[0] : "",
+          "M-D Volvo Journey Date": md?.travel_date || "",
+          "M-D Volvo Booking Price": md?.rate_per_seat ?? 0,
+          "M-D Volvo Selling Price": md?.total_amount ?? 0,
+          "Safari Transporter": safari?.safari_name || "",
+          "No.of Safari": safari?.number_of_persons ?? 0,
+          "Safari Booking Date": safari?.created_at ? String(safari.created_at).split("T")[0] : "",
+          "Safari Journey Date": safari?.safari_date || "",
+          "Safari Booking Pirce": safari?.rate_per_person ?? 0,
+          "Safari Selling Price": safari?.total_amount ?? 0,
+          "Another Hotel Name": anotherHotel?.hotel?.name || "",
+          "No of Rooms": anotherHotel?.number_of_rooms ?? 0,
+          "Room Type": anotherHotel?.room_type || "",
+          "Booking From ": anotherHotel?.check_in_date || "",
+          "Hotel Booking Date": anotherHotel?.created_at
+            ? String(anotherHotel.created_at).split("T")[0]
+            : "",
+          "Hotel Check In": anotherHotel?.check_in_date || "",
+          "Hotel Check Out": anotherHotel?.check_out_date || "",
+          "Room Booking Price": anotherHotel?.room_rate ?? 0,
+          "Room Selling Price": anotherHotel?.total_amount ?? 0,
+          "Vehicle Details": vehicle
+            ? [vehicle.vehicle_type, vehicle.vehicle_number].filter(Boolean).join(" ")
+            : "",
+          "Vehicle booking Price": vehicle?.rate ?? 0,
+          "Vehicle Selling Price": vehicle?.total_amount ?? 0,
+          Transporter: vehicle?.transporter?.name || "",
+          "Vehicle Booking Date": vehicle?.pickup_date || "",
+          "Vehicle Selling Date": vehicle?.dropoff_date || "",
+          Reference: b.reference || "",
+          "Reference Email": b.reference_email || "",
+          "Agent Commission": b.agent_commission ?? 0,
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Bookings");
+      XLSX.writeFile(wb, `booking_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success(`Exported ${rows.length} bookings`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to export bookings");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Export Bookings" />
+      <Header title="Export Booking" />
       <main className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Export Bookings</h2>
-          <Button className="bg-gradient-primary" onClick={handleExport} disabled={!filtered.length}>
-            <Download className="h-4 w-4 mr-2" />
-            Export to Excel
-          </Button>
-        </div>
-
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div>
-                <Label>Check-in From</Label>
-                <DateInput value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        <div className="rounded-lg overflow-hidden border border-border shadow-sm max-w-5xl">
+          <div className="bg-[#1a72b8] text-white px-4 py-2 font-serif font-bold text-lg">
+            Export Booking
+          </div>
+          <div className="bg-[#f7dede] px-4 py-3 space-y-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#7a4a4a]">
+              <div className="flex items-center gap-2">
+                <span>From :</span>
+                <LegacyDatePicker value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               </div>
-              <div>
-                <Label>Check-in To</Label>
-                <DateInput value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <div className="flex items-center gap-2">
+                <span>To :</span>
+                <LegacyDatePicker value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
               </div>
-              <div>
-                <Label>Payment Status</Label>
+              <div className="flex items-center gap-2 ml-4">
+                <span>Search with Date :</span>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    checked={searchWithDate === "yes"}
+                    onChange={() => setSearchWithDate("yes")}
+                  />
+                  YES
+                </label>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    checked={searchWithDate === "no"}
+                    onChange={() => setSearchWithDate("no")}
+                  />
+                  NO
+                </label>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[#7a4a4a]">
+              <div className="flex items-center gap-2">
+                <span>Hotel</span>
                 <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={hotelId}
+                  onChange={(e) => setHotelId(e.target.value)}
+                  className="h-7 min-w-[200px] border border-black bg-white px-1 text-sm text-foreground"
                 >
-                  <option value="all">All</option>
-                  <option value="pending">Pending</option>
-                  <option value="partial">Partial</option>
-                  <option value="paid">Paid</option>
-                </select>
-              </div>
-              <div>
-                <Label>Created By</Label>
-                <select
-                  value={userFilter}
-                  onChange={(e) => setUserFilter(e.target.value)}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="all">All Users</option>
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.username || `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Unknown"}
+                  <option value="all">All Hotels</option>
+                  {hotels.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
                     </option>
                   ))}
                 </select>
               </div>
-              <div>
-                <Label>Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="No, customer, contact, email..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
+              <button
+                onClick={handleExport}
+                disabled={exporting}
+                className="border-2 border-outset border-[#999] bg-[#d4d0c8] px-4 py-1 font-mono font-bold text-black text-sm disabled:opacity-60"
+              >
+                {exporting ? "Exporting..." : "Export"}
+              </button>
             </div>
-
-            <div className="mt-6">
-              <p className="text-sm text-muted-foreground mb-2">Total Bookings: {filtered.length}</p>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3 font-semibold">Booking No</th>
-                      <th className="text-left p-3 font-semibold">Customer</th>
-                      <th className="text-left p-3 font-semibold">Agent</th>
-                      <th className="text-left p-3 font-semibold">Check-in</th>
-                      <th className="text-left p-3 font-semibold">Check-out</th>
-                      <th className="text-right p-3 font-semibold">Total</th>
-                      <th className="text-right p-3 font-semibold">Paid</th>
-                      <th className="text-right p-3 font-semibold">Due</th>
-                      <th className="text-left p-3 font-semibold">Payment</th>
-                      <th className="text-left p-3 font-semibold">Created By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr><td className="p-4 text-center text-muted-foreground" colSpan={10}>Loading...</td></tr>
-                    ) : filtered.length === 0 ? (
-                      <tr><td className="p-4 text-center text-muted-foreground" colSpan={10}>No bookings found</td></tr>
-                    ) : filtered.map((b) => (
-                      <tr key={b.id} className="border-b hover:bg-muted/50">
-                        <td className="p-3">{b.booking_number}</td>
-                        <td className="p-3">{b.customer_name || "-"}</td>
-                        <td className="p-3">{b.agent?.name || "-"}</td>
-                        <td className="p-3">{b.check_in_date ? formatDisplayDate(b.check_in_date) : "-"}</td>
-                        <td className="p-3">{b.check_out_date ? formatDisplayDate(b.check_out_date) : "-"}</td>
-                        <td className="p-3 text-right">{b.total_amount ?? 0}</td>
-                        <td className="p-3 text-right">{b.paid_amount ?? 0}</td>
-                        <td className="p-3 text-right">{b.due_amount ?? 0}</td>
-                        <td className="p-3 capitalize">{b.payment_status || "-"}</td>
-                        <td className="p-3">{b.created_by ? getUserName(b.created_by) : "-"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="bg-white h-40" />
+          <div className="bg-[#1a72b8] h-8" />
+        </div>
       </main>
     </div>
   );
