@@ -299,7 +299,26 @@ export default function Payments() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-2 py-1.5 border-b border-border text-[11px]">
             <div className="flex items-center gap-1">
               <span>From :</span>
-              <PartsDatePicker month={filters.fromMonth} day={filters.fromDay} year={filters.fromYear} onChange={(p) => setFilters({...filters, fromMonth: p.month, fromDay: p.day, fromYear: p.year})} />
+              <PartsDatePicker
+                month={String(months.indexOf(filters.fromMonth) + 1)}
+                day={filters.fromDay}
+                year={filters.fromYear}
+                onChange={(p) => setFilters({ ...filters, fromMonth: months[Number(p.month) - 1] || filters.fromMonth, fromDay: p.day, fromYear: p.year })}
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span>To :</span>
+              <PartsDatePicker
+                month={String(months.indexOf(filters.toMonth) + 1)}
+                day={filters.toDay}
+                year={filters.toYear}
+                onChange={(p) => setFilters({ ...filters, toMonth: months[Number(p.month) - 1] || filters.toMonth, toDay: p.day, toYear: p.year })}
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span>Search with Date :</span>
+              <label className="flex items-center gap-0.5">
+                <input type="radio" name="searchDate" value="YES" checked={filters.searchWithDate === "YES"} onChange={() => setFilters({ ...filters, searchWithDate: "YES" })} className="w-3 h-3" />
                 <span>YES</span>
               </label>
               <label className="flex items-center gap-0.5">
@@ -307,6 +326,7 @@ export default function Payments() {
                 <span>NO</span>
               </label>
             </div>
+
           </div>
 
           {/* Row 2: Place, Payment Mode, Amount */}
