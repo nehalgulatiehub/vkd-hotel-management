@@ -9,16 +9,14 @@ let inflight: Promise<Record<string, string>> | null = null;
 async function loadRooms(): Promise<Record<string, string>> {
   if (cache) return cache;
   if (!inflight) {
-    inflight = supabase
-      .from("rooms")
-      .select("id, room_type, room_number")
-      .then(({ data }) => {
-        cache = (data || []).reduce((acc: Record<string, string>, r: any) => {
-          acc[r.id] = r.room_type || r.room_number || r.id;
-          return acc;
-        }, {});
-        return cache;
-      });
+    inflight = (async () => {
+      const { data } = await supabase.from("rooms").select("id, room_type, room_number");
+      cache = (data || []).reduce((acc: Record<string, string>, r: any) => {
+        acc[r.id] = r.room_type || r.room_number || r.id;
+        return acc;
+      }, {});
+      return cache;
+    })();
   }
   return inflight;
 }
