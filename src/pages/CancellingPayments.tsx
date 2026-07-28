@@ -119,12 +119,12 @@ export default function CancellingPayments() {
           <div className="flex flex-wrap items-center gap-4 mb-2 text-[11px]">
             <div className="flex items-center gap-1">
               <span>From :</span>
-              <PartsDatePicker month={String(months.indexOf(fromMonth) + 1)} day={String(fromDay)} year={String(fromYear)} onChange={(p) => { setFromMonth(months[Number(p.month) - 1] || fromMonthMonth); setFromDay(Number(p.day)); setFromYear(Number(p.year)); }} />
+              <PartsDatePicker month={String(months.indexOf(fromMonth) + 1)} day={String(fromDay)} year={String(fromYear)} onChange={(p) => { setFromMonth(months[Number(p.month) - 1] || fromMonth); setFromDay(Number(p.day)); setFromYear(Number(p.year)); }} />
             </div>
 
             <div className="flex items-center gap-1">
               <span>To :</span>
-              <PartsDatePicker month={String(months.indexOf(toMonth) + 1)} day={String(toDay)} year={String(toYear)} onChange={(p) => { setToMonth(months[Number(p.month) - 1] || toMonthMonth); setToDay(Number(p.day)); setToYear(Number(p.year)); }} />
+              <PartsDatePicker month={String(months.indexOf(toMonth) + 1)} day={String(toDay)} year={String(toYear)} onChange={(p) => { setToMonth(months[Number(p.month) - 1] || toMonth); setToDay(Number(p.day)); setToYear(Number(p.year)); }} />
             </div>
 
             <div className="flex items-center gap-2">
