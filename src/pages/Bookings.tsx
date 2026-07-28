@@ -212,6 +212,7 @@ export default function Bookings() {
     booking_num_rooms: "",
     booking_room_number: "",
     booking_package_type: "select",
+    booking_selected_package: "",
     booking_custom_package: "",
     booking_price: "",
     booking_from: "",
@@ -604,7 +605,12 @@ export default function Bookings() {
           total_amount: hotelAmount,
           paid_amount: 0,
           due_amount: hotelAmount,
-          notes: [formData.booking_custom_package, formData.booking_room_number ? `Room No: ${formData.booking_room_number}` : ''].filter(Boolean).join(' | ') || null
+          notes: [
+            formData.booking_package_type === "select" && formData.booking_selected_package
+              ? `Package: ${formData.booking_selected_package}`
+              : formData.booking_custom_package,
+            formData.booking_room_number ? `Room No: ${formData.booking_room_number}` : ''
+          ].filter(Boolean).join(' | ') || null
         };
         
         const { error: hotelError } = await supabase
@@ -806,6 +812,7 @@ export default function Bookings() {
         booking_num_rooms: "",
         booking_room_number: "",
         booking_package_type: "select",
+        booking_selected_package: "",
         booking_custom_package: "",
         booking_price: "",
         booking_from: "",
@@ -1285,8 +1292,9 @@ export default function Bookings() {
         booking_room: hotelBooking?.room_type || "",
         booking_num_rooms: hotelBooking?.number_of_rooms?.toString() || "",
         booking_room_number: hotelBooking?.notes?.match(/Room No: (.+)/)?.[1] || "",
-        booking_package_type: "select",
-        booking_custom_package: hotelBooking?.notes || "",
+        booking_package_type: hotelBooking?.notes?.match(/Package:\s*([^|]+)/) ? "select" : (hotelBooking?.notes ? "custom" : "select"),
+        booking_selected_package: hotelBooking?.notes?.match(/Package:\s*([^|]+)/)?.[1]?.trim() || "",
+        booking_custom_package: hotelBooking?.notes?.match(/Package:\s*([^|]+)/) ? "" : (hotelBooking?.notes || ""),
         booking_price: hotelBooking?.total_amount?.toString() || "",
         booking_from: hotelBooking?.check_in_date || "",
         booking_to: hotelBooking?.check_out_date || "",
@@ -1708,6 +1716,23 @@ export default function Bookings() {
                         </div>
                       </RadioGroup>
                     </CompactFormRow>
+
+                    {formData.booking_package_type === "select" && (
+                      <CompactFormRow label="Package" className="!w-auto">
+                        <select
+                          value={formData.booking_selected_package}
+                          onChange={(e) => setFormData({ ...formData, booking_selected_package: e.target.value })}
+                          className="h-6 text-[11px] border border-input bg-background px-1 rounded-sm w-48"
+                        >
+                          <option value="">--Select Package--</option>
+                          <option value="EP">EP (Room Only)</option>
+                          <option value="CP">CP (Room + Breakfast)</option>
+                          <option value="MAP">MAP (Breakfast + Dinner)</option>
+                          <option value="AP">AP (All Meals)</option>
+                        </select>
+                      </CompactFormRow>
+                    )}
+
 
                     {formData.booking_package_type === "custom" && (
                       <CompactFormRow label="Package Note" className="!w-auto">
@@ -2414,6 +2439,7 @@ export default function Bookings() {
                         booking_num_rooms: "",
                         booking_room_number: "",
                         booking_package_type: "select",
+                        booking_selected_package: "",
                         booking_custom_package: "",
                         booking_price: "",
                         booking_from: "",
