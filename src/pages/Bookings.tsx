@@ -605,7 +605,12 @@ export default function Bookings() {
           total_amount: hotelAmount,
           paid_amount: 0,
           due_amount: hotelAmount,
-          notes: [formData.booking_custom_package, formData.booking_room_number ? `Room No: ${formData.booking_room_number}` : ''].filter(Boolean).join(' | ') || null
+          notes: [
+            formData.booking_package_type === "select" && formData.booking_selected_package
+              ? `Package: ${formData.booking_selected_package}`
+              : formData.booking_custom_package,
+            formData.booking_room_number ? `Room No: ${formData.booking_room_number}` : ''
+          ].filter(Boolean).join(' | ') || null
         };
         
         const { error: hotelError } = await supabase
