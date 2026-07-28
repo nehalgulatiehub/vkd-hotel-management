@@ -102,9 +102,28 @@ export default function VehicleDetails() {
                     <div><strong>Note :</strong> {booking.bookings?.notes || ""}</div>
                   </td>
                   <td style={tdStyle}>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => handleViewDetails(booking)}>View Details</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}>Refund Payment</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
+                    {(() => {
+                      const b = booking.bookings;
+                      const isOwner = !!b && (b.created_by === user?.id || isAdmin());
+                      const actions: { label: string; fn: () => void }[] = [
+                        { label: "View Details", fn: () => handleViewDetails(booking) },
+                      ];
+                      if (isOwner) {
+                        actions.push(
+                          { label: "Print Booking", fn: () => handlePrintBooking(b.id) },
+                          { label: "Edit Booking", fn: () => navigate(`/bookings?edit=${b.id}`) },
+                          { label: "Add Payment", fn: () => paymentDialog.handleAddPayment(b, { type: "vehicle", id: booking.id }) },
+                          { label: "View Payment", fn: () => paymentDialog.handleViewPayment(b, { type: "vehicle", id: booking.id }) },
+                        );
+                      }
+                      actions.push(
+                        { label: "Refund Payment", fn: () => b && navigate(`/refunds?id=${b.id}`) },
+                        { label: "View Refund Payment", fn: () => b && paymentDialog.handleViewPayment(b) },
+                      );
+                      return actions.map((a, i) => (
+                        <button key={i} style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={a.fn}>{a.label}</button>
+                      ));
+                    })()}
                   </td>
                 </tr>
               ))}
