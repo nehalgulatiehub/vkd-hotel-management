@@ -456,7 +456,13 @@ export default function Bookings() {
             hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
             room_type: isUuid ? (roomInfo?.name || hb.room_type) : hb.room_type,
             room_number: roomInfo?.room_number || hb.notes?.match(/Room No: (.+?)(?:\s*\||$)/)?.[1] || null,
-            number_of_rooms: hb.number_of_rooms
+            number_of_rooms: hb.number_of_rooms,
+            package: (hb.notes || "")
+              .split("|")
+              .map((p: string) => p.trim())
+              .filter((p: string) => p && !/^Room No:/i.test(p))
+              .join(" | ")
+              .replace(/^Package:\s*/i, "") || null
           };
         });
         
