@@ -9,6 +9,8 @@ import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const MAROON_LIGHT = "#c47a7e";
 const ROW_ALT = "#f6f0f0";
