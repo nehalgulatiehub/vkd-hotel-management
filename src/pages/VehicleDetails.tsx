@@ -85,7 +85,7 @@ export default function VehicleDetails() {
                 <tr key={booking.id} style={{ backgroundColor: idx % 2 === 0 ? "#fff" : ROW_ALT }}>
                   <td style={tdStyle}>{startIndex + idx + 1}</td>
                   <td style={tdStyle}>{booking.bookings?.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10 }}>{booking.bookings?.agents?.name || ""}</div></> : "Direct"}</td>
-                  <td style={tdStyle}>{booking.bookings?.created_by ? "User" : "-"}</td>
+                  <td style={tdStyle}>{booking.bookings?.created_by ? (profilesMap[booking.bookings.created_by] || "User") : "-"}</td>
                   <td style={tdStyle}><div style={{ fontWeight: "bold" }}>{booking.bookings?.customer_name || "-"}</div><div style={{ fontSize: 10 }}>Contact No.: {booking.bookings?.contact_no || ""}</div></td>
                   <td style={tdStyle}>
                     <div><strong>Vehicle :</strong> {booking.vehicle_type || "-"}</div>
