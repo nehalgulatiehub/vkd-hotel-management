@@ -249,66 +249,25 @@ export default function RoomBookings() {
               {/* Booking From */}
               <div className="flex items-center gap-1">
                 <span className="whitespace-nowrap">Booking From</span>
-                <select
-                  value={fromMonth}
-                  onChange={(e) => setFromMonth(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white"
-                >
-                  {months.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={fromDay}
-                  onChange={(e) => setFromDay(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white"
-                >
-                  {days.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-                <select
-                  value={fromYear}
-                  onChange={(e) => setFromYear(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white"
-                >
-                  {years.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
+                <PartsDatePicker
+                  month={fromMonth}
+                  day={fromDay}
+                  year={fromYear}
+                  onChange={(p) => { setFromMonth(p.month); setFromDay(p.day); setFromYear(p.year); }}
+                />
               </div>
 
               {/* Booking To */}
               <div className="flex items-center gap-1">
                 <span className="whitespace-nowrap">Booking To</span>
-                <select
-                  value={toMonth}
-                  onChange={(e) => setToMonth(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white"
-                >
-                  {months.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={toDay}
-                  onChange={(e) => setToDay(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white"
-                >
-                  {days.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-                <select
-                  value={toYear}
-                  onChange={(e) => setToYear(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white"
-                >
-                  {years.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
+                <PartsDatePicker
+                  month={toMonth}
+                  day={toDay}
+                  year={toYear}
+                  onChange={(p) => { setToMonth(p.month); setToDay(p.day); setToYear(p.year); }}
+                />
               </div>
+
 
               {/* Hotel */}
               <div className="flex items-center gap-1">
