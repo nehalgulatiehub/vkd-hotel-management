@@ -60,10 +60,31 @@ export default function Bookings() {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const editId = searchParams.get("edit");
+    const rebookId = searchParams.get("rebook");
     
     if (isAddRoute) {
       setShowForm(true);
       setEditingBookingId(null);
+    } else if (rebookId) {
+      // Handle ?rebook=bookingId - clone a cancelled booking into a NEW booking form
+      const loadBookingForRebook = async () => {
+        const { data: booking, error } = await supabase
+          .from("bookings")
+          .select("*, agents(name)")
+          .eq("id", rebookId)
+          .maybeSingle();
+
+        if (booking && !error) {
+          await handleEditBooking(booking);
+          // Clear edit target so submitting creates a brand new booking
+          setEditingBookingId(null);
+          setShowForm(true);
+          toast.success("Booking details loaded — review and click Create to re-book");
+        } else {
+          toast.error("Could not load booking for re-booking");
+        }
+      };
+      loadBookingForRebook();
     } else if (editId) {
       // Handle ?edit=bookingId query parameter - fetch booking and load for editing
       const loadBookingForEdit = async () => {
