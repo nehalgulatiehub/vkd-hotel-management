@@ -360,8 +360,16 @@ export default function CancelledBookings() {
           </div>
         )}
       </div>
+      <BookingDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        booking={selectedBookingData}
+        serviceType={selectedServiceType}
+        serviceData={selectedServiceData}
+      />
     </main>
   );
+
 
   if (!isAdminRoute) {
     return (
