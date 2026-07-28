@@ -338,8 +338,8 @@ export default function VehicleDue() {
                           <div><strong>Vehicle :</strong> {booking.vehicle_type || "-"}</div>
                           <div><strong>Transporter :</strong> {booking.transporters?.name || "-"}</div>
                           <div><strong>Journey Date :</strong> {booking.pickup_date ? new Date(booking.pickup_date).toLocaleDateString("en-GB") : "-"}</div>
-                          <div><strong>Booking Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
-                          <div><strong>Selling Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
+                          <div><strong>Booking Price :</strong> Rs. {(Number(booking.rate) || 0).toLocaleString("en-IN")}/-</div>
+                          <div><strong>Selling Price :</strong> Rs. {(Number(booking.total_amount) || 0).toLocaleString("en-IN")}/-</div>
                           <div><strong>Total Received Payment :</strong> Rs. {booking.paid_amount?.toLocaleString("en-IN") || 0}/-</div>
                           <div className="text-destructive"><strong>Due Payment :</strong> Rs. {booking.due_amount?.toLocaleString("en-IN") || 0}/-</div>
                         </td>
