@@ -2638,7 +2638,7 @@ export default function Bookings() {
                                 {booking.include_another_hotel && <div>✓ Another Hotel</div>}
                                 {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
-                                {booking.notes && <div><strong>Note :</strong> {booking.notes}</div>}
+                                {booking.hotel_info?.package && <div><strong>Package :</strong> {booking.hotel_info.package}</div>}
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
@@ -2822,7 +2822,7 @@ export default function Bookings() {
                                 {booking.include_another_hotel && <div>✓ Another Hotel</div>}
                                 {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
-                                {booking.notes && <div><strong>Note :</strong> {booking.notes}</div>}
+                                {booking.hotel_info?.package && <div><strong>Package :</strong> {booking.hotel_info.package}</div>}
                               </div>
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
