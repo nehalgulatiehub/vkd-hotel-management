@@ -22,6 +22,9 @@ const tdStyle: React.CSSProperties = { border: "1px solid #ddd", padding: "5px 8
 const actionStyle: React.CSSProperties = { color: "#c00", cursor: "pointer", fontSize: 10, display: "block", background: "none", border: "none", padding: 0, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
 
 export default function VehicleDetails() {
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
+  const { profilesMap } = useProfilesMap();
   const [vehicleBookings, setVehicleBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,7 @@ export default function VehicleDetails() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
+  const [printBookingId, setPrintBookingId] = useState<string | null>(null);
 
   useEffect(() => { fetchVehicleBookings(); }, []);
 
@@ -40,6 +44,12 @@ export default function VehicleDetails() {
   };
 
   const handleViewDetails = (booking: any) => { setSelectedBookingData(booking.bookings); setSelectedServiceData(booking); setShowDetailsDialog(true); };
+
+  const handlePrintBooking = (bookingId: string) => {
+    setPrintBookingId(bookingId);
+    setTimeout(() => window.print(), 800);
+  };
+
 
   const filteredBookings = vehicleBookings.filter(booking => {
     if (filters.searchWithDate) { const d = new Date(booking.pickup_date); const f = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`); const t = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`); if (d < f || d > t) return false; }
