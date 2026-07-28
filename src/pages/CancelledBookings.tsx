@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { useRoomNames } from "@/hooks/useRoomNames";
+import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
@@ -17,6 +18,46 @@ export default function CancelledBookings() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const { roomName } = useRoomNames();
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
+  const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
+  const [selectedServiceType, setSelectedServiceType] = useState<"safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md">("hotel");
+
+  const handleViewDetails = async (b: any) => {
+    try {
+      const hb = b.hotel_bookings?.[0];
+      if (hb) {
+        setSelectedBookingData(b);
+        setSelectedServiceData(hb);
+        setSelectedServiceType("hotel");
+        setShowDetailsDialog(true);
+        return;
+      }
+      const [safari, vehicle, volvo] = await Promise.all([
+        supabase.from("safari_bookings").select("*").eq("booking_id", b.id),
+        supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", b.id),
+        supabase.from("volvo_bookings").select("*").eq("booking_id", b.id),
+      ]);
+      if (safari.data?.length) {
+        setSelectedServiceData(safari.data[0]);
+        setSelectedServiceType("safari");
+      } else if (vehicle.data?.length) {
+        setSelectedServiceData(vehicle.data[0]);
+        setSelectedServiceType("vehicle");
+      } else if (volvo.data?.length) {
+        const v: any = volvo.data[0];
+        setSelectedServiceData(v);
+        setSelectedServiceType(v.route === "manali_delhi" ? "volvo_md" : "volvo_dm");
+      } else {
+        setSelectedServiceData({});
+        setSelectedServiceType("hotel");
+      }
+      setSelectedBookingData(b);
+      setShowDetailsDialog(true);
+    } catch (e) {
+      toast.error("Failed to load booking details");
+    }
+  };
 
   const today = new Date().toISOString().slice(0, 10);
   const [filters, setFilters] = useState({
@@ -264,7 +305,7 @@ export default function CancelledBookings() {
                       <td className="p-2 border-b border-gray-300">
                         <div className="flex flex-col gap-1 text-[#7a3b2e]">
                           <button
-                            onClick={() => navigate(isAdminRoute ? `/admin/bookings?id=${b.id}` : `/bookings?id=${b.id}`)}
+                            onClick={() => handleViewDetails(b)}
                             className="text-left hover:underline"
                           >
                             View Details
@@ -319,8 +360,16 @@ export default function CancelledBookings() {
           </div>
         )}
       </div>
+      <BookingDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        booking={selectedBookingData}
+        serviceType={selectedServiceType}
+        serviceData={selectedServiceData}
+      />
     </main>
   );
+
 
   if (!isAdminRoute) {
     return (
