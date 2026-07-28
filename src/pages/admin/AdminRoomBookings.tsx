@@ -1,3 +1,4 @@
+import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -333,26 +334,21 @@ export default function AdminRoomBookings() {
       <div style={{ border: "1px solid #ccc", borderTop: "none", padding: "8px 10px", backgroundColor: "#fff" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <label style={{ fontSize: 11 }}>Booking From :</label>
-          <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
-            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select value={fromDay} onChange={(e) => setFromDay(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
-            {days.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <select value={fromYear} onChange={(e) => setFromYear(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
-            {years.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <PartsDatePicker
+            month={fromMonth}
+            day={fromDay}
+            year={fromYear}
+            onChange={(p) => { setFromMonth(p.month); setFromDay(p.day); setFromYear(p.year); }}
+          />
 
           <label style={{ fontSize: 11, marginLeft: 16 }}>Booking To :</label>
-          <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
-            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select value={toDay} onChange={(e) => setToDay(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
-            {days.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <select value={toYear} onChange={(e) => setToYear(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11 }}>
-            {years.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <PartsDatePicker
+            month={toMonth}
+            day={toDay}
+            year={toYear}
+            onChange={(p) => { setToMonth(p.month); setToDay(p.day); setToYear(p.year); }}
+          />
+
 
           <label style={{ fontSize: 11, marginLeft: 16 }}>Hotel :</label>
           <select value={selectedHotel} onChange={(e) => setSelectedHotel(e.target.value)} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, minWidth: 140 }}>

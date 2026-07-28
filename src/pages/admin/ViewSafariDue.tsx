@@ -7,6 +7,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
+import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 
 interface SafariWithBooking {
   id: string;
@@ -130,15 +131,11 @@ export default function ViewSafariDue() {
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, borderBottom: "1px solid #ccc", padding: "4px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>From :</span>
-          <select value={filters.fromMonth} onChange={(e) => setFilters({...filters, fromMonth: e.target.value})} style={fs}><option value="">Month</option>{months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}</select>
-          <select value={filters.fromDay} onChange={(e) => setFilters({...filters, fromDay: e.target.value})} style={fs}><option value="">Day</option>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
-          <input type="text" placeholder="2026" value={filters.fromYear} onChange={(e) => setFilters({...filters, fromYear: e.target.value})} style={{ ...fs, width: 48 }} />
+          <PartsDatePicker month={filters.fromMonth} day={filters.fromDay} year={filters.fromYear} onChange={(p) => setFilters({...filters, fromMonth: p.month, fromDay: p.day, fromYear: p.year})} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>To :</span>
-          <select value={filters.toMonth} onChange={(e) => setFilters({...filters, toMonth: e.target.value})} style={fs}><option value="">Month</option>{months.map(m => <option key={m} value={m}>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m)-1]}</option>)}</select>
-          <select value={filters.toDay} onChange={(e) => setFilters({...filters, toDay: e.target.value})} style={fs}><option value="">Day</option>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
-          <input type="text" placeholder="2026" value={filters.toYear} onChange={(e) => setFilters({...filters, toYear: e.target.value})} style={{ ...fs, width: 48 }} />
+          <PartsDatePicker month={filters.toMonth} day={filters.toDay} year={filters.toYear} onChange={(p) => setFilters({...filters, toMonth: p.month, toDay: p.day, toYear: p.year})} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span>Search with Date :</span>

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
+import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -60,13 +61,9 @@ export default function VolvoPayments() {
     <div style={{ width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid #ccc" }}>
         <span>From :</span>
-        <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={sty}>{months.map(m => <option key={m}>{m}</option>)}</select>
-        <select value={fromDay} onChange={e => setFromDay(Number(e.target.value))} style={sty}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
-        <select value={fromYear} onChange={e => setFromYear(Number(e.target.value))} style={sty}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+        <PartsDatePicker month={String(months.indexOf(fromMonth) + 1)} day={String(fromDay)} year={String(fromYear)} onChange={(p) => { setFromMonth(months[Number(p.month) - 1] || fromMonth); setFromDay(Number(p.day)); setFromYear(Number(p.year)); }} />
         <span style={{ marginLeft: 16 }}>To :</span>
-        <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={sty}>{months.map(m => <option key={m}>{m}</option>)}</select>
-        <select value={toDay} onChange={e => setToDay(Number(e.target.value))} style={sty}>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
-        <select value={toYear} onChange={e => setToYear(Number(e.target.value))} style={sty}>{years.map(y => <option key={y} value={y}>{y}</option>)}</select>
+        <PartsDatePicker month={String(months.indexOf(toMonth) + 1)} day={String(toDay)} year={String(toYear)} onChange={(p) => { setToMonth(months[Number(p.month) - 1] || toMonth); setToDay(Number(p.day)); setToYear(Number(p.year)); }} />
         <span style={{ marginLeft: 16 }}>Search with Date :</span>
         <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
         <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>

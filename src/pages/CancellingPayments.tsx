@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -118,28 +119,12 @@ export default function CancellingPayments() {
           <div className="flex flex-wrap items-center gap-4 mb-2 text-[11px]">
             <div className="flex items-center gap-1">
               <span>From :</span>
-              <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={fromDay} onChange={(e) => setFromDay(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={fromYear} onChange={(e) => setFromYear(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+              <PartsDatePicker month={String(months.indexOf(fromMonth) + 1)} day={String(fromDay)} year={String(fromYear)} onChange={(p) => { setFromMonth(months[Number(p.month) - 1] || fromMonth); setFromDay(Number(p.day)); setFromYear(Number(p.year)); }} />
             </div>
 
             <div className="flex items-center gap-1">
               <span>To :</span>
-              <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="border px-1 py-0.5 text-[11px]">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={toDay} onChange={(e) => setToDay(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select value={toYear} onChange={(e) => setToYear(Number(e.target.value))} className="border px-1 py-0.5 text-[11px]">
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+              <PartsDatePicker month={String(months.indexOf(toMonth) + 1)} day={String(toDay)} year={String(toYear)} onChange={(p) => { setToMonth(months[Number(p.month) - 1] || toMonth); setToDay(Number(p.day)); setToYear(Number(p.year)); }} />
             </div>
 
             <div className="flex items-center gap-2">
