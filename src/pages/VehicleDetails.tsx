@@ -27,6 +27,9 @@ export default function VehicleDetails() {
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
 
+  const { profilesMap } = useProfilesMap();
+  const { user, isAdmin, isAccount } = useAuthContext();
+
   useEffect(() => { fetchVehicleBookings(); }, []);
 
   const fetchVehicleBookings = async () => {
