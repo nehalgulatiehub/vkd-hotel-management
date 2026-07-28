@@ -9,6 +9,8 @@ import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const MAROON_LIGHT = "#c47a7e";
 const ROW_ALT = "#f6f0f0";
@@ -24,6 +26,9 @@ export default function VehicleDetails() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
+
+  const { profilesMap } = useProfilesMap();
+  const { user, isAdmin, isAccount } = useAuthContext();
 
   useEffect(() => { fetchVehicleBookings(); }, []);
 
@@ -45,6 +50,7 @@ export default function VehicleDetails() {
     if (filters.reference && !booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     if (filters.contact && !booking.bookings?.contact_no?.toLowerCase().includes(filters.contact.toLowerCase())) return false;
     if (filters.email && !booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
+    if (filters.user && booking.bookings?.created_by !== filters.user) return false;
     return true;
   });
 
@@ -69,7 +75,7 @@ export default function VehicleDetails() {
                 <tr key={booking.id} style={{ backgroundColor: idx % 2 === 0 ? "#fff" : ROW_ALT }}>
                   <td style={tdStyle}>{startIndex + idx + 1}</td>
                   <td style={tdStyle}>{booking.bookings?.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10 }}>{booking.bookings?.agents?.name || ""}</div></> : "Direct"}</td>
-                  <td style={tdStyle}>{booking.bookings?.created_by ? "User" : "-"}</td>
+                  <td style={tdStyle}>{booking.bookings?.created_by ? (profilesMap[booking.bookings.created_by] || "Unknown User") : "-"}</td>
                   <td style={tdStyle}><div style={{ fontWeight: "bold" }}>{booking.bookings?.customer_name || "-"}</div><div style={{ fontSize: 10 }}>Contact No.: {booking.bookings?.contact_no || ""}</div></td>
                   <td style={tdStyle}>
                     <div><strong>Vehicle :</strong> {booking.vehicle_type || "-"}</div>
@@ -86,9 +92,16 @@ export default function VehicleDetails() {
                     <div><strong>Note :</strong> {booking.bookings?.notes || ""}</div>
                   </td>
                   <td style={tdStyle}>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => handleViewDetails(booking)}>View Details</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}>Refund Payment</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
+                    {(() => {
+                      const isOwner = booking.bookings?.created_by === user?.id || isAdmin() || isAccount();
+                      return (
+                        <>
+                          <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => handleViewDetails(booking)}>View Details</button>
+                          {isOwner && <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => booking.bookings && paymentDialog.handleAddPayment(booking.bookings)}>Add Payment</button>}
+                          <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Payment</button>
+                        </>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
