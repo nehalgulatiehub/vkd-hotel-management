@@ -2312,75 +2312,121 @@ export default function Bookings() {
                       </RadioGroup>
                     </CompactFormRow>
                     {formData.include_additional_vehicle && (
-                      <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
-                        <CompactFormRow label="Details" className="!w-auto">
-                          <Input
-                            value={formData.vehicle_details}
-                            onChange={(e) => setFormData({ ...formData, vehicle_details: e.target.value })}
-                            className="w-48"
-                          />
-                        </CompactFormRow>
-                        <CompactFormRow label="Transporter" className="!w-auto">
-                          <Select
-                            value={formData.vehicle_transporter_id}
-                            onValueChange={(value) => setFormData({ ...formData, vehicle_transporter_id: value })}
+                      <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-semibold text-primary">Additional Vehicle Details</p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-[10px] px-2"
+                            onClick={() => setVehiclesList([...vehiclesList, { ...emptyVehicleEntry }])}
                           >
-                            <SelectTrigger className="w-40">
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {transporters.map((transporter) => (
-                                <SelectItem key={transporter.id} value={transporter.id}>
-                                  {transporter.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </CompactFormRow>
-                        <div className="flex gap-2">
-                          <CompactFormRow label="Booking Price" className="!w-auto">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={formData.vehicle_booking_price}
-                              onChange={(e) => setFormData({ ...formData, vehicle_booking_price: e.target.value })}
-                              className="w-24"
-                            />
-                          </CompactFormRow>
-                          <CompactFormRow label="Selling Price" className="!w-auto">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={formData.vehicle_selling_price}
-                              onChange={(e) => setFormData({ ...formData, vehicle_selling_price: e.target.value })}
-                              className="w-24"
-                            />
-                          </CompactFormRow>
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add More Vehicle
+                          </Button>
                         </div>
-                        <div className="flex gap-2">
-                          <CompactFormRow label="Booking Date" className="!w-auto">
-                            <LegacyDatePicker
-                              value={formData.vehicle_booking_date}
-                              onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
-                              className="w-32"
-                            />
-                          </CompactFormRow>
-                          <CompactFormRow label="Journey Date" className="!w-auto">
-                            <LegacyDatePicker
-                              value={formData.vehicle_journey_date}
-                              onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
-                              className="w-32"
-                            />
-                          </CompactFormRow>
-                        </div>
-                        <CompactFormRow label="Note" className="!w-auto">
-                          <Textarea
-                            value={formData.vehicle_note}
-                            onChange={(e) => setFormData({ ...formData, vehicle_note: e.target.value })}
-                            rows={2}
-                            className="w-48"
-                          />
-                        </CompactFormRow>
+
+                        {vehiclesList.map((vehicle, index) => {
+                          const updateVehicle = (field: keyof VehicleEntry, value: string) => {
+                            const newList = [...vehiclesList];
+                            newList[index] = { ...newList[index], [field]: value };
+                            setVehiclesList(newList);
+                          };
+
+                          const removeVehicle = () => {
+                            if (vehiclesList.length > 1) {
+                              setVehiclesList(vehiclesList.filter((_, i) => i !== index));
+                            }
+                          };
+
+                          return (
+                            <div key={index} className="border border-muted rounded-md p-2 space-y-1 relative">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-medium text-muted-foreground">Vehicle #{index + 1}</span>
+                                {vehiclesList.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                    onClick={removeVehicle}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                              <CompactFormRow label="Details" className="!w-auto">
+                                <Input
+                                  value={vehicle.details}
+                                  onChange={(e) => updateVehicle("details", e.target.value)}
+                                  className="w-48"
+                                />
+                              </CompactFormRow>
+                              <CompactFormRow label="Transporter" className="!w-auto">
+                                <Select
+                                  value={vehicle.transporter_id}
+                                  onValueChange={(value) => updateVehicle("transporter_id", value)}
+                                >
+                                  <SelectTrigger className="w-40">
+                                    <SelectValue placeholder="Select" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {transporters.map((transporter) => (
+                                      <SelectItem key={transporter.id} value={transporter.id}>
+                                        {transporter.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </CompactFormRow>
+                              <div className="flex gap-2">
+                                <CompactFormRow label="Booking Price" className="!w-auto">
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={vehicle.booking_price}
+                                    onChange={(e) => updateVehicle("booking_price", e.target.value)}
+                                    className="w-24"
+                                  />
+                                </CompactFormRow>
+                                <CompactFormRow label="Selling Price" className="!w-auto">
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={vehicle.selling_price}
+                                    onChange={(e) => updateVehicle("selling_price", e.target.value)}
+                                    className="w-24"
+                                  />
+                                </CompactFormRow>
+                              </div>
+                              <div className="flex gap-2">
+                                <CompactFormRow label="Booking Date" className="!w-auto">
+                                  <LegacyDatePicker
+                                    value={vehicle.booking_date}
+                                    onChange={(e) => updateVehicle("booking_date", e.target.value)}
+                                    className="w-32"
+                                  />
+                                </CompactFormRow>
+                                <CompactFormRow label="Journey Date" className="!w-auto">
+                                  <LegacyDatePicker
+                                    value={vehicle.journey_date}
+                                    onChange={(e) => updateVehicle("journey_date", e.target.value)}
+                                    className="w-32"
+                                  />
+                                </CompactFormRow>
+                              </div>
+                              <CompactFormRow label="Note" className="!w-auto">
+                                <Textarea
+                                  value={vehicle.note}
+                                  onChange={(e) => updateVehicle("note", e.target.value)}
+                                  rows={2}
+                                  className="w-48"
+                                />
+                              </CompactFormRow>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </>
