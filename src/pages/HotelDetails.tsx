@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -8,6 +9,9 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { useRoomNames } from "@/hooks/useRoomNames";
 
 const MAROON_LIGHT = "#c47a7e";
