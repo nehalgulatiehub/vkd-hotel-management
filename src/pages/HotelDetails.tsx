@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -8,6 +9,9 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { useRoomNames } from "@/hooks/useRoomNames";
 
 const MAROON_LIGHT = "#c47a7e";
@@ -17,6 +21,9 @@ const tdStyle: React.CSSProperties = { border: "1px solid #ddd", padding: "5px 8
 const actionStyle: React.CSSProperties = { color: "#c00", cursor: "pointer", fontSize: 10, display: "block", background: "none", border: "none", padding: 0, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
 
 export default function HotelDetails() {
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
+  const { profilesMap } = useProfilesMap();
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const { roomName } = useRoomNames();
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
@@ -25,8 +32,15 @@ export default function HotelDetails() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
+  const [printBookingId, setPrintBookingId] = useState<string | null>(null);
 
   useEffect(() => { fetchHotelBookings(); }, []);
+
+  const handlePrintBooking = (bookingId: string) => {
+    setPrintBookingId(bookingId);
+    setTimeout(() => window.print(), 800);
+  };
+
 
   const fetchHotelBookings = async () => {
     setLoading(true);
@@ -46,6 +60,7 @@ export default function HotelDetails() {
     if (filters.reference && !booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     if (filters.contact && !booking.bookings?.contact_no?.toLowerCase().includes(filters.contact.toLowerCase())) return false;
     if (filters.email && !booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
+    if (filters.user && booking.bookings?.created_by !== filters.user) return false;
     return true;
   });
 
@@ -70,7 +85,7 @@ export default function HotelDetails() {
                 <tr key={booking.id} style={{ backgroundColor: idx % 2 === 0 ? "#fff" : ROW_ALT }}>
                   <td style={tdStyle}>{startIndex + idx + 1}</td>
                   <td style={tdStyle}>{booking.bookings?.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10 }}>{booking.bookings?.agents?.name || ""}</div></> : "Direct"}</td>
-                  <td style={tdStyle}>{booking.bookings?.created_by ? "User" : "-"}</td>
+                  <td style={tdStyle}>{booking.bookings?.created_by ? (profilesMap[booking.bookings.created_by] || "User") : "-"}</td>
                   <td style={tdStyle}><div style={{ fontWeight: "bold" }}>{booking.bookings?.customer_name || "-"}</div><div style={{ fontSize: 10 }}>Contact No.: {booking.bookings?.contact_no || ""}</div></td>
                   <td style={tdStyle}>
                     <div><strong>Hotel Name :</strong> {booking.another_hotels?.name || "-"}</div>
@@ -89,10 +104,28 @@ export default function HotelDetails() {
                     <div><strong>Note :</strong> {booking.bookings?.notes || ""}</div>
                   </td>
                   <td style={tdStyle}>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => handleViewDetails(booking)}>View Details</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}>Refund Payment</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}>Cancel</button>
+                    {(() => {
+                      const b = booking.bookings;
+                      const isOwner = !!b && (b.created_by === user?.id || isAdmin());
+                      const actions: { label: string; fn: () => void }[] = [
+                        { label: "View Details", fn: () => handleViewDetails(booking) },
+                      ];
+                      if (isOwner) {
+                        actions.push(
+                          { label: "Print Booking", fn: () => handlePrintBooking(b.id) },
+                          { label: "Edit Booking", fn: () => navigate(`/bookings?edit=${b.id}`) },
+                          { label: "Add Payment", fn: () => paymentDialog.handleAddPayment(b, { type: "hotel", id: booking.id }) },
+                          { label: "View Payment", fn: () => paymentDialog.handleViewPayment(b, { type: "hotel", id: booking.id }) },
+                        );
+                      }
+                      actions.push(
+                        { label: "Refund Payment", fn: () => b && navigate(`/refunds?id=${b.id}`) },
+                        { label: "View Refund Payment", fn: () => b && paymentDialog.handleViewPayment(b) },
+                      );
+                      return actions.map((a, i) => (
+                        <button key={i} style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={a.fn}>{a.label}</button>
+                      ));
+                    })()}
                   </td>
                 </tr>
               ))}
@@ -105,6 +138,7 @@ export default function HotelDetails() {
 
       <BookingDetailsDialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog} booking={selectedBookingData} serviceType="hotel" serviceData={selectedServiceData} />
       <PaymentDialogs showViewPaymentDialog={paymentDialog.showViewPaymentDialog} setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog} showPaymentDialog={paymentDialog.showPaymentDialog} setShowPaymentDialog={paymentDialog.setShowPaymentDialog} selectedBooking={paymentDialog.selectedBooking} bookingPayments={paymentDialog.bookingPayments} paymentAmount={paymentDialog.paymentAmount} setPaymentAmount={paymentDialog.setPaymentAmount} paymentMode={paymentDialog.paymentMode} setPaymentMode={paymentDialog.setPaymentMode} paymentReference={paymentDialog.paymentReference} setPaymentReference={paymentDialog.setPaymentReference} isSubmittingPayment={paymentDialog.isSubmittingPayment} onSubmitPayment={paymentDialog.submitPayment} />
+      {printBookingId && <BookingReceipt bookingId={printBookingId} />}
     </div>
   );
 }
