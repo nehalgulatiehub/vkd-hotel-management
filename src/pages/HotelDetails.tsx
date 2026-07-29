@@ -60,6 +60,7 @@ export default function HotelDetails() {
     if (filters.reference && !booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     if (filters.contact && !booking.bookings?.contact_no?.toLowerCase().includes(filters.contact.toLowerCase())) return false;
     if (filters.email && !booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
+    if (filters.user && booking.bookings?.created_by !== filters.user) return false;
     return true;
   });
 
