@@ -521,8 +521,8 @@ export default function Bookings() {
       formData.booking_from ||
       firstAnotherHotelCheckIn ||
       formData.check_in_date ||
-      formData.vehicle_booking_date ||
-      formData.vehicle_journey_date ||
+      (vehiclesList[0]?.booking_date || "") ||
+      (vehiclesList[0]?.journey_date || "") ||
       formData.safari_journey_date ||
       formData.safari_booking_date ||
       formData.dm_journey_date ||
@@ -532,8 +532,8 @@ export default function Bookings() {
       formData.booking_to ||
       firstAnotherHotelCheckOut ||
       formData.check_out_date ||
-      formData.vehicle_journey_date ||
-      formData.vehicle_booking_date ||
+      (vehiclesList[0]?.journey_date || "") ||
+      (vehiclesList[0]?.booking_date || "") ||
       formData.safari_journey_date ||
       formData.safari_booking_date ||
       formData.dm_journey_date ||
