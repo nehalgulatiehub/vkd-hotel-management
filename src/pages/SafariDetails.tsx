@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { toast } from "sonner";
@@ -9,6 +10,8 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { BookingReceipt } from "@/components/booking/BookingReceipt";
+import { useAuth } from "@/hooks/useAuth";
 
 const MAROON = "#b44a50";
 const MAROON_LIGHT = "#c47a7e";
@@ -18,6 +21,8 @@ const tdStyle: React.CSSProperties = { border: "1px solid #ddd", padding: "5px 8
 const actionStyle: React.CSSProperties = { color: "#c00", cursor: "pointer", fontSize: 10, display: "block", background: "none", border: "none", padding: 0, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
 
 export default function SafariDetails() {
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
@@ -26,6 +31,9 @@ export default function SafariDetails() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
+  const [printBookingId, setPrintBookingId] = useState<string | null>(null);
+
+  const handlePrintBooking = (bookingId: string) => { setPrintBookingId(bookingId); setTimeout(() => window.print(), 800); };
 
   useEffect(() => { fetchSafariBookings(); }, []);
 
@@ -46,6 +54,7 @@ export default function SafariDetails() {
     if (filters.reference && !booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     if (filters.contact && !booking.bookings?.contact_no?.toLowerCase().includes(filters.contact.toLowerCase())) return false;
     if (filters.email && !booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
+    if (filters.user && booking.bookings?.created_by !== filters.user) return false;
     return true;
   });
 
@@ -90,9 +99,28 @@ export default function SafariDetails() {
                     <div><strong>Booking Date</strong></div><div>:{booking.bookings?.created_at ? format(new Date(booking.bookings.created_at), "dd/MM/yyyy") : "-"}</div>
                   </td>
                   <td style={tdStyle}>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => handleViewDetails(booking)}>View Details</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}>Refund Payment</button>
-                    <button style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={() => booking.bookings && paymentDialog.handleViewPayment(booking.bookings)}>View Refund Payment</button>
+                    {(() => {
+                      const b = booking.bookings;
+                      const isOwner = !!b && (b.created_by === user?.id || isAdmin());
+                      const actions: { label: string; fn: () => void }[] = [
+                        { label: "View Details", fn: () => handleViewDetails(booking) },
+                      ];
+                      if (isOwner) {
+                        actions.push(
+                          { label: "Print Booking", fn: () => handlePrintBooking(b.id) },
+                          { label: "Edit Booking", fn: () => navigate(`/bookings?edit=${b.id}`) },
+                          { label: "Add Payment", fn: () => paymentDialog.handleAddPayment(b, { type: "safari", id: booking.id }) },
+                          { label: "View Payment", fn: () => paymentDialog.handleViewPayment(b, { type: "safari", id: booking.id }) },
+                        );
+                      }
+                      actions.push(
+                        { label: "Refund Payment", fn: () => b && navigate(`/refunds?id=${b.id}`) },
+                        { label: "View Refund Payment", fn: () => b && paymentDialog.handleViewPayment(b) },
+                      );
+                      return actions.map((a, i) => (
+                        <button key={i} style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={a.fn}>{a.label}</button>
+                      ));
+                    })()}
                   </td>
                 </tr>
               ))}
@@ -118,6 +146,7 @@ export default function SafariDetails() {
 
       <BookingDetailsDialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog} booking={selectedBookingData} serviceType="safari" serviceData={selectedServiceData} />
       <PaymentDialogs showViewPaymentDialog={paymentDialog.showViewPaymentDialog} setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog} showPaymentDialog={paymentDialog.showPaymentDialog} setShowPaymentDialog={paymentDialog.setShowPaymentDialog} selectedBooking={paymentDialog.selectedBooking} bookingPayments={paymentDialog.bookingPayments} paymentAmount={paymentDialog.paymentAmount} setPaymentAmount={paymentDialog.setPaymentAmount} paymentMode={paymentDialog.paymentMode} setPaymentMode={paymentDialog.setPaymentMode} paymentReference={paymentDialog.paymentReference} setPaymentReference={paymentDialog.setPaymentReference} isSubmittingPayment={paymentDialog.isSubmittingPayment} onSubmitPayment={paymentDialog.submitPayment} />
+      {printBookingId && <BookingReceipt bookingId={printBookingId} />}
     </div>
   );
 }
