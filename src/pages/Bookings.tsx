@@ -25,6 +25,26 @@ interface AnotherHotelEntry {
   selling_price: string;
   note: string;
 }
+
+// Type for additional vehicle entry
+interface VehicleEntry {
+  details: string;
+  transporter_id: string;
+  booking_price: string;
+  selling_price: string;
+  booking_date: string;
+  journey_date: string;
+  note: string;
+}
+const emptyVehicleEntry: VehicleEntry = {
+  details: "",
+  transporter_id: "",
+  booking_price: "",
+  selling_price: "",
+  booking_date: "",
+  journey_date: "",
+  note: ""
+};
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
@@ -128,6 +148,9 @@ export default function Bookings() {
     selling_price: "",
     note: ""
   }]);
+
+  // Multiple additional vehicles state
+  const [vehiclesList, setVehiclesList] = useState<VehicleEntry[]>([{ ...emptyVehicleEntry }]);
   
   // Dialog states
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -728,29 +751,34 @@ export default function Bookings() {
         }
       }
 
-      // Insert Additional Vehicle Booking if included
+      // Insert Additional Vehicle Bookings if included (supports multiple vehicles)
       if (formData.include_additional_vehicle) {
-        const vehicleAmount = formData.vehicle_selling_price ? parseFloat(formData.vehicle_selling_price) : 0;
-        totalAmount += vehicleAmount;
-        
-        const vehicleData = {
-          booking_id: bookingId,
-          transporter_id: formData.vehicle_transporter_id || null,
-          vehicle_type: "other" as const,
-          pickup_date: formData.vehicle_booking_date,
-          dropoff_date: formData.vehicle_journey_date,
-          rate: formData.vehicle_booking_price ? parseFloat(formData.vehicle_booking_price) : 0,
-          total_amount: vehicleAmount,
-          paid_amount: 0,
-          due_amount: vehicleAmount,
-          notes: `${formData.vehicle_details}\n${formData.vehicle_note}`
-        };
-        
-        const { error: vehicleError } = await supabase
-          .from("vehicle_bookings")
-          .insert([vehicleData]);
-        
-        if (vehicleError) console.error("Vehicle booking error:", vehicleError);
+        const validVehicles = vehiclesList.filter(
+          (v) => v.details || v.transporter_id || v.selling_price || v.booking_price
+        );
+        for (const vehicle of validVehicles) {
+          const vehicleAmount = vehicle.selling_price ? parseFloat(vehicle.selling_price) : 0;
+          totalAmount += vehicleAmount;
+
+          const vehicleData = {
+            booking_id: bookingId,
+            transporter_id: vehicle.transporter_id || null,
+            vehicle_type: "other" as const,
+            pickup_date: vehicle.booking_date || null,
+            dropoff_date: vehicle.journey_date || null,
+            rate: vehicle.booking_price ? parseFloat(vehicle.booking_price) : 0,
+            total_amount: vehicleAmount,
+            paid_amount: 0,
+            due_amount: vehicleAmount,
+            notes: `${vehicle.details}\n${vehicle.note}`
+          };
+
+          const { error: vehicleError } = await supabase
+            .from("vehicle_bookings")
+            .insert([vehicleData]);
+
+          if (vehicleError) console.error("Vehicle booking error:", vehicleError);
+        }
       }
 
       // Insert Group Expenses if included
@@ -857,6 +885,7 @@ export default function Bookings() {
         group_expense_details: ""
       });
       // Reset another hotels list
+      setVehiclesList([{ ...emptyVehicleEntry }]);
       setAnotherHotelsList([{
         hotel_id: "",
         num_rooms: "",
@@ -1343,6 +1372,21 @@ export default function Bookings() {
         group_expense_amount: groupExpense?.amount?.toString() || "",
         group_expense_details: groupExpense?.description || ""
       });
+
+      // Load all additional vehicles for editing
+      const loadedVehicles = (vehicleData.data || []).map((vb: any) => {
+        const [details, ...noteParts] = String(vb.notes || "").split("\n");
+        return {
+          details: details || "",
+          transporter_id: vb.transporter_id || "",
+          booking_price: vb.rate?.toString() || "",
+          selling_price: vb.total_amount?.toString() || "",
+          booking_date: vb.pickup_date || "",
+          journey_date: vb.dropoff_date || "",
+          note: noteParts.join("\n").trim()
+        } as VehicleEntry;
+      });
+      setVehiclesList(loadedVehicles.length ? loadedVehicles : [{ ...emptyVehicleEntry }]);
 
       // Load rooms if hotel is selected
       if (hotelBooking?.hotel_id) {
@@ -2483,6 +2527,7 @@ export default function Bookings() {
                         group_expense_amount: "",
                         group_expense_details: ""
                       });
+                      setVehiclesList([{ ...emptyVehicleEntry }]);
                       setAnotherHotelsList([{
                         hotel_id: "",
                         num_rooms: "",
