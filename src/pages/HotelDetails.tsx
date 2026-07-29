@@ -21,6 +21,9 @@ const tdStyle: React.CSSProperties = { border: "1px solid #ddd", padding: "5px 8
 const actionStyle: React.CSSProperties = { color: "#c00", cursor: "pointer", fontSize: 10, display: "block", background: "none", border: "none", padding: 0, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
 
 export default function HotelDetails() {
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
+  const { profilesMap } = useProfilesMap();
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
   const { roomName } = useRoomNames();
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
@@ -29,8 +32,15 @@ export default function HotelDetails() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedServiceData, setSelectedServiceData] = useState<any>(null);
   const [selectedBookingData, setSelectedBookingData] = useState<any>(null);
+  const [printBookingId, setPrintBookingId] = useState<string | null>(null);
 
   useEffect(() => { fetchHotelBookings(); }, []);
+
+  const handlePrintBooking = (bookingId: string) => {
+    setPrintBookingId(bookingId);
+    setTimeout(() => window.print(), 800);
+  };
+
 
   const fetchHotelBookings = async () => {
     setLoading(true);
