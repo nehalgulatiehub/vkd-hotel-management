@@ -575,10 +575,13 @@ export default function Bookings() {
         agent_commission: formData.agent_commission ? parseFloat(formData.agent_commission) : null,
         cheque_no: formData.cheque_no,
         status: "confirmed" as const,
-        payment_status: "pending" as const,
-        total_amount: 0,
-        paid_amount: 0,
-        due_amount: 0
+        // Never reset payment figures on edit — they are derived from actual payments
+        ...(!isEditing && {
+          payment_status: "pending" as const,
+          total_amount: 0,
+          paid_amount: 0,
+          due_amount: 0,
+        }),
       };
 
       let bookingId: string;
