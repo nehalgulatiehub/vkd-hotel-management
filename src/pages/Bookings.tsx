@@ -2800,9 +2800,9 @@ export default function Bookings() {
                   </table>
                 </div>
                 <div style={{ padding: "6px 10px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", color: "#c00", fontStyle: "italic" }}>
-                  <strong>Total Booking Price :</strong> Rs. {filteredBookings.reduce((s: number, b: any) => s + (b.total_amount || 0), 0).toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
-                  <strong>Total Received Payment :</strong> Rs. {filteredBookings.reduce((s: number, b: any) => s + (b.paid_amount || 0), 0).toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
-                  <strong>Total Due Payment :</strong> Rs. {filteredBookings.reduce((s: number, b: any) => s + (b.due_amount || 0), 0).toLocaleString('en-IN')} /-
+                  <strong>Total Booking Price :</strong> Rs. {summaryTotals.total.toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
+                  <strong>Total Received Payment :</strong> Rs. {summaryTotals.paid.toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
+                  <strong>Total Due Payment :</strong> Rs. {summaryTotals.due.toLocaleString('en-IN')} /-
                 </div>
                 <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
               </div>
@@ -2988,10 +2988,10 @@ export default function Bookings() {
                   </table>
                 </div>
                 <div className="bg-muted border border-border p-3 space-y-1">
-                  <div className="font-semibold text-sm">Total Booking Price : Rs. {filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0).toLocaleString('en-IN')} /-</div>
+                  <div className="font-semibold text-sm">Total Booking Price : Rs. {summaryTotals.total.toLocaleString('en-IN')} /-</div>
                   <div className="flex gap-8 text-sm">
-                    <span className="font-semibold">Total Received Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.paid_amount || 0), 0).toLocaleString('en-IN')} /-</span>
-                    <span className="font-semibold">Total Due Payment : Rs. {filteredBookings.reduce((sum, b) => sum + (b.due_amount || 0), 0).toLocaleString('en-IN')} /-</span>
+                    <span className="font-semibold">Total Received Payment : Rs. {summaryTotals.paid.toLocaleString('en-IN')} /-</span>
+                    <span className="font-semibold">Total Due Payment : Rs. {summaryTotals.due.toLocaleString('en-IN')} /-</span>
                   </div>
                 </div>
                 <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
