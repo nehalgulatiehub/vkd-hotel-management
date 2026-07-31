@@ -1014,6 +1014,16 @@ export default function Bookings() {
   });
 
   const pagination = usePagination(filteredBookings);
+
+  // Summary totals: admins see everything, other users only their own bookings
+  const totalsBookings = (isAdmin() || isAccount())
+    ? filteredBookings
+    : filteredBookings.filter((b: any) => b.created_by === user?.id);
+  const summaryTotals = {
+    total: totalsBookings.reduce((s: number, b: any) => s + (Number(b.total_amount) || 0), 0),
+    paid: totalsBookings.reduce((s: number, b: any) => s + (Number(b.paid_amount) || 0), 0),
+    due: totalsBookings.reduce((s: number, b: any) => s + (Number(b.due_amount) || 0), 0),
+  };
   
   useEffect(() => {
     pagination.resetPage();
