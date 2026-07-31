@@ -804,15 +804,28 @@ export default function Bookings() {
         if (expenseError) console.error("Group expense error:", expenseError);
       }
 
-      // Update booking with calculated totals
+      // Update booking with calculated totals (paid amount derived from real payments)
+      const { data: paymentRows } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("booking_id", bookingId);
+      const paidAmount = (paymentRows || []).reduce(
+        (sum: number, p: any) => sum + (Number(p.amount) || 0),
+        0
+      );
+      const dueAmount = Math.max(totalAmount - paidAmount, 0);
+
       const { error: updateTotalsError } = await supabase
         .from("bookings")
         .update({
           total_amount: totalAmount,
-          due_amount: totalAmount - (bookingData.paid_amount || 0),
-          payment_status: totalAmount > 0 ? (bookingData.paid_amount || 0) >= totalAmount ? "paid" : (bookingData.paid_amount || 0) > 0 ? "partial" : "pending" : "paid"
+          paid_amount: paidAmount,
+          due_amount: dueAmount,
+          payment_status: paidAmount <= 0 ? "pending" : dueAmount <= 0 ? "paid" : "partial"
         })
         .eq("id", bookingId);
+
+      if (updateTotalsError) console.error("Error updating totals:", updateTotalsError);
 
       if (updateTotalsError) console.error("Error updating totals:", updateTotalsError);
 
