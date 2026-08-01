@@ -560,8 +560,9 @@ export default function Bookings() {
         address: formData.address,
         contact_no: formData.contact_no,
         email: formData.email,
-        check_in_date: effectiveCheckIn,
-        check_out_date: effectiveCheckOut,
+        check_in_date: finalCheckIn,
+        check_out_date: finalCheckOut,
+
         adults: formData.adults,
         children: formData.children,
         notes: formData.notes,
