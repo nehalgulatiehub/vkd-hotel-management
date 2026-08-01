@@ -540,11 +540,11 @@ export default function Bookings() {
       formData.md_journey_date ||
       "";
 
-    // Require at least one date somewhere in the form
-    if (!effectiveCheckIn || !effectiveCheckOut) {
-      toast.error("Please select at least one date (booking, journey, or safari).");
-      return;
-    }
+    // Fallback: if no date was picked anywhere, use today's date instead of blocking submission
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const finalCheckIn = effectiveCheckIn || effectiveCheckOut || todayIso;
+    const finalCheckOut = effectiveCheckOut || effectiveCheckIn || todayIso;
+
 
     try {
       const isEditing = !!editingBookingId;
