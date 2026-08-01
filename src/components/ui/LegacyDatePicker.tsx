@@ -80,6 +80,16 @@ export function LegacyDatePicker({
     }
   };
 
+  // If no value is set, publish the date shown in the dropdowns so the visible
+  // selection always matches the stored value (prevents "no date selected" errors).
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+    if (!parseIso(value)) emit(initY, initM, initD);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
@@ -88,6 +98,7 @@ export function LegacyDatePicker({
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [open]);
+
 
   const openCal = () => { setCalY(y); setCalM(m); setOpen(true); };
   const shiftMonth = (delta: number) => {
