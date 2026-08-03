@@ -496,6 +496,13 @@ export default function PurchaseOrders() {
     setPoItems(updated);
   };
 
+  const handleUpdateItemUnit = (index: number, unit: string) => {
+    const updated = [...poItems];
+    updated[index].unit = unit;
+    setPoItems(updated);
+  };
+
+
   const calculateTotals = () => {
     const subtotal = poItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
     const totalGst = poItems.reduce((sum, item) => {
