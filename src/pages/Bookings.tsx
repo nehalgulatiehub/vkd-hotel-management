@@ -2250,6 +2250,160 @@ export default function Bookings() {
                   </>
                 )}
 
+                {/* Visa Toggle + Details */}
+                {canSeeVisaSection && (
+                  <>
+                    <CompactFormRow label="Visa">
+                      <RadioGroup
+                        value={formData.include_visa ? "yes" : "no"}
+                        onValueChange={(value) => setFormData({ ...formData, include_visa: value === "yes" })}
+                        className="flex gap-3"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="yes" id="visa-yes" className="h-3 w-3" />
+                          <Label htmlFor="visa-yes" className="text-[11px]">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="no" id="visa-no" className="h-3 w-3" />
+                          <Label htmlFor="visa-no" className="text-[11px]">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </CompactFormRow>
+                    {formData.include_visa && (
+                      <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                        <CompactFormRow label="Visa Name" className="!w-auto">
+                          <Input
+                            value={formData.visa_name}
+                            onChange={(e) => setFormData({ ...formData, visa_name: e.target.value })}
+                            className="w-40"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="No. of Persons" className="!w-auto">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={formData.visa_num}
+                            onChange={(e) => setFormData({ ...formData, visa_num: e.target.value })}
+                            className="w-20"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="Visa Date" className="!w-auto">
+                          <LegacyDatePicker
+                            value={formData.visa_journey_date}
+                            onChange={(e) => setFormData({ ...formData, visa_journey_date: e.target.value })}
+                            className="w-32"
+                          />
+                        </CompactFormRow>
+                        <div className="flex gap-2">
+                          <CompactFormRow label="Booking Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.visa_booking_price}
+                              onChange={(e) => setFormData({ ...formData, visa_booking_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                          <CompactFormRow label="Selling Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.visa_selling_price}
+                              onChange={(e) => setFormData({ ...formData, visa_selling_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                        </div>
+                        <CompactFormRow label="Note" className="!w-auto">
+                          <Textarea
+                            value={formData.visa_note}
+                            onChange={(e) => setFormData({ ...formData, visa_note: e.target.value })}
+                            rows={2}
+                            className="w-48"
+                          />
+                        </CompactFormRow>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Cruise Toggle + Details */}
+                {canSeeCruiseSection && (
+                  <>
+                    <CompactFormRow label="Cruise">
+                      <RadioGroup
+                        value={formData.include_cruise ? "yes" : "no"}
+                        onValueChange={(value) => setFormData({ ...formData, include_cruise: value === "yes" })}
+                        className="flex gap-3"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="yes" id="cruise-yes" className="h-3 w-3" />
+                          <Label htmlFor="cruise-yes" className="text-[11px]">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="no" id="cruise-no" className="h-3 w-3" />
+                          <Label htmlFor="cruise-no" className="text-[11px]">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </CompactFormRow>
+                    {formData.include_cruise && (
+                      <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                        <CompactFormRow label="Cruise Name" className="!w-auto">
+                          <Input
+                            value={formData.cruise_name}
+                            onChange={(e) => setFormData({ ...formData, cruise_name: e.target.value })}
+                            className="w-40"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="No. of Persons" className="!w-auto">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={formData.cruise_num}
+                            onChange={(e) => setFormData({ ...formData, cruise_num: e.target.value })}
+                            className="w-20"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="Cruise Date" className="!w-auto">
+                          <LegacyDatePicker
+                            value={formData.cruise_journey_date}
+                            onChange={(e) => setFormData({ ...formData, cruise_journey_date: e.target.value })}
+                            className="w-32"
+                          />
+                        </CompactFormRow>
+                        <div className="flex gap-2">
+                          <CompactFormRow label="Booking Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.cruise_booking_price}
+                              onChange={(e) => setFormData({ ...formData, cruise_booking_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                          <CompactFormRow label="Selling Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.cruise_selling_price}
+                              onChange={(e) => setFormData({ ...formData, cruise_selling_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                        </div>
+                        <CompactFormRow label="Note" className="!w-auto">
+                          <Textarea
+                            value={formData.cruise_note}
+                            onChange={(e) => setFormData({ ...formData, cruise_note: e.target.value })}
+                            rows={2}
+                            className="w-48"
+                          />
+                        </CompactFormRow>
+                      </div>
+                    )}
+                  </>
+                )}
+
                 {/* Another Hotel Toggle + Details */}
                 {canSeeAnotherHotelSection && (
                   <>
