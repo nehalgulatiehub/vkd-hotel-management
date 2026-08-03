@@ -65,6 +65,20 @@ interface POItem {
   gst_percentage: number;
 }
 
+const unitOptions = [
+  { value: "kg", label: "Kilogram (kg)" },
+  { value: "gram", label: "Gram (g)" },
+  { value: "liter", label: "Liter" },
+  { value: "piece", label: "Piece" },
+  { value: "box", label: "Box" },
+  { value: "packet", label: "Packet" },
+  { value: "dozen", label: "Dozen" },
+  { value: "meter", label: "Meter" },
+  { value: "set", label: "Set" },
+];
+
+
+
 const statusLabels: Record<PoStatus, string> = {
   pending: "Pending Approval",
   approved: "Approved",
@@ -238,6 +252,7 @@ export default function PurchaseOrders() {
         po_id: po.id,
         pr_id: item.pr_id || null,
         item_id: item.item_id,
+        unit: item.unit || null,
         quantity: item.quantity,
         rate: item.rate,
         gst_percentage: item.gst_percentage,
@@ -341,6 +356,7 @@ export default function PurchaseOrders() {
         po_id: editingPO.id,
         pr_id: item.pr_id || null,
         item_id: item.item_id,
+        unit: item.unit || null,
         quantity: item.quantity,
         rate: item.rate,
         gst_percentage: item.gst_percentage,
@@ -449,7 +465,7 @@ export default function PurchaseOrders() {
         pr_id: item.pr_id || "",
         item_id: item.item_id,
         item_name: item.purchase_items?.item_name || "",
-        unit: item.purchase_items?.unit || "",
+        unit: item.unit || item.purchase_items?.unit || "",
         quantity: item.quantity,
         rate: item.rate,
         gst_percentage: item.gst_percentage || 18,
@@ -496,6 +512,13 @@ export default function PurchaseOrders() {
     setPoItems(updated);
   };
 
+  const handleUpdateItemUnit = (index: number, unit: string) => {
+    const updated = [...poItems];
+    updated[index].unit = unit;
+    setPoItems(updated);
+  };
+
+
   const calculateTotals = () => {
     const subtotal = poItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
     const totalGst = poItems.reduce((sum, item) => {
@@ -541,7 +564,7 @@ export default function PurchaseOrders() {
         id: item.id,
         item_id: item.item_id,
         item_name: item.purchase_items?.item_name || "",
-        unit: item.purchase_items?.unit || "",
+        unit: item.unit || item.purchase_items?.unit || "",
         quantity: item.quantity,
         rate: item.rate,
         gst_percentage: item.gst_percentage || 18,
@@ -638,7 +661,7 @@ export default function PurchaseOrders() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Item</TableHead>
-                          <TableHead>Unit</TableHead>
+                          <TableHead>Unit *</TableHead>
                           <TableHead>Qty</TableHead>
                           <TableHead>Rate</TableHead>
                           <TableHead>GST %</TableHead>
@@ -650,7 +673,23 @@ export default function PurchaseOrders() {
                         {poItems.map((item, index) => (
                           <TableRow key={index}>
                             <TableCell>{item.item_name}</TableCell>
-                            <TableCell>{item.unit}</TableCell>
+                            <TableCell>
+                              <Select
+                                value={item.unit}
+                                onValueChange={(v) => handleUpdateItemUnit(index, v)}
+                              >
+                                <SelectTrigger className="w-28">
+                                  <SelectValue placeholder="Unit" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {unitOptions.map((u) => (
+                                    <SelectItem key={u.value} value={u.value}>
+                                      {u.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
                             <TableCell>
                               <Input
                                 type="number"
@@ -1144,7 +1183,7 @@ export default function PurchaseOrders() {
                           <tr key={item.id}>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{idx + 1}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.item_name}</td>
-                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.unit}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.unit || item.purchase_items?.unit}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.quantity}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.rate?.toFixed(2)}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{amount.toFixed(2)}</td>

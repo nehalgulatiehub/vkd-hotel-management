@@ -1561,6 +1561,7 @@ export type Database = {
           rate: number
           received_quantity: number | null
           total_amount: number | null
+          unit: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1574,6 +1575,7 @@ export type Database = {
           rate?: number
           received_quantity?: number | null
           total_amount?: number | null
+          unit?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1587,6 +1589,7 @@ export type Database = {
           rate?: number
           received_quantity?: number | null
           total_amount?: number | null
+          unit?: string | null
         }
         Relationships: [
           {
