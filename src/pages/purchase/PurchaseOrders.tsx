@@ -65,6 +65,20 @@ interface POItem {
   gst_percentage: number;
 }
 
+const unitOptions = [
+  { value: "kg", label: "Kilogram (kg)" },
+  { value: "gram", label: "Gram (g)" },
+  { value: "liter", label: "Liter" },
+  { value: "piece", label: "Piece" },
+  { value: "box", label: "Box" },
+  { value: "packet", label: "Packet" },
+  { value: "dozen", label: "Dozen" },
+  { value: "meter", label: "Meter" },
+  { value: "set", label: "Set" },
+];
+
+
+
 const statusLabels: Record<PoStatus, string> = {
   pending: "Pending Approval",
   approved: "Approved",
