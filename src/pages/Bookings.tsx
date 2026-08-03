@@ -588,10 +588,12 @@ export default function Bookings() {
       let bookingId: string;
       
       if (isEditing) {
-        // Update existing booking — stamp booking date with current date on edit
+        // Update existing booking — stamp the displayed booking date with the edit
+        // date via updated_at, but keep created_at intact so the row keeps its
+        // position in the list.
         const { error: bookingError } = await supabase
           .from("bookings")
-          .update({ ...bookingData, created_at: new Date().toISOString() })
+          .update({ ...bookingData, updated_at: new Date().toISOString() })
           .eq("id", editingBookingId);
 
 
@@ -1086,7 +1088,7 @@ export default function Bookings() {
         checkOut: hb.check_out_date || "",
         totalAmount: hb.total_amount || 0,
         roomRate: hb.room_rate || 0,
-        createdAt: booking.created_at
+        createdAt: booking.updated_at || booking.created_at
       })));
 
       setViewDetailAnotherHotelInfo(anotherHotelBookings.map((hb: any) => ({
@@ -1098,7 +1100,7 @@ export default function Bookings() {
         checkOut: hb.check_out_date || "",
         totalAmount: hb.total_amount || 0,
         roomRate: hb.room_rate || 0,
-        createdAt: booking.created_at
+        createdAt: booking.updated_at || booking.created_at
       })));
     }
 
@@ -1110,7 +1112,7 @@ export default function Bookings() {
         ratePerPerson: sb.rate_per_person || 0,
         totalAmount: sb.total_amount || 0,
         notes: sb.notes || "",
-        createdAt: booking.created_at
+        createdAt: booking.updated_at || booking.created_at
       })));
     }
 
@@ -1126,7 +1128,7 @@ export default function Bookings() {
           rate: vb.rate || 0,
           totalAmount: vb.total_amount || 0,
           notes: vehicleNote,
-          createdAt: booking.created_at
+          createdAt: booking.updated_at || booking.created_at
         };
       }));
     }
@@ -1164,7 +1166,7 @@ export default function Bookings() {
         ratePerSeat: vb.rate_per_seat || 0,
         totalAmount: vb.total_amount || 0,
           notes: vb.notes || "",
-        createdAt: booking.created_at,
+        createdAt: booking.updated_at || booking.created_at,
       };
     };
 
@@ -2770,7 +2772,7 @@ export default function Bookings() {
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                               <div style={{ fontSize: 10 }}>
-                                <div><strong>Date:</strong> {booking.created_at ? new Date(booking.created_at).toLocaleDateString("en-GB") : "-"}</div>
+                                <div><strong>Date:</strong> {(booking.updated_at || booking.created_at) ? new Date(booking.updated_at || booking.created_at).toLocaleDateString("en-GB") : "-"}</div>
                                 <div><strong>Booking From:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString("en-GB") : "-"}</div>
                                 <div><strong>Booking to:</strong> {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString("en-GB") : "-"}</div>
                               </div>
@@ -2953,7 +2955,7 @@ export default function Bookings() {
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
                               <div className="space-y-1 text-xs">
-                                <div><strong>Date:</strong> {booking.created_at ? new Date(booking.created_at).toLocaleDateString() : "-"}</div>
+                                <div><strong>Date:</strong> {(booking.updated_at || booking.created_at) ? new Date(booking.updated_at || booking.created_at).toLocaleDateString("en-GB") : "-"}</div>
                                 <div><strong>Booking From:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</div>
                                 <div><strong>Booking to:</strong> {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}</div>
                               </div>
@@ -3140,7 +3142,7 @@ export default function Bookings() {
                         ))}
                         
                         {selectedBooking.notes && <tr><td className="pr-4 py-0.5 pt-3">Booking Notes :</td><td className="py-0.5 pt-3 whitespace-pre-wrap">{selectedBooking.notes}</td></tr>}
-                        <tr><td className="pr-4 py-0.5 pt-3">Date :</td><td className="py-0.5 pt-3">{selectedBooking.created_at ? new Date(selectedBooking.created_at).toLocaleDateString("en-GB") : "-"}</td></tr>
+                        <tr><td className="pr-4 py-0.5 pt-3">Date :</td><td className="py-0.5 pt-3">{(selectedBooking.updated_at || selectedBooking.created_at) ? new Date(selectedBooking.updated_at || selectedBooking.created_at).toLocaleDateString("en-GB") : "-"}</td></tr>
                       </tbody>
                     </table>
                   </div>
