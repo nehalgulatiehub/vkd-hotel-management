@@ -28,11 +28,17 @@ export default function AdminPlaces() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cityData = {
+      name: formData.name.trim(),
+      state: formData.state.trim() || null,
+      country: formData.country.trim() || "India",
+    };
+    if (!cityData.name) { toast.error("Place name is required"); return; }
     try {
-      if (editingPlace) { const { error } = await supabase.from("cities").update(formData).eq("id", editingPlace.id); if (error) throw error; toast.success("Place updated"); }
-      else { const { error } = await supabase.from("cities").insert([formData]); if (error) throw error; toast.success("Place added"); }
+      if (editingPlace) { const { error } = await supabase.from("cities").update(cityData).eq("id", editingPlace.id); if (error) throw error; toast.success("Place updated"); }
+      else { const { error } = await supabase.from("cities").insert([cityData]); if (error) throw error; toast.success("Place added"); }
       resetForm(); fetchPlaces();
-    } catch (error: any) { toast.error(error.message || "Error saving place"); }
+    } catch (error: any) { toast.error(error?.code === "23505" ? "This place already exists" : error?.message || "Error saving place"); }
   };
 
   const handleEdit = (place: any) => { setEditingPlace(place); setFormData({ name: place.name || "", state: place.state || "", country: place.country || "India" }); setIsDialogOpen(true); };
