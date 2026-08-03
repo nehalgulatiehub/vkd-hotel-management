@@ -1,4 +1,5 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export interface LegacyDatePickerProps {
   value?: string; // yyyy-mm-dd
@@ -51,6 +52,7 @@ export function LegacyDatePicker({
   const [calY, setCalY] = useState(initY);
   const [calM, setCalM] = useState(initM);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const calRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -93,14 +95,45 @@ export function LegacyDatePicker({
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (
+        wrapRef.current && !wrapRef.current.contains(t) &&
+        (!calRef.current || !calRef.current.contains(t))
+      ) setOpen(false);
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [open]);
 
 
-  const openCal = () => { setCalY(y); setCalM(m); setOpen(true); };
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
+  const CAL_W = 230;
+  const CAL_H = 220;
+  const placeCal = () => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    let left = r.left;
+    let top = r.bottom + 4;
+    if (left + CAL_W > window.innerWidth - 8) left = Math.max(8, window.innerWidth - CAL_W - 8);
+    if (top + CAL_H > window.innerHeight - 8) top = Math.max(8, r.top - CAL_H - 4);
+    setPos({ top, left });
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    placeCal();
+    const h = () => placeCal();
+    window.addEventListener("scroll", h, true);
+    window.addEventListener("resize", h);
+    return () => {
+      window.removeEventListener("scroll", h, true);
+      window.removeEventListener("resize", h);
+    };
+  }, [open]);
+
+  const openCal = () => { setCalY(y); setCalM(m); placeCal(); setOpen(true); };
   const shiftMonth = (delta: number) => {
     let nm = calM + delta;
     let ny = calY;
@@ -151,8 +184,12 @@ export function LegacyDatePicker({
         📅
       </button>
 
-      {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-white border border-gray-400 shadow-md p-1 text-[12px] select-none">
+      {open && createPortal(
+        <div
+          ref={calRef}
+          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
+          className="bg-white border border-gray-400 shadow-lg p-1 text-[12px] select-none"
+        >
           <div className="flex items-center justify-between px-1 py-0.5">
             <button type="button" onClick={() => shiftMonth(-1)} className="px-1">◀</button>
             <div className="font-semibold">{MONTHS[calM - 1]} {calY}</div>
@@ -191,7 +228,8 @@ export function LegacyDatePicker({
               ))}
             </tbody>
           </table>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
