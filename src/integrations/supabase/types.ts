@@ -333,10 +333,12 @@ export type Database = {
           include_additional_vehicle: boolean | null
           include_another_hotel: boolean | null
           include_booking: boolean | null
+          include_cruise: boolean | null
           include_delhi_manali: boolean | null
           include_group_expenses: boolean | null
           include_manali_delhi: boolean | null
           include_safari: boolean | null
+          include_visa: boolean | null
           is_hold: boolean | null
           notes: string | null
           paid_amount: number | null
@@ -372,10 +374,12 @@ export type Database = {
           include_additional_vehicle?: boolean | null
           include_another_hotel?: boolean | null
           include_booking?: boolean | null
+          include_cruise?: boolean | null
           include_delhi_manali?: boolean | null
           include_group_expenses?: boolean | null
           include_manali_delhi?: boolean | null
           include_safari?: boolean | null
+          include_visa?: boolean | null
           is_hold?: boolean | null
           notes?: string | null
           paid_amount?: number | null
@@ -411,10 +415,12 @@ export type Database = {
           include_additional_vehicle?: boolean | null
           include_another_hotel?: boolean | null
           include_booking?: boolean | null
+          include_cruise?: boolean | null
           include_delhi_manali?: boolean | null
           include_group_expenses?: boolean | null
           include_manali_delhi?: boolean | null
           include_safari?: boolean | null
+          include_visa?: boolean | null
           is_hold?: boolean | null
           notes?: string | null
           paid_amount?: number | null
@@ -591,6 +597,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      cruise_bookings: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          cruise_date: string
+          cruise_name: string
+          due_amount: number | null
+          id: string
+          notes: string | null
+          number_of_persons: number | null
+          paid_amount: number | null
+          rate_per_person: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          cruise_date: string
+          cruise_name: string
+          due_amount?: number | null
+          id?: string
+          notes?: string | null
+          number_of_persons?: number | null
+          paid_amount?: number | null
+          rate_per_person?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          cruise_date?: string
+          cruise_name?: string
+          due_amount?: number | null
+          id?: string
+          notes?: string | null
+          number_of_persons?: number | null
+          paid_amount?: number | null
+          rate_per_person?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cruise_bookings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       enquiries: {
         Row: {
@@ -2812,6 +2871,59 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visa_bookings: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          due_amount: number | null
+          id: string
+          notes: string | null
+          number_of_persons: number | null
+          paid_amount: number | null
+          rate_per_person: number | null
+          total_amount: number | null
+          updated_at: string
+          visa_date: string
+          visa_name: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          due_amount?: number | null
+          id?: string
+          notes?: string | null
+          number_of_persons?: number | null
+          paid_amount?: number | null
+          rate_per_person?: number | null
+          total_amount?: number | null
+          updated_at?: string
+          visa_date: string
+          visa_name: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          due_amount?: number | null
+          id?: string
+          notes?: string | null
+          number_of_persons?: number | null
+          paid_amount?: number | null
+          rate_per_person?: number | null
+          total_amount?: number | null
+          updated_at?: string
+          visa_date?: string
+          visa_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_bookings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]

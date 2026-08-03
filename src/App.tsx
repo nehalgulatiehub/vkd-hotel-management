@@ -51,6 +51,12 @@ import BookingDue from "./pages/BookingDue";
 import BookingPayments from "./pages/BookingPayments";
 import SafariDetails from "./pages/SafariDetails";
 import SafariDue from "./pages/SafariDue";
+import VisaDetails from "./pages/VisaDetails";
+import VisaDue from "./pages/VisaDue";
+import VisaPayments from "./pages/VisaPayments";
+import CruiseDetails from "./pages/CruiseDetails";
+import CruiseDue from "./pages/CruiseDue";
+import CruisePayments from "./pages/CruisePayments";
 import VolvoPayments from "./pages/VolvoPayments";
 import HotelDetails from "./pages/HotelDetails";
 import HotelDue from "./pages/HotelDue";
@@ -476,6 +482,25 @@ const App = () => (
               </DashboardLayout>
             }
           />
+          <Route path="/payments/visa" element={<DashboardLayout><VisaDetails /></DashboardLayout>} />
+          <Route path="/payments/visa-due" element={<DashboardLayout><VisaDue /></DashboardLayout>} />
+          <Route path="/payments/visa-payment" element={<DashboardLayout><VisaPayments /></DashboardLayout>} />
+          <Route path="/payments/cruise" element={<DashboardLayout><CruiseDetails /></DashboardLayout>} />
+          <Route path="/payments/cruise-due" element={<DashboardLayout><CruiseDue /></DashboardLayout>} />
+          <Route path="/payments/cruise-payment" element={<DashboardLayout><CruisePayments /></DashboardLayout>} />
+          <Route path="/admin/visa-details" element={<AdminLayout><VisaDetails /></AdminLayout>} />
+          <Route path="/admin/visa-due" element={<AdminLayout><VisaDue /></AdminLayout>} />
+          <Route path="/admin/visa-payments" element={<AdminLayout><VisaPayments /></AdminLayout>} />
+          <Route path="/admin/cruise-details" element={<AdminLayout><CruiseDetails /></AdminLayout>} />
+          <Route path="/admin/cruise-due" element={<AdminLayout><CruiseDue /></AdminLayout>} />
+          <Route path="/admin/cruise-payments" element={<AdminLayout><CruisePayments /></AdminLayout>} />
+          <Route path="/account/visa-details" element={<AccountLayout><VisaDetails /></AccountLayout>} />
+          <Route path="/account/visa-due" element={<AccountLayout><VisaDue /></AccountLayout>} />
+          <Route path="/account/visa-payments" element={<AccountLayout><VisaPayments /></AccountLayout>} />
+          <Route path="/account/cruise-details" element={<AccountLayout><CruiseDetails /></AccountLayout>} />
+          <Route path="/account/cruise-due" element={<AccountLayout><CruiseDue /></AccountLayout>} />
+          <Route path="/account/cruise-payments" element={<AccountLayout><CruisePayments /></AccountLayout>} />
+
           <Route
             path="/payments/hotel"
             element={

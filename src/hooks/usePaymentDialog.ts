@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface ServiceInfo {
-  type: 'safari' | 'hotel' | 'vehicle' | 'volvo_dm' | 'volvo_md';
+  type: 'safari' | 'hotel' | 'vehicle' | 'volvo_dm' | 'volvo_md' | 'visa' | 'cruise';
   id: string;
 }
 
@@ -64,7 +64,9 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
           'hotel': 'hotel',
           'vehicle': 'vehicle',
           'volvo_dm': 'delhi_manali',
-          'volvo_md': 'manali_delhi'
+          'volvo_md': 'manali_delhi',
+          'visa': 'visa',
+          'cruise': 'cruise'
         };
         paymentType = typeMap[selectedService.type] || "booking";
       }

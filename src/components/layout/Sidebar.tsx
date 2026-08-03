@@ -185,6 +185,24 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    title: "Visa",
+    icon: Plane,
+    submenu: [
+      { title: "View Visa Detail", url: "/payments/visa", menuKey: "payments_visa" },
+      { title: "Visa Due Amount", url: "/payments/visa-due", menuKey: "payments_visa_due" },
+      { title: "View Visa Payment", url: "/payments/visa-payment", menuKey: "payments_visa_payment" },
+    ]
+  },
+  {
+    title: "Cruise",
+    icon: Plane,
+    submenu: [
+      { title: "View Cruise Detail", url: "/payments/cruise", menuKey: "payments_cruise" },
+      { title: "Cruise Due Amount", url: "/payments/cruise-due", menuKey: "payments_cruise_due" },
+      { title: "View Cruise Payment", url: "/payments/cruise-payment", menuKey: "payments_cruise_payment" },
+    ]
+  },
+  {
     title: "Another Hotel",
     icon: Hotel,
     submenu: [

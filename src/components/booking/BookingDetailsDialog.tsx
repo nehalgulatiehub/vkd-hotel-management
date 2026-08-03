@@ -7,7 +7,7 @@ interface BookingDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking: any;
-  serviceType: "safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md";
+  serviceType: "safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md" | "visa" | "cruise";
   serviceData: any;
 }
 
@@ -168,6 +168,18 @@ export function BookingDetailsDialog({
     </>
   );
 
+  const renderGenericServiceDetails = (title: string, nameLabel: string, nameField: string, dateField: string) => (
+    <>
+      {renderSectionHeader(`${title} :`)}
+      {renderRow(`${nameLabel} :`, serviceData[nameField])}
+      {renderRow(`${title} Booking Date :`, formatDate(booking.created_at))}
+      {renderRow(`${title} Date :`, formatDate(serviceData[dateField]))}
+      {renderRow("No of Persons :", serviceData.number_of_persons)}
+      {renderRow(`${title} Booking Price :`, formatPrice(serviceData.rate_per_person))}
+      {renderRow(`${title} Selling Price :`, formatPrice(serviceData.total_amount))}
+    </>
+  );
+
   const renderServiceDetails = () => {
     switch (serviceType) {
       case "safari":
@@ -179,6 +191,10 @@ export function BookingDetailsDialog({
       case "volvo_dm":
       case "volvo_md":
         return renderVolvoDetails();
+      case "visa":
+        return renderGenericServiceDetails("Visa", "Visa Name", "visa_name", "visa_date");
+      case "cruise":
+        return renderGenericServiceDetails("Cruise", "Cruise Name", "cruise_name", "cruise_date");
       default:
         return null;
     }

@@ -72,6 +72,8 @@ export default function Bookings() {
   const canSeeAnotherHotelSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_another_hotel");
   const canSeeVehicleSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_vehicle");
   const canSeeGroupExpensesSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_group_expenses");
+  const canSeeVisaSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_visa");
+  const canSeeCruiseSection = isAdmin() || isAccount() || hasMenuAccess("booking_section_cruise");
 
   const [showForm, setShowForm] = useState(isAddRoute);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
@@ -227,6 +229,8 @@ export default function Bookings() {
     include_another_hotel: false,
     include_additional_vehicle: false,
     include_group_expenses: false,
+    include_visa: false,
+    include_cruise: false,
     agent_commission: "",
     cheque_no: "",
     // Booking section fields
@@ -266,6 +270,18 @@ export default function Bookings() {
     safari_booking_price: "",
     safari_selling_price: "",
     safari_note: "",
+    visa_name: "",
+    visa_num: "",
+    visa_journey_date: "",
+    visa_booking_price: "",
+    visa_selling_price: "",
+    visa_note: "",
+    cruise_name: "",
+    cruise_num: "",
+    cruise_journey_date: "",
+    cruise_booking_price: "",
+    cruise_selling_price: "",
+    cruise_note: "",
     // Another Hotel section fields - removed (now using anotherHotelsList state)
     // Additional Vehicle section fields
     vehicle_details: "",
@@ -573,6 +589,8 @@ export default function Bookings() {
         include_another_hotel: formData.include_another_hotel,
         include_additional_vehicle: formData.include_additional_vehicle,
         include_group_expenses: formData.include_group_expenses,
+        include_visa: formData.include_visa,
+        include_cruise: formData.include_cruise,
         agent_commission: formData.agent_commission ? parseFloat(formData.agent_commission) : null,
         cheque_no: formData.cheque_no,
         status: "confirmed" as const,
@@ -606,7 +624,9 @@ export default function Bookings() {
           supabase.from("volvo_bookings").delete().eq("booking_id", bookingId),
           supabase.from("safari_bookings").delete().eq("booking_id", bookingId),
           supabase.from("vehicle_bookings").delete().eq("booking_id", bookingId),
-          supabase.from("group_expenses").delete().eq("booking_id", bookingId)
+          supabase.from("group_expenses").delete().eq("booking_id", bookingId),
+          (supabase as any).from("visa_bookings").delete().eq("booking_id", bookingId),
+          (supabase as any).from("cruise_bookings").delete().eq("booking_id", bookingId)
         ]);
       } else {
         // Insert new booking
@@ -725,6 +745,50 @@ export default function Bookings() {
           .insert([safariData]);
         
         if (safariError) console.error("Safari booking error:", safariError);
+      }
+
+      // Insert Visa Booking if included
+      if (formData.include_visa) {
+        const visaAmount = formData.visa_selling_price ? parseFloat(formData.visa_selling_price) : 0;
+        totalAmount += visaAmount;
+
+        const { error: visaError } = await (supabase as any)
+          .from("visa_bookings")
+          .insert([{
+            booking_id: bookingId,
+            visa_name: formData.visa_name || "Visa",
+            visa_date: formData.visa_journey_date || null,
+            number_of_persons: formData.visa_num ? parseInt(formData.visa_num) : 1,
+            rate_per_person: formData.visa_booking_price ? parseFloat(formData.visa_booking_price) : 0,
+            total_amount: visaAmount,
+            paid_amount: 0,
+            due_amount: visaAmount,
+            notes: formData.visa_note
+          }]);
+
+        if (visaError) console.error("Visa booking error:", visaError);
+      }
+
+      // Insert Cruise Booking if included
+      if (formData.include_cruise) {
+        const cruiseAmount = formData.cruise_selling_price ? parseFloat(formData.cruise_selling_price) : 0;
+        totalAmount += cruiseAmount;
+
+        const { error: cruiseError } = await (supabase as any)
+          .from("cruise_bookings")
+          .insert([{
+            booking_id: bookingId,
+            cruise_name: formData.cruise_name || "Cruise",
+            cruise_date: formData.cruise_journey_date || null,
+            number_of_persons: formData.cruise_num ? parseInt(formData.cruise_num) : 1,
+            rate_per_person: formData.cruise_booking_price ? parseFloat(formData.cruise_booking_price) : 0,
+            total_amount: cruiseAmount,
+            paid_amount: 0,
+            due_amount: cruiseAmount,
+            notes: formData.cruise_note
+          }]);
+
+        if (cruiseError) console.error("Cruise booking error:", cruiseError);
       }
 
       // Insert Another Hotel Bookings if included (supports multiple hotels)
@@ -858,6 +922,8 @@ export default function Bookings() {
         include_another_hotel: false,
         include_additional_vehicle: false,
         include_group_expenses: false,
+        include_visa: false,
+        include_cruise: false,
         agent_commission: "",
         cheque_no: "",
         booking_hotel_id: "",
@@ -893,6 +959,18 @@ export default function Bookings() {
         safari_booking_price: "",
         safari_selling_price: "",
         safari_note: "",
+        visa_name: "",
+        visa_num: "",
+        visa_journey_date: "",
+        visa_booking_price: "",
+        visa_selling_price: "",
+        visa_note: "",
+        cruise_name: "",
+        cruise_num: "",
+        cruise_journey_date: "",
+        cruise_booking_price: "",
+        cruise_selling_price: "",
+        cruise_note: "",
         vehicle_details: "",
         vehicle_booking_price: "",
         vehicle_selling_price: "",
@@ -1312,18 +1390,22 @@ export default function Bookings() {
     
     try {
       // Fetch all related booking data
-      const [hotelData, volvoData, safariData, vehicleData, expenseData] = await Promise.all([
+      const [hotelData, volvoData, safariData, vehicleData, expenseData, visaData, cruiseData] = await Promise.all([
         supabase.from("hotel_bookings").select("*").eq("booking_id", booking.id),
         supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id),
         supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
         supabase.from("vehicle_bookings").select("*").eq("booking_id", booking.id),
-        supabase.from("group_expenses").select("*").eq("booking_id", booking.id)
+        supabase.from("group_expenses").select("*").eq("booking_id", booking.id),
+        (supabase as any).from("visa_bookings").select("*").eq("booking_id", booking.id),
+        (supabase as any).from("cruise_bookings").select("*").eq("booking_id", booking.id)
       ]);
 
       const hotelBooking = hotelData.data?.[0];
       const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "Delhi-Manali");
       const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "Manali-Delhi");
       const safariBooking = safariData.data?.[0];
+      const visaBooking = visaData.data?.[0];
+      const cruiseBooking = cruiseData.data?.[0];
       const vehicleBooking = vehicleData.data?.[0];
       const groupExpense = expenseData.data?.[0];
 
@@ -1349,6 +1431,8 @@ export default function Bookings() {
         include_another_hotel: booking.include_another_hotel || false,
         include_additional_vehicle: booking.include_additional_vehicle || false,
         include_group_expenses: booking.include_group_expenses || false,
+        include_visa: booking.include_visa || false,
+        include_cruise: booking.include_cruise || false,
         agent_commission: booking.agent_commission?.toString() || "",
         cheque_no: booking.cheque_no || "",
         // Hotel booking data - use own_hotel_id if available
@@ -1388,6 +1472,18 @@ export default function Bookings() {
         safari_booking_price: safariBooking?.rate_per_person?.toString() || "",
         safari_selling_price: safariBooking?.total_amount?.toString() || "",
         safari_note: safariBooking?.notes || "",
+        visa_name: visaBooking?.visa_name || "",
+        visa_num: visaBooking?.number_of_persons?.toString() || "",
+        visa_journey_date: visaBooking?.visa_date || "",
+        visa_booking_price: visaBooking?.rate_per_person?.toString() || "",
+        visa_selling_price: visaBooking?.total_amount?.toString() || "",
+        visa_note: visaBooking?.notes || "",
+        cruise_name: cruiseBooking?.cruise_name || "",
+        cruise_num: cruiseBooking?.number_of_persons?.toString() || "",
+        cruise_journey_date: cruiseBooking?.cruise_date || "",
+        cruise_booking_price: cruiseBooking?.rate_per_person?.toString() || "",
+        cruise_selling_price: cruiseBooking?.total_amount?.toString() || "",
+        cruise_note: cruiseBooking?.notes || "",
         // Another hotel data is now managed via anotherHotelsList state
         // Vehicle data
         vehicle_details: vehicleBooking?.notes?.split("\n")[0] || "",
@@ -2154,6 +2250,160 @@ export default function Bookings() {
                   </>
                 )}
 
+                {/* Visa Toggle + Details */}
+                {canSeeVisaSection && (
+                  <>
+                    <CompactFormRow label="Visa">
+                      <RadioGroup
+                        value={formData.include_visa ? "yes" : "no"}
+                        onValueChange={(value) => setFormData({ ...formData, include_visa: value === "yes" })}
+                        className="flex gap-3"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="yes" id="visa-yes" className="h-3 w-3" />
+                          <Label htmlFor="visa-yes" className="text-[11px]">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="no" id="visa-no" className="h-3 w-3" />
+                          <Label htmlFor="visa-no" className="text-[11px]">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </CompactFormRow>
+                    {formData.include_visa && (
+                      <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                        <CompactFormRow label="Visa Name" className="!w-auto">
+                          <Input
+                            value={formData.visa_name}
+                            onChange={(e) => setFormData({ ...formData, visa_name: e.target.value })}
+                            className="w-40"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="No. of Persons" className="!w-auto">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={formData.visa_num}
+                            onChange={(e) => setFormData({ ...formData, visa_num: e.target.value })}
+                            className="w-20"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="Visa Date" className="!w-auto">
+                          <LegacyDatePicker
+                            value={formData.visa_journey_date}
+                            onChange={(e) => setFormData({ ...formData, visa_journey_date: e.target.value })}
+                            className="w-32"
+                          />
+                        </CompactFormRow>
+                        <div className="flex gap-2">
+                          <CompactFormRow label="Booking Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.visa_booking_price}
+                              onChange={(e) => setFormData({ ...formData, visa_booking_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                          <CompactFormRow label="Selling Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.visa_selling_price}
+                              onChange={(e) => setFormData({ ...formData, visa_selling_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                        </div>
+                        <CompactFormRow label="Note" className="!w-auto">
+                          <Textarea
+                            value={formData.visa_note}
+                            onChange={(e) => setFormData({ ...formData, visa_note: e.target.value })}
+                            rows={2}
+                            className="w-48"
+                          />
+                        </CompactFormRow>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Cruise Toggle + Details */}
+                {canSeeCruiseSection && (
+                  <>
+                    <CompactFormRow label="Cruise">
+                      <RadioGroup
+                        value={formData.include_cruise ? "yes" : "no"}
+                        onValueChange={(value) => setFormData({ ...formData, include_cruise: value === "yes" })}
+                        className="flex gap-3"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="yes" id="cruise-yes" className="h-3 w-3" />
+                          <Label htmlFor="cruise-yes" className="text-[11px]">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="no" id="cruise-no" className="h-3 w-3" />
+                          <Label htmlFor="cruise-no" className="text-[11px]">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </CompactFormRow>
+                    {formData.include_cruise && (
+                      <div className="ml-28 border-l-2 border-primary/30 pl-3 py-1 space-y-1">
+                        <CompactFormRow label="Cruise Name" className="!w-auto">
+                          <Input
+                            value={formData.cruise_name}
+                            onChange={(e) => setFormData({ ...formData, cruise_name: e.target.value })}
+                            className="w-40"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="No. of Persons" className="!w-auto">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={formData.cruise_num}
+                            onChange={(e) => setFormData({ ...formData, cruise_num: e.target.value })}
+                            className="w-20"
+                          />
+                        </CompactFormRow>
+                        <CompactFormRow label="Cruise Date" className="!w-auto">
+                          <LegacyDatePicker
+                            value={formData.cruise_journey_date}
+                            onChange={(e) => setFormData({ ...formData, cruise_journey_date: e.target.value })}
+                            className="w-32"
+                          />
+                        </CompactFormRow>
+                        <div className="flex gap-2">
+                          <CompactFormRow label="Booking Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.cruise_booking_price}
+                              onChange={(e) => setFormData({ ...formData, cruise_booking_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                          <CompactFormRow label="Selling Price" className="!w-auto">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.cruise_selling_price}
+                              onChange={(e) => setFormData({ ...formData, cruise_selling_price: e.target.value })}
+                              className="w-24"
+                            />
+                          </CompactFormRow>
+                        </div>
+                        <CompactFormRow label="Note" className="!w-auto">
+                          <Textarea
+                            value={formData.cruise_note}
+                            onChange={(e) => setFormData({ ...formData, cruise_note: e.target.value })}
+                            rows={2}
+                            className="w-48"
+                          />
+                        </CompactFormRow>
+                      </div>
+                    )}
+                  </>
+                )}
+
                 {/* Another Hotel Toggle + Details */}
                 {canSeeAnotherHotelSection && (
                   <>
@@ -2557,6 +2807,8 @@ export default function Bookings() {
                         include_another_hotel: false,
                         include_additional_vehicle: false,
                         include_group_expenses: false,
+                        include_visa: false,
+                        include_cruise: false,
                         agent_commission: "",
                         cheque_no: "",
                         booking_hotel_id: "",
@@ -2592,6 +2844,18 @@ export default function Bookings() {
                         safari_booking_price: "",
                         safari_selling_price: "",
                         safari_note: "",
+                        visa_name: "",
+                        visa_num: "",
+                        visa_journey_date: "",
+                        visa_booking_price: "",
+                        visa_selling_price: "",
+                        visa_note: "",
+                        cruise_name: "",
+                        cruise_num: "",
+                        cruise_journey_date: "",
+                        cruise_booking_price: "",
+                        cruise_selling_price: "",
+                        cruise_note: "",
                         vehicle_details: "",
                         vehicle_booking_price: "",
                         vehicle_selling_price: "",
