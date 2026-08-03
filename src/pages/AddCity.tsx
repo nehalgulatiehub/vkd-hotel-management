@@ -18,10 +18,21 @@ export default function AddCity() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("cities").insert([formData]);
+    const cityData = {
+      name: formData.name.trim(),
+      state: formData.state.trim() || null,
+      country: formData.country.trim() || "India",
+    };
+
+    if (!cityData.name) {
+      toast.error("City name is required");
+      return;
+    }
+
+    const { error } = await supabase.from("cities").insert([cityData]);
 
     if (error) {
-      toast.error("Error adding city");
+      toast.error(error.code === "23505" ? "This city already exists" : `Unable to add city: ${error.message}`);
     } else {
       toast.success("City added successfully");
       navigate("/cities");
@@ -58,6 +69,7 @@ export default function AddCity() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    maxLength={100}
                     className="bg-white"
                   />
                 </div>
@@ -67,6 +79,7 @@ export default function AddCity() {
                     id="state"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    maxLength={100}
                     className="bg-white"
                   />
                 </div>
@@ -76,6 +89,7 @@ export default function AddCity() {
                     id="country"
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    maxLength={100}
                     className="bg-white"
                   />
                 </div>

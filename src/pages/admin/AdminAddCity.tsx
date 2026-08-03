@@ -40,19 +40,29 @@ export default function AdminAddCity() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cityData = {
+      name: formData.name.trim(),
+      state: formData.state.trim() || null,
+      country: formData.country.trim() || "India",
+    };
+
+    if (!cityData.name) {
+      toast.error("City name is required");
+      return;
+    }
     
     if (isEditMode && editId) {
-      const { error } = await supabase.from("cities").update(formData).eq("id", editId);
+      const { error } = await supabase.from("cities").update(cityData).eq("id", editId);
       if (error) {
-        toast.error("Error updating city");
+        toast.error(error.code === "23505" ? "This city already exists" : `Unable to update city: ${error.message}`);
       } else {
         toast.success("City updated successfully");
         navigate("/admin/cities");
       }
     } else {
-      const { error } = await supabase.from("cities").insert([formData]);
+      const { error } = await supabase.from("cities").insert([cityData]);
       if (error) {
-        toast.error("Error adding city");
+        toast.error(error.code === "23505" ? "This city already exists" : `Unable to add city: ${error.message}`);
       } else {
         toast.success("City added successfully");
         navigate("/admin/cities");
@@ -92,6 +102,7 @@ export default function AdminAddCity() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                maxLength={100}
                 className="bg-white flex-1"
               />
               <span className="text-red-500">*</span>
@@ -104,6 +115,7 @@ export default function AdminAddCity() {
                 id="state"
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                maxLength={100}
                 className="bg-white flex-1"
               />
             </div>
@@ -115,6 +127,7 @@ export default function AdminAddCity() {
                 id="country"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                maxLength={100}
                 className="bg-white flex-1"
               />
             </div>
