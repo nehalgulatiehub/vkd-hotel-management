@@ -589,6 +589,8 @@ export default function Bookings() {
         include_another_hotel: formData.include_another_hotel,
         include_additional_vehicle: formData.include_additional_vehicle,
         include_group_expenses: formData.include_group_expenses,
+        include_visa: formData.include_visa,
+        include_cruise: formData.include_cruise,
         agent_commission: formData.agent_commission ? parseFloat(formData.agent_commission) : null,
         cheque_no: formData.cheque_no,
         status: "confirmed" as const,
@@ -622,7 +624,9 @@ export default function Bookings() {
           supabase.from("volvo_bookings").delete().eq("booking_id", bookingId),
           supabase.from("safari_bookings").delete().eq("booking_id", bookingId),
           supabase.from("vehicle_bookings").delete().eq("booking_id", bookingId),
-          supabase.from("group_expenses").delete().eq("booking_id", bookingId)
+          supabase.from("group_expenses").delete().eq("booking_id", bookingId),
+          (supabase as any).from("visa_bookings").delete().eq("booking_id", bookingId),
+          (supabase as any).from("cruise_bookings").delete().eq("booking_id", bookingId)
         ]);
       } else {
         // Insert new booking
@@ -741,6 +745,50 @@ export default function Bookings() {
           .insert([safariData]);
         
         if (safariError) console.error("Safari booking error:", safariError);
+      }
+
+      // Insert Visa Booking if included
+      if (formData.include_visa) {
+        const visaAmount = formData.visa_selling_price ? parseFloat(formData.visa_selling_price) : 0;
+        totalAmount += visaAmount;
+
+        const { error: visaError } = await (supabase as any)
+          .from("visa_bookings")
+          .insert([{
+            booking_id: bookingId,
+            visa_name: formData.visa_name || "Visa",
+            visa_date: formData.visa_journey_date || null,
+            number_of_persons: formData.visa_num ? parseInt(formData.visa_num) : 1,
+            rate_per_person: formData.visa_booking_price ? parseFloat(formData.visa_booking_price) : 0,
+            total_amount: visaAmount,
+            paid_amount: 0,
+            due_amount: visaAmount,
+            notes: formData.visa_note
+          }]);
+
+        if (visaError) console.error("Visa booking error:", visaError);
+      }
+
+      // Insert Cruise Booking if included
+      if (formData.include_cruise) {
+        const cruiseAmount = formData.cruise_selling_price ? parseFloat(formData.cruise_selling_price) : 0;
+        totalAmount += cruiseAmount;
+
+        const { error: cruiseError } = await (supabase as any)
+          .from("cruise_bookings")
+          .insert([{
+            booking_id: bookingId,
+            cruise_name: formData.cruise_name || "Cruise",
+            cruise_date: formData.cruise_journey_date || null,
+            number_of_persons: formData.cruise_num ? parseInt(formData.cruise_num) : 1,
+            rate_per_person: formData.cruise_booking_price ? parseFloat(formData.cruise_booking_price) : 0,
+            total_amount: cruiseAmount,
+            paid_amount: 0,
+            due_amount: cruiseAmount,
+            notes: formData.cruise_note
+          }]);
+
+        if (cruiseError) console.error("Cruise booking error:", cruiseError);
       }
 
       // Insert Another Hotel Bookings if included (supports multiple hotels)
@@ -1342,18 +1390,22 @@ export default function Bookings() {
     
     try {
       // Fetch all related booking data
-      const [hotelData, volvoData, safariData, vehicleData, expenseData] = await Promise.all([
+      const [hotelData, volvoData, safariData, vehicleData, expenseData, visaData, cruiseData] = await Promise.all([
         supabase.from("hotel_bookings").select("*").eq("booking_id", booking.id),
         supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id),
         supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
         supabase.from("vehicle_bookings").select("*").eq("booking_id", booking.id),
-        supabase.from("group_expenses").select("*").eq("booking_id", booking.id)
+        supabase.from("group_expenses").select("*").eq("booking_id", booking.id),
+        (supabase as any).from("visa_bookings").select("*").eq("booking_id", booking.id),
+        (supabase as any).from("cruise_bookings").select("*").eq("booking_id", booking.id)
       ]);
 
       const hotelBooking = hotelData.data?.[0];
       const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "Delhi-Manali");
       const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "Manali-Delhi");
       const safariBooking = safariData.data?.[0];
+      const visaBooking = visaData.data?.[0];
+      const cruiseBooking = cruiseData.data?.[0];
       const vehicleBooking = vehicleData.data?.[0];
       const groupExpense = expenseData.data?.[0];
 
