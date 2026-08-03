@@ -88,11 +88,12 @@ const menuItems: MenuItem[] = [
   { title: "Create Booking", url: "/bookings/add", menuKey: "bookings_add" },
   { title: "View Booking", url: "/bookings", menuKey: "bookings_view" },
   { title: "Booking Availability", url: "/bookings/availability", menuKey: "bookings_availability" },
+  { title: "View Room Booking", url: "/payments/room-booking", menuKey: "payments_room_booking" },
   { title: "View Payment", url: "/payments", menuKey: "payments_view" },
   { title: "Booking Due Amount", url: "/payments/booking-due", menuKey: "payments_booking_due" },
   { title: "View Booking Payment", url: "/payments/booking", menuKey: "payments_booking_view" },
   { title: "Export Booking", url: "/payments/booking-export", menuKey: "payments_booking_export" },
-  { title: "View Room Booking", url: "/payments/room-booking", menuKey: "payments_room_booking" },
+
   { title: "View Safari Detail", url: "/payments/safari", menuKey: "payments_safari" },
   { title: "Safari Due Amount", url: "/payments/safari-due", menuKey: "payments_safari_due" },
   { title: "View Safari Payment", url: "/payments/safari-payment", menuKey: "payments_safari_payment" },
