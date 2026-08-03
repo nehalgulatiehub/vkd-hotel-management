@@ -8,6 +8,16 @@ import { useRoomNames } from "@/hooks/useRoomNames";
 
 const today = new Date().toISOString().split("T")[0];
 
+/** Format any date value as DD-MM-YYYY */
+const fmtDate = (v: any) => {
+  if (!v) return "";
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return "";
+  return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
+};
+
 export default function ExportBookings() {
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
@@ -34,7 +44,7 @@ export default function ExportBookings() {
           "*, agent:agents(name), hotel_bookings(*, own_hotel:own_hotels(name), hotel:another_hotels(name)), volvo_bookings(*), safari_bookings(*), vehicle_bookings(*, transporter:transporters(name))"
         )
         .neq("status", "cancelled")
-        .order("created_at", { ascending: false });
+        .order("check_in_date", { ascending: true });
 
       if (searchWithDate === "yes") {
         if (dateFrom) query = query.gte("check_in_date", dateFrom);
@@ -56,6 +66,12 @@ export default function ExportBookings() {
         return;
       }
 
+      // Sort by booking (check-in) date, oldest first
+      rowsData = [...rowsData].sort(
+        (a: any, b: any) =>
+          new Date(a.check_in_date || 0).getTime() - new Date(b.check_in_date || 0).getTime()
+      );
+
       const rows = rowsData.map((b: any, i: number) => {
         const ownHotel = (b.hotel_bookings || []).find((h: any) => h.own_hotel_id);
         const anotherHotel = (b.hotel_bookings || []).find((h: any) => h.hotel_id);
@@ -72,8 +88,8 @@ export default function ExportBookings() {
           Type: b.booking_type || "",
           Agent: b.agent?.name || "",
           "Customer Name": b.customer_name || "",
-          "Booking From": b.check_in_date || "",
-          "Booking To": b.check_out_date || "",
+          "Booking From": fmtDate(b.check_in_date),
+          "Booking To": fmtDate(b.check_out_date),
           Package: ownHotel?.notes || b.notes || "",
           Room: roomName(ownHotel?.room_type, ""),
           "No.of Room": ownHotel?.number_of_rooms ?? 0,
@@ -83,33 +99,31 @@ export default function ExportBookings() {
           "D-M Ticket No.": "",
           "D-M Seat No.": "",
           "D-M Transporter": "",
-          "D-M Volvo Booking Date": dm?.created_at ? String(dm.created_at).split("T")[0] : "",
-          "D-M Volvo Journey Date": dm?.travel_date || "",
+          "D-M Volvo Booking Date": fmtDate(dm?.created_at),
+          "D-M Volvo Journey Date": fmtDate(dm?.travel_date),
           "D-M Volvo Booking Price": dm?.rate_per_seat ?? 0,
           "D-M Volvo Selling Price": dm?.total_amount ?? 0,
           "M-D No.of Tickets": md?.number_of_seats ?? 0,
           "M-D Ticket No.": "",
           "M-D Seat No.": "",
           "M-D Transporter": "",
-          "M-D Volvo Booking Date": md?.created_at ? String(md.created_at).split("T")[0] : "",
-          "M-D Volvo Journey Date": md?.travel_date || "",
+          "M-D Volvo Booking Date": fmtDate(md?.created_at),
+          "M-D Volvo Journey Date": fmtDate(md?.travel_date),
           "M-D Volvo Booking Price": md?.rate_per_seat ?? 0,
           "M-D Volvo Selling Price": md?.total_amount ?? 0,
           "Safari Transporter": safari?.safari_name || "",
           "No.of Safari": safari?.number_of_persons ?? 0,
-          "Safari Booking Date": safari?.created_at ? String(safari.created_at).split("T")[0] : "",
-          "Safari Journey Date": safari?.safari_date || "",
+          "Safari Booking Date": fmtDate(safari?.created_at),
+          "Safari Journey Date": fmtDate(safari?.safari_date),
           "Safari Booking Pirce": safari?.rate_per_person ?? 0,
           "Safari Selling Price": safari?.total_amount ?? 0,
           "Another Hotel Name": anotherHotel?.hotel?.name || "",
           "No of Rooms": anotherHotel?.number_of_rooms ?? 0,
           "Room Type": roomName(anotherHotel?.room_type, ""),
-          "Booking From ": anotherHotel?.check_in_date || "",
-          "Hotel Booking Date": anotherHotel?.created_at
-            ? String(anotherHotel.created_at).split("T")[0]
-            : "",
-          "Hotel Check In": anotherHotel?.check_in_date || "",
-          "Hotel Check Out": anotherHotel?.check_out_date || "",
+          "Booking From ": fmtDate(anotherHotel?.check_in_date),
+          "Hotel Booking Date": fmtDate(anotherHotel?.created_at),
+          "Hotel Check In": fmtDate(anotherHotel?.check_in_date),
+          "Hotel Check Out": fmtDate(anotherHotel?.check_out_date),
           "Room Booking Price": anotherHotel?.room_rate ?? 0,
           "Room Selling Price": anotherHotel?.total_amount ?? 0,
           "Vehicle Details": vehicle
@@ -118,8 +132,8 @@ export default function ExportBookings() {
           "Vehicle booking Price": vehicle?.rate ?? 0,
           "Vehicle Selling Price": vehicle?.total_amount ?? 0,
           Transporter: vehicle?.transporter?.name || "",
-          "Vehicle Booking Date": vehicle?.pickup_date || "",
-          "Vehicle Selling Date": vehicle?.dropoff_date || "",
+          "Vehicle Booking Date": fmtDate(vehicle?.pickup_date),
+          "Vehicle Selling Date": fmtDate(vehicle?.dropoff_date),
           Reference: b.reference || "",
           "Reference Email": b.reference_email || "",
           "Agent Commission": b.agent_commission ?? 0,
