@@ -1183,7 +1183,7 @@ export default function PurchaseOrders() {
                           <tr key={item.id}>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{idx + 1}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.item_name}</td>
-                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.unit}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.unit || item.purchase_items?.unit}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.quantity}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.rate?.toFixed(2)}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{amount.toFixed(2)}</td>
