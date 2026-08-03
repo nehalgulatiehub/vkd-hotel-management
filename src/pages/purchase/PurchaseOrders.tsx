@@ -659,7 +659,7 @@ export default function PurchaseOrders() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Item</TableHead>
-                          <TableHead>Unit</TableHead>
+                          <TableHead>Unit *</TableHead>
                           <TableHead>Qty</TableHead>
                           <TableHead>Rate</TableHead>
                           <TableHead>GST %</TableHead>
@@ -671,7 +671,23 @@ export default function PurchaseOrders() {
                         {poItems.map((item, index) => (
                           <TableRow key={index}>
                             <TableCell>{item.item_name}</TableCell>
-                            <TableCell>{item.unit}</TableCell>
+                            <TableCell>
+                              <Select
+                                value={item.unit}
+                                onValueChange={(v) => handleUpdateItemUnit(index, v)}
+                              >
+                                <SelectTrigger className="w-28">
+                                  <SelectValue placeholder="Unit" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {unitOptions.map((u) => (
+                                    <SelectItem key={u.value} value={u.value}>
+                                      {u.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
                             <TableCell>
                               <Input
                                 type="number"
