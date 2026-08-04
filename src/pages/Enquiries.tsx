@@ -37,6 +37,7 @@ export default function Enquiries() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingEnquiryId, setEditingEnquiryId] = useState<string | null>(null);
