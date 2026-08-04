@@ -107,6 +107,24 @@ export default function Enquiries() {
     group_expense_details: ""
   });
 
+  const today = new Date().toISOString().slice(0, 10);
+  const [cities, setCities] = useState<any[]>([]);
+  const { profiles, getUserName } = useProfilesMap();
+  const [filters, setFilters] = useState({
+    from: today,
+    to: today,
+    searchWithDate: false,
+    type: "",
+    agentId: "",
+    reference: "",
+    status: "",
+    userId: "",
+    email: "",
+    contactNo: "",
+    cityId: "",
+    customer: "",
+  });
+
   useEffect(() => {
     fetchEnquiries();
     fetchAgents();
@@ -114,7 +132,32 @@ export default function Enquiries() {
     fetchHotels();
     fetchAnotherHotels();
     fetchTransporters();
+    fetchCities();
   }, []);
+
+  const fetchCities = async () => {
+    const { data } = await supabase.from("cities").select("id, name").order("name");
+    setCities(data || []);
+  };
+
+  const handleEditEnquiry = (enquiry: any) => {
+    setEditingEnquiryId(enquiry.id);
+    setFormData((prev) => {
+      const next: any = { ...prev };
+      Object.keys(prev).forEach((key) => {
+        const value = (enquiry as any)[key];
+        const current = (prev as any)[key];
+        if (typeof current === "boolean") next[key] = !!value;
+        else if (typeof current === "number") next[key] = value ?? current;
+        else next[key] = value == null ? "" : String(value);
+      });
+      next.booking_type = enquiry.booking_type || "agent";
+      next.booking_package_type = enquiry.booking_package_type || "select";
+      return next;
+    });
+    setShowForm(true);
+  };
+
 
   const fetchEnquiries = async () => {
     const { data, error } = await supabase
