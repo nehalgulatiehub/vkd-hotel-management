@@ -1696,12 +1696,13 @@ export default function Bookings() {
                   <CompactFormRow label="Agent" required>
                     <Select
                       value={formData.agent_id}
-                      onValueChange={(value) => setFormData({ ...formData, agent_id: value })}
+                      onValueChange={(value) => setFormData({ ...formData, agent_id: value === "none" ? "" : value })}
                     >
                       <SelectTrigger className="w-64">
                         <SelectValue placeholder="-----Select-----" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none">----Select----</SelectItem>
                         {agents.map((agent) => (
                           <SelectItem key={agent.id} value={agent.id}>
                             {agent.name}
@@ -1820,14 +1821,16 @@ export default function Bookings() {
                       <Select
                         value={formData.booking_hotel_id}
                         onValueChange={(value) => {
-                          setFormData({ ...formData, booking_hotel_id: value, booking_room: "" });
-                          fetchRoomsForHotel(value);
+                          const v = value === "none" ? "" : value;
+                          setFormData({ ...formData, booking_hotel_id: v, booking_room: "" });
+                          if (v) fetchRoomsForHotel(v);
                         }}
                       >
                         <SelectTrigger className="w-48">
                           <SelectValue placeholder="-----Select-----" />
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">
+                          <SelectItem value="none">----Select----</SelectItem>
                           {ownHotels.map((hotel) => (
                             <SelectItem key={hotel.id} value={hotel.id}>
                               {hotel.name}
@@ -1999,12 +2002,13 @@ export default function Bookings() {
                         <CompactFormRow label="Transporter" className="!w-auto">
                           <Select
                             value={formData.dm_transporter_id}
-                            onValueChange={(value) => setFormData({ ...formData, dm_transporter_id: value })}
+                            onValueChange={(value) => setFormData({ ...formData, dm_transporter_id: value === "none" ? "" : value })}
                           >
                             <SelectTrigger className="w-40">
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="none">----Select----</SelectItem>
                               {transporters.map((transporter) => (
                                 <SelectItem key={transporter.id} value={transporter.id}>
                                   {transporter.name}
@@ -2101,12 +2105,13 @@ export default function Bookings() {
                         <CompactFormRow label="Transporter" className="!w-auto">
                           <Select
                             value={formData.md_transporter_id}
-                            onValueChange={(value) => setFormData({ ...formData, md_transporter_id: value })}
+                            onValueChange={(value) => setFormData({ ...formData, md_transporter_id: value === "none" ? "" : value })}
                           >
                             <SelectTrigger className="w-40">
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="none">----Select----</SelectItem>
                               {transporters.map((transporter) => (
                                 <SelectItem key={transporter.id} value={transporter.id}>
                                   {transporter.name}
@@ -2180,12 +2185,13 @@ export default function Bookings() {
                         <CompactFormRow label="Transporter" className="!w-auto">
                           <Select
                             value={formData.safari_transporter_id}
-                            onValueChange={(value) => setFormData({ ...formData, safari_transporter_id: value })}
+                            onValueChange={(value) => setFormData({ ...formData, safari_transporter_id: value === "none" ? "" : value })}
                           >
                             <SelectTrigger className="w-40">
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="none">----Select----</SelectItem>
                               {transporters.map((transporter) => (
                                 <SelectItem key={transporter.id} value={transporter.id}>
                                   {transporter.name}
@@ -2483,12 +2489,13 @@ export default function Bookings() {
                               <CompactFormRow label="Hotel" className="!w-auto">
                                 <Select
                                   value={hotel.hotel_id}
-                                  onValueChange={(value) => updateHotel('hotel_id', value)}
+                                  onValueChange={(value) => updateHotel('hotel_id', value === "none" ? "" : value)}
                                 >
                                   <SelectTrigger className="w-48">
                                     <SelectValue placeholder="-----Select-----" />
                                   </SelectTrigger>
                                   <SelectContent>
+                                    <SelectItem value="none">----Select----</SelectItem>
                                     {anotherHotels.map((h) => (
                                       <SelectItem key={h.id} value={h.id}>
                                         {h.name}
@@ -2647,12 +2654,13 @@ export default function Bookings() {
                               <CompactFormRow label="Transporter" className="!w-auto">
                                 <Select
                                   value={vehicle.transporter_id}
-                                  onValueChange={(value) => updateVehicle("transporter_id", value)}
+                                  onValueChange={(value) => updateVehicle("transporter_id", value === "none" ? "" : value)}
                                 >
                                   <SelectTrigger className="w-40">
                                     <SelectValue placeholder="Select" />
                                   </SelectTrigger>
                                   <SelectContent>
+                                    <SelectItem value="none">----Select----</SelectItem>
                                     {transporters.map((transporter) => (
                                       <SelectItem key={transporter.id} value={transporter.id}>
                                         {transporter.name}
