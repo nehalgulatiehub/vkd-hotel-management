@@ -245,6 +245,26 @@ export default function Enquiries() {
       status: "on_hold"
     };
 
+    // Persist the per-service detail fields (only for the sections set to Yes)
+    const detailGroups: Record<string, string[]> = {
+      include_booking: ["booking_hotel_id", "booking_room", "booking_num_rooms", "booking_package_type", "booking_custom_package", "booking_price", "booking_from", "booking_to"],
+      include_delhi_manali: ["dm_num_tickets", "dm_ticket_no", "dm_seat_no", "dm_transporter_id", "dm_booking_date", "dm_journey_date", "dm_booking_price", "dm_selling_price"],
+      include_manali_delhi: ["md_num_tickets", "md_ticket_no", "md_seat_no", "md_transporter_id", "md_booking_date", "md_journey_date", "md_booking_price", "md_selling_price"],
+      include_safari: ["safari_transporter_id", "safari_num", "safari_booking_date", "safari_journey_date", "safari_booking_price", "safari_selling_price", "safari_note"],
+      include_another_hotel: ["another_hotel_id", "another_hotel_num_rooms", "another_hotel_room_type", "another_hotel_booking_date", "another_hotel_check_in", "another_hotel_check_out", "another_hotel_booking_price", "another_hotel_selling_price", "another_hotel_note"],
+      include_additional_vehicle: ["vehicle_details", "vehicle_booking_price", "vehicle_selling_price", "vehicle_transporter_id", "vehicle_booking_date", "vehicle_journey_date", "vehicle_note"],
+      include_group_expenses: ["group_expense_amount", "group_expense_details"],
+    };
+
+    Object.entries(detailGroups).forEach(([flag, keys]) => {
+      const on = (formData as any)[flag];
+      keys.forEach((k) => {
+        const val = (formData as any)[k];
+        enquiryData[k] = on ? (val === "" || val == null ? null : String(val)) : null;
+      });
+    });
+
+
     if (formData.booking_type === "agent" && !formData.agent_id) {
       toast.error("Please select an agent");
       return;
