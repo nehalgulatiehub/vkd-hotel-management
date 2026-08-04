@@ -654,8 +654,8 @@ export default function Bookings() {
           hotel_id: null,
           check_in_date: formData.booking_from || formData.check_in_date,
           check_out_date: formData.booking_to || formData.check_out_date,
-          room_type: formData.booking_room,
-          number_of_rooms: formData.booking_num_rooms ? parseInt(formData.booking_num_rooms) : 1,
+          room_type: formData.booking_room === "none" ? null : formData.booking_room,
+          number_of_rooms: formData.booking_room === "none" ? 0 : (formData.booking_num_rooms ? parseInt(formData.booking_num_rooms) : 1),
           room_rate: hotelAmount,
           total_amount: hotelAmount,
           paid_amount: 0,
@@ -1437,8 +1437,8 @@ export default function Bookings() {
         cheque_no: booking.cheque_no || "",
         // Hotel booking data - use own_hotel_id if available
         booking_hotel_id: hotelBooking?.own_hotel_id || hotelBooking?.hotel_id || "",
-        booking_room: hotelBooking?.room_type || "",
-        booking_num_rooms: hotelBooking?.number_of_rooms?.toString() || "",
+        booking_room: hotelBooking ? (hotelBooking.room_type && hotelBooking.number_of_rooms !== 0 ? hotelBooking.room_type : "none") : "",
+        booking_num_rooms: hotelBooking?.number_of_rooms?.toString() ?? "",
         booking_room_number: hotelBooking?.notes?.match(/Room No: (.+)/)?.[1] || "",
         booking_package_type: hotelBooking?.notes?.match(/Package:\s*([^|]+)/) ? "select" : (hotelBooking?.notes ? "custom" : "select"),
         booking_selected_package: hotelBooking?.notes?.match(/Package:\s*([^|]+)/)?.[1]?.trim() || "",
@@ -1847,6 +1847,7 @@ export default function Bookings() {
                           <SelectValue placeholder="-----Select-----" />
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">
+                          <SelectItem value="none">None (0 Room)</SelectItem>
                           {rooms.map((room) => (
                             <SelectItem key={room.id} value={room.id}>
                               {room.room_number} - {room.room_type}
@@ -1859,8 +1860,9 @@ export default function Bookings() {
                     <CompactFormRow label="No of Rooms" className="!w-auto">
                       <Input
                         type="number"
-                        min="1"
-                        value={formData.booking_num_rooms}
+                        min="0"
+                        value={formData.booking_room === "none" ? "0" : formData.booking_num_rooms}
+                        disabled={formData.booking_room === "none"}
                         onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
                         className="w-20"
                       />
