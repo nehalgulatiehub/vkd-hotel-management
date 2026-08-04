@@ -1437,8 +1437,8 @@ export default function Bookings() {
         cheque_no: booking.cheque_no || "",
         // Hotel booking data - use own_hotel_id if available
         booking_hotel_id: hotelBooking?.own_hotel_id || hotelBooking?.hotel_id || "",
-        booking_room: hotelBooking?.room_type || "",
-        booking_num_rooms: hotelBooking?.number_of_rooms?.toString() || "",
+        booking_room: hotelBooking ? (hotelBooking.room_type && hotelBooking.number_of_rooms !== 0 ? hotelBooking.room_type : "none") : "",
+        booking_num_rooms: hotelBooking?.number_of_rooms?.toString() ?? "",
         booking_room_number: hotelBooking?.notes?.match(/Room No: (.+)/)?.[1] || "",
         booking_package_type: hotelBooking?.notes?.match(/Package:\s*([^|]+)/) ? "select" : (hotelBooking?.notes ? "custom" : "select"),
         booking_selected_package: hotelBooking?.notes?.match(/Package:\s*([^|]+)/)?.[1]?.trim() || "",
