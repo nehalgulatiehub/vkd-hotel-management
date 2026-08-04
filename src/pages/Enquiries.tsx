@@ -218,15 +218,37 @@ export default function Enquiries() {
     
     const enquiryData: Record<string, any> = {
       ...(!editingEnquiryId && { enquiry_number: `ENQ${Date.now().toString().slice(-8)}` }),
+      booking_type: formData.booking_type,
       agent_id: formData.booking_type === "agent" && formData.agent_id ? formData.agent_id : null,
+      reference: formData.reference || null,
+      reference_email: formData.reference_email || null,
+      customer_name: formData.customer_name || null,
+      address: formData.address || null,
+      contact_no: formData.contact_no || null,
+      email: formData.email || null,
+      destination_city_id: formData.city_id || null,
       check_in_date: formData.check_in_date || null,
       check_out_date: formData.check_out_date || null,
       adults: formData.adults,
       children: formData.children,
       notes: formData.notes,
       special_requests: formData.notes || null,
+      agent_commission: formData.agent_commission === "" ? 0 : Number(formData.agent_commission),
+      include_booking: formData.include_booking,
+      include_delhi_manali: formData.include_delhi_manali,
+      include_manali_delhi: formData.include_manali_delhi,
+      include_safari: formData.include_safari,
+      include_another_hotel: formData.include_another_hotel,
+      include_additional_vehicle: formData.include_additional_vehicle,
+      include_group_expenses: formData.include_group_expenses,
       status: "on_hold"
     };
+
+    if (formData.booking_type === "agent" && !formData.agent_id) {
+      toast.error("Please select an agent");
+      return;
+    }
+
 
     if (editingEnquiryId) {
       const { error } = await supabase
