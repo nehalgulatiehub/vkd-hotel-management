@@ -42,6 +42,7 @@ export default function Enquiries() {
     address: "",
     contact_no: "",
     email: "",
+    city_id: "",
     adults: 1,
     children: 0,
     notes: "",
