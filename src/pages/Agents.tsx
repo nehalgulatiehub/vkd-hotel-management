@@ -8,12 +8,15 @@ import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Agents() {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuthContext();
   const [agents, setAgents] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const canManageAgent = (agent: any) => isAdmin() || (!!user?.id && agent.created_by === user.id);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -52,12 +55,21 @@ export default function Agents() {
   };
 
   const handleEdit = (agent: any) => {
-    // Navigate to edit page (could be implemented later or use a query param)
+    if (!canManageAgent(agent)) {
+      toast.error("You can only edit agents you created");
+      return;
+    }
     navigate(`/agents/add?edit=${agent.id}`);
   };
 
   const handleDelete = async (id: string) => {
+    const agent = agents.find((a) => a.id === id);
+    if (!agent || !canManageAgent(agent)) {
+      toast.error("You can only delete agents you created");
+      return;
+    }
     if (!confirm("Are you sure you want to delete this agent?")) return;
+    
     
     const { error } = await supabase.from("agents").delete().eq("id", id);
     if (error) {
@@ -243,15 +255,19 @@ export default function Agents() {
                           {agent.phone || "-"}
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEdit(agent)}>
-                              Edit
-                            </Button>
-                            <span className="text-muted-foreground">/</span>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(agent.id)}>
-                              Delete
-                            </Button>
-                          </div>
+                          {canManageAgent(agent) ? (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEdit(agent)}>
+                                Edit
+                              </Button>
+                              <span className="text-muted-foreground">/</span>
+                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(agent.id)}>
+                                Delete
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-[11px]">-</span>
+                          )}
                         </td>
                       </tr>
                     ))
