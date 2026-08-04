@@ -32,11 +32,13 @@ export default function Enquiries() {
   useEffect(() => {
     setShowForm(isAddRoute);
   }, [isAddRoute]);
+
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingEnquiryId, setEditingEnquiryId] = useState<string | null>(null);
@@ -653,6 +655,20 @@ export default function Enquiries() {
     </div>
   );
 
+  useEffect(() => {
+    const hotelId = formData.booking_hotel_id;
+    if (!hotelId) {
+      setRooms([]);
+      return;
+    }
+    supabase
+      .from("rooms")
+      .select("*")
+      .eq("hotel_id", hotelId)
+      .order("room_number")
+      .then(({ data }) => setRooms(data || []));
+  }, [formData.booking_hotel_id]);
+
   const rowSelect = (label: string, key: string, list: any[], placeholder = "-----Select-----") => (
     <div className="flex items-center mb-2" key={key}>
       <div className={lblCell}>{label} :</div>
@@ -666,6 +682,26 @@ export default function Enquiries() {
       </select>
     </div>
   );
+
+  const rowRoomSelect = () => (
+    <div className="flex items-center mb-2">
+      <div className={lblCell}>Room :</div>
+      <select
+        value={formData.booking_room ?? ""}
+        onChange={(e) => setF("booking_room", e.target.value)}
+        disabled={!formData.booking_hotel_id}
+        className="border border-gray-600 bg-white text-[12px] h-[22px] w-[250px] px-1"
+      >
+        <option value="">-----Select-----</option>
+        {rooms.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.room_number} - {r.room_type}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
 
   const rowDate = (label: string, key: string) => (
     <div className="flex items-center mb-2" key={key}>
@@ -1037,7 +1073,7 @@ export default function Enquiries() {
               {formData.include_booking && servicePanel("Booking Details", (
                 <>
                   {rowSelect("Hotel", "booking_hotel_id", ownHotels)}
-                  {rowInput("Room", "booking_room")}
+                  {rowRoomSelect()}
                   {rowInput("No of Rooms", "booking_num_rooms", "number", "80px")}
                   <div className="flex items-center mb-2">
                     <div className={lblCell}>Package Type :</div>
