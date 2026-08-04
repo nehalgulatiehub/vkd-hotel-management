@@ -525,23 +525,34 @@ export default function Enquiries() {
     setEditingEnquiryId(null);
   };
 
-  const filteredEnquiries = enquiries.filter(enquiry => {
-    const q = searchTerm.toLowerCase();
-    return (
-      enquiry.enquiry_number?.toLowerCase().includes(q) ||
-      enquiry.customer_name?.toLowerCase().includes(q) ||
-      enquiry.agents?.name?.toLowerCase().includes(q) ||
-      enquiry.contact_no?.toLowerCase().includes(q) ||
-      enquiry.email?.toLowerCase().includes(q) ||
-      enquiry.reference_email?.toLowerCase().includes(q)
-    );
-  });
+  const filteredEnquiries = useMemo(() => {
+    return enquiries.filter((enquiry) => {
+      const like = (val: any, term: string) => (val || "").toString().toLowerCase().includes(term.toLowerCase());
+      if (filters.customer && !like(enquiry.customer_name, filters.customer)) return false;
+      if (filters.reference && !(like(enquiry.reference, filters.reference) || like(enquiry.enquiry_number, filters.reference))) return false;
+      if (filters.email && !(like(enquiry.email, filters.email) || like(enquiry.reference_email, filters.email))) return false;
+      if (filters.contactNo && !like(enquiry.contact_no, filters.contactNo)) return false;
+      if (filters.agentId && enquiry.agent_id !== filters.agentId) return false;
+      if (filters.type === "Direct" && enquiry.agent_id) return false;
+      if (filters.type === "Agent" && !enquiry.agent_id) return false;
+      if (filters.status && enquiry.status !== filters.status) return false;
+      if (filters.userId && enquiry.created_by !== filters.userId) return false;
+      if (filters.cityId && enquiry.destination_city_id !== filters.cityId) return false;
+      if (filters.searchWithDate && filters.from && filters.to) {
+        const d = (enquiry.check_in_date || enquiry.created_at || "").slice(0, 10);
+        if (!d) return false;
+        if (d < filters.from || d > filters.to) return false;
+      }
+      return true;
+    });
+  }, [enquiries, filters]);
 
   const pagination = usePagination(filteredEnquiries);
-  
+
   useEffect(() => {
     pagination.resetPage();
-  }, [searchTerm]);
+  }, [filters]);
+
 
   const getStatusBadge = (status: string) => {
     const statusColors: { [key: string]: string } = {
