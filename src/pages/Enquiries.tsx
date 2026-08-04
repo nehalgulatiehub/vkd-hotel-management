@@ -576,6 +576,7 @@ export default function Enquiries() {
     });
     setShowForm(false);
     setEditingEnquiryId(null);
+    if (isAddRoute) navigate("/enquiries", { replace: true });
   };
 
   const filteredEnquiries = useMemo(() => {
