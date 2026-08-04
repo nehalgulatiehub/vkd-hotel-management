@@ -1847,7 +1847,7 @@ export default function Bookings() {
                           <SelectValue placeholder="-----Select-----" />
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">
-                          <SelectItem value="none">None (0 Room)</SelectItem>
+                          <SelectItem value="none">----Select----</SelectItem>
                           {rooms.map((room) => (
                             <SelectItem key={room.id} value={room.id}>
                               {room.room_number} - {room.room_type}
