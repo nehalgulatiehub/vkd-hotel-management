@@ -1,0 +1,17 @@
+ALTER TABLE public.enquiries
+  ADD COLUMN IF NOT EXISTS booking_type text DEFAULT 'agent',
+  ADD COLUMN IF NOT EXISTS reference text,
+  ADD COLUMN IF NOT EXISTS reference_email text,
+  ADD COLUMN IF NOT EXISTS customer_name text,
+  ADD COLUMN IF NOT EXISTS address text,
+  ADD COLUMN IF NOT EXISTS contact_no text,
+  ADD COLUMN IF NOT EXISTS email text,
+  ADD COLUMN IF NOT EXISTS agent_commission numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS cheque_no text,
+  ADD COLUMN IF NOT EXISTS include_booking boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS include_delhi_manali boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS include_manali_delhi boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS include_safari boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS include_another_hotel boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS include_additional_vehicle boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS include_group_expenses boolean DEFAULT false;
