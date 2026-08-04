@@ -657,6 +657,23 @@ export type Database = {
           adults: number | null
           agent_commission: number | null
           agent_id: string | null
+          another_hotel_booking_date: string | null
+          another_hotel_booking_price: string | null
+          another_hotel_check_in: string | null
+          another_hotel_check_out: string | null
+          another_hotel_id: string | null
+          another_hotel_note: string | null
+          another_hotel_num_rooms: string | null
+          another_hotel_room_type: string | null
+          another_hotel_selling_price: string | null
+          booking_custom_package: string | null
+          booking_from: string | null
+          booking_hotel_id: string | null
+          booking_num_rooms: string | null
+          booking_package_type: string | null
+          booking_price: string | null
+          booking_room: string | null
+          booking_to: string | null
           booking_type: string | null
           budget_amount: number | null
           check_in_date: string | null
@@ -668,8 +685,18 @@ export type Database = {
           created_by: string | null
           customer_name: string | null
           destination_city_id: string | null
+          dm_booking_date: string | null
+          dm_booking_price: string | null
+          dm_journey_date: string | null
+          dm_num_tickets: string | null
+          dm_seat_no: string | null
+          dm_selling_price: string | null
+          dm_ticket_no: string | null
+          dm_transporter_id: string | null
           email: string | null
           enquiry_number: string
+          group_expense_amount: string | null
+          group_expense_details: string | null
           guest_id: string | null
           id: string
           include_additional_vehicle: boolean | null
@@ -679,19 +706,58 @@ export type Database = {
           include_group_expenses: boolean | null
           include_manali_delhi: boolean | null
           include_safari: boolean | null
+          md_booking_date: string | null
+          md_booking_price: string | null
+          md_journey_date: string | null
+          md_num_tickets: string | null
+          md_seat_no: string | null
+          md_selling_price: string | null
+          md_ticket_no: string | null
+          md_transporter_id: string | null
           notes: string | null
           reference: string | null
           reference_email: string | null
           rooms_required: number | null
+          safari_booking_date: string | null
+          safari_booking_price: string | null
+          safari_journey_date: string | null
+          safari_note: string | null
+          safari_num: string | null
+          safari_selling_price: string | null
+          safari_transporter_id: string | null
           special_requests: string | null
           status: string | null
           updated_at: string | null
+          vehicle_booking_date: string | null
+          vehicle_booking_price: string | null
+          vehicle_details: string | null
+          vehicle_journey_date: string | null
+          vehicle_note: string | null
+          vehicle_selling_price: string | null
+          vehicle_transporter_id: string | null
         }
         Insert: {
           address?: string | null
           adults?: number | null
           agent_commission?: number | null
           agent_id?: string | null
+          another_hotel_booking_date?: string | null
+          another_hotel_booking_price?: string | null
+          another_hotel_check_in?: string | null
+          another_hotel_check_out?: string | null
+          another_hotel_id?: string | null
+          another_hotel_note?: string | null
+          another_hotel_num_rooms?: string | null
+          another_hotel_room_type?: string | null
+          another_hotel_selling_price?: string | null
+          booking_custom_package?: string | null
+          booking_from?: string | null
+          booking_hotel_id?: string | null
+          booking_num_rooms?: string | null
+          booking_package_type?: string | null
+          booking_price?: string | null
+          booking_room?: string | null
+          booking_to?: string | null
           booking_type?: string | null
           budget_amount?: number | null
           check_in_date?: string | null
@@ -703,8 +769,18 @@ export type Database = {
           created_by?: string | null
           customer_name?: string | null
           destination_city_id?: string | null
+          dm_booking_date?: string | null
+          dm_booking_price?: string | null
+          dm_journey_date?: string | null
+          dm_num_tickets?: string | null
+          dm_seat_no?: string | null
+          dm_selling_price?: string | null
+          dm_ticket_no?: string | null
+          dm_transporter_id?: string | null
           email?: string | null
           enquiry_number: string
+          group_expense_amount?: string | null
+          group_expense_details?: string | null
           guest_id?: string | null
           id?: string
           include_additional_vehicle?: boolean | null
@@ -714,19 +790,58 @@ export type Database = {
           include_group_expenses?: boolean | null
           include_manali_delhi?: boolean | null
           include_safari?: boolean | null
+          md_booking_date?: string | null
+          md_booking_price?: string | null
+          md_journey_date?: string | null
+          md_num_tickets?: string | null
+          md_seat_no?: string | null
+          md_selling_price?: string | null
+          md_ticket_no?: string | null
+          md_transporter_id?: string | null
           notes?: string | null
           reference?: string | null
           reference_email?: string | null
           rooms_required?: number | null
+          safari_booking_date?: string | null
+          safari_booking_price?: string | null
+          safari_journey_date?: string | null
+          safari_note?: string | null
+          safari_num?: string | null
+          safari_selling_price?: string | null
+          safari_transporter_id?: string | null
           special_requests?: string | null
           status?: string | null
           updated_at?: string | null
+          vehicle_booking_date?: string | null
+          vehicle_booking_price?: string | null
+          vehicle_details?: string | null
+          vehicle_journey_date?: string | null
+          vehicle_note?: string | null
+          vehicle_selling_price?: string | null
+          vehicle_transporter_id?: string | null
         }
         Update: {
           address?: string | null
           adults?: number | null
           agent_commission?: number | null
           agent_id?: string | null
+          another_hotel_booking_date?: string | null
+          another_hotel_booking_price?: string | null
+          another_hotel_check_in?: string | null
+          another_hotel_check_out?: string | null
+          another_hotel_id?: string | null
+          another_hotel_note?: string | null
+          another_hotel_num_rooms?: string | null
+          another_hotel_room_type?: string | null
+          another_hotel_selling_price?: string | null
+          booking_custom_package?: string | null
+          booking_from?: string | null
+          booking_hotel_id?: string | null
+          booking_num_rooms?: string | null
+          booking_package_type?: string | null
+          booking_price?: string | null
+          booking_room?: string | null
+          booking_to?: string | null
           booking_type?: string | null
           budget_amount?: number | null
           check_in_date?: string | null
@@ -738,8 +853,18 @@ export type Database = {
           created_by?: string | null
           customer_name?: string | null
           destination_city_id?: string | null
+          dm_booking_date?: string | null
+          dm_booking_price?: string | null
+          dm_journey_date?: string | null
+          dm_num_tickets?: string | null
+          dm_seat_no?: string | null
+          dm_selling_price?: string | null
+          dm_ticket_no?: string | null
+          dm_transporter_id?: string | null
           email?: string | null
           enquiry_number?: string
+          group_expense_amount?: string | null
+          group_expense_details?: string | null
           guest_id?: string | null
           id?: string
           include_additional_vehicle?: boolean | null
@@ -749,13 +874,35 @@ export type Database = {
           include_group_expenses?: boolean | null
           include_manali_delhi?: boolean | null
           include_safari?: boolean | null
+          md_booking_date?: string | null
+          md_booking_price?: string | null
+          md_journey_date?: string | null
+          md_num_tickets?: string | null
+          md_seat_no?: string | null
+          md_selling_price?: string | null
+          md_ticket_no?: string | null
+          md_transporter_id?: string | null
           notes?: string | null
           reference?: string | null
           reference_email?: string | null
           rooms_required?: number | null
+          safari_booking_date?: string | null
+          safari_booking_price?: string | null
+          safari_journey_date?: string | null
+          safari_note?: string | null
+          safari_num?: string | null
+          safari_selling_price?: string | null
+          safari_transporter_id?: string | null
           special_requests?: string | null
           status?: string | null
           updated_at?: string | null
+          vehicle_booking_date?: string | null
+          vehicle_booking_price?: string | null
+          vehicle_details?: string | null
+          vehicle_journey_date?: string | null
+          vehicle_note?: string | null
+          vehicle_selling_price?: string | null
+          vehicle_transporter_id?: string | null
         }
         Relationships: [
           {
