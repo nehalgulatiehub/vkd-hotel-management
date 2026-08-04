@@ -653,57 +653,105 @@ export type Database = {
       }
       enquiries: {
         Row: {
+          address: string | null
           adults: number | null
+          agent_commission: number | null
           agent_id: string | null
+          booking_type: string | null
           budget_amount: number | null
           check_in_date: string | null
           check_out_date: string | null
+          cheque_no: string | null
           children: number | null
+          contact_no: string | null
           created_at: string | null
           created_by: string | null
+          customer_name: string | null
           destination_city_id: string | null
+          email: string | null
           enquiry_number: string
           guest_id: string | null
           id: string
+          include_additional_vehicle: boolean | null
+          include_another_hotel: boolean | null
+          include_booking: boolean | null
+          include_delhi_manali: boolean | null
+          include_group_expenses: boolean | null
+          include_manali_delhi: boolean | null
+          include_safari: boolean | null
           notes: string | null
+          reference: string | null
+          reference_email: string | null
           rooms_required: number | null
           special_requests: string | null
           status: string | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           adults?: number | null
+          agent_commission?: number | null
           agent_id?: string | null
+          booking_type?: string | null
           budget_amount?: number | null
           check_in_date?: string | null
           check_out_date?: string | null
+          cheque_no?: string | null
           children?: number | null
+          contact_no?: string | null
           created_at?: string | null
           created_by?: string | null
+          customer_name?: string | null
           destination_city_id?: string | null
+          email?: string | null
           enquiry_number: string
           guest_id?: string | null
           id?: string
+          include_additional_vehicle?: boolean | null
+          include_another_hotel?: boolean | null
+          include_booking?: boolean | null
+          include_delhi_manali?: boolean | null
+          include_group_expenses?: boolean | null
+          include_manali_delhi?: boolean | null
+          include_safari?: boolean | null
           notes?: string | null
+          reference?: string | null
+          reference_email?: string | null
           rooms_required?: number | null
           special_requests?: string | null
           status?: string | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           adults?: number | null
+          agent_commission?: number | null
           agent_id?: string | null
+          booking_type?: string | null
           budget_amount?: number | null
           check_in_date?: string | null
           check_out_date?: string | null
+          cheque_no?: string | null
           children?: number | null
+          contact_no?: string | null
           created_at?: string | null
           created_by?: string | null
+          customer_name?: string | null
           destination_city_id?: string | null
+          email?: string | null
           enquiry_number?: string
           guest_id?: string | null
           id?: string
+          include_additional_vehicle?: boolean | null
+          include_another_hotel?: boolean | null
+          include_booking?: boolean | null
+          include_delhi_manali?: boolean | null
+          include_group_expenses?: boolean | null
+          include_manali_delhi?: boolean | null
+          include_safari?: boolean | null
           notes?: string | null
+          reference?: string | null
+          reference_email?: string | null
           rooms_required?: number | null
           special_requests?: string | null
           status?: string | null

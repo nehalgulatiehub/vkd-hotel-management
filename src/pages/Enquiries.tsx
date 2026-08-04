@@ -42,6 +42,7 @@ export default function Enquiries() {
     address: "",
     contact_no: "",
     email: "",
+    city_id: "",
     adults: 1,
     children: 0,
     notes: "",
@@ -151,8 +152,9 @@ export default function Enquiries() {
         else if (typeof current === "number") next[key] = value ?? current;
         else next[key] = value == null ? "" : String(value);
       });
-      next.booking_type = enquiry.booking_type || "agent";
+      next.booking_type = enquiry.booking_type || (enquiry.agent_id ? "agent" : "direct");
       next.booking_package_type = enquiry.booking_package_type || "select";
+      next.city_id = enquiry.destination_city_id || "";
       return next;
     });
     setShowForm(true);
@@ -217,15 +219,37 @@ export default function Enquiries() {
     
     const enquiryData: Record<string, any> = {
       ...(!editingEnquiryId && { enquiry_number: `ENQ${Date.now().toString().slice(-8)}` }),
+      booking_type: formData.booking_type,
       agent_id: formData.booking_type === "agent" && formData.agent_id ? formData.agent_id : null,
+      reference: formData.reference || null,
+      reference_email: formData.reference_email || null,
+      customer_name: formData.customer_name || null,
+      address: formData.address || null,
+      contact_no: formData.contact_no || null,
+      email: formData.email || null,
+      destination_city_id: formData.city_id || null,
       check_in_date: formData.check_in_date || null,
       check_out_date: formData.check_out_date || null,
       adults: formData.adults,
       children: formData.children,
       notes: formData.notes,
       special_requests: formData.notes || null,
+      agent_commission: formData.agent_commission === "" ? 0 : Number(formData.agent_commission),
+      include_booking: formData.include_booking,
+      include_delhi_manali: formData.include_delhi_manali,
+      include_manali_delhi: formData.include_manali_delhi,
+      include_safari: formData.include_safari,
+      include_another_hotel: formData.include_another_hotel,
+      include_additional_vehicle: formData.include_additional_vehicle,
+      include_group_expenses: formData.include_group_expenses,
       status: "on_hold"
     };
+
+    if (formData.booking_type === "agent" && !formData.agent_id) {
+      toast.error("Please select an agent");
+      return;
+    }
+
 
     if (editingEnquiryId) {
       const { error } = await supabase
@@ -457,6 +481,7 @@ export default function Enquiries() {
       address: "",
       contact_no: "",
       email: "",
+      city_id: "",
       adults: 1,
       children: 0,
       notes: "",
@@ -785,757 +810,175 @@ export default function Enquiries() {
           </div>
 
         ) : (
-          <form onSubmit={handleSubmit}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Booking Type */}
-                <div>
-                  <Label>Booking Type</Label>
-                  <RadioGroup
-                    value={formData.booking_type}
-                    onValueChange={(value) => setFormData({ ...formData, booking_type: value })}
-                    className="flex gap-4 mt-2"
+          <form onSubmit={handleSubmit} className="bg-[#fdf6f6] p-4">
+            <div className="max-w-[880px] mx-auto border border-gray-400 bg-[#f2ccd0] p-4">
+              <div className="text-right text-[12px] mb-3">
+                <span className="text-red-600">*</span> - Required fields
+              </div>
+
+              {/* Type */}
+              <div className="flex items-start mb-2">
+                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Type :</div>
+                <div className="flex items-center gap-4 text-[12px]">
+                  <label className="flex items-center gap-1">
+                    <input type="radio" name="booking_type" checked={formData.booking_type === "agent"}
+                      onChange={() => setFormData({ ...formData, booking_type: "agent" })} />
+                    Agent
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <input type="radio" name="booking_type" checked={formData.booking_type === "direct"}
+                      onChange={() => setFormData({ ...formData, booking_type: "direct", agent_id: "" })} />
+                    Direct from customer <span className="text-red-600">*</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Agent */}
+              {formData.booking_type === "agent" && (
+                <div className="flex items-center mb-2">
+                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Agent :</div>
+                  <select
+                    value={formData.agent_id}
+                    onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
+                    className="border border-gray-600 bg-white text-[12px] h-[22px] w-[360px] px-1"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="agent" id="agent" />
-                      <Label htmlFor="agent">Agent Booking</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="direct" id="direct" />
-                      <Label htmlFor="direct">Direct Booking</Label>
-                    </div>
-                  </RadioGroup>
+                    <option value="">-----Select-----</option>
+                    {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </select>
+                  <span className="text-red-600 ml-2 text-[12px]">*</span>
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {formData.booking_type === "agent" && (
-                    <div>
-                      <Label>Agent</Label>
-                      <Select
-                        value={formData.agent_id}
-                        onValueChange={(value) => setFormData({ ...formData, agent_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select agent" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {agents.map((agent) => (
-                            <SelectItem key={agent.id} value={agent.id}>
-                              {agent.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <div>
-                    <Label>Customer Name</Label>
-                    <Input
-                      value={formData.customer_name}
-                      onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                      placeholder="Enter customer name"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Contact Number</Label>
-                    <Input
-                      value={formData.contact_no}
-                      onChange={(e) => setFormData({ ...formData, contact_no: e.target.value })}
-                      placeholder="Enter contact number"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="Enter email"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Address</Label>
-                    <Input
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Enter address"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Reference</Label>
-                    <Input
-                      value={formData.reference}
-                      onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-                      placeholder="Enter reference"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Reference Email</Label>
-                    <Input
-                      value={formData.reference_email}
-                      onChange={(e) => setFormData({ ...formData, reference_email: e.target.value })}
-                      placeholder="Enter reference email"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Check-in Date</Label>
-                    <DateInput
-                      value={formData.check_in_date}
-                      onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Check-out Date</Label>
-                    <DateInput
-                      value={formData.check_out_date}
-                      onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Adults</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.adults}
-                      onChange={(e) => setFormData({ ...formData, adults: parseInt(e.target.value) })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Children</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={formData.children}
-                      onChange={(e) => setFormData({ ...formData, children: parseInt(e.target.value) })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Agent Commission</Label>
-                    <Input
-                      type="number"
-                      value={formData.agent_commission}
-                      onChange={(e) => setFormData({ ...formData, agent_commission: e.target.value })}
-                      placeholder="Enter commission amount"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Cheque Number</Label>
-                    <Input
-                      value={formData.cheque_no}
-                      onChange={(e) => setFormData({ ...formData, cheque_no: e.target.value })}
-                      placeholder="Enter cheque number"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Notes</Label>
-                  <Textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Additional notes..."
-                    rows={3}
+              {[
+                { label: "Reference", key: "reference" },
+                { label: "Reference Email", key: "reference_email" },
+                { label: "Customer Name", key: "customer_name" },
+              ].map((f) => (
+                <div className="flex items-center mb-2" key={f.key}>
+                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">{f.label} :</div>
+                  <input
+                    type="text"
+                    value={(formData as any)[f.key]}
+                    onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })}
+                    className="border border-gray-600 bg-white text-[12px] h-[22px] w-[230px] px-1"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              ))}
 
-            {/* Include Services Checkboxes */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Services</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_booking"
-                      checked={formData.include_booking}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_booking: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_booking">Hotel Booking</Label>
-                  </div>
+              {/* Address */}
+              <div className="flex items-start mb-2">
+                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800 pt-8">Address :</div>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="border border-gray-600 bg-white text-[12px] w-[230px] h-[90px] px-1"
+                />
+              </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_delhi_manali"
-                      checked={formData.include_delhi_manali}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_delhi_manali: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_delhi_manali">Delhi-Manali Volvo</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_manali_delhi"
-                      checked={formData.include_manali_delhi}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_manali_delhi: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_manali_delhi">Manali-Delhi Volvo</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_safari"
-                      checked={formData.include_safari}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_safari: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_safari">Safari</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_another_hotel"
-                      checked={formData.include_another_hotel}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_another_hotel: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_another_hotel">Another Hotel</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_additional_vehicle"
-                      checked={formData.include_additional_vehicle}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_additional_vehicle: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_additional_vehicle">Additional Vehicle</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include_group_expenses"
-                      checked={formData.include_group_expenses}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, include_group_expenses: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="include_group_expenses">Group Expenses</Label>
-                  </div>
+              {[
+                { label: "Contact No.", key: "contact_no" },
+                { label: "Email", key: "email" },
+              ].map((f) => (
+                <div className="flex items-center mb-2" key={f.key}>
+                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">{f.label} :</div>
+                  <input
+                    type="text"
+                    value={(formData as any)[f.key]}
+                    onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })}
+                    className="border border-gray-600 bg-white text-[12px] h-[22px] w-[230px] px-1"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+              ))}
 
-            {/* Conditional Service Forms */}
-            {formData.include_booking && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Hotel Booking Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Hotel</Label>
-                      <Select
-                        value={formData.booking_hotel_id}
-                        onValueChange={(value) => setFormData({ ...formData, booking_hotel_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select hotel" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ownHotels.map((hotel) => (
-                            <SelectItem key={hotel.id} value={hotel.id}>
-                              {hotel.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+              {/* No of People */}
+              <div className="flex items-center mb-2">
+                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">No of People :</div>
+                <input
+                  type="number" min={0}
+                  value={formData.adults}
+                  onChange={(e) => setFormData({ ...formData, adults: Number(e.target.value) })}
+                  className="border border-gray-600 bg-white text-[12px] h-[22px] w-[60px] px-1"
+                />
+                <span className="text-[12px] mx-2">Adult</span>
+                <input
+                  type="number" min={0}
+                  value={formData.children}
+                  onChange={(e) => setFormData({ ...formData, children: Number(e.target.value) })}
+                  className="border border-gray-600 bg-white text-[12px] h-[22px] w-[60px] px-1"
+                />
+                <span className="text-[12px] ml-2">Children</span>
+              </div>
 
-                    <div>
-                      <Label>Room Type</Label>
-                      <Input
-                        value={formData.booking_room}
-                        onChange={(e) => setFormData({ ...formData, booking_room: e.target.value })}
-                        placeholder="Enter room type"
-                      />
-                    </div>
+              {/* Enquiry Message */}
+              <div className="flex items-start mb-2">
+                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800 pt-8">Enquiry Message :</div>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="border border-gray-600 bg-white text-[12px] w-[230px] h-[90px] px-1"
+                />
+              </div>
 
-                    <div>
-                      <Label>Number of Rooms</Label>
-                      <Input
-                        type="number"
-                        value={formData.booking_num_rooms}
-                        onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
-                        placeholder="Enter number of rooms"
-                      />
-                    </div>
+              {/* Place (City) */}
+              <div className="flex items-center mb-2">
+                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Place(City) :</div>
+                <select
+                  value={formData.city_id}
+                  onChange={(e) => setFormData({ ...formData, city_id: e.target.value })}
+                  className="border border-gray-600 bg-white text-[12px] h-[22px] w-[250px] px-1"
+                >
+                  <option value="">-City-</option>
+                  {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
 
-                    <div>
-                      <Label>Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.booking_price}
-                        onChange={(e) => setFormData({ ...formData, booking_price: e.target.value })}
-                        placeholder="Enter price"
-                      />
-                    </div>
+              {/* Yes / No service toggles */}
+              {[
+                { label: "Booking", key: "include_booking" },
+                { label: "DELHI - MANALI", key: "include_delhi_manali" },
+                { label: "MANALI - DELHI", key: "include_manali_delhi" },
+                { label: "Safari", key: "include_safari" },
+                { label: "Another Hotel", key: "include_another_hotel" },
+                { label: "Additional Vehicle", key: "include_additional_vehicle" },
+                { label: "Group Expences", key: "include_group_expenses" },
+              ].map((f) => (
+                <div className="flex items-center mb-2" key={f.key}>
+                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">{f.label} :</div>
+                  <label className="flex items-center gap-1 text-[12px] mr-4">
+                    <input type="radio" name={f.key} checked={!!(formData as any)[f.key]}
+                      onChange={() => setFormData({ ...formData, [f.key]: true })} />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-1 text-[12px]">
+                    <input type="radio" name={f.key} checked={!(formData as any)[f.key]}
+                      onChange={() => setFormData({ ...formData, [f.key]: false })} />
+                    No
+                  </label>
+                </div>
+              ))}
 
-                    <div>
-                      <Label>From Date</Label>
-                      <DateInput
-                        value={formData.booking_from}
-                        onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
-                      />
-                    </div>
+              {/* Agent Commission */}
+              <div className="flex items-center mb-4">
+                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Agent Commission :</div>
+                <input
+                  type="number"
+                  value={formData.agent_commission}
+                  onChange={(e) => setFormData({ ...formData, agent_commission: e.target.value })}
+                  className="border border-gray-600 bg-white text-[12px] h-[22px] w-[230px] px-1"
+                />
+              </div>
 
-                    <div>
-                      <Label>To Date</Label>
-                      <DateInput
-                        value={formData.booking_to}
-                        onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <Label>Notes</Label>
-                      <Textarea
-                        value={formData.booking_custom_package}
-                        onChange={(e) => setFormData({ ...formData, booking_custom_package: e.target.value })}
-                        placeholder="Additional notes..."
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.include_delhi_manali && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Delhi-Manali Volvo Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Number of Tickets</Label>
-                      <Input
-                        type="number"
-                        value={formData.dm_num_tickets}
-                        onChange={(e) => setFormData({ ...formData, dm_num_tickets: e.target.value })}
-                        placeholder="Enter number of tickets"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Ticket Number</Label>
-                      <Input
-                        value={formData.dm_ticket_no}
-                        onChange={(e) => setFormData({ ...formData, dm_ticket_no: e.target.value })}
-                        placeholder="Enter ticket number"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Seat Number</Label>
-                      <Input
-                        value={formData.dm_seat_no}
-                        onChange={(e) => setFormData({ ...formData, dm_seat_no: e.target.value })}
-                        placeholder="Enter seat number"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Journey Date</Label>
-                      <DateInput
-                        value={formData.dm_journey_date}
-                        onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Booking Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.dm_booking_price}
-                        onChange={(e) => setFormData({ ...formData, dm_booking_price: e.target.value })}
-                        placeholder="Enter booking price"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Selling Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.dm_selling_price}
-                        onChange={(e) => setFormData({ ...formData, dm_selling_price: e.target.value })}
-                        placeholder="Enter selling price"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.include_manali_delhi && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Manali-Delhi Volvo Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Number of Tickets</Label>
-                      <Input
-                        type="number"
-                        value={formData.md_num_tickets}
-                        onChange={(e) => setFormData({ ...formData, md_num_tickets: e.target.value })}
-                        placeholder="Enter number of tickets"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Ticket Number</Label>
-                      <Input
-                        value={formData.md_ticket_no}
-                        onChange={(e) => setFormData({ ...formData, md_ticket_no: e.target.value })}
-                        placeholder="Enter ticket number"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Seat Number</Label>
-                      <Input
-                        value={formData.md_seat_no}
-                        onChange={(e) => setFormData({ ...formData, md_seat_no: e.target.value })}
-                        placeholder="Enter seat number"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Journey Date</Label>
-                      <DateInput
-                        value={formData.md_journey_date}
-                        onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Booking Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.md_booking_price}
-                        onChange={(e) => setFormData({ ...formData, md_booking_price: e.target.value })}
-                        placeholder="Enter booking price"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Selling Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.md_selling_price}
-                        onChange={(e) => setFormData({ ...formData, md_selling_price: e.target.value })}
-                        placeholder="Enter selling price"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.include_safari && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Safari Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Number of Persons</Label>
-                      <Input
-                        type="number"
-                        value={formData.safari_num}
-                        onChange={(e) => setFormData({ ...formData, safari_num: e.target.value })}
-                        placeholder="Enter number of persons"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Safari Date</Label>
-                      <DateInput
-                        value={formData.safari_journey_date}
-                        onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Booking Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.safari_booking_price}
-                        onChange={(e) => setFormData({ ...formData, safari_booking_price: e.target.value })}
-                        placeholder="Enter booking price"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Selling Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.safari_selling_price}
-                        onChange={(e) => setFormData({ ...formData, safari_selling_price: e.target.value })}
-                        placeholder="Enter selling price"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <Label>Notes</Label>
-                      <Textarea
-                        value={formData.safari_note}
-                        onChange={(e) => setFormData({ ...formData, safari_note: e.target.value })}
-                        placeholder="Additional notes..."
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.include_another_hotel && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Another Hotel Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Hotel</Label>
-                      <Select
-                        value={formData.another_hotel_id}
-                        onValueChange={(value) => setFormData({ ...formData, another_hotel_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select hotel" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {anotherHotels.map((hotel) => (
-                            <SelectItem key={hotel.id} value={hotel.id}>
-                              {hotel.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Room Type</Label>
-                      <Input
-                        value={formData.another_hotel_room_type}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_room_type: e.target.value })}
-                        placeholder="Enter room type"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Number of Rooms</Label>
-                      <Input
-                        type="number"
-                        value={formData.another_hotel_num_rooms}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_num_rooms: e.target.value })}
-                        placeholder="Enter number of rooms"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Check-in Date</Label>
-                      <DateInput
-                        value={formData.another_hotel_check_in}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_check_in: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Check-out Date</Label>
-                      <DateInput
-                        value={formData.another_hotel_check_out}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_check_out: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Booking Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.another_hotel_booking_price}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_booking_price: e.target.value })}
-                        placeholder="Enter booking price"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Selling Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.another_hotel_selling_price}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_selling_price: e.target.value })}
-                        placeholder="Enter selling price"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <Label>Notes</Label>
-                      <Textarea
-                        value={formData.another_hotel_note}
-                        onChange={(e) => setFormData({ ...formData, another_hotel_note: e.target.value })}
-                        placeholder="Additional notes..."
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.include_additional_vehicle && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Additional Vehicle Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Transporter</Label>
-                      <Select
-                        value={formData.vehicle_transporter_id}
-                        onValueChange={(value) => setFormData({ ...formData, vehicle_transporter_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select transporter" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {transporters.map((transporter) => (
-                            <SelectItem key={transporter.id} value={transporter.id}>
-                              {transporter.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Vehicle Details</Label>
-                      <Input
-                        value={formData.vehicle_details}
-                        onChange={(e) => setFormData({ ...formData, vehicle_details: e.target.value })}
-                        placeholder="Enter vehicle details"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Pickup Date</Label>
-                      <DateInput
-                        value={formData.vehicle_booking_date}
-                        onChange={(e) => setFormData({ ...formData, vehicle_booking_date: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Journey Date</Label>
-                      <DateInput
-                        value={formData.vehicle_journey_date}
-                        onChange={(e) => setFormData({ ...formData, vehicle_journey_date: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Booking Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.vehicle_booking_price}
-                        onChange={(e) => setFormData({ ...formData, vehicle_booking_price: e.target.value })}
-                        placeholder="Enter booking price"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Selling Price</Label>
-                      <Input
-                        type="number"
-                        value={formData.vehicle_selling_price}
-                        onChange={(e) => setFormData({ ...formData, vehicle_selling_price: e.target.value })}
-                        placeholder="Enter selling price"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <Label>Notes</Label>
-                      <Textarea
-                        value={formData.vehicle_note}
-                        onChange={(e) => setFormData({ ...formData, vehicle_note: e.target.value })}
-                        placeholder="Additional notes..."
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.include_group_expenses && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Group Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Amount</Label>
-                      <Input
-                        type="number"
-                        value={formData.group_expense_amount}
-                        onChange={(e) => setFormData({ ...formData, group_expense_amount: e.target.value })}
-                        placeholder="Enter expense amount"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <Label>Details</Label>
-                      <Textarea
-                        value={formData.group_expense_details}
-                        onChange={(e) => setFormData({ ...formData, group_expense_details: e.target.value })}
-                        placeholder="Enter expense details..."
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="flex justify-end gap-2 mt-6">
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-gradient-primary">
-                {editingEnquiryId ? "Update Enquiry" : "Create Enquiry"}
-              </Button>
+              <div className="flex justify-center gap-3">
+                <button type="submit" className="border-2 border-gray-500 bg-[#e6e6e6] text-[12px] font-mono px-4 py-[2px]">
+                  {editingEnquiryId ? "Update" : "Create"}
+                </button>
+                <button type="button" onClick={resetForm} className="border-2 border-gray-500 bg-[#e6e6e6] text-[12px] font-mono px-4 py-[2px]">
+                  Reset
+                </button>
+              </div>
             </div>
           </form>
+
         )}
       </main>
     </div>
