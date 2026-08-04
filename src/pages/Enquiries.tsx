@@ -32,6 +32,7 @@ export default function Enquiries() {
   useEffect(() => {
     setShowForm(isAddRoute);
   }, [isAddRoute]);
+
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
