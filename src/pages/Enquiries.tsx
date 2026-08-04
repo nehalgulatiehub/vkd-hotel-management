@@ -1058,7 +1058,7 @@ export default function Enquiries() {
               {formData.include_booking && servicePanel("Booking Details", (
                 <>
                   {rowSelect("Hotel", "booking_hotel_id", ownHotels)}
-                  {rowInput("Room", "booking_room")}
+                  {rowRoomSelect()}
                   {rowInput("No of Rooms", "booking_num_rooms", "number", "80px")}
                   <div className="flex items-center mb-2">
                     <div className={lblCell}>Package Type :</div>
