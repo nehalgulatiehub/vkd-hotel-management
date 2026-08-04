@@ -668,6 +668,26 @@ export default function Enquiries() {
     </div>
   );
 
+  const rowRoomSelect = () => (
+    <div className="flex items-center mb-2">
+      <div className={lblCell}>Room :</div>
+      <select
+        value={formData.booking_room ?? ""}
+        onChange={(e) => setF("booking_room", e.target.value)}
+        disabled={!formData.booking_hotel_id}
+        className="border border-gray-600 bg-white text-[12px] h-[22px] w-[250px] px-1"
+      >
+        <option value="">-----Select-----</option>
+        {rooms.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.room_number} - {r.room_type}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+
   const rowDate = (label: string, key: string) => (
     <div className="flex items-center mb-2" key={key}>
       <div className={lblCell}>{label} :</div>
