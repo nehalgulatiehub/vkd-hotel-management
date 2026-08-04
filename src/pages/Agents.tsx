@@ -55,12 +55,21 @@ export default function Agents() {
   };
 
   const handleEdit = (agent: any) => {
-    // Navigate to edit page (could be implemented later or use a query param)
+    if (!canManageAgent(agent)) {
+      toast.error("You can only edit agents you created");
+      return;
+    }
     navigate(`/agents/add?edit=${agent.id}`);
   };
 
   const handleDelete = async (id: string) => {
+    const agent = agents.find((a) => a.id === id);
+    if (!agent || !canManageAgent(agent)) {
+      toast.error("You can only delete agents you created");
+      return;
+    }
     if (!confirm("Are you sure you want to delete this agent?")) return;
+    
     
     const { error } = await supabase.from("agents").delete().eq("id", id);
     if (error) {
