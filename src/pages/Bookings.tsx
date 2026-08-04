@@ -1847,6 +1847,7 @@ export default function Bookings() {
                           <SelectValue placeholder="-----Select-----" />
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">
+                          <SelectItem value="none">None (0 Room)</SelectItem>
                           {rooms.map((room) => (
                             <SelectItem key={room.id} value={room.id}>
                               {room.room_number} - {room.room_type}
@@ -1859,8 +1860,9 @@ export default function Bookings() {
                     <CompactFormRow label="No of Rooms" className="!w-auto">
                       <Input
                         type="number"
-                        min="1"
-                        value={formData.booking_num_rooms}
+                        min="0"
+                        value={formData.booking_room === "none" ? "0" : formData.booking_num_rooms}
+                        disabled={formData.booking_room === "none"}
                         onChange={(e) => setFormData({ ...formData, booking_num_rooms: e.target.value })}
                         className="w-20"
                       />
