@@ -12,10 +12,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, CheckCircle, Eye } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
-import { useState, useEffect } from "react";
+import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
+import { formatDisplayDate } from "@/utils/dateFormat";
+import { useProfilesMap } from "@/hooks/useProfilesMap";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+
 
 export default function Enquiries() {
   const navigate = useNavigate();
