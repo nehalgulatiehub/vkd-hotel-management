@@ -99,11 +99,11 @@ const adminMenuItems: MenuItem[] = [
     ] 
   },
   { 
-    title: "Place Manager", 
+    title: "Payment Place (City) Manager", 
     color: "#4CAF50", 
     submenu: [
-      { title: "Add Place", url: "/admin/places/add" },
-      { title: "Manage Place", url: "/admin/places" },
+      { title: "Add Payment Place", url: "/admin/places/add" },
+      { title: "Manage Payment Place", url: "/admin/places" },
     ] 
   },
   { 

@@ -60,7 +60,7 @@ export default function AdminPlaces() {
 
   return (
     <>
-      <AdminPageShell title="Place Manager" actions={[{ label: "Add Place", onClick: () => { resetForm(); setIsDialogOpen(true); } }]} filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+      <AdminPageShell title="Payment Place (City) Manager" actions={[{ label: "Add Payment Place", onClick: () => { resetForm(); setIsDialogOpen(true); } }]} filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
         <ThemedTable>
           <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Name</ThemedTH><ThemedTH>State</ThemedTH><ThemedTH>Country</ThemedTH><ThemedTH>Action</ThemedTH></ThemedTHead>
           <tbody>
