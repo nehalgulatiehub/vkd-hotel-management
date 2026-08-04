@@ -245,6 +245,26 @@ export default function Enquiries() {
       status: "on_hold"
     };
 
+    // Persist the per-service detail fields (only for the sections set to Yes)
+    const detailGroups: Record<string, string[]> = {
+      include_booking: ["booking_hotel_id", "booking_room", "booking_num_rooms", "booking_package_type", "booking_custom_package", "booking_price", "booking_from", "booking_to"],
+      include_delhi_manali: ["dm_num_tickets", "dm_ticket_no", "dm_seat_no", "dm_transporter_id", "dm_booking_date", "dm_journey_date", "dm_booking_price", "dm_selling_price"],
+      include_manali_delhi: ["md_num_tickets", "md_ticket_no", "md_seat_no", "md_transporter_id", "md_booking_date", "md_journey_date", "md_booking_price", "md_selling_price"],
+      include_safari: ["safari_transporter_id", "safari_num", "safari_booking_date", "safari_journey_date", "safari_booking_price", "safari_selling_price", "safari_note"],
+      include_another_hotel: ["another_hotel_id", "another_hotel_num_rooms", "another_hotel_room_type", "another_hotel_booking_date", "another_hotel_check_in", "another_hotel_check_out", "another_hotel_booking_price", "another_hotel_selling_price", "another_hotel_note"],
+      include_additional_vehicle: ["vehicle_details", "vehicle_booking_price", "vehicle_selling_price", "vehicle_transporter_id", "vehicle_booking_date", "vehicle_journey_date", "vehicle_note"],
+      include_group_expenses: ["group_expense_amount", "group_expense_details"],
+    };
+
+    Object.entries(detailGroups).forEach(([flag, keys]) => {
+      const on = (formData as any)[flag];
+      keys.forEach((k) => {
+        const val = (formData as any)[k];
+        enquiryData[k] = on ? (val === "" || val == null ? null : String(val)) : null;
+      });
+    });
+
+
     if (formData.booking_type === "agent" && !formData.agent_id) {
       toast.error("Please select an agent");
       return;
@@ -595,6 +615,77 @@ export default function Enquiries() {
   const smallInput = "border border-gray-500 bg-white h-[22px] text-[12px] px-1 leading-none";
   const labelStyle = "text-[12px] text-gray-800 whitespace-nowrap";
 
+  // ---- Legacy form helpers ----
+  const setF = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
+  const lblCell = "w-[200px] text-right pr-2 text-[12px] text-gray-800";
+  const inpCls = "border border-gray-600 bg-white text-[12px] h-[22px] px-1";
+
+  const rowInput = (label: string, key: string, type = "text", width = "230px") => (
+    <div className="flex items-center mb-2" key={key}>
+      <div className={lblCell}>{label} :</div>
+      <input
+        type={type}
+        value={(formData as any)[key] ?? ""}
+        onChange={(e) => setF(key, e.target.value)}
+        className={inpCls}
+        style={{ width }}
+      />
+    </div>
+  );
+
+  const rowArea = (label: string, key: string) => (
+    <div className="flex items-start mb-2" key={key}>
+      <div className={`${lblCell} pt-6`}>{label} :</div>
+      <textarea
+        value={(formData as any)[key] ?? ""}
+        onChange={(e) => setF(key, e.target.value)}
+        className="border border-gray-600 bg-white text-[12px] w-[230px] h-[70px] px-1"
+      />
+    </div>
+  );
+
+  const rowSelect = (label: string, key: string, list: any[], placeholder = "-----Select-----") => (
+    <div className="flex items-center mb-2" key={key}>
+      <div className={lblCell}>{label} :</div>
+      <select
+        value={(formData as any)[key] ?? ""}
+        onChange={(e) => setF(key, e.target.value)}
+        className="border border-gray-600 bg-white text-[12px] h-[22px] w-[250px] px-1"
+      >
+        <option value="">{placeholder}</option>
+        {list.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+      </select>
+    </div>
+  );
+
+  const rowDate = (label: string, key: string) => (
+    <div className="flex items-center mb-2" key={key}>
+      <div className={lblCell}>{label} :</div>
+      <LegacyDatePicker value={(formData as any)[key] ?? ""} onChange={(e: any) => setF(key, e.target.value)} />
+    </div>
+  );
+
+  const toggleRow = (label: string, key: string) => (
+    <div className="flex items-center mb-2">
+      <div className={lblCell}>{label} :</div>
+      <label className="flex items-center gap-1 text-[12px] mr-4">
+        <input type="radio" name={key} checked={!!(formData as any)[key]} onChange={() => setF(key, true)} />
+        Yes
+      </label>
+      <label className="flex items-center gap-1 text-[12px]">
+        <input type="radio" name={key} checked={!(formData as any)[key]} onChange={() => setF(key, false)} />
+        No
+      </label>
+    </div>
+  );
+
+  const servicePanel = (title: string, children: React.ReactNode) => (
+    <div className="ml-[60px] mb-3 border border-gray-400 bg-[#f7dde0] p-3">
+      <div className="text-[12px] font-semibold text-gray-800 mb-2">{title}</div>
+      {children}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="Enquiry Management" />
@@ -932,30 +1023,118 @@ export default function Enquiries() {
                 </select>
               </div>
 
-              {/* Yes / No service toggles */}
-              {[
-                { label: "Booking", key: "include_booking" },
-                { label: "DELHI - MANALI", key: "include_delhi_manali" },
-                { label: "MANALI - DELHI", key: "include_manali_delhi" },
-                { label: "Safari", key: "include_safari" },
-                { label: "Another Hotel", key: "include_another_hotel" },
-                { label: "Additional Vehicle", key: "include_additional_vehicle" },
-                { label: "Group Expences", key: "include_group_expenses" },
-              ].map((f) => (
-                <div className="flex items-center mb-2" key={f.key}>
-                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">{f.label} :</div>
-                  <label className="flex items-center gap-1 text-[12px] mr-4">
-                    <input type="radio" name={f.key} checked={!!(formData as any)[f.key]}
-                      onChange={() => setFormData({ ...formData, [f.key]: true })} />
-                    Yes
-                  </label>
-                  <label className="flex items-center gap-1 text-[12px]">
-                    <input type="radio" name={f.key} checked={!(formData as any)[f.key]}
-                      onChange={() => setFormData({ ...formData, [f.key]: false })} />
-                    No
-                  </label>
-                </div>
+              {/* Booking (own hotel) */}
+              {toggleRow("Booking", "include_booking")}
+              {formData.include_booking && servicePanel("Booking Details", (
+                <>
+                  {rowSelect("Hotel", "booking_hotel_id", ownHotels)}
+                  {rowInput("Room", "booking_room")}
+                  {rowInput("No of Rooms", "booking_num_rooms", "number", "80px")}
+                  <div className="flex items-center mb-2">
+                    <div className={lblCell}>Package Type :</div>
+                    <select
+                      value={formData.booking_package_type}
+                      onChange={(e) => setF("booking_package_type", e.target.value)}
+                      className="border border-gray-600 bg-white text-[12px] h-[22px] w-[250px] px-1"
+                    >
+                      <option value="select">-----Select-----</option>
+                      <option value="EP">EP (Room Only)</option>
+                      <option value="CP">CP (Room + Breakfast)</option>
+                      <option value="MAP">MAP (Room + Breakfast + 1 Meal)</option>
+                      <option value="AP">AP (All Meals)</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                  {formData.booking_package_type === "custom" && rowInput("Custom Package", "booking_custom_package")}
+                  {rowDate("Booking From", "booking_from")}
+                  {rowDate("Booking To", "booking_to")}
+                  {rowInput("Booking Price", "booking_price", "number", "150px")}
+                </>
               ))}
+
+              {/* Delhi - Manali */}
+              {toggleRow("DELHI - MANALI", "include_delhi_manali")}
+              {formData.include_delhi_manali && servicePanel("Delhi - Manali Details", (
+                <>
+                  {rowSelect("Transporter", "dm_transporter_id", transporters)}
+                  {rowInput("No of Tickets", "dm_num_tickets", "number", "80px")}
+                  {rowInput("Ticket No.", "dm_ticket_no")}
+                  {rowInput("Seat No.", "dm_seat_no")}
+                  {rowDate("Booking Date", "dm_booking_date")}
+                  {rowDate("Journey Date", "dm_journey_date")}
+                  {rowInput("Booking Price", "dm_booking_price", "number", "150px")}
+                  {rowInput("Selling Price", "dm_selling_price", "number", "150px")}
+                </>
+              ))}
+
+              {/* Manali - Delhi */}
+              {toggleRow("MANALI - DELHI", "include_manali_delhi")}
+              {formData.include_manali_delhi && servicePanel("Manali - Delhi Details", (
+                <>
+                  {rowSelect("Transporter", "md_transporter_id", transporters)}
+                  {rowInput("No of Tickets", "md_num_tickets", "number", "80px")}
+                  {rowInput("Ticket No.", "md_ticket_no")}
+                  {rowInput("Seat No.", "md_seat_no")}
+                  {rowDate("Booking Date", "md_booking_date")}
+                  {rowDate("Journey Date", "md_journey_date")}
+                  {rowInput("Booking Price", "md_booking_price", "number", "150px")}
+                  {rowInput("Selling Price", "md_selling_price", "number", "150px")}
+                </>
+              ))}
+
+              {/* Safari */}
+              {toggleRow("Safari", "include_safari")}
+              {formData.include_safari && servicePanel("Safari Details", (
+                <>
+                  {rowSelect("Transporter", "safari_transporter_id", transporters)}
+                  {rowInput("No of Safari", "safari_num", "number", "80px")}
+                  {rowDate("Booking Date", "safari_booking_date")}
+                  {rowDate("Journey Date", "safari_journey_date")}
+                  {rowInput("Booking Price", "safari_booking_price", "number", "150px")}
+                  {rowInput("Selling Price", "safari_selling_price", "number", "150px")}
+                  {rowArea("Note", "safari_note")}
+                </>
+              ))}
+
+              {/* Another Hotel */}
+              {toggleRow("Another Hotel", "include_another_hotel")}
+              {formData.include_another_hotel && servicePanel("Another Hotel Details", (
+                <>
+                  {rowSelect("Hotel", "another_hotel_id", anotherHotels)}
+                  {rowInput("Room Type", "another_hotel_room_type")}
+                  {rowInput("No of Rooms", "another_hotel_num_rooms", "number", "80px")}
+                  {rowDate("Booking Date", "another_hotel_booking_date")}
+                  {rowDate("Check In", "another_hotel_check_in")}
+                  {rowDate("Check Out", "another_hotel_check_out")}
+                  {rowInput("Booking Price", "another_hotel_booking_price", "number", "150px")}
+                  {rowInput("Selling Price", "another_hotel_selling_price", "number", "150px")}
+                  {rowArea("Note", "another_hotel_note")}
+                </>
+              ))}
+
+              {/* Additional Vehicle */}
+              {toggleRow("Additional Vehicle", "include_additional_vehicle")}
+              {formData.include_additional_vehicle && servicePanel("Additional Vehicle Details", (
+                <>
+                  {rowSelect("Transporter", "vehicle_transporter_id", transporters)}
+                  {rowInput("Vehicle Details", "vehicle_details")}
+                  {rowDate("Booking Date", "vehicle_booking_date")}
+                  {rowDate("Journey Date", "vehicle_journey_date")}
+                  {rowInput("Booking Price", "vehicle_booking_price", "number", "150px")}
+                  {rowInput("Selling Price", "vehicle_selling_price", "number", "150px")}
+                  {rowArea("Note", "vehicle_note")}
+                </>
+              ))}
+
+              {/* Group Expences */}
+              {toggleRow("Group Expences", "include_group_expenses")}
+              {formData.include_group_expenses && servicePanel("Group Expences Details", (
+                <>
+                  {rowInput("Amount", "group_expense_amount", "number", "150px")}
+                  {rowArea("Details", "group_expense_details")}
+                </>
+              ))}
+
 
               {/* Agent Commission */}
               <div className="flex items-center mb-4">
