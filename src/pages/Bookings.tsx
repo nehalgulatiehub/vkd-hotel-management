@@ -1534,6 +1534,7 @@ export default function Bookings() {
     setPaymentCityId("");
     setPaymentType("");
     setPaymentOtherNote("");
+    fetchCities();
     setShowPaymentDialog(true);
   };
 
