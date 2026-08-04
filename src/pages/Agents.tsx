@@ -246,15 +246,19 @@ export default function Agents() {
                           {agent.phone || "-"}
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEdit(agent)}>
-                              Edit
-                            </Button>
-                            <span className="text-muted-foreground">/</span>
-                            <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(agent.id)}>
-                              Delete
-                            </Button>
-                          </div>
+                          {canManageAgent(agent) ? (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEdit(agent)}>
+                                Edit
+                              </Button>
+                              <span className="text-muted-foreground">/</span>
+                              <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleDelete(agent.id)}>
+                                Delete
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-[11px]">-</span>
+                          )}
                         </td>
                       </tr>
                     ))
