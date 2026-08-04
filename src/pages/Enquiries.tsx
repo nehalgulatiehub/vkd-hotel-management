@@ -152,8 +152,9 @@ export default function Enquiries() {
         else if (typeof current === "number") next[key] = value ?? current;
         else next[key] = value == null ? "" : String(value);
       });
-      next.booking_type = enquiry.booking_type || "agent";
+      next.booking_type = enquiry.booking_type || (enquiry.agent_id ? "agent" : "direct");
       next.booking_package_type = enquiry.booking_package_type || "select";
+      next.city_id = enquiry.destination_city_id || "";
       return next;
     });
     setShowForm(true);
