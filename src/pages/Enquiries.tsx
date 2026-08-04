@@ -595,6 +595,77 @@ export default function Enquiries() {
   const smallInput = "border border-gray-500 bg-white h-[22px] text-[12px] px-1 leading-none";
   const labelStyle = "text-[12px] text-gray-800 whitespace-nowrap";
 
+  // ---- Legacy form helpers ----
+  const setF = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
+  const lblCell = "w-[200px] text-right pr-2 text-[12px] text-gray-800";
+  const inpCls = "border border-gray-600 bg-white text-[12px] h-[22px] px-1";
+
+  const rowInput = (label: string, key: string, type = "text", width = "230px") => (
+    <div className="flex items-center mb-2" key={key}>
+      <div className={lblCell}>{label} :</div>
+      <input
+        type={type}
+        value={(formData as any)[key] ?? ""}
+        onChange={(e) => setF(key, e.target.value)}
+        className={inpCls}
+        style={{ width }}
+      />
+    </div>
+  );
+
+  const rowArea = (label: string, key: string) => (
+    <div className="flex items-start mb-2" key={key}>
+      <div className={`${lblCell} pt-6`}>{label} :</div>
+      <textarea
+        value={(formData as any)[key] ?? ""}
+        onChange={(e) => setF(key, e.target.value)}
+        className="border border-gray-600 bg-white text-[12px] w-[230px] h-[70px] px-1"
+      />
+    </div>
+  );
+
+  const rowSelect = (label: string, key: string, list: any[], placeholder = "-----Select-----") => (
+    <div className="flex items-center mb-2" key={key}>
+      <div className={lblCell}>{label} :</div>
+      <select
+        value={(formData as any)[key] ?? ""}
+        onChange={(e) => setF(key, e.target.value)}
+        className="border border-gray-600 bg-white text-[12px] h-[22px] w-[250px] px-1"
+      >
+        <option value="">{placeholder}</option>
+        {list.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+      </select>
+    </div>
+  );
+
+  const rowDate = (label: string, key: string) => (
+    <div className="flex items-center mb-2" key={key}>
+      <div className={lblCell}>{label} :</div>
+      <LegacyDatePicker value={(formData as any)[key] ?? ""} onChange={(e: any) => setF(key, e.target.value)} />
+    </div>
+  );
+
+  const toggleRow = (label: string, key: string) => (
+    <div className="flex items-center mb-2">
+      <div className={lblCell}>{label} :</div>
+      <label className="flex items-center gap-1 text-[12px] mr-4">
+        <input type="radio" name={key} checked={!!(formData as any)[key]} onChange={() => setF(key, true)} />
+        Yes
+      </label>
+      <label className="flex items-center gap-1 text-[12px]">
+        <input type="radio" name={key} checked={!(formData as any)[key]} onChange={() => setF(key, false)} />
+        No
+      </label>
+    </div>
+  );
+
+  const servicePanel = (title: string, children: React.ReactNode) => (
+    <div className="ml-[60px] mb-3 border border-gray-400 bg-[#f7dde0] p-3">
+      <div className="text-[12px] font-semibold text-gray-800 mb-2">{title}</div>
+      {children}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="Enquiry Management" />
