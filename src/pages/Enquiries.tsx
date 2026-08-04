@@ -655,6 +655,20 @@ export default function Enquiries() {
     </div>
   );
 
+  useEffect(() => {
+    const hotelId = formData.booking_hotel_id;
+    if (!hotelId) {
+      setRooms([]);
+      return;
+    }
+    supabase
+      .from("rooms")
+      .select("*")
+      .eq("hotel_id", hotelId)
+      .order("room_number")
+      .then(({ data }) => setRooms(data || []));
+  }, [formData.booking_hotel_id]);
+
   const rowSelect = (label: string, key: string, list: any[], placeholder = "-----Select-----") => (
     <div className="flex items-center mb-2" key={key}>
       <div className={lblCell}>{label} :</div>
