@@ -18,12 +18,20 @@ import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 
 export default function Enquiries() {
   const navigate = useNavigate();
-  const [showForm, setShowForm] = useState(false);
+  const location = useLocation();
+  const isAddRoute = location.pathname.replace(/\/+$/, "").endsWith("/add");
+  const [showForm, setShowForm] = useState(isAddRoute);
+
+  // Keep the form open/closed in sync with the route so clicking
+  // "Generate Enquiry" while already on "View Enquiry" works.
+  useEffect(() => {
+    setShowForm(isAddRoute);
+  }, [isAddRoute]);
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
