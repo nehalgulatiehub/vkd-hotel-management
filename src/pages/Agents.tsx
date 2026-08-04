@@ -8,12 +8,15 @@ import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Agents() {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuthContext();
   const [agents, setAgents] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const canManageAgent = (agent: any) => isAdmin() || (!!user?.id && agent.created_by === user.id);
   
   // Filter states
   const [filters, setFilters] = useState({
