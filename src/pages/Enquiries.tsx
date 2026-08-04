@@ -565,189 +565,225 @@ export default function Enquiries() {
     return <Badge className={statusColors[status] || "bg-gray-500"}>{statusText}</Badge>;
   };
 
+  const filterPanelStyle = { backgroundColor: "#F9D7D7" };
+  const smallSelect = "border border-gray-500 bg-white h-[22px] text-[12px] px-1 leading-none";
+  const smallInput = "border border-gray-500 bg-white h-[22px] text-[12px] px-1 leading-none";
+  const labelStyle = "text-[12px] text-gray-800 whitespace-nowrap";
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="Enquiry Management" />
-      <main className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">
-            {showForm ? (editingEnquiryId ? "Edit Enquiry" : "Generate Enquiry") : "View Enquiries"}
-          </h2>
-          <div className="flex gap-2">
-            {!showForm && (
-              <Button 
-                className="bg-gradient-primary"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Generate Enquiry
-              </Button>
-            )}
-            {showForm && (
-              <Button variant="outline" onClick={resetForm}>
-                Back to List
-              </Button>
-            )}
+      <main className="p-4">
+        {showForm && (
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">
+              {editingEnquiryId ? "Edit Enquiry" : "Generate Enquiry"}
+            </h2>
+            <Button variant="outline" onClick={resetForm}>
+              Back to List
+            </Button>
           </div>
-        </div>
+        )}
 
         {!showForm ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by enquiry no, customer, agent, contact no or email..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+          <div className="border border-gray-300">
+            {/* Blue Header */}
+            <div className="flex justify-between items-center px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
+              <span className="text-white font-semibold text-[14px]">View Enquiry</span>
+              <button
+                onClick={() => setFilters({ from: today, to: today, searchWithDate: false, type: "", agentId: "", reference: "", status: "", userId: "", email: "", contactNo: "", cityId: "", customer: "" })}
+                className="text-white hover:underline text-[14px] bg-transparent border-0 cursor-pointer font-semibold"
+              >
+                View All Records
+              </button>
+            </div>
+
+            {/* Filter Panel */}
+            <div className="p-3 space-y-2" style={filterPanelStyle}>
+              {/* Row 1 */}
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>From :</span>
+                  <LegacyDatePicker value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>To :</span>
+                  <LegacyDatePicker value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Search with Date :</span>
+                  <label className="flex items-center gap-1 text-[12px]">
+                    <input type="radio" checked={filters.searchWithDate} onChange={() => setFilters({ ...filters, searchWithDate: true })} /> YES
+                  </label>
+                  <label className="flex items-center gap-1 text-[12px]">
+                    <input type="radio" checked={!filters.searchWithDate} onChange={() => setFilters({ ...filters, searchWithDate: false })} /> NO
+                  </label>
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-4 font-semibold">Enquiry No</th>
-                      <th className="text-left p-4 font-semibold">Customer/Agent</th>
-                      <th className="text-left p-4 font-semibold">Check-in</th>
-                      <th className="text-left p-4 font-semibold">Check-out</th>
-                      <th className="text-left p-4 font-semibold">Guests</th>
-                      <th className="text-left p-4 font-semibold">Status</th>
-                      <th className="text-left p-4 font-semibold">Actions</th>
+              {/* Row 2 */}
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Type :</span>
+                  <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className={`${smallSelect} min-w-[110px]`}>
+                    <option value="">--Select--</option>
+                    <option value="Direct">Direct</option>
+                    <option value="Agent">Agent</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Agent Name :</span>
+                  <select value={filters.agentId} onChange={(e) => setFilters({ ...filters, agentId: e.target.value })} className={`${smallSelect} min-w-[200px]`}>
+                    <option value="">--Select--</option>
+                    {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Reference :</span>
+                  <input value={filters.reference} onChange={(e) => setFilters({ ...filters, reference: e.target.value })} className={`${smallInput} w-[220px]`} />
+                </div>
+              </div>
+
+              {/* Row 3 */}
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Status :</span>
+                  <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className={`${smallSelect} min-w-[130px]`}>
+                    <option value="">--Select--</option>
+                    <option value="on_hold">On Hold</option>
+                    <option value="pending">Pending</option>
+                    <option value="follow_up">Follow Up</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="converted">Converted</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>User :</span>
+                  <select value={filters.userId} onChange={(e) => setFilters({ ...filters, userId: e.target.value })} className={`${smallSelect} min-w-[150px]`}>
+                    <option value="">--Select--</option>
+                    {profiles.map((p) => <option key={p.id} value={p.id}>{getUserName(p.id)}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 4 */}
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Email-Id :</span>
+                  <input value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} className={`${smallInput} w-[180px]`} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Contact-No :</span>
+                  <input value={filters.contactNo} onChange={(e) => setFilters({ ...filters, contactNo: e.target.value })} className={`${smallInput} w-[180px]`} />
+                </div>
+              </div>
+
+              {/* Row 5 */}
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>City :</span>
+                  <select value={filters.cityId} onChange={(e) => setFilters({ ...filters, cityId: e.target.value })} className={`${smallSelect} min-w-[260px]`}>
+                    <option value="">-City-</option>
+                    {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={labelStyle}>Customer :</span>
+                  <input value={filters.customer} onChange={(e) => setFilters({ ...filters, customer: e.target.value })} className={`${smallInput} w-[200px]`} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => pagination.resetPage()}
+                  className="ml-auto border border-gray-500 bg-gray-200 hover:bg-gray-300 px-4 py-1 text-[12px] font-semibold"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px] border-collapse">
+                <thead>
+                  <tr style={{ backgroundColor: "#D4A59A" }} className="text-left">
+                    <th className="p-2 border-b border-gray-400 w-[50px]">S.No.</th>
+                    <th className="p-2 border-b border-gray-400">Enquiry No</th>
+                    <th className="p-2 border-b border-gray-400">Type</th>
+                    <th className="p-2 border-b border-gray-400">Customer / Agent</th>
+                    <th className="p-2 border-b border-gray-400">Contact</th>
+                    <th className="p-2 border-b border-gray-400">Enquiry Detail</th>
+                    <th className="p-2 border-b border-gray-400">Status</th>
+                    <th className="p-2 border-b border-gray-400">User</th>
+                    <th className="p-2 border-b border-gray-400 w-[120px]"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagination.paginatedItems.length === 0 ? (
+                    <tr style={filterPanelStyle}>
+                      <td colSpan={9} className="text-center py-8" style={{ color: "#c00" }}>
+                        Sorry, Currently There are no record to display
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {pagination.paginatedItems.map((enquiry) => (
-                      <tr key={enquiry.id} className="border-b hover:bg-muted/50">
-                        <td className="p-4">{enquiry.enquiry_number}</td>
-                        <td className="p-4">
-                          {enquiry.customer_name || enquiry.agents?.name || "N/A"}
+                  ) : (
+                    pagination.paginatedItems.map((enquiry, idx) => (
+                      <tr key={enquiry.id} style={filterPanelStyle} className="align-top">
+                        <td className="p-2 border-b border-gray-300">{pagination.startIndex + idx + 1}</td>
+                        <td className="p-2 border-b border-gray-300">{enquiry.enquiry_number}</td>
+                        <td className="p-2 border-b border-gray-300">
+                          {enquiry.agent_id ? `Agent (${enquiry.agents?.name || ""})` : "Direct"}
                         </td>
-                        <td className="p-4">{enquiry.check_in_date ? new Date(enquiry.check_in_date).toLocaleDateString() : "-"}</td>
-                        <td className="p-4">{enquiry.check_out_date ? new Date(enquiry.check_out_date).toLocaleDateString() : "-"}</td>
-                        <td className="p-4">{enquiry.adults + enquiry.children}</td>
-                        <td className="p-4">{getStatusBadge(enquiry.status)}</td>
-                        <td className="p-4">
-                          <div className="flex gap-2">
+                        <td className="p-2 border-b border-gray-300">{enquiry.customer_name || enquiry.agents?.name || "-"}</td>
+                        <td className="p-2 border-b border-gray-300">
+                          <div>{enquiry.contact_no || "-"}</div>
+                          <div>{enquiry.email || enquiry.reference_email || ""}</div>
+                        </td>
+                        <td className="p-2 border-b border-gray-300">
+                          <div>{formatDisplayDate(enquiry.check_in_date)} - {formatDisplayDate(enquiry.check_out_date)}</div>
+                          <div>{(enquiry.adults || 0)} Adult {(enquiry.children || 0)} Children</div>
+                          {enquiry.reference && <div>Reference : {enquiry.reference}</div>}
+                        </td>
+                        <td className="p-2 border-b border-gray-300">{getStatusBadge(enquiry.status)}</td>
+                        <td className="p-2 border-b border-gray-300">{enquiry.created_by ? getUserName(enquiry.created_by) : "-"}</td>
+                        <td className="p-2 border-b border-gray-300">
+                          <div className="flex flex-col gap-1 text-[#7a3b2e]">
                             {enquiry.status === "on_hold" && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-green-600 hover:text-green-700"
-                                onClick={() => handleConvertToBooking(enquiry)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Confirm
-                              </Button>
+                              <button onClick={() => handleConvertToBooking(enquiry)} className="text-left hover:underline">
+                                Confirm Booking
+                              </button>
                             )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingEnquiryId(enquiry.id);
-                                setFormData({
-                                  booking_type: enquiry.booking_type || "agent",
-                                  agent_id: enquiry.agent_id || "",
-                                  reference: enquiry.reference || "",
-                                  reference_email: enquiry.reference_email || "",
-                                  customer_name: enquiry.customer_name || "",
-                                  address: enquiry.address || "",
-                                  contact_no: enquiry.contact_no || "",
-                                  email: enquiry.email || "",
-                                  adults: enquiry.adults,
-                                  children: enquiry.children,
-                                  notes: enquiry.notes || "",
-                                  check_in_date: enquiry.check_in_date || "",
-                                  check_out_date: enquiry.check_out_date || "",
-                                  include_booking: enquiry.include_booking || false,
-                                  include_delhi_manali: enquiry.include_delhi_manali || false,
-                                  include_manali_delhi: enquiry.include_manali_delhi || false,
-                                  include_safari: enquiry.include_safari || false,
-                                  include_another_hotel: enquiry.include_another_hotel || false,
-                                  include_additional_vehicle: enquiry.include_additional_vehicle || false,
-                                  include_group_expenses: enquiry.include_group_expenses || false,
-                                  agent_commission: enquiry.agent_commission?.toString() || "",
-                                  cheque_no: enquiry.cheque_no || "",
-                                  booking_hotel_id: enquiry.booking_hotel_id || "",
-                                  booking_room: enquiry.booking_room || "",
-                                  booking_num_rooms: enquiry.booking_num_rooms || "",
-                                  booking_package_type: enquiry.booking_package_type || "select",
-                                  booking_custom_package: enquiry.booking_custom_package || "",
-                                  booking_price: enquiry.booking_price || "",
-                                  booking_from: enquiry.booking_from || "",
-                                  booking_to: enquiry.booking_to || "",
-                                  dm_num_tickets: enquiry.dm_num_tickets || "",
-                                  dm_ticket_no: enquiry.dm_ticket_no || "",
-                                  dm_seat_no: enquiry.dm_seat_no || "",
-                                  dm_transporter_id: enquiry.dm_transporter_id || "",
-                                  dm_booking_date: enquiry.dm_booking_date || "",
-                                  dm_journey_date: enquiry.dm_journey_date || "",
-                                  dm_booking_price: enquiry.dm_booking_price || "",
-                                  dm_selling_price: enquiry.dm_selling_price || "",
-                                  md_num_tickets: enquiry.md_num_tickets || "",
-                                  md_ticket_no: enquiry.md_ticket_no || "",
-                                  md_seat_no: enquiry.md_seat_no || "",
-                                  md_transporter_id: enquiry.md_transporter_id || "",
-                                  md_booking_date: enquiry.md_booking_date || "",
-                                  md_journey_date: enquiry.md_journey_date || "",
-                                  md_booking_price: enquiry.md_booking_price || "",
-                                  md_selling_price: enquiry.md_selling_price || "",
-                                  safari_transporter_id: enquiry.safari_transporter_id || "",
-                                  safari_num: enquiry.safari_num || "",
-                                  safari_booking_date: enquiry.safari_booking_date || "",
-                                  safari_journey_date: enquiry.safari_journey_date || "",
-                                  safari_booking_price: enquiry.safari_booking_price || "",
-                                  safari_selling_price: enquiry.safari_selling_price || "",
-                                  safari_note: enquiry.safari_note || "",
-                                  another_hotel_id: enquiry.another_hotel_id || "",
-                                  another_hotel_num_rooms: enquiry.another_hotel_num_rooms || "",
-                                  another_hotel_room_type: enquiry.another_hotel_room_type || "",
-                                  another_hotel_booking_date: enquiry.another_hotel_booking_date || "",
-                                  another_hotel_check_in: enquiry.another_hotel_check_in || "",
-                                  another_hotel_check_out: enquiry.another_hotel_check_out || "",
-                                  another_hotel_booking_price: enquiry.another_hotel_booking_price || "",
-                                  another_hotel_selling_price: enquiry.another_hotel_selling_price || "",
-                                  another_hotel_note: enquiry.another_hotel_note || "",
-                                  vehicle_details: enquiry.vehicle_details || "",
-                                  vehicle_booking_price: enquiry.vehicle_booking_price || "",
-                                  vehicle_selling_price: enquiry.vehicle_selling_price || "",
-                                  vehicle_transporter_id: enquiry.vehicle_transporter_id || "",
-                                  vehicle_booking_date: enquiry.vehicle_booking_date || "",
-                                  vehicle_journey_date: enquiry.vehicle_journey_date || "",
-                                  vehicle_note: enquiry.vehicle_note || "",
-                                  group_expense_amount: enquiry.group_expense_amount || "",
-                                  group_expense_details: enquiry.group_expense_details || ""
-                                });
-                                setShowForm(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <button onClick={() => handleEditEnquiry(enquiry)} className="text-left hover:underline">
+                              View / Edit
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredEnquiries.length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    No enquiries found
-                  </div>
-                )}
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-between items-center px-3 py-2 text-[12px] border-t border-gray-300 bg-white">
+                <span>Showing {pagination.startIndex + 1}-{pagination.endIndex} of {pagination.totalItems}</span>
+                <div className="flex gap-1">
+                  <button onClick={() => pagination.goToPage(Math.max(1, pagination.currentPage - 1))} disabled={pagination.currentPage === 1} className="border border-gray-400 px-2 py-0.5 disabled:opacity-50">Prev</button>
+                  <span className="px-2 py-0.5">Page {pagination.currentPage} / {pagination.totalPages}</span>
+                  <button onClick={() => pagination.goToPage(Math.min(pagination.totalPages, pagination.currentPage + 1))} disabled={pagination.currentPage === pagination.totalPages} className="border border-gray-400 px-2 py-0.5 disabled:opacity-50">Next</button>
+                </div>
               </div>
-              <TablePagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                onPageChange={pagination.goToPage}
-                totalItems={pagination.totalItems}
-                startIndex={pagination.startIndex}
-                endIndex={pagination.endIndex}
-              />
-            </CardContent>
-          </Card>
+            )}
+
+            <div className="flex justify-end p-2 bg-white border-t border-gray-300">
+              <Button size="sm" onClick={() => setShowForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Generate Enquiry
+              </Button>
+            </div>
+          </div>
+
         ) : (
           <form onSubmit={handleSubmit}>
             <Card>
