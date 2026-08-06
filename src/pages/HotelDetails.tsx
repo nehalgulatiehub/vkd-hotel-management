@@ -65,6 +65,11 @@ export default function HotelDetails() {
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
+  const totalBookingPrice = filteredBookings.reduce((s, b) => s + (b.room_rate || 0), 0);
+  const totalSellingPrice = filteredBookings.reduce((s, b) => s + (b.total_amount || 0), 0);
+  const netProfit = totalSellingPrice - totalBookingPrice;
+  const totalReceivedPayment = filteredBookings.reduce((s, b) => s + (b.paid_amount || 0), 0);
+  const totalDuePayment = filteredBookings.reduce((s, b) => s + (b.due_amount || 0), 0);
 
   return (
     <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
@@ -133,6 +138,21 @@ export default function HotelDetails() {
           </table>
         )}
       </div>
+
+      {/* Summary Footer */}
+      <div style={{ padding: "8px 10px", border: "1px solid #ccc", borderTop: "none", backgroundColor: "#fff", fontSize: 11 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px" }}>
+          <span><strong>Total Booking Price :</strong> Rs. {totalBookingPrice.toLocaleString("en-IN")} /-</span>
+          <span><strong>Total Selling Price :</strong> Rs. {totalSellingPrice.toLocaleString("en-IN")} /-</span>
+          <span><strong>Net Profit :</strong> Rs. {netProfit.toLocaleString("en-IN")} /-</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px", marginTop: 2 }}>
+          <span><strong>Total Received Payment :</strong> Rs. {totalReceivedPayment.toLocaleString("en-IN")} /-</span>
+          <span><strong>Total Due Payment :</strong> Rs. {totalDuePayment.toLocaleString("en-IN")} /-</span>
+        </div>
+      </div>
+
+
 
       <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
 
