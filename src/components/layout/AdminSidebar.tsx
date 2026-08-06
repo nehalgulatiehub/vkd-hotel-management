@@ -228,6 +228,44 @@ const adminMenuItems: MenuItem[] = [
     ] 
   },
   { 
+    title: "Visa Manager", 
+    color: "#4DB6AC", 
+    submenu: [
+      { title: "View Visa Detail", url: "/admin/visa-details" },
+      { title: "View Pending Payment", url: "/admin/visa-pending" },
+      { title: "View Approved Payment", url: "/admin/visa-approved" },
+      { title: "Due Amount", url: "/admin/visa-due" },
+    ] 
+  },
+  { 
+    title: "Visa Payment Manager", 
+    color: "#4DB6AC", 
+    submenu: [
+      { title: "Add Visa Payment", url: "/admin/add-visa-payment" },
+      { title: "View Visa Payment", url: "/admin/visa-payments" },
+      { title: "Due Amount Visa", url: "/admin/visa-due" },
+    ] 
+  },
+  { 
+    title: "Cruise Manager", 
+    color: "#9575CD", 
+    submenu: [
+      { title: "View Cruise Detail", url: "/admin/cruise-details" },
+      { title: "View Pending Payment", url: "/admin/cruise-pending" },
+      { title: "View Approved Payment", url: "/admin/cruise-approved" },
+      { title: "Due Amount", url: "/admin/cruise-due" },
+    ] 
+  },
+  { 
+    title: "Cruise Payment Manager", 
+    color: "#9575CD", 
+    submenu: [
+      { title: "Add Cruise Payment", url: "/admin/add-cruise-payment" },
+      { title: "View Cruise Payment", url: "/admin/cruise-payments" },
+      { title: "Due Amount Cruise", url: "/admin/cruise-due" },
+    ] 
+  },
+  { 
     title: "Additional Vehicle Manager", 
     color: "#607D8B", 
     submenu: [

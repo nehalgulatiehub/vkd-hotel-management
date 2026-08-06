@@ -72,6 +72,42 @@ export const accountMenuItems: MenuItem[] = [
     ]
   },
   {
+    title: "Visa Manager",
+    color: "#4DB6AC",
+    submenu: [
+      { title: "View Visa Detail", url: "/account/visa-details", menuKey: "acc_visa_details" },
+      { title: "View Pending Payment", url: "/account/visa-pending", menuKey: "acc_visa_pending" },
+      { title: "View Approved Payment", url: "/account/visa-approved", menuKey: "acc_visa_approved" },
+      { title: "Due Amount", url: "/account/visa-due", menuKey: "acc_visa_due" },
+    ]
+  },
+  {
+    title: "Visa Payment Manager",
+    color: "#4DB6AC",
+    submenu: [
+      { title: "Add Visa Payment", url: "/account/add-visa-payment", menuKey: "acc_visa_payment_add" },
+      { title: "View Visa Payment", url: "/account/visa-payments", menuKey: "acc_visa_payment_view" },
+    ]
+  },
+  {
+    title: "Cruise Manager",
+    color: "#9575CD",
+    submenu: [
+      { title: "View Cruise Detail", url: "/account/cruise-details", menuKey: "acc_cruise_details" },
+      { title: "View Pending Payment", url: "/account/cruise-pending", menuKey: "acc_cruise_pending" },
+      { title: "View Approved Payment", url: "/account/cruise-approved", menuKey: "acc_cruise_approved" },
+      { title: "Due Amount", url: "/account/cruise-due", menuKey: "acc_cruise_due" },
+    ]
+  },
+  {
+    title: "Cruise Payment Manager",
+    color: "#9575CD",
+    submenu: [
+      { title: "Add Cruise Payment", url: "/account/add-cruise-payment", menuKey: "acc_cruise_payment_add" },
+      { title: "View Cruise Payment", url: "/account/cruise-payments", menuKey: "acc_cruise_payment_view" },
+    ]
+  },
+  {
     title: "D - M Volvo Manager",
     color: "#F8BBD9",
     textColor: "#000",
