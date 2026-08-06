@@ -1895,7 +1895,7 @@ export default function Bookings() {
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">
                           <SelectItem value="none">----Select----</SelectItem>
-                          {rooms.map((room) => (
+                          {(rooms.length ? rooms : allRooms.filter((r) => r.hotel_id === formData.booking_hotel_id)).map((room) => (
                             <SelectItem key={room.id} value={room.id}>
                               {room.room_number} - {room.room_type}
                             </SelectItem>
