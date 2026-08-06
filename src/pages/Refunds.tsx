@@ -112,7 +112,7 @@ export default function Refunds() {
         <tbody>
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={8} message="No refunds found" /> : paginatedItems.map((refund, index) => (
             <ThemedTR key={refund.id} index={index}>
-              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{startIndex + index}</ThemedTD>
               <ThemedTD>{refund.refund_date ? new Date(refund.refund_date).toLocaleDateString() : "-"}</ThemedTD>
               <ThemedTD>{refund.bookings?.booking_number || "-"}</ThemedTD>
               <ThemedTD>{refund.bookings?.customer_name || "-"}</ThemedTD>

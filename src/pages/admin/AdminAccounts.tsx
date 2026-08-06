@@ -117,7 +117,7 @@ export default function AdminAccounts() {
           <tbody>
             {pagination.paginatedItems.map((account, index) => (
               <ThemedTR key={account.id} index={index}>
-                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index}</ThemedTD>
                 <ThemedTD>{account.first_name} {account.last_name}</ThemedTD>
                 <ThemedTD>{account.username || "-"}</ThemedTD>
                 <ThemedTD>{account.phone || "-"}</ThemedTD>

@@ -92,7 +92,7 @@ export default function VehiclePayments() {
         <tbody>
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No vehicle payments found" /> : paginatedItems.map((payment, index) => (
             <ThemedTR key={payment.id} index={index}>
-              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{startIndex + index}</ThemedTD>
               <ThemedTD>{payment.vehicle_booking?.transporters?.name || "-"}</ThemedTD>
               <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
               <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>

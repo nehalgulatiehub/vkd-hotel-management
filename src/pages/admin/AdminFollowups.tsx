@@ -54,7 +54,7 @@ export default function AdminFollowups() {
         <tbody>
           {pagination.paginatedItems.map((enquiry, index) => (
             <ThemedTR key={enquiry.id} index={index}>
-              <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{pagination.startIndex + index}</ThemedTD>
               <ThemedTD>{enquiry.enquiry_number}</ThemedTD>
               <ThemedTD>{enquiry.guest ? `${enquiry.guest.first_name} ${enquiry.guest.last_name}` : "-"}</ThemedTD>
               <ThemedTD>{enquiry.agent?.name || "-"}</ThemedTD>

@@ -46,7 +46,7 @@ export default function Expenses() {
               <tbody>
                 {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={7} message="No expenses found" /> : paginatedItems.map((expense, index) => (
                   <ThemedTR key={expense.id} index={index}>
-                    <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                    <ThemedTD>{startIndex + index}</ThemedTD>
                     <ThemedTD>{expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "-"}</ThemedTD>
                     <ThemedTD>{expense.bookings?.booking_number || "-"}</ThemedTD>
                     <ThemedTD>{expense.bookings?.customer_name || "-"}</ThemedTD>
@@ -78,7 +78,7 @@ export default function Expenses() {
         <tbody>
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={7} message="No expenses found" /> : paginatedItems.map((expense, index) => (
             <ThemedTR key={expense.id} index={index}>
-              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{startIndex + index}</ThemedTD>
               <ThemedTD>{expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "-"}</ThemedTD>
               <ThemedTD>{expense.bookings?.booking_number || "-"}</ThemedTD>
               <ThemedTD>{expense.bookings?.customer_name || "-"}</ThemedTD>

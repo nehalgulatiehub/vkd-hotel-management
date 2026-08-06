@@ -98,7 +98,7 @@ export default function ViewDelhiManaliDue() {
           <tbody>
             {pagination.paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={6} message="No records found" /> : pagination.paginatedItems.map((summary, index) => (
               <ThemedTR key={summary.transporter_id} index={index}>
-                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index}</ThemedTD>
                 <ThemedTD>{summary.transporter_name}</ThemedTD>
                 <ThemedTD>Rs {summary.total_paid.toLocaleString("en-IN")}</ThemedTD>
                 <ThemedTD>Rs {summary.total_transport_amount.toLocaleString("en-IN")}</ThemedTD>

@@ -106,7 +106,7 @@ export default function AdminGuestUsers() {
           <tbody>
             {pagination.paginatedItems.map((guest, index) => (
               <ThemedTR key={guest.id} index={index}>
-                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index}</ThemedTD>
                 <ThemedTD>{guest.first_name} {guest.last_name}</ThemedTD>
                 <ThemedTD>{guest.email || "-"}</ThemedTD>
                 <ThemedTD>{guest.phone || "-"}</ThemedTD>

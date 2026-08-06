@@ -68,7 +68,7 @@ export default function AdminPlaces() {
           <tbody>
             {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No places found" /> : paginatedItems.map((place, index) => (
               <ThemedTR key={place.id} index={index}>
-                <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{startIndex + index}</ThemedTD>
                 <ThemedTD>{place.name}</ThemedTD>
                 <ThemedTD>{place.state || "-"}</ThemedTD>
                 <ThemedTD>{place.country || "-"}</ThemedTD>

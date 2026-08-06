@@ -48,7 +48,7 @@ export default function ViewTotalPax() {
           <tbody>
             {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={10} message="No bookings found" /> : paginatedItems.map((booking, index) => (
               <ThemedTR key={booking.id} index={index}>
-                <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{startIndex + index}</ThemedTD>
                 <ThemedTD>{booking.booking_number}</ThemedTD>
                 <ThemedTD>{booking.customer_name || "N/A"}</ThemedTD>
                 <ThemedTD>{booking.agent?.name || "Direct"}</ThemedTD>

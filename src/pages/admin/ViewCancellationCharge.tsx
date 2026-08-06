@@ -83,7 +83,7 @@ export default function ViewCancellationCharge() {
         <tbody>
           {pagination.paginatedItems.map((c, index) => (
             <ThemedTR key={c.id} index={index}>
-              <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{pagination.startIndex + index}</ThemedTD>
               <ThemedTD>{c.booking?.booking_number || "N/A"}</ThemedTD>
               <ThemedTD>{c.booking?.customer_name || "N/A"}</ThemedTD>
               <ThemedTD>{c.cancellation_date ? format(new Date(c.cancellation_date), "dd/MM/yyyy") : "N/A"}</ThemedTD>

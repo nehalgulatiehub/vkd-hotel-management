@@ -60,7 +60,7 @@ export default function AdminNews() {
           <tbody>
             {pagination.paginatedItems.map((item, index) => (
               <ThemedTR key={item.id} index={index}>
-                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index}</ThemedTD>
                 <ThemedTD>{item.title}</ThemedTD>
                 <ThemedTD>{item.content}</ThemedTD>
                 <ThemedTD>{format(new Date(item.created_at), "dd/MM/yyyy")}</ThemedTD>

@@ -46,7 +46,7 @@ export default function ViewReferenceList() {
           <tbody>
             {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={8} message="No bookings with references found" /> : paginatedItems.map((booking, index) => (
               <ThemedTR key={booking.id} index={index}>
-                <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{startIndex + index}</ThemedTD>
                 <ThemedTD><div>{booking.booking_number}</div><div>{formatDisplayDate(booking.check_in_date)} - {formatDisplayDate(booking.check_out_date)}</div></ThemedTD>
                 <ThemedTD>{booking.booking_type || "Agent"}</ThemedTD>
                 <ThemedTD><div>{booking.customer_name || "N/A"}</div><div>Contact: {booking.contact_no || "N/A"}</div></ThemedTD>

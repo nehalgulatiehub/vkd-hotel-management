@@ -62,7 +62,7 @@ export default function ViewReceivePayment() {
           <tbody>
             {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={9} message="No payments found" /> : paginatedItems.map((payment, index) => (
               <ThemedTR key={payment.id} index={index}>
-                <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{startIndex + index}</ThemedTD>
                 <ThemedTD>{payment.booking?.booking_number || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.booking?.customer_name || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.created_at ? format(new Date(payment.created_at), "dd/MM/yyyy") : "N/A"}</ThemedTD>

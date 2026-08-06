@@ -81,7 +81,7 @@ export default function ViewHotelDue() {
             <tbody>
               {pagination.paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={4} message="No another hotel data found" /> : pagination.paginatedItems.map((summary, idx) => (
                 <ThemedTR key={summary.hotel_id} index={idx}>
-                  <ThemedTD>{pagination.startIndex + idx + 1}</ThemedTD>
+                  <ThemedTD>{pagination.startIndex + idx}</ThemedTD>
                   <ThemedTD>{summary.latest_date ? new Date(summary.latest_date).toLocaleDateString("en-GB") : "-"}</ThemedTD>
                   <ThemedTD>{summary.hotel_name}</ThemedTD>
                   <ThemedTD>Rs {summary.due_amount.toLocaleString("en-IN")}</ThemedTD>

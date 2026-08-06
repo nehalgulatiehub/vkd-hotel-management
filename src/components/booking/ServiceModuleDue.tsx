@@ -72,7 +72,7 @@ export function ServiceModuleDue({ config }: { config: ServiceDueConfig }) {
           <tbody>
             {pagination.paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={7} message="No records found" /> : pagination.paginatedItems.map((r, index) => (
               <ThemedTR key={r.id} index={index}>
-                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index}</ThemedTD>
                 <ThemedTD>{r.bookings?.booking_number || "-"}</ThemedTD>
                 <ThemedTD>{r.bookings?.customer_name || "-"}</ThemedTD>
                 <ThemedTD>{r[config.nameField] || "-"}</ThemedTD>

@@ -40,7 +40,7 @@ export default function AdminRoomTypes() {
         <tbody>
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={2} message="No room types found" /> : paginatedItems.map((type, index) => (
             <ThemedTR key={type} index={index}>
-              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{startIndex + index}</ThemedTD>
               <ThemedTD>{type}</ThemedTD>
             </ThemedTR>
           ))}

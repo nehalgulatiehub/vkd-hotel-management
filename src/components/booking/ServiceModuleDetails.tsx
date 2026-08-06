@@ -111,7 +111,7 @@ export function ServiceModuleDetails({ config }: { config: ServiceModuleConfig }
                 <tr><td colSpan={7} style={{ ...tdStyle, textAlign: "center", padding: 20, color: "#999" }}>No {config.label.toLowerCase()} bookings found</td></tr>
               ) : paginatedItems.map((row, idx) => (
                 <tr key={row.id} style={{ backgroundColor: idx % 2 === 0 ? "#fff" : ROW_ALT }}>
-                  <td style={tdStyle}>{startIndex + idx + 1}</td>
+                  <td style={tdStyle}>{startIndex + idx}</td>
                   <td style={tdStyle}>{row.bookings?.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10 }}>{row.bookings?.agents?.name || ""}</div></> : "Direct"}</td>
                   <td style={tdStyle}>{getUserName(row.bookings?.created_by)}</td>
                   <td style={tdStyle}><div style={{ fontWeight: "bold" }}>{row.bookings?.customer_name || "-"}</div><div style={{ fontSize: 10 }}>Contact No.: {row.bookings?.contact_no || ""}</div></td>

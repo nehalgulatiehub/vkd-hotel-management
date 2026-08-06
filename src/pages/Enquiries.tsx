@@ -889,7 +889,7 @@ export default function Enquiries() {
                   ) : (
                     pagination.paginatedItems.map((enquiry, idx) => (
                       <tr key={enquiry.id} style={filterPanelStyle} className="align-top">
-                        <td className="p-2 border-b border-gray-300">{pagination.startIndex + idx + 1}</td>
+                        <td className="p-2 border-b border-gray-300">{pagination.startIndex + idx}</td>
                         <td className="p-2 border-b border-gray-300">{enquiry.enquiry_number}</td>
                         <td className="p-2 border-b border-gray-300">
                           {enquiry.agent_id ? `Agent (${enquiry.agents?.name || ""})` : "Direct"}
