@@ -313,20 +313,22 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         {/* Inclusions */}
         <div data-pdf-section className="mb-6 text-sm">
           <h3 className="font-bold mb-2 underline">Inclusions:</h3>
-          <ul className="list-disc ml-6 space-y-1">
-            <li>Welcome drink (Non-alcoholic) on arrival</li>
-            <li>Meals as per plan (at Restaurant)</li>
-            <li>Evening Hi Tea with cookies (at Restaurant)</li>
-            <li>Complimentary use of Swimming Pool (costumes mandatory)</li>
-            <li>Complimentary use of Gym</li>
-            <li>Complimentary use of Indoor/Outdoor games</li>
-            <li>Complimentary use of Adventure activities</li>
-            <li>Complimentary use of Wifi facility</li>
-          </ul>
+          {editing ? (
+            <>
+              <Multi k="inclusions" rows={8} />
+              <p className="text-xs text-gray-500 mt-1">One inclusion per line</p>
+            </>
+          ) : (
+            <ul className="list-disc ml-6 space-y-1">
+              {lines("inclusions").map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Bank Details */}
-        {companySettings && (companySettings.bank_name || companySettings.account_no) && (
+        {(editing || fields.bankName || fields.bankAccountNo) && (
           <div data-pdf-section className="mb-6">
             <h3 className="font-bold mb-2 text-sm underline">BANK DETAILS</h3>
             <table className="w-full border-collapse border border-gray-400 text-sm">
@@ -334,27 +336,27 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
                 <tr className="bg-gray-100">
                   <td className="border border-gray-400 p-2 w-8">1</td>
                   <td className="border border-gray-400 p-2 font-semibold">Beneficiary / Account Name</td>
-                  <td className="border border-gray-400 p-2">{companySettings.company_name || companyName}</td>
+                  <td className="border border-gray-400 p-2"><Val k="bankAccountName" /></td>
                 </tr>
                 <tr>
                   <td className="border border-gray-400 p-2">2</td>
                   <td className="border border-gray-400 p-2 font-semibold">Account No.</td>
-                  <td className="border border-gray-400 p-2">{companySettings.account_no || "-"}</td>
+                  <td className="border border-gray-400 p-2"><Val k="bankAccountNo" /></td>
                 </tr>
                 <tr className="bg-gray-50">
                   <td className="border border-gray-400 p-2">3</td>
                   <td className="border border-gray-400 p-2 font-semibold">BANK Name</td>
-                  <td className="border border-gray-400 p-2">{companySettings.bank_name || "-"}</td>
+                  <td className="border border-gray-400 p-2"><Val k="bankName" /></td>
                 </tr>
                 <tr>
                   <td className="border border-gray-400 p-2">4</td>
                   <td className="border border-gray-400 p-2 font-semibold">RTGS/NEFT/IFSC</td>
-                  <td className="border border-gray-400 p-2">{companySettings.ifsc_code || "-"}</td>
+                  <td className="border border-gray-400 p-2"><Val k="bankIfsc" /></td>
                 </tr>
                 <tr className="bg-gray-50">
                   <td className="border border-gray-400 p-2">5</td>
                   <td className="border border-gray-400 p-2 font-semibold">Branch Name / Address</td>
-                  <td className="border border-gray-400 p-2">{companySettings.branch_name || "-"}</td>
+                  <td className="border border-gray-400 p-2"><Val k="bankBranch" /></td>
                 </tr>
               </tbody>
             </table>
@@ -364,8 +366,13 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         {/* Special Requests */}
         <div data-pdf-section className="mb-4 text-sm">
           <h3 className="font-bold mb-1">SPECIAL REQUESTS</h3>
-          <p>Requests for anything not included above will be subject to availability and to be intimated at the time of check-in</p>
+          {editing ? (
+            <Multi k="specialRequests" rows={3} />
+          ) : (
+            lines("specialRequests").map((l, i) => <p key={i}>{l}</p>)
+          )}
         </div>
+
 
         {/* Contact Info */}
         <div data-pdf-section className="mb-4 text-sm">
