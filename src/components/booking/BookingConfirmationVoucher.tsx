@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import sitaraLogo from "@/assets/sitara-logo.png.asset.json";
-import winsomeLogo from "@/assets/mukut-logo.webp";
+import winsomeLogo from "@/assets/winsome-logo.png.asset.json";
 
 interface BookingConfirmationVoucherProps {
   bookingId: string;
@@ -23,7 +23,7 @@ type Brand = {
 
 const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
   winsome: {
-    logo: winsomeLogo,
+    logo: winsomeLogo.url,
     name: "Winsome Resort",
     subTitle: "Jim Corbett, Ramnagar",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
