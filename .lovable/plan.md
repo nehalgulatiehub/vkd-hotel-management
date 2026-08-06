@@ -1,44 +1,26 @@
-# Recovering old payment places
+# Split module amounts: View Booking shows only own-hotel money
 
-## What I checked
+## Goal
 
-There are 37 payments in total. 30 still have a payment place attached (delhi / corbett / winsome corbett / manali). 7 payments have no place at all — these are the ones whose old city was removed during the Payment Place cleanup.
+On View Booking (both user and admin), a booking row must show **only the own-hotel part** of the money — booking price, received and due. Safari, Delhi-Manali, Manali-Delhi, Another Hotel, Additional Vehicle, Visa and Cruise amounts stay out of that row and appear only on their own module detail / due / payment pages with their own prices.
 
-The old city names themselves were deleted from the cities list, and the database keeps no audit history of the removed rows, so the original names cannot be read back from the current database. They can only come from a database backup/snapshot, or be re-assigned by hand.
+Example: booking with own hotel 1000 + safari 2000 + another hotel 3000 shows Rs. 1000 on View Booking, Rs. 2000 on Safari Details, Rs. 3000 on Another Hotel Details.
 
-## The 7 payments missing a place
+## What changes
 
-| Date | Amount | Mode | Reference (hint) |
-| --- | --- | --- | --- |
-| 06/08/2026 | 6,000 | upi | received in icici mukut on 5/8/26 ref no-6217770345 |
-| 04/08/2026 | 6,000 | card | (blank) |
-| 04/08/2026 | 10,800 | cash | received 10800 by cash at winsome 4th Aug |
-| 03/08/2026 | 100,000 | cash | payment recd by cash on 31 july, in corbett |
-| 31/07/2026 | 5,000 | bank transfer | Received in bank on date 25 july 2026 |
-| 29/07/2026 | 112,000 | bank transfer | received 100000+12000 in icici spring 28th july |
-| plus 1 more with no usable hint | | | |
-
-## Options
-
-**Option A — Restore from a backup (only true recovery)**
-Use Cloud → Advanced settings to restore/inspect a snapshot taken before the city cleanup, read the old city names for these 7 payments, and re-apply them. This is the only way to get the exact original values back.
-
-**Option B — Re-assign the 7 payments manually (recommended, fast)**
-Set the place on these 7 payments using the visible hints, and leave the rest blank for you to confirm:
-- "cash at winsome" -> winsome corbett
-- "cash ... in corbett" -> corbett
-- the icici/bank-transfer ones -> delhi (typical for bank receipts) — only if you confirm
-- the remaining ones with no hint -> left blank until you tell me the place
-
-**Option C — Leave them blank**
-The Payment Place column simply shows "-" for those 7 rows; you set the correct place next time you edit each payment.
+1. **View Booking row money block** — Booking Price / Total Received / Due Payment are computed from the own-hotel record only, instead of the combined booking total.
+2. **Service checkmarks** — the "✓ Safari / ✓ Another Hotel / ✓ Delhi-Manali / ✓ Manali-Delhi / ✓ Add. Vehicle / ✓ Visa / ✓ Cruise" lines are removed from the View Booking service column, so the row only describes the own-hotel stay (hotel, room, rooms, package). Group Expenses stays as-is.
+3. **Summary footer** — Total Booking Price / Received / Due at the bottom of View Booking sum the own-hotel figures only (still user-wise for normal users, global for admin/account).
+4. **Bookings with no own hotel** stay hidden from View Booking (already the case) and remain visible on their module pages.
+5. **Module pages** keep using their own table rows, so their prices are already independent — verified for Safari, Volvo (DM/MD), Vehicle, Another Hotel, Visa, Cruise. Any place still reading the combined `bookings.total_amount` for a module row is switched to the module row's own amount.
+6. **Add Payment / View Payment from View Booking** records and displays the payment against the own-hotel part (payment type "booking"), so the own-hotel received/due stays correct and module payments stay on module pages.
 
 ## Technical notes
 
-- Deleted `cities` rows are gone; `payments.city_id` for these 7 rows was set to NULL to avoid foreign-key errors, so no hidden pointer to the old city remains.
-- Any re-assignment is a data migration that updates `payments.city_id` for those specific payment ids to one of the 4 current cities.
-- No schema or UI changes are needed for this task.
+- `fetchBookings` in `src/pages/Bookings.tsx` already loads `hotel_bookings`; it will additionally keep the own-hotel row (`own_hotel_id` not null) with its `total_amount`, and fetch that booking's payments grouped by `payment_type` so the own-hotel received amount = sum of payments with type `booking`/null.
+- Row display, filters that depend on amounts, and the summary reducer switch from `booking.total_amount / paid_amount / due_amount` to the derived own-hotel values; the underlying `bookings` totals stay untouched in the database (still the grand total used by vouchers/invoices).
+- No schema change and no migration; this is a read/display split in the frontend.
 
-## Recommendation
+## Out of scope
 
-Go with Option B: tell me the correct place for each of the 7 rows above (or approve my hint-based mapping), and I will update them in one migration.
+- Booking voucher, invoices and cancellation still use the full booking total.
