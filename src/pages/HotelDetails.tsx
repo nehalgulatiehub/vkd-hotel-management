@@ -65,6 +65,11 @@ export default function HotelDetails() {
   });
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
+  const totalBookingPrice = filteredBookings.reduce((s, b) => s + (b.room_rate || 0), 0);
+  const totalSellingPrice = filteredBookings.reduce((s, b) => s + (b.total_amount || 0), 0);
+  const netProfit = totalSellingPrice - totalBookingPrice;
+  const totalReceivedPayment = filteredBookings.reduce((s, b) => s + (b.paid_amount || 0), 0);
+  const totalDuePayment = filteredBookings.reduce((s, b) => s + (b.due_amount || 0), 0);
 
   return (
     <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
