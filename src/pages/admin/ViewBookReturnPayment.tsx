@@ -47,7 +47,7 @@ export default function ViewBookReturnPayment() {
           <tbody>
             {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={10} message="No refunds found" /> : paginatedItems.map((refund, index) => (
               <ThemedTR key={refund.id} index={index}>
-                <ThemedTD>{startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{startIndex + index}</ThemedTD>
                 <ThemedTD>{refund.booking?.booking_number || "N/A"}</ThemedTD>
                 <ThemedTD>{refund.booking?.customer_name || "N/A"}</ThemedTD>
                 <ThemedTD>{refund.refund_date ? format(new Date(refund.refund_date), "dd/MM/yyyy") : "N/A"}</ThemedTD>

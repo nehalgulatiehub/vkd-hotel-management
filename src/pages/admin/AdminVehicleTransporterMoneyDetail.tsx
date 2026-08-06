@@ -96,7 +96,7 @@ export default function AdminVehicleTransporterMoneyDetail() {
             <tbody>
               {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={8} message="No vehicle bookings found" /> : paginatedItems.map((booking, idx) => (
                 <ThemedTR key={booking.id} index={idx}>
-                  <ThemedTD>{startIndex + idx + 1}</ThemedTD>
+                  <ThemedTD>{startIndex + idx}</ThemedTD>
                   <ThemedTD>{booking.transporter?.name || "-"}</ThemedTD>
                   <ThemedTD>{booking.bookings?.created_at ? format(new Date(booking.bookings.created_at), "dd/MM/yyyy") : "-"}</ThemedTD>
                   <ThemedTD>{booking.bookings?.customer_name || "-"}</ThemedTD>

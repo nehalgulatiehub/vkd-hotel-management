@@ -82,7 +82,7 @@ export default function SafariDetails() {
                 <tr><td colSpan={7} style={{ ...tdStyle, textAlign: "center", padding: 20, color: "#999" }}>No safari bookings found</td></tr>
               ) : paginatedItems.map((booking, idx) => (
                 <tr key={booking.id} style={{ backgroundColor: idx % 2 === 0 ? "#fff" : ROW_ALT }}>
-                  <td style={tdStyle}>{startIndex + idx + 1}</td>
+                  <td style={tdStyle}>{startIndex + idx}</td>
                   <td style={tdStyle}>{booking.bookings?.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10 }}>{booking.bookings?.agents?.name || ""}</div></> : "Direct"}</td>
                   <td style={tdStyle}>{getUserName(booking.bookings?.created_by)}</td>
                   <td style={tdStyle}><div style={{ fontWeight: "bold" }}>{booking.bookings?.customer_name || "-"}</div><div style={{ fontSize: 10 }}>Contact No.: {booking.bookings?.contact_no || ""}</div></td>

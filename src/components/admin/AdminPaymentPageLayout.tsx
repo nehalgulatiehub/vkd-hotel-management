@@ -556,7 +556,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
               <tbody>
                 {paginatedItems.map((payment, index) => (
                   <tr key={payment.id} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#f6f0f0" }}>
-                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{startIndex + index + 1}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{startIndex + index}</td>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                       <div>Booking:</div>
                       <div>{payment.booking?.check_in_date ? format(new Date(payment.booking.check_in_date), "dd/MM/yyyy") : ""}</div>

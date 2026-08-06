@@ -78,7 +78,7 @@ export function ServiceModulePayments({ config }: { config: ServicePaymentsConfi
         <tbody>
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={6} message="No payments found" /> : paginatedItems.map((p, index) => (
             <ThemedTR key={p.id} index={index}>
-              <ThemedTD>{startIndex + index + 1}</ThemedTD>
+              <ThemedTD>{startIndex + index}</ThemedTD>
               <ThemedTD>{p.bookings?.booking_number || "-"}</ThemedTD>
               <ThemedTD>{p.bookings?.customer_name || "-"}</ThemedTD>
               <ThemedTD>Rs. {p.amount?.toLocaleString("en-IN")}/-</ThemedTD>

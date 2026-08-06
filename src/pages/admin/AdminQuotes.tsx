@@ -67,7 +67,7 @@ export default function AdminQuotes() {
           <tbody>
             {pagination.paginatedItems.map((item, index) => (
               <ThemedTR key={item.id} index={index}>
-                <ThemedTD>{pagination.startIndex + index + 1}</ThemedTD>
+                <ThemedTD>{pagination.startIndex + index}</ThemedTD>
                 <ThemedTD>{item.text}</ThemedTD>
                 <ThemedTD>{item.author || "-"}</ThemedTD>
                 <ThemedTD>{format(new Date(item.created_at), "dd/MM/yyyy")}</ThemedTD>
