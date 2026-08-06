@@ -416,11 +416,12 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
         {/* Footer */}
         <div data-pdf-section className="text-sm border-t border-gray-300 pt-4">
-          <p className="font-semibold">Thanks &amp; Regards,</p>
-          <p>{companyName}</p>
-          {companyAddress && <p className="text-gray-600">{companyAddress}</p>}
-          {companyContact && <p className="text-gray-600">Mobile: {companyContact}</p>}
+          <p className="font-semibold"><Val k="footerSalutation" className="font-semibold" /></p>
+          <p><Val k="footerCompany" /></p>
+          <p className="text-gray-600"><Val k="footerAddress" /></p>
+          <p className="text-gray-600">{editing ? <Val k="footerMobile" /> : (fields.footerMobile ? `Mobile: ${fields.footerMobile}` : "")}</p>
         </div>
+
       </div>
 
       {/* Action Buttons - hidden during print */}
