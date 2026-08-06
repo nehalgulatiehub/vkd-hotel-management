@@ -2,203 +2,198 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRoomNames } from "@/hooks/useRoomNames";
 
 interface BookingDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking: any;
-  serviceType: "safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md" | "visa" | "cruise";
-  serviceData: any;
+  serviceType?: "safari" | "vehicle" | "hotel" | "volvo_dm" | "volvo_md" | "visa" | "cruise";
+  serviceData?: any;
 }
 
-export function BookingDetailsDialog({ 
-  open, 
-  onOpenChange, 
-  booking, 
-  serviceType, 
-  serviceData 
+const normalizeRoute = (route: unknown) =>
+  String(route ?? "").toLowerCase().replace(/\s+/g, "").replace(/[-_]/g, "");
+
+export function BookingDetailsDialog({
+  open,
+  onOpenChange,
+  booking,
+  serviceData,
 }: BookingDetailsDialogProps) {
-  const [resolvedRoomName, setResolvedRoomName] = useState<string | null>(null);
+  const { roomName } = useRoomNames();
+  const [data, setData] = useState<any>(null);
+  const [transporters, setTransporters] = useState<any[]>([]);
 
-  // Resolve room UUID to name when dialog opens
   useEffect(() => {
-    const resolveRoomName = async () => {
-      if (!serviceData?.room_type) {
-        setResolvedRoomName(null);
-        return;
-      }
+    const load = async () => {
+      if (!open || !booking?.id) return;
+      const [hotels, safaris, volvos, vehicles, visas, cruises, transp] = await Promise.all([
+        supabase
+          .from("hotel_bookings")
+          .select("*, own_hotels(name), another_hotels(name)")
+          .eq("booking_id", booking.id),
+        supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
+        (supabase as any).from("visa_bookings").select("*").eq("booking_id", booking.id),
+        (supabase as any).from("cruise_bookings").select("*").eq("booking_id", booking.id),
+        supabase.from("transporters").select("id, name"),
+      ]);
 
-      const roomType = serviceData.room_type;
-      // Check if it's a UUID
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(roomType);
-      
-      if (isUUID) {
-        const { data } = await supabase
-          .from("rooms")
-          .select("room_type, room_number")
-          .eq("id", roomType)
-          .maybeSingle();
-        
-        if (data) {
-          setResolvedRoomName(data.room_type || data.room_number || roomType);
-        } else {
-          setResolvedRoomName(roomType);
-        }
-      } else {
-        setResolvedRoomName(roomType);
-      }
+      const hotelRows = hotels.data || [];
+      setTransporters(transp.data || []);
+      setData({
+        ownHotels: hotelRows.filter((h: any) => h.own_hotel_id),
+        anotherHotels: hotelRows.filter((h: any) => !h.own_hotel_id && h.hotel_id),
+        safaris: safaris.data || [],
+        volvoDM: (volvos.data || []).filter((v: any) => normalizeRoute(v.route) === "delhimanali"),
+        volvoMD: (volvos.data || []).filter((v: any) => normalizeRoute(v.route) === "manalidelhi"),
+        vehicles: vehicles.data || [],
+        visas: visas.data || [],
+        cruises: cruises.data || [],
+      });
     };
+    load();
+  }, [open, booking?.id]);
 
-    if (open && serviceData) {
-      resolveRoomName();
-    }
-  }, [open, serviceData]);
-
-  if (!booking || !serviceData) return null;
+  if (!booking) return null;
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
-    return format(new Date(date), "dd/MM/yyyy");
+    try {
+      return format(new Date(date), "dd/MM/yyyy");
+    } catch {
+      return "-";
+    }
   };
 
-  const formatPrice = (amount: number | null) => {
-    return `Rs. ${(amount || 0).toLocaleString('en-IN')}/-`;
-  };
+  const formatPrice = (amount: number | null | undefined) =>
+    `Rs. ${(Number(amount) || 0).toLocaleString("en-IN")}/-`;
 
-  const renderRow = (label: string, value: string | number | null, isBold?: boolean) => (
-    <tr>
-      <td className={`pr-4 py-0.5 ${isBold ? 'font-bold' : ''}`} style={{ width: '45%' }}>{label}</td>
-      <td className="py-0.5">{value || "-"}</td>
+  const transporterName = (id?: string | null) =>
+    (id && transporters.find((t) => t.id === id)?.name) || "-";
+
+  const renderRow = (label: string, value: any, key?: string) => (
+    <tr key={key || label}>
+      <td className="pr-4 py-0.5" style={{ width: "45%" }}>{label}</td>
+      <td className="py-0.5">{value === 0 ? 0 : value || "-"}</td>
     </tr>
   );
 
-  const renderSectionHeader = (title: string) => (
-    <tr>
+  const renderSectionHeader = (title: string, key?: string) => (
+    <tr key={key || title}>
       <td colSpan={2} className="font-bold pt-2 pb-1">{title}</td>
     </tr>
   );
 
-  const renderSafariDetails = () => (
-    <>
-      {renderSectionHeader("Safari :")}
-      {renderRow("Safari Name :", serviceData.safari_name)}
-      {renderRow("Safari Booking Date :", formatDate(booking.created_at))}
-      {renderRow("Safari Date :", formatDate(serviceData.safari_date))}
-      {renderRow("No of Persons :", serviceData.number_of_persons)}
-      {renderRow("Safari Booking Price :", formatPrice(serviceData.rate_per_person))}
-      {renderRow("Safari Selling Price :", formatPrice(serviceData.total_amount))}
-    </>
-  );
+  const sections: JSX.Element[] = [];
 
-  const renderVehicleDetails = () => (
-    <>
-      {renderSectionHeader("Another Vehicle :")}
-      {renderRow("Vehicle Details :", serviceData.vehicle_type)}
-      {renderRow("Vehicle Selling Price :", formatPrice(serviceData.total_amount))}
-      {renderRow("Vehicle Booking Price :", formatPrice(serviceData.rate))}
-      {renderRow("Transporter :", serviceData.transporters?.name)}
-      {renderRow("Vehicle Booking Date :", formatDate(booking.created_at))}
-      {renderRow("Vehicle Journey Date :", formatDate(serviceData.pickup_date))}
-    </>
-  );
+  (data?.ownHotels || []).forEach((h: any, i: number) => {
+    sections.push(
+      renderSectionHeader("Hotel :", `own-h-${i}`),
+      renderRow("Hotel Name :", h.own_hotels?.name, `own-n-${i}`),
+      renderRow("Number of Rooms :", h.number_of_rooms, `own-r-${i}`),
+      renderRow("Room Name :", roomName(h.room_type), `own-rt-${i}`),
+      renderRow("Hotel Booking Date :", formatDate(booking.created_at), `own-bd-${i}`),
+      renderRow("Hotel Check In :", formatDate(h.check_in_date), `own-ci-${i}`),
+      renderRow("Hotel Check Out :", formatDate(h.check_out_date), `own-co-${i}`),
+      renderRow("Room Selling Price :", formatPrice(h.total_amount), `own-sp-${i}`),
+      ...(h.notes ? [renderRow("Hotel Notes :", h.notes, `own-nt-${i}`)] : []),
+    );
+  });
 
-  const renderHotelDetails = () => {
-    // Check if this is an Own Hotel (has own_hotel_id and own_hotels data) or Another Hotel (has hotel_id and another_hotels data)
-    const isOwnHotel = serviceData.own_hotel_id && serviceData.own_hotels?.name;
-    const isAnotherHotel = serviceData.hotel_id && serviceData.another_hotels?.name;
-    
-    // Use resolved room name or fallback to raw value
-    const roomName = resolvedRoomName || serviceData.room_type || "-";
-    
-    if (isOwnHotel) {
-      // Own Hotel Section
-      return (
-        <>
-          {renderSectionHeader("Hotel :")}
-          {renderRow("Hotel Name :", serviceData.own_hotels?.name)}
-          {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-          {renderRow("Room Name :", roomName)}
-          {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
-          {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
-          {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
-          {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
-        </>
-      );
-    } else if (isAnotherHotel) {
-      // Another Hotel Section
-      return (
-        <>
-          {renderSectionHeader("Another Hotel :")}
-          {renderRow("Another Hotel Name :", serviceData.another_hotels?.name)}
-          {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-          {renderRow("Room Type :", roomName)}
-          {renderRow("Hotel Booking Date :", formatDate(booking.created_at))}
-          {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
-          {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
-          {renderRow("Room Booking Price :", formatPrice(serviceData.room_rate))}
-          {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
-        </>
-      );
-    } else {
-      // Fallback - show generic hotel info
-      return (
-        <>
-          {renderSectionHeader("Hotel :")}
-          {renderRow("Number of Rooms :", serviceData.number_of_rooms)}
-          {renderRow("Room Type :", roomName)}
-          {renderRow("Hotel Check In :", formatDate(serviceData.check_in_date))}
-          {renderRow("Hotel Check Out :", formatDate(serviceData.check_out_date))}
-          {renderRow("Room Selling Price :", formatPrice(serviceData.total_amount))}
-        </>
-      );
-    }
+  (data?.anotherHotels || []).forEach((h: any, i: number) => {
+    sections.push(
+      renderSectionHeader("Another Hotel :", `ah-h-${i}`),
+      renderRow("Another Hotel Name :", h.another_hotels?.name, `ah-n-${i}`),
+      renderRow("Number of Rooms :", h.number_of_rooms, `ah-r-${i}`),
+      renderRow("Room Type :", roomName(h.room_type), `ah-rt-${i}`),
+      renderRow("Hotel Booking Date :", formatDate(booking.created_at), `ah-bd-${i}`),
+      renderRow("Hotel Check In :", formatDate(h.check_in_date), `ah-ci-${i}`),
+      renderRow("Hotel Check Out :", formatDate(h.check_out_date), `ah-co-${i}`),
+      renderRow("Room Booking Price :", formatPrice(h.room_rate), `ah-bp-${i}`),
+      renderRow("Room Selling Price :", formatPrice(h.total_amount), `ah-sp-${i}`),
+      ...(h.notes ? [renderRow("Hotel Notes :", h.notes, `ah-nt-${i}`)] : []),
+    );
+  });
+
+  (data?.safaris || []).forEach((s: any, i: number) => {
+    sections.push(
+      renderSectionHeader("Safari :", `sf-h-${i}`),
+      renderRow("Transporter :", s.safari_name, `sf-n-${i}`),
+      renderRow("Safari Booking Date :", formatDate(booking.created_at), `sf-bd-${i}`),
+      renderRow("Safari Date :", formatDate(s.safari_date), `sf-d-${i}`),
+      renderRow("No of Safari :", s.number_of_persons, `sf-p-${i}`),
+      renderRow("Safari Booking Price :", formatPrice(s.rate_per_person), `sf-bp-${i}`),
+      renderRow("Safari Selling Price :", formatPrice(s.total_amount), `sf-sp-${i}`),
+      ...(s.notes ? [renderRow("Safari Notes :", s.notes, `sf-nt-${i}`)] : []),
+    );
+  });
+
+  const volvoSection = (v: any, title: string, prefix: string) => {
+    const notes = String(v.notes || "");
+    const ticket = notes.match(/Ticket No:\s*([^,]*)/i)?.[1]?.trim();
+    const seat = notes.match(/Seat No:\s*(.*)$/i)?.[1]?.trim();
+    return [
+      renderSectionHeader(title, `${prefix}-h`),
+      renderRow("No. of Tickets :", v.number_of_seats, `${prefix}-t`),
+      renderRow("Ticket No. :", ticket, `${prefix}-tn`),
+      renderRow("Seat No. :", seat, `${prefix}-sn`),
+      renderRow("Transporter :", transporterName(v.transporter_id), `${prefix}-tr`),
+      renderRow("Volvo Booking Date :", formatDate(booking.created_at), `${prefix}-bd`),
+      renderRow("Volvo Journey Date :", formatDate(v.travel_date), `${prefix}-jd`),
+      renderRow("Volvo Booking Price :", formatPrice(v.rate_per_seat), `${prefix}-bp`),
+      renderRow("Volvo Selling Price :", formatPrice(v.total_amount), `${prefix}-sp`),
+      ...(v.notes ? [renderRow("Volvo Notes :", v.notes, `${prefix}-nt`)] : []),
+    ];
   };
 
-  const renderVolvoDetails = () => (
-    <>
-      {renderSectionHeader(serviceType === "volvo_dm" ? "Delhi - Manali :" : "Manali - Delhi :")}
-      {renderRow("No. of Tickets :", serviceData.number_of_seats)}
-      {renderRow("Ticket No. :", serviceData.ticket_number)}
-      {renderRow("Seat No. :", serviceData.seat_numbers)}
-      {renderRow("Transporter :", serviceData.transporters?.name)}
-      {renderRow("Volvo Booking Date :", formatDate(booking.created_at))}
-      {renderRow("Volvo Journey Date :", formatDate(serviceData.travel_date))}
-      {renderRow("Volvo Booking Price :", formatPrice(serviceData.rate_per_seat))}
-      {renderRow("Volvo Selling Price :", formatPrice(serviceData.total_amount))}
-    </>
-  );
+  (data?.volvoDM || []).forEach((v: any, i: number) => {
+    sections.push(...volvoSection(v, "Delhi - Manali :", `dm-${i}`));
+  });
+  (data?.volvoMD || []).forEach((v: any, i: number) => {
+    sections.push(...volvoSection(v, "Manali - Delhi :", `md-${i}`));
+  });
 
-  const renderGenericServiceDetails = (title: string, nameLabel: string, nameField: string, dateField: string) => (
-    <>
-      {renderSectionHeader(`${title} :`)}
-      {renderRow(`${nameLabel} :`, serviceData[nameField])}
-      {renderRow(`${title} Booking Date :`, formatDate(booking.created_at))}
-      {renderRow(`${title} Date :`, formatDate(serviceData[dateField]))}
-      {renderRow("No of Persons :", serviceData.number_of_persons)}
-      {renderRow(`${title} Booking Price :`, formatPrice(serviceData.rate_per_person))}
-      {renderRow(`${title} Selling Price :`, formatPrice(serviceData.total_amount))}
-    </>
-  );
+  (data?.vehicles || []).forEach((v: any, i: number) => {
+    sections.push(
+      renderSectionHeader("Another Vehicle :", `vh-h-${i}`),
+      renderRow("Vehicle Details :", v.vehicle_type, `vh-t-${i}`),
+      renderRow("Vehicle Booking Price :", formatPrice(v.rate), `vh-bp-${i}`),
+      renderRow("Vehicle Selling Price :", formatPrice(v.total_amount), `vh-sp-${i}`),
+      renderRow("Transporter :", v.transporters?.name || transporterName(v.transporter_id), `vh-tr-${i}`),
+      renderRow("Vehicle Booking Date :", formatDate(booking.created_at), `vh-bd-${i}`),
+      renderRow("Vehicle Journey Date :", formatDate(v.pickup_date), `vh-jd-${i}`),
+      ...(v.notes ? [renderRow("Vehicle Notes :", v.notes, `vh-nt-${i}`)] : []),
+    );
+  });
 
-  const renderServiceDetails = () => {
-    switch (serviceType) {
-      case "safari":
-        return renderSafariDetails();
-      case "vehicle":
-        return renderVehicleDetails();
-      case "hotel":
-        return renderHotelDetails();
-      case "volvo_dm":
-      case "volvo_md":
-        return renderVolvoDetails();
-      case "visa":
-        return renderGenericServiceDetails("Visa", "Visa Name", "visa_name", "visa_date");
-      case "cruise":
-        return renderGenericServiceDetails("Cruise", "Cruise Name", "cruise_name", "cruise_date");
-      default:
-        return null;
-    }
-  };
+  (data?.visas || []).forEach((v: any, i: number) => {
+    sections.push(
+      renderSectionHeader("Visa :", `vs-h-${i}`),
+      renderRow("Visa Name :", v.visa_name, `vs-n-${i}`),
+      renderRow("Visa Booking Date :", formatDate(booking.created_at), `vs-bd-${i}`),
+      renderRow("Visa Date :", formatDate(v.visa_date), `vs-d-${i}`),
+      renderRow("No of Persons :", v.number_of_persons, `vs-p-${i}`),
+      renderRow("Visa Booking Price :", formatPrice(v.rate_per_person), `vs-bp-${i}`),
+      renderRow("Visa Selling Price :", formatPrice(v.total_amount), `vs-sp-${i}`),
+      ...(v.notes ? [renderRow("Visa Notes :", v.notes, `vs-nt-${i}`)] : []),
+    );
+  });
+
+  (data?.cruises || []).forEach((c: any, i: number) => {
+    sections.push(
+      renderSectionHeader("Cruise :", `cr-h-${i}`),
+      renderRow("Cruise Name :", c.cruise_name, `cr-n-${i}`),
+      renderRow("Cruise Booking Date :", formatDate(booking.created_at), `cr-bd-${i}`),
+      renderRow("Cruise Date :", formatDate(c.cruise_date), `cr-d-${i}`),
+      renderRow("No of Persons :", c.number_of_persons, `cr-p-${i}`),
+      renderRow("Cruise Booking Price :", formatPrice(c.rate_per_person), `cr-bp-${i}`),
+      renderRow("Cruise Selling Price :", formatPrice(c.total_amount), `cr-sp-${i}`),
+      ...(c.notes ? [renderRow("Cruise Notes :", c.notes, `cr-nt-${i}`)] : []),
+    );
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -206,7 +201,7 @@ export function BookingDetailsDialog({
         <DialogHeader className="px-4 py-3" style={{ backgroundColor: "#b44a50" }}>
           <DialogTitle className="text-white text-sm font-semibold">View Booking Details</DialogTitle>
         </DialogHeader>
-        
+
         <div className="p-4">
           <div className="border border-gray-400 rounded" style={{ backgroundColor: "#f6f0f0" }}>
             <div className="p-4 text-[12px]">
@@ -224,8 +219,8 @@ export function BookingDetailsDialog({
                   {renderRow("Booking From :", formatDate(booking.check_in_date))}
                   {renderRow("Booking To :", formatDate(booking.check_out_date))}
                   {booking.cheque_no && renderRow("Cheque No :", booking.cheque_no)}
-                  {renderServiceDetails()}
-                  {serviceData?.notes && renderRow("Package / Notes :", serviceData.notes)}
+                  {sections}
+                  {serviceData?.notes && !data && renderRow("Package / Notes :", serviceData.notes)}
                   {booking.special_requests && renderRow("Special Requests :", booking.special_requests)}
                   {booking.notes && renderRow("Booking Notes :", booking.notes)}
                   {renderRow("Date :", formatDate(booking.created_at))}
