@@ -57,6 +57,12 @@ import VisaPayments from "./pages/VisaPayments";
 import CruiseDetails from "./pages/CruiseDetails";
 import CruiseDue from "./pages/CruiseDue";
 import CruisePayments from "./pages/CruisePayments";
+import AdminVisaPendingPayments from "./pages/admin/AdminVisaPendingPayments";
+import AdminVisaApprovedPayments from "./pages/admin/AdminVisaApprovedPayments";
+import AdminCruisePendingPayments from "./pages/admin/AdminCruisePendingPayments";
+import AdminCruiseApprovedPayments from "./pages/admin/AdminCruiseApprovedPayments";
+import AdminAddVisaPayment from "./pages/admin/AdminAddVisaPayment";
+import AdminAddCruisePayment from "./pages/admin/AdminAddCruisePayment";
 import VolvoPayments from "./pages/VolvoPayments";
 import HotelDetails from "./pages/HotelDetails";
 import HotelDue from "./pages/HotelDue";
@@ -500,6 +506,19 @@ const App = () => (
           <Route path="/account/cruise-details" element={<AccountLayout><CruiseDetails /></AccountLayout>} />
           <Route path="/account/cruise-due" element={<AccountLayout><CruiseDue /></AccountLayout>} />
           <Route path="/account/cruise-payments" element={<AccountLayout><CruisePayments /></AccountLayout>} />
+          {/* Visa & Cruise Manager (Admin + Account) */}
+          <Route path="/admin/visa-pending" element={<AdminLayout><AdminVisaPendingPayments /></AdminLayout>} />
+          <Route path="/admin/visa-approved" element={<AdminLayout><AdminVisaApprovedPayments /></AdminLayout>} />
+          <Route path="/admin/add-visa-payment" element={<AdminLayout><AdminAddVisaPayment /></AdminLayout>} />
+          <Route path="/admin/cruise-pending" element={<AdminLayout><AdminCruisePendingPayments /></AdminLayout>} />
+          <Route path="/admin/cruise-approved" element={<AdminLayout><AdminCruiseApprovedPayments /></AdminLayout>} />
+          <Route path="/admin/add-cruise-payment" element={<AdminLayout><AdminAddCruisePayment /></AdminLayout>} />
+          <Route path="/account/visa-pending" element={<AccountLayout><AdminVisaPendingPayments /></AccountLayout>} />
+          <Route path="/account/visa-approved" element={<AccountLayout><AdminVisaApprovedPayments /></AccountLayout>} />
+          <Route path="/account/add-visa-payment" element={<AccountLayout><AdminAddVisaPayment /></AccountLayout>} />
+          <Route path="/account/cruise-pending" element={<AccountLayout><AdminCruisePendingPayments /></AccountLayout>} />
+          <Route path="/account/cruise-approved" element={<AccountLayout><AdminCruiseApprovedPayments /></AccountLayout>} />
+          <Route path="/account/add-cruise-payment" element={<AccountLayout><AdminAddCruisePayment /></AccountLayout>} />
 
           <Route
             path="/payments/hotel"
