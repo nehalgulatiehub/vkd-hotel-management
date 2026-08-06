@@ -1596,6 +1596,22 @@ export default function Bookings() {
       });
       setVehiclesList(loadedVehicles.length ? loadedVehicles : [{ ...emptyVehicleEntry }]);
 
+      // Load existing Another Hotel rows so editing does not wipe them
+      setAnotherHotelsList(
+        anotherHotelRows.length
+          ? anotherHotelRows.map((h: any) => ({
+              hotel_id: h.hotel_id || "",
+              num_rooms: h.number_of_rooms?.toString() || "",
+              room_type: h.room_type || "",
+              check_in: h.check_in_date || "",
+              check_out: h.check_out_date || "",
+              booking_price: h.room_rate?.toString() || "",
+              selling_price: h.total_amount?.toString() || "",
+              note: h.notes || ""
+            }))
+          : [{ hotel_id: "", num_rooms: "", room_type: "", check_in: "", check_out: "", booking_price: "", selling_price: "", note: "" }]
+      );
+
       // Load rooms if hotel is selected
       if (hotelBooking?.hotel_id) {
         fetchRoomsForHotel(hotelBooking.hotel_id);
