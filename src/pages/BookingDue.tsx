@@ -759,7 +759,7 @@ export default function BookingDue() {
           setShowViewPaymentDialog={paymentDialog.setShowViewPaymentDialog}
           showPaymentDialog={paymentDialog.showPaymentDialog}
           setShowPaymentDialog={paymentDialog.setShowPaymentDialog}
-          selectedBooking={paymentDialog.selectedBooking}
+          selectedBooking={paymentDialog.selectedBooking} serviceTotals={paymentDialog.serviceTotals}
           bookingPayments={paymentDialog.bookingPayments}
           paymentAmount={paymentDialog.paymentAmount}
           setPaymentAmount={paymentDialog.setPaymentAmount}

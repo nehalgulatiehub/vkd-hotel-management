@@ -22,6 +22,7 @@ interface PaymentDialogsProps {
   setPaymentReference: (ref: string) => void;
   isSubmittingPayment: boolean;
   onSubmitPayment: () => void;
+  serviceTotals?: { label: string; total: number; paid: number; due: number } | null;
   onEditPayment?: (payment: any) => void;
   onDeletePayment?: (paymentId: string) => void;
 }
@@ -41,6 +42,7 @@ export function PaymentDialogs({
   setPaymentReference,
   isSubmittingPayment,
   onSubmitPayment,
+  serviceTotals,
   onEditPayment,
   onDeletePayment,
 }: PaymentDialogsProps) {
@@ -220,6 +222,22 @@ export function PaymentDialogs({
             <DialogTitle>Add Payment - {selectedBooking?.booking_number}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {serviceTotals && (
+              <div className="space-y-2">
+                <div>
+                  <Label>{serviceTotals.label} Total Amount</Label>
+                  <Input value={`Rs. ${serviceTotals.total.toLocaleString("en-IN")}/-`} disabled />
+                </div>
+                <div>
+                  <Label>{serviceTotals.label} Received Amount</Label>
+                  <Input value={`Rs. ${serviceTotals.paid.toLocaleString("en-IN")}/-`} disabled />
+                </div>
+                <div>
+                  <Label>{serviceTotals.label} Due Amount</Label>
+                  <Input value={`Rs. ${serviceTotals.due.toLocaleString("en-IN")}/-`} disabled className="text-destructive font-semibold" />
+                </div>
+              </div>
+            )}
             <div>
               <Label>Amount *</Label>
               <Input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="Enter amount" />

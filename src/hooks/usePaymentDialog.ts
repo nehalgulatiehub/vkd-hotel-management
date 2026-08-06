@@ -7,11 +7,32 @@ interface ServiceInfo {
   id: string;
 }
 
+const SERVICE_TABLES: Record<string, string> = {
+  safari: "safari_bookings",
+  hotel: "hotel_bookings",
+  vehicle: "vehicle_bookings",
+  volvo_dm: "volvo_bookings",
+  volvo_md: "volvo_bookings",
+  visa: "visa_bookings",
+  cruise: "cruise_bookings",
+};
+
+const SERVICE_LABELS: Record<string, string> = {
+  safari: "Safari",
+  hotel: "Hotel",
+  vehicle: "Vehicle",
+  volvo_dm: "D-M Volvo",
+  volvo_md: "M-D Volvo",
+  visa: "Visa",
+  cruise: "Cruise",
+};
+
 export function usePaymentDialog(onPaymentSuccess?: () => void) {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showViewPaymentDialog, setShowViewPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [selectedService, setSelectedService] = useState<ServiceInfo | null>(null);
+  const [serviceTotals, setServiceTotals] = useState<{ label: string; total: number; paid: number; due: number } | null>(null);
   const [bookingPayments, setBookingPayments] = useState<any[]>([]);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
@@ -27,22 +48,45 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setBookingPayments(data || []);
   };
 
+  // Loads the respective service module's own amount / received / due
+  const fetchServiceTotals = async (serviceInfo?: ServiceInfo) => {
+    if (!serviceInfo) { setServiceTotals(null); return; }
+    const table = SERVICE_TABLES[serviceInfo.type];
+    if (!table) { setServiceTotals(null); return; }
+    const { data } = await (supabase as any)
+      .from(table)
+      .select("total_amount, paid_amount, due_amount")
+      .eq("id", serviceInfo.id)
+      .maybeSingle();
+    if (!data) { setServiceTotals(null); return; }
+    setServiceTotals({
+      label: SERVICE_LABELS[serviceInfo.type] || "",
+      total: Number(data.total_amount) || 0,
+      paid: Number(data.paid_amount) || 0,
+      due: Number(data.due_amount) || 0,
+    });
+  };
+
   const handleViewPayment = async (booking: any, serviceInfo?: ServiceInfo) => {
     setSelectedBooking(booking);
     setSelectedService(serviceInfo || null);
     setBookingPayments([]);
     setShowViewPaymentDialog(true);
     await fetchBookingPayments(booking.id);
+    fetchServiceTotals(serviceInfo);
   };
 
   const handleAddPayment = (booking: any, serviceInfo?: ServiceInfo) => {
     setSelectedBooking(booking);
     setSelectedService(serviceInfo || null);
+    setServiceTotals(null);
     setPaymentAmount("");
     setPaymentMode("");
     setPaymentReference("");
     setShowPaymentDialog(true);
+    fetchServiceTotals(serviceInfo);
   };
+
 
   const submitPayment = async () => {
     if (!paymentAmount || !paymentMode) {
@@ -127,6 +171,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setShowViewPaymentDialog,
     selectedBooking,
     selectedService,
+    serviceTotals,
     bookingPayments,
     paymentAmount,
     setPaymentAmount,
