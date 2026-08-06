@@ -71,12 +71,14 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         .order("payment_date", { ascending: false });
 
       // Fetch service-specific data
-      const [safariRes, hotelRes, vehicleRes, volvoDMRes, volvomDRes] = await Promise.all([
+      const [safariRes, hotelRes, vehicleRes, volvoDMRes, volvomDRes, visaRes, cruiseRes] = await Promise.all([
         supabase.from("safari_bookings").select("id, booking_id, safari_date, total_amount, paid_amount, due_amount").eq("booking_id", bookingId),
-        supabase.from("hotel_bookings").select("id, booking_id, check_in_date, total_amount, paid_amount, due_amount, another_hotels(name), own_hotels(name)").eq("booking_id", bookingId),
+        supabase.from("hotel_bookings").select("id, booking_id, check_in_date, total_amount, paid_amount, due_amount, own_hotel_id, another_hotels(name), own_hotels(name)").eq("booking_id", bookingId),
         supabase.from("vehicle_bookings").select("id, booking_id, pickup_date, total_amount, paid_amount, due_amount, transporters(name)").eq("booking_id", bookingId),
         supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId).eq("route", "delhi_manali"),
         supabase.from("volvo_bookings").select("id, booking_id, travel_date, total_amount, paid_amount, due_amount, route").eq("booking_id", bookingId).eq("route", "manali_delhi"),
+        supabase.from("visa_bookings").select("id, booking_id, visa_date, total_amount").eq("booking_id", bookingId),
+        supabase.from("cruise_bookings").select("id, booking_id, cruise_date, total_amount").eq("booking_id", bookingId),
       ]);
 
       // Group payments by type
@@ -87,17 +89,35 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         return Number.isFinite(amount) ? amount : 0;
       };
 
-      // Booking row is the full booking amount, not total minus services.
-      const bookingTotal = toAmount(bookingData.total_amount);
+      const bookingGrandTotal = toAmount(bookingData.total_amount);
 
       // Determine hotel context
-      const hasOwnHotel = (hotelRes.data || []).some((h: any) => h.own_hotels);
-      const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotels);
+      const ownHotelData = (hotelRes.data || []).filter((h: any) => h.own_hotel_id || h.own_hotels);
+      const hasOwnHotel = ownHotelData.length > 0;
+      const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotel_id && !h.own_hotels);
       const hasAnotherHotel = anotherHotelData.length > 0;
       const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
       // When the booking is on an another_hotel (not our own), skip the generic "Booking" row
       // and show only the "Another Hotel" section. Otherwise show the Booking row as usual.
       const showBookingRow = !(hasAnotherHotel && !hasOwnHotel);
+
+      // Payments tagged to a specific service module never belong to the Booking (own hotel) row
+      const MODULE_PAYMENT_TYPES = new Set([
+        "safari", "hotel", "another_hotel", "vehicle",
+        "volvo_dm", "volvo_md", "delhi_manali", "manali_delhi", "visa", "cruise",
+      ]);
+
+      // Module totals (used to derive the own-hotel share of the booking amount)
+      const safariTotalAmount = (safariRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
+      const dmTotalAmount = (volvoDMRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
+      const mdTotalAmount = (volvomDRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
+      const vehicleTotalAmount = (vehicleRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
+      const anotherHotelTotalAmount = anotherHotelData.reduce((s: number, r: any) => s + toAmount(r.total_amount), 0);
+      const visaTotalAmount = (visaRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
+      const cruiseTotalAmount = (cruiseRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
+      const modulesTotalAmount = safariTotalAmount + dmTotalAmount + mdTotalAmount + vehicleTotalAmount
+        + anotherHotelTotalAmount + visaTotalAmount + cruiseTotalAmount;
+      const ownHotelTotalAmount = ownHotelData.reduce((s: number, r: any) => s + toAmount(r.total_amount), 0);
 
       // Helper function to map payments to records
       const mapPaymentsToRecords = (paymentList: any[]) => paymentList.map(p => ({
@@ -112,8 +132,13 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       }));
 
       if (showBookingRow) {
-        const bookingPayments = payments || [];
+        const bookingPayments = (payments || []).filter(
+          p => !MODULE_PAYMENT_TYPES.has((p.payment_type || "").toLowerCase())
+        );
         const bookingReceived = bookingPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
+        const bookingTotal = ownHotelTotalAmount > 0
+          ? ownHotelTotalAmount
+          : Math.max(0, bookingGrandTotal - modulesTotalAmount);
         summaries.push({
           type: "Booking",
           customerName: bookingData.customer_name || "N/A",
