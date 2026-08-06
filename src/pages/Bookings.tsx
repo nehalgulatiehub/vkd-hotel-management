@@ -509,18 +509,23 @@ export default function Bookings() {
           roomsMap = (roomsData || []).reduce((acc: Record<string, any>, r: any) => ({ ...acc, [r.id]: { name: r.room_type || r.room_number, room_number: r.room_number } }), {});
         }
         
-        // Map hotel bookings to their booking_id with resolved room names
+        // Map hotel bookings to their booking_id with resolved room names.
+        // Only own-hotel rows belong on this page; another-hotel rows live on
+        // the Another Hotel module page with their own price.
         const hotelBookingsMap: Record<string, any> = {};
-        hotelData?.forEach((hb: any) => {
+        hotelData?.filter((hb: any) => hb.own_hotel_id).forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
           const roomInfo = isUuid ? roomsMap[hb.room_type] : null;
           hotelBookingsMap[hb.booking_id] = {
-            hotel_id: hb.own_hotel_id || hb.hotel_id,
+            hotel_id: hb.own_hotel_id,
             room_id: isUuid ? hb.room_type : null,
-            hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
+            hotel_name: hb.own_hotels?.name || null,
             room_type: isUuid ? (roomInfo?.name || hb.room_type) : hb.room_type,
             room_number: roomInfo?.room_number || hb.notes?.match(/Room No: (.+?)(?:\s*\||$)/)?.[1] || null,
             number_of_rooms: hb.number_of_rooms,
+            total_amount: Number(hb.total_amount) || 0,
+            check_in_date: hb.check_in_date,
+            check_out_date: hb.check_out_date,
             package: (hb.notes || "")
               .split("|")
               .map((p: string) => p.trim())
@@ -529,14 +534,40 @@ export default function Bookings() {
               .replace(/^Package:\s*/i, "") || null
           };
         });
-        
+
+        // Own-hotel received payment = payments not attributed to another module
+        const MODULE_PAYMENT_TYPES = new Set([
+          "safari", "safari_direct", "hotel", "hotel_direct", "another_hotel",
+          "vehicle", "volvo_dm", "volvo_md", "delhi_manali", "manali_delhi",
+          "visa", "cruise",
+        ]);
+        const { data: paymentRows } = await supabase
+          .from("payments")
+          .select("booking_id, amount, payment_type")
+          .in("booking_id", bookingIds);
+        const ownPaidMap: Record<string, number> = {};
+        (paymentRows || []).forEach((p: any) => {
+          const type = (p.payment_type || "").toLowerCase();
+          if (MODULE_PAYMENT_TYPES.has(type)) return;
+          ownPaidMap[p.booking_id] = (ownPaidMap[p.booking_id] || 0) + (Number(p.amount) || 0);
+        });
+
         // Attach hotel info and username to bookings
-        const bookingsWithHotelInfo = (data || []).map(b => ({
-          ...b,
-          hotel_info: hotelBookingsMap[b.id] || null,
-          created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
-        }));
+        const bookingsWithHotelInfo = (data || []).map(b => {
+          const info = hotelBookingsMap[b.id] || null;
+          const ownTotal = info ? info.total_amount : 0;
+          const ownPaid = ownPaidMap[b.id] || 0;
+          return {
+            ...b,
+            hotel_info: info,
+            own_total_amount: ownTotal,
+            own_paid_amount: ownPaid,
+            own_due_amount: Math.max(ownTotal - ownPaid, 0),
+            created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
+          };
+        });
         setBookings(bookingsWithHotelInfo);
+
       } else {
         // Attach username even without hotel info
         const bookingsWithUsernames = (data || []).map(b => ({
