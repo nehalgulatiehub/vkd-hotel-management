@@ -204,8 +204,8 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         ? (payments || [])
         : anotherHotelPayments;
       const anotherHotelTotal = hasAnotherHotel && !hasOwnHotel
-        ? bookingTotal
-        : anotherHotelData.reduce((sum: number, h: any) => sum + toAmount(h.total_amount), 0);
+        ? (anotherHotelTotalAmount > 0 ? anotherHotelTotalAmount : bookingGrandTotal)
+        : anotherHotelTotalAmount;
       const anotherHotelReceived = anotherHotelDisplayPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (hasAnotherHotel || anotherHotelPayments.length > 0) {
         summaries.push({
