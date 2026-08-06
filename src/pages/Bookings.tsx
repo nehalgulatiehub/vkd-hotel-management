@@ -1481,7 +1481,9 @@ export default function Bookings() {
         (supabase as any).from("cruise_bookings").select("*").eq("booking_id", booking.id)
       ]);
 
-      const hotelBooking = hotelData.data?.[0];
+      const hotelRows = hotelData.data || [];
+      const hotelBooking = hotelRows.find((h: any) => h.own_hotel_id) || hotelRows.find((h: any) => !h.hotel_id);
+      const anotherHotelRows = hotelRows.filter((h: any) => h.hotel_id);
       const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "delhi_manali");
       const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "manali_delhi");
       const safariBooking = safariData.data?.[0];
