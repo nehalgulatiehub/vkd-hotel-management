@@ -106,9 +106,15 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
             contact: settings?.contact_no || "",
           };
 
-      // Meal plan / package details — stored in hotel_bookings.notes as "Package: XYZ"
+      // Meal plan / package details — stored in hotel_bookings.notes either as
+      // "Package: XYZ" (selected package) or as free-text custom package note
       const packageFromNotes = hbs
-        .map((hb: any) => hb.notes?.match(/Package:\s*([^|]+)/)?.[1]?.trim())
+        .map((hb: any) => {
+          const n = (hb.notes || "").trim();
+          if (!n) return null;
+          const m = n.match(/Package:\s*([^|]+)/);
+          return m ? m[1].trim() : n;
+        })
         .filter(Boolean)
         .join(", ");
       const mealPlan =
@@ -117,6 +123,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         (bk as any)?.package_type ||
         bk?.special_requests ||
         "-";
+
 
       const numberOfRooms = hbs.reduce((s: number, hb: any) => s + (hb.number_of_rooms || 0), 0);
       const roomType =
