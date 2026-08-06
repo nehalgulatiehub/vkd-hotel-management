@@ -44,7 +44,7 @@ export interface PaymentWithDetails {
 
 interface AdminPaymentPageLayoutProps {
   title: string;
-  paymentType?: string;
+  paymentType?: string | string[];
   approvalStatus: "pending" | "approved";
   serviceLabel?: string; // e.g. "Hotel" for the Hotel filter label, "Another Hotel" etc.
 }
@@ -214,7 +214,9 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         .select(`id, amount, payment_mode, payment_date, reference_number, approval_status, approved_at, created_at, created_by, city_id, booking:bookings(id, booking_number, check_in_date, check_out_date, customer_name, contact_no, total_amount, adults, children, address, agent:agents(name, company_name))`);
       
       if (paymentType) {
-        query = query.eq("payment_type", paymentType);
+        query = Array.isArray(paymentType)
+          ? query.in("payment_type", paymentType)
+          : query.eq("payment_type", paymentType);
       }
       
       const { data, error } = await query
