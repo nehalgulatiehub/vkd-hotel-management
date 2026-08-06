@@ -460,47 +460,35 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
                 useCORS: true,
                 backgroundColor: '#ffffff',
                 logging: false,
+                windowWidth: document.documentElement.scrollWidth,
+                windowHeight: document.documentElement.scrollHeight,
+                scrollX: 0,
+                scrollY: 0,
               });
-              const imgW = CONTENT_W;
+
+              let imgW = CONTENT_W;
               let imgH = (canvas.height * imgW) / canvas.width;
 
+              // Never slice through a section (that cuts text in half).
+              // If it is taller than a full page, scale it down to fit the page.
               if (imgH > CONTENT_H) {
-                const pxPerMm = canvas.width / imgW;
-                const sliceHeightPx = Math.floor(CONTENT_H * pxPerMm);
-                let offsetY = 0;
-                while (offsetY < canvas.height) {
-                  const remainingPx = canvas.height - offsetY;
-                  const thisSlicePx = Math.min(sliceHeightPx, remainingPx);
-                  const sliceCanvas = document.createElement('canvas');
-                  sliceCanvas.width = canvas.width;
-                  sliceCanvas.height = thisSlicePx;
-                  const ctx = sliceCanvas.getContext('2d');
-                  if (!ctx) break;
-                  ctx.fillStyle = '#ffffff';
-                  ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-                  ctx.drawImage(canvas, 0, -offsetY);
-                  const sliceH = thisSlicePx / pxPerMm;
-                  if (cursorY + sliceH > A4_H - MARGIN && cursorY > MARGIN) {
-                    pdf.addPage();
-                    cursorY = MARGIN;
-                  }
-                  pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, cursorY, imgW, sliceH);
-                  cursorY += sliceH + GAP;
-                  offsetY += thisSlicePx;
-                  if (offsetY < canvas.height) {
-                    pdf.addPage();
-                    cursorY = MARGIN;
-                  }
-                }
-              } else {
-                if (cursorY + imgH > A4_H - MARGIN && cursorY > MARGIN) {
+                const ratio = CONTENT_H / imgH;
+                imgH = CONTENT_H;
+                imgW = CONTENT_W * ratio;
+                if (cursorY > MARGIN) {
                   pdf.addPage();
                   cursorY = MARGIN;
                 }
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, cursorY, imgW, imgH);
-                cursorY += imgH + GAP;
+              } else if (cursorY + imgH > A4_H - MARGIN && cursorY > MARGIN) {
+                pdf.addPage();
+                cursorY = MARGIN;
               }
+
+              const offsetX = MARGIN + (CONTENT_W - imgW) / 2;
+              pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', offsetX, cursorY, imgW, imgH);
+              cursorY += imgH + GAP;
             }
+
 
             pdf.save(`Booking_${fields.bookingNumber || bookingId}.pdf`);
           }}
