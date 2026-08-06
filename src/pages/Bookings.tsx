@@ -1601,7 +1601,7 @@ export default function Bookings() {
     }
   };
 
-  const handleAddPayment = (booking: any) => {
+  const handleAddPayment = async (booking: any) => {
     setSelectedBooking(booking);
     setPaymentAmount("");
     setPaymentMode("");
@@ -1609,9 +1609,50 @@ export default function Bookings() {
     setPaymentCityId("");
     setPaymentType("");
     setPaymentOtherNote("");
+    setPaymentModuleTotals({});
     fetchCities();
     setShowPaymentDialog(true);
+
+    // Load per-module (service-wise) amounts so the dialog can show the
+    // respective module's total & due instead of the whole booking amount.
+    try {
+      const [safari, hotels, vehicle, volvo, visa, cruise] = await Promise.all([
+        supabase.from("safari_bookings").select("total_amount, paid_amount, due_amount").eq("booking_id", booking.id),
+        supabase.from("hotel_bookings").select("total_amount, paid_amount, due_amount, own_hotel_id").eq("booking_id", booking.id),
+        supabase.from("vehicle_bookings").select("total_amount, paid_amount, due_amount").eq("booking_id", booking.id),
+        supabase.from("volvo_bookings").select("total_amount, paid_amount, due_amount, route").eq("booking_id", booking.id),
+        (supabase as any).from("visa_bookings").select("total_amount, paid_amount, due_amount").eq("booking_id", booking.id),
+        (supabase as any).from("cruise_bookings").select("total_amount, paid_amount, due_amount").eq("booking_id", booking.id),
+      ]);
+
+      const sum = (rows: any[] | null | undefined) => ({
+        total: (rows || []).reduce((s, r) => s + (Number(r.total_amount) || 0), 0),
+        paid: (rows || []).reduce((s, r) => s + (Number(r.paid_amount) || 0), 0),
+        due: (rows || []).reduce((s, r) => s + (Number(r.due_amount) || 0), 0),
+      });
+
+      const volvoRows = (volvo.data as any[]) || [];
+      const hotelRows = (hotels.data as any[]) || [];
+      const totals: Record<string, { total: number; paid: number; due: number }> = {
+        booking: {
+          total: Number(booking.own_total_amount ?? booking.total_amount ?? 0),
+          paid: Number(booking.own_paid_amount ?? booking.paid_amount ?? 0),
+          due: Number(booking.own_due_amount ?? booking.due_amount ?? 0),
+        },
+        safari: sum(safari.data as any[]),
+        another_hotel: sum(hotelRows.filter(h => !h.own_hotel_id)),
+        vehicle: sum(vehicle.data as any[]),
+        delhi_manali: sum(volvoRows.filter(v => v.route === "delhi_manali")),
+        manali_delhi: sum(volvoRows.filter(v => v.route === "manali_delhi")),
+        visa: sum(visa.data as any[]),
+        cruise: sum(cruise.data as any[]),
+      };
+      setPaymentModuleTotals(totals);
+    } catch (e) {
+      console.error("Failed to load module totals for payment dialog:", e);
+    }
   };
+
 
   const handleCancelBooking = (booking: any) => {
     setSelectedBooking(booking);
