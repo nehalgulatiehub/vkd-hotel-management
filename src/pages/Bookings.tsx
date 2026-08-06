@@ -855,29 +855,33 @@ export default function Bookings() {
         for (const hotel of validHotels) {
           const hotelAmount = hotel.selling_price ? parseFloat(hotel.selling_price) : 0;
           totalAmount += hotelAmount;
-          
+
           const anotherHotelData = {
             booking_id: bookingId,
             hotel_id: hotel.hotel_id,
             own_hotel_id: null,
-            check_in_date: hotel.check_in,
-            check_out_date: hotel.check_out,
-            room_type: hotel.room_type,
+            check_in_date: hotel.check_in || formData.booking_from || formData.check_in_date || new Date().toISOString().split("T")[0],
+            check_out_date: hotel.check_out || hotel.check_in || formData.booking_to || formData.check_out_date || new Date().toISOString().split("T")[0],
+            room_type: hotel.room_type || null,
             number_of_rooms: hotel.num_rooms ? parseInt(hotel.num_rooms) : 1,
             room_rate: hotel.booking_price ? parseFloat(hotel.booking_price) : 0,
             total_amount: hotelAmount,
             paid_amount: 0,
             due_amount: hotelAmount,
-            notes: hotel.note
+            notes: hotel.note || null
           };
-          
+
           const { error: anotherHotelError } = await supabase
             .from("hotel_bookings")
             .insert([anotherHotelData]);
-          
-          if (anotherHotelError) console.error("Another hotel booking error:", anotherHotelError);
+
+          if (anotherHotelError) {
+            console.error("Another hotel booking error:", anotherHotelError);
+            toast.error(`Failed to save another hotel booking: ${anotherHotelError.message}`);
+          }
         }
       }
+
 
       // Insert Additional Vehicle Bookings if included (supports multiple vehicles)
       if (formData.include_additional_vehicle) {
