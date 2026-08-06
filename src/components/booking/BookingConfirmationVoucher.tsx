@@ -6,6 +6,15 @@ import html2canvas from "html2canvas";
 import sitaraLogo from "@/assets/sitara-logo.png.asset.json";
 import winsomeLogo from "@/assets/winsome-logo.png.asset.json";
 
+function hostedAssetUrl(path: string) {
+  if (!path) return "";
+  try {
+    return new URL(path, window.location.origin).href;
+  } catch {
+    return path;
+  }
+}
+
 interface BookingConfirmationVoucherProps {
   bookingId: string;
   onClose: () => void;
@@ -23,7 +32,7 @@ type Brand = {
 
 const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
   winsome: {
-    logo: winsomeLogo.url,
+    logo: hostedAssetUrl(winsomeLogo.url),
     name: "Winsome Resort",
     subTitle: "Jim Corbett, Ramnagar",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
@@ -31,7 +40,7 @@ const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
     contact: "9560002045/46",
   },
   sitara: {
-    logo: sitaraLogo.url,
+    logo: hostedAssetUrl(sitaraLogo.url),
     name: "Hotel Sitara International",
     subTitle: "Manali",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
@@ -227,7 +236,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         {/* Header */}
         <div data-pdf-section className="text-center mb-6 border-b-2 border-gray-800 pb-4">
           {fields.logoUrl && (
-            <img src={fields.logoUrl} alt={companyName} className="h-16 mx-auto mb-2 object-contain" />
+            <img src={fields.logoUrl} alt={companyName} crossOrigin="anonymous" className="h-16 mx-auto mb-2 object-contain" />
           )}
           <h1 className="text-2xl font-bold tracking-wide">
             <Val k="companyName" className="text-center font-bold" />
@@ -446,6 +455,16 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
             const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
             if (sections.length === 0) return;
 
+             await document.fonts?.ready;
+             const voucherImages = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
+             await Promise.all(voucherImages.map((image) => {
+               if (image.complete) return Promise.resolve();
+               return new Promise<void>((resolve) => {
+                 image.addEventListener('load', () => resolve(), { once: true });
+                 image.addEventListener('error', () => resolve(), { once: true });
+               });
+             }));
+
             const A4_W = 210, A4_H = 297, MARGIN = 12;
             const CONTENT_W = A4_W - MARGIN * 2;
             const CONTENT_H = A4_H - MARGIN * 2;
@@ -455,16 +474,44 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
             let cursorY = MARGIN;
 
             for (const section of sections) {
-              const canvas = await html2canvas(section, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                logging: false,
-                windowWidth: document.documentElement.scrollWidth,
-                windowHeight: document.documentElement.scrollHeight,
-                scrollX: 0,
-                scrollY: 0,
-              });
+               // Capture a padded clone instead of the live element. html2canvas can
+               // otherwise trim the final line's descenders at an element boundary.
+               const captureHost = document.createElement('div');
+               captureHost.style.position = 'fixed';
+               captureHost.style.left = '-10000px';
+               captureHost.style.top = '0';
+               captureHost.style.width = `${container.clientWidth}px`;
+               captureHost.style.padding = '4px 2px 8px';
+               captureHost.style.boxSizing = 'border-box';
+               captureHost.style.background = '#ffffff';
+               captureHost.style.color = '#000000';
+
+               const clone = section.cloneNode(true) as HTMLElement;
+               clone.style.margin = '0';
+               clone.style.width = '100%';
+               clone.style.boxSizing = 'border-box';
+               captureHost.appendChild(clone);
+               document.body.appendChild(captureHost);
+
+               let canvas: HTMLCanvasElement;
+               try {
+                 const cloneImages = Array.from(captureHost.querySelectorAll<HTMLImageElement>('img'));
+                 await Promise.all(cloneImages.map((image) => image.decode().catch(() => undefined)));
+                 canvas = await html2canvas(captureHost, {
+                   scale: 2,
+                   useCORS: true,
+                   allowTaint: false,
+                   backgroundColor: '#ffffff',
+                   logging: false,
+                   width: captureHost.scrollWidth,
+                   height: captureHost.scrollHeight,
+                   windowWidth: container.clientWidth,
+                   scrollX: 0,
+                   scrollY: 0,
+                 });
+               } finally {
+                 captureHost.remove();
+               }
 
               let imgW = CONTENT_W;
               let imgH = (canvas.height * imgW) / canvas.width;
@@ -485,7 +532,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
               }
 
               const offsetX = MARGIN + (CONTENT_W - imgW) / 2;
-              pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', offsetX, cursorY, imgW, imgH);
+               pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, cursorY, imgW, imgH, undefined, 'FAST');
               cursorY += imgH + GAP;
             }
 
