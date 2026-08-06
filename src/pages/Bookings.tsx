@@ -509,18 +509,23 @@ export default function Bookings() {
           roomsMap = (roomsData || []).reduce((acc: Record<string, any>, r: any) => ({ ...acc, [r.id]: { name: r.room_type || r.room_number, room_number: r.room_number } }), {});
         }
         
-        // Map hotel bookings to their booking_id with resolved room names
+        // Map hotel bookings to their booking_id with resolved room names.
+        // Only own-hotel rows belong on this page; another-hotel rows live on
+        // the Another Hotel module page with their own price.
         const hotelBookingsMap: Record<string, any> = {};
-        hotelData?.forEach((hb: any) => {
+        hotelData?.filter((hb: any) => hb.own_hotel_id).forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
           const roomInfo = isUuid ? roomsMap[hb.room_type] : null;
           hotelBookingsMap[hb.booking_id] = {
-            hotel_id: hb.own_hotel_id || hb.hotel_id,
+            hotel_id: hb.own_hotel_id,
             room_id: isUuid ? hb.room_type : null,
-            hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
+            hotel_name: hb.own_hotels?.name || null,
             room_type: isUuid ? (roomInfo?.name || hb.room_type) : hb.room_type,
             room_number: roomInfo?.room_number || hb.notes?.match(/Room No: (.+?)(?:\s*\||$)/)?.[1] || null,
             number_of_rooms: hb.number_of_rooms,
+            total_amount: Number(hb.total_amount) || 0,
+            check_in_date: hb.check_in_date,
+            check_out_date: hb.check_out_date,
             package: (hb.notes || "")
               .split("|")
               .map((p: string) => p.trim())
@@ -529,14 +534,40 @@ export default function Bookings() {
               .replace(/^Package:\s*/i, "") || null
           };
         });
-        
+
+        // Own-hotel received payment = payments not attributed to another module
+        const MODULE_PAYMENT_TYPES = new Set([
+          "safari", "safari_direct", "hotel", "hotel_direct", "another_hotel",
+          "vehicle", "volvo_dm", "volvo_md", "delhi_manali", "manali_delhi",
+          "visa", "cruise",
+        ]);
+        const { data: paymentRows } = await supabase
+          .from("payments")
+          .select("booking_id, amount, payment_type")
+          .in("booking_id", bookingIds);
+        const ownPaidMap: Record<string, number> = {};
+        (paymentRows || []).forEach((p: any) => {
+          const type = (p.payment_type || "").toLowerCase();
+          if (MODULE_PAYMENT_TYPES.has(type)) return;
+          ownPaidMap[p.booking_id] = (ownPaidMap[p.booking_id] || 0) + (Number(p.amount) || 0);
+        });
+
         // Attach hotel info and username to bookings
-        const bookingsWithHotelInfo = (data || []).map(b => ({
-          ...b,
-          hotel_info: hotelBookingsMap[b.id] || null,
-          created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
-        }));
+        const bookingsWithHotelInfo = (data || []).map(b => {
+          const info = hotelBookingsMap[b.id] || null;
+          const ownTotal = info ? info.total_amount : 0;
+          const ownPaid = ownPaidMap[b.id] || 0;
+          return {
+            ...b,
+            hotel_info: info,
+            own_total_amount: ownTotal,
+            own_paid_amount: ownPaid,
+            own_due_amount: Math.max(ownTotal - ownPaid, 0),
+            created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
+          };
+        });
         setBookings(bookingsWithHotelInfo);
+
       } else {
         // Attach username even without hotel info
         const bookingsWithUsernames = (data || []).map(b => ({
@@ -1144,9 +1175,10 @@ export default function Bookings() {
     ? filteredBookings
     : filteredBookings.filter((b: any) => b.created_by === user?.id);
   const summaryTotals = {
-    total: totalsBookings.reduce((s: number, b: any) => s + (Number(b.total_amount) || 0), 0),
-    paid: totalsBookings.reduce((s: number, b: any) => s + (Number(b.paid_amount) || 0), 0),
-    due: totalsBookings.reduce((s: number, b: any) => s + (Number(b.due_amount) || 0), 0),
+    total: totalsBookings.reduce((s: number, b: any) => s + (Number(b.own_total_amount) || 0), 0),
+    paid: totalsBookings.reduce((s: number, b: any) => s + (Number(b.own_paid_amount) || 0), 0),
+    due: totalsBookings.reduce((s: number, b: any) => s + (Number(b.own_due_amount) || 0), 0),
+
   };
   
   useEffect(() => {
@@ -3070,22 +3102,16 @@ export default function Bookings() {
                               <div style={{ fontSize: 10 }}>
                                 {booking.hotel_info && (<><div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div><div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>{booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}{booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}</>)}
                                 {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
-                                {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
-                                {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
-                                {booking.include_safari && <div>✓ Safari</div>}
-                                {booking.include_another_hotel && <div>✓ Another Hotel</div>}
-                                {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
                                 {booking.hotel_info?.package && <div><strong>Package :</strong> {booking.hotel_info.package}</div>}
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                               <div style={{ fontSize: 10 }}>
-                                <div><strong>Booking Price:</strong> Rs. {booking.total_amount || 0}/-</div>
-                                <div><strong>Total Received:</strong> Rs. {booking.paid_amount || 0}/-</div>
-                                
+                                <div><strong>Booking Price:</strong> Rs. {booking.own_total_amount || 0}/-</div>
+                                <div><strong>Total Received:</strong> Rs. {booking.own_paid_amount || 0}/-</div>
+                                <div style={{ color: "#c00" }}><strong>Due Payment:</strong> Rs. {booking.own_due_amount || 0}/-</div>
 
-                                <div style={{ color: "#c00" }}><strong>Due Payment:</strong> Rs. {booking.due_amount || 0}/-</div>
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
@@ -3254,21 +3280,16 @@ export default function Bookings() {
                               <div className="space-y-1 text-xs">
                                 {booking.hotel_info && (<><div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div><div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>{booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}{booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}</>)}
                                 {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
-                                {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
-                                {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
-                                {booking.include_safari && <div>✓ Safari</div>}
-                                {booking.include_another_hotel && <div>✓ Another Hotel</div>}
-                                {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
                                 {booking.hotel_info?.package && <div><strong>Package :</strong> {booking.hotel_info.package}</div>}
                               </div>
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
                               <div className="space-y-1 text-xs">
-                                <div><strong>Booking Price:</strong> Rs. {booking.total_amount || 0}/-</div>
-                                <div><strong>Total Received:</strong> Rs. {booking.paid_amount || 0}/-</div>
-                                
-                                <div className="text-destructive"><strong>Due Payment:</strong> Rs. {booking.due_amount || 0}/-</div>
+                                <div><strong>Booking Price:</strong> Rs. {booking.own_total_amount || 0}/-</div>
+                                <div><strong>Total Received:</strong> Rs. {booking.own_paid_amount || 0}/-</div>
+                                <div className="text-destructive"><strong>Due Payment:</strong> Rs. {booking.own_due_amount || 0}/-</div>
+
                               </div>
                             </td>
                             <td className="border border-border px-3 py-2 text-sm">
