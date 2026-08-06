@@ -138,6 +138,20 @@ export default function VehicleDetails() {
         )}
       </div>
 
+      {/* Summary Footer */}
+      <div style={{ padding: "8px 10px", border: "1px solid #ccc", borderTop: "none", backgroundColor: "#fff", fontSize: 11 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px" }}>
+          <span><strong>Total Booking Price :</strong> Rs. {totalBookingPrice.toLocaleString("en-IN")} /-</span>
+          <span><strong>Total Selling Price :</strong> Rs. {totalSellingPrice.toLocaleString("en-IN")} /-</span>
+          <span><strong>Net Profit :</strong> Rs. {netProfit.toLocaleString("en-IN")} /-</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px", marginTop: 2 }}>
+          <span><strong>Total Received Payment :</strong> Rs. {totalReceivedPayment.toLocaleString("en-IN")} /-</span>
+          <span><strong>Total Due Payment :</strong> Rs. {totalDuePayment.toLocaleString("en-IN")} /-</span>
+        </div>
+      </div>
+
+
       <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} totalItems={totalItems} startIndex={startIndex} endIndex={endIndex} />
 
       <BookingDetailsDialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog} booking={selectedBookingData} serviceType="vehicle" serviceData={selectedServiceData} />
