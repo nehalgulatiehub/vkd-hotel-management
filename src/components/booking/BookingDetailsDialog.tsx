@@ -24,11 +24,13 @@ export function BookingDetailsDialog({
   const { roomName } = useRoomNames();
   const [data, setData] = useState<any>(null);
   const [transporters, setTransporters] = useState<any[]>([]);
+  const [fullBooking, setFullBooking] = useState<any>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!open || !booking?.id) return;
-      const [hotels, safaris, volvos, vehicles, visas, cruises, transp] = await Promise.all([
+      const [bookingRes, hotels, safaris, volvos, vehicles, visas, cruises, transp] = await Promise.all([
+        supabase.from("bookings").select("*, agents(name)").eq("id", booking.id).maybeSingle(),
         supabase
           .from("hotel_bookings")
           .select("*, own_hotels(name), another_hotels(name)")
@@ -42,6 +44,7 @@ export function BookingDetailsDialog({
       ]);
 
       const hotelRows = hotels.data || [];
+      setFullBooking(bookingRes.data || null);
       setTransporters(transp.data || []);
       setData({
         ownHotels: hotelRows.filter((h: any) => h.own_hotel_id),
@@ -56,6 +59,7 @@ export function BookingDetailsDialog({
     };
     load();
   }, [open, booking?.id]);
+
 
   if (!booking) return null;
 
