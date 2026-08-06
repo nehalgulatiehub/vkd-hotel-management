@@ -132,6 +132,7 @@ export default function Bookings() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [ownHotels, setOwnHotels] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [allRooms, setAllRooms] = useState<any[]>([]);
   const [filterRooms, setFilterRooms] = useState<any[]>([]);
   const [anotherHotels, setAnotherHotels] = useState<any[]>([]);
   const [transporters, setTransporters] = useState<any[]>([]);
@@ -302,6 +303,7 @@ export default function Bookings() {
     if (authLoading) return;
     if (!user?.id) return;
     fetchOwnHotels();
+    fetchAllRooms();
     fetchHotels();
     fetchAnotherHotels();
     fetchTransporters();
@@ -348,19 +350,42 @@ export default function Bookings() {
     }
   };
 
+  // Load every room once so the Room dropdown never depends on a per-hotel
+  // request that may race with auth/session hydration.
+  const fetchAllRooms = async (attempt = 0) => {
+    const { data, error } = await supabase
+      .from("rooms")
+      .select("*")
+      .order("room_number");
+
+    if (error) {
+      console.error("Failed to load rooms", error);
+      if (attempt < 2) setTimeout(() => fetchAllRooms(attempt + 1), 800);
+      return;
+    }
+    setAllRooms(data || []);
+  };
+
   const fetchRoomsForHotel = async (hotelId: string) => {
+    if (!hotelId) {
+      setRooms([]);
+      return;
+    }
     const { data, error } = await supabase
       .from("rooms")
       .select("*")
       .eq("hotel_id", hotelId)
-      .eq("is_available", true)
       .order("room_number");
-    
-    if (error) {
-      console.error("Failed to load rooms", error);
-    } else {
-      setRooms(data || []);
+
+    if (error || !data || data.length === 0) {
+      if (error) console.error("Failed to load rooms", error);
+      // Fallback to the preloaded list so the dropdown is never empty
+      const cached = allRooms.filter((r) => r.hotel_id === hotelId);
+      setRooms(cached);
+      if (cached.length === 0) fetchAllRooms();
+      return;
     }
+    setRooms(data);
   };
 
   const fetchFilterRoomsForHotel = async (hotelId: string) => {
