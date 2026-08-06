@@ -63,7 +63,6 @@ export function BookingDetailsDialog({
 
   if (!booking) return null;
   const b: any = { ...(booking || {}), ...(fullBooking || {}) };
-  if (!booking) return null;
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
