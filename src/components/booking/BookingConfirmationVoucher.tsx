@@ -183,6 +183,24 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       <span className={className}>{fields[k] || "-"}</span>
     );
 
+  const Multi = ({ k, rows = 4 }: { k: string; rows?: number }) =>
+    editing ? (
+      <textarea
+        value={fields[k] ?? ""}
+        rows={rows}
+        onChange={(e) => set(k, e.target.value)}
+        className="w-full border border-blue-400 rounded px-2 py-1 text-sm bg-blue-50"
+      />
+    ) : null;
+
+  const lines = (k: string) =>
+    (fields[k] || "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+
+
   if (loading) return null;
   if (!booking) return null;
 
