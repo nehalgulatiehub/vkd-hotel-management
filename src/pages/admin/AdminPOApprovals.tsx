@@ -34,7 +34,8 @@ interface AdminPOApprovalsProps {
 
 export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
   const queryClient = useQueryClient();
-  const { user } = useAuthContext();
+  const { user, isAdmin, hasMenuAccess, loading: authLoading } = useAuthContext();
+  const canApprove = isAdmin() || hasMenuAccess("purchase_po_approvals");
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState<any>(null);
@@ -181,6 +182,17 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
   const statusTitle = status === "pending" ? "Pending PO Approvals" : 
                       status === "approved" ? "Approved Purchase Orders" : "Rejected Purchase Orders";
 
+  if (!authLoading && !canApprove) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold">{statusTitle}</h1>
+        <p className="text-muted-foreground text-sm mt-2">
+          You don't have permission to access PO approvals. Please ask an admin to assign the "PO Approvals" module to your account.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -255,7 +267,7 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {status === "pending" && (
+                            {status === "pending" && canApprove && (
                               <>
                                 <Button
                                   variant="ghost"
@@ -362,7 +374,7 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
                 </div>
               )}
 
-              {status === "pending" && (
+              {status === "pending" && canApprove && (
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
