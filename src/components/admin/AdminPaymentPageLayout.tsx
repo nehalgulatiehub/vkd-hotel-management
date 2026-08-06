@@ -44,7 +44,7 @@ export interface PaymentWithDetails {
 
 interface AdminPaymentPageLayoutProps {
   title: string;
-  paymentType?: string;
+  paymentType?: string | string[];
   approvalStatus: "pending" | "approved";
   serviceLabel?: string; // e.g. "Hotel" for the Hotel filter label, "Another Hotel" etc.
 }
