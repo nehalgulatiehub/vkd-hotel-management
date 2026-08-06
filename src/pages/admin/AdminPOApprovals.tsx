@@ -34,7 +34,8 @@ interface AdminPOApprovalsProps {
 
 export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
   const queryClient = useQueryClient();
-  const { user } = useAuthContext();
+  const { user, isAdmin, hasMenuAccess, loading: authLoading } = useAuthContext();
+  const canApprove = isAdmin() || hasMenuAccess("purchase_po_approvals");
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState<any>(null);
