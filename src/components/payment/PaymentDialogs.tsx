@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { useState } from "react";
+import { UserViewPaymentDialog } from "@/components/booking/UserViewPaymentDialog";
 
 interface PaymentDialogsProps {
   showViewPaymentDialog: boolean;
@@ -87,104 +88,11 @@ export function PaymentDialogs({
 
   return (
     <>
-      <Dialog open={showViewPaymentDialog} onOpenChange={setShowViewPaymentDialog}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden">
-          <div className="bg-[#b44a50] text-white px-4 py-2.5 flex justify-between items-center">
-            <span className="text-sm font-medium">View Payment</span>
-          </div>
-          <div className="p-4 space-y-4">
-            {/* Summary Table */}
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr style={{ backgroundColor: "#c47a7e" }}>
-                  <th className="border border-[#ddd] px-3 py-2 text-left font-semibold"></th>
-                  <th className="border border-[#ddd] px-3 py-2 text-left font-semibold">Total Payment</th>
-                  <th className="border border-[#ddd] px-3 py-2 text-left font-semibold">Total Received Payment</th>
-                  <th className="border border-[#ddd] px-3 py-2 text-left font-semibold">Total Due Payment</th>
-                  <th className="border border-[#ddd] px-3 py-2 text-left font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ backgroundColor: "#f6f0f0" }}>
-                  <td className="border border-[#ddd] px-3 py-2 font-medium underline">Booking</td>
-                  <td className="border border-[#ddd] px-3 py-2">Rs. {(selectedBooking?.total_amount || 0).toLocaleString('en-IN')}/-</td>
-                  <td className="border border-[#ddd] px-3 py-2">Rs. {(selectedBooking?.paid_amount || 0).toLocaleString('en-IN')}/-</td>
-                  <td className="border border-[#ddd] px-3 py-2">Rs. {(selectedBooking?.due_amount || 0).toLocaleString('en-IN')}/-</td>
-                  <td className="border border-[#ddd] px-3 py-2">
-                    <Button 
-                      variant="link" 
-                      className="h-auto p-0 text-xs text-[#dc2626] hover:text-[#dc2626]/80 underline"
-                    >
-                      View Details
-                    </Button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            
-            {/* Payment History Label */}
-            <div className="text-sm font-semibold">Booking</div>
-            
-            {/* Payment History Table */}
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr style={{ backgroundColor: "#c47a7e" }}>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">S.No.</th>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">Payment</th>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">Date</th>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">Mode</th>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">Payment Detail</th>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">Place</th>
-                  <th className="border border-[#ddd] px-2 py-2 text-left font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookingPayments.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="border border-[#ddd] px-2 py-4 text-center text-muted-foreground">
-                      No payments found
-                    </td>
-                  </tr>
-                ) : (
-                  bookingPayments.map((payment, idx) => (
-                    <tr key={payment.id} style={{ backgroundColor: "#f6f0f0" }}>
-                      <td className="border border-[#ddd] px-2 py-2">{idx + 1}</td>
-                      <td className="border border-[#ddd] px-2 py-2">Rs. {payment.amount.toLocaleString('en-IN')}/-</td>
-                      <td className="border border-[#ddd] px-2 py-2">{format(new Date(payment.payment_date), "dd/MM/yyyy")}</td>
-                      <td className="border border-[#ddd] px-2 py-2 capitalize">{payment.payment_mode?.replace(/_/g, " ") || "-"}</td>
-                      <td className="border border-[#ddd] px-2 py-2">{payment.reference_number || "-"}</td>
-                      <td className="border border-[#ddd] px-2 py-2">{(payment as any).cities?.name || "-"}</td>
-                      <td className="border border-[#ddd] px-2 py-2">
-                        <div className="flex flex-col items-start gap-0.5">
-                          <span className="capitalize">{payment.approval_status || "Pending"}</span>
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleEditClick(payment)}
-                              className="text-[#dc2626] hover:text-[#dc2626]/80 underline text-xs"
-                            >
-                              Edit
-                            </button>
-                            <span className="text-gray-400">|</span>
-                            <button
-                              onClick={() => handleDeleteClick(payment.id)}
-                              className="text-[#dc2626] hover:text-[#dc2626]/80 underline text-xs"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="bg-[#b44a50] text-white px-4 py-2 text-xs">
-            Booking: {selectedBooking?.booking_number} | Customer: {selectedBooking?.customer_name}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UserViewPaymentDialog
+        open={showViewPaymentDialog}
+        onOpenChange={setShowViewPaymentDialog}
+        bookingId={selectedBooking?.id || null}
+      />
 
       {/* Edit Payment Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>

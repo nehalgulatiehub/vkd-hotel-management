@@ -115,7 +115,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
       if (selectedService) {
         const typeMap: Record<string, string> = {
           'safari': 'safari',
-          'hotel': 'hotel',
+          'hotel': 'another_hotel',
           'vehicle': 'vehicle',
           'volvo_dm': 'delhi_manali',
           'volvo_md': 'manali_delhi',
@@ -162,6 +162,32 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
           .eq("id", selectedBooking.id);
       } catch (e) {
         console.error("Recalc booking totals after payment failed:", e);
+      }
+
+      // Update the respective service module's paid/due amounts
+      if (selectedService) {
+        try {
+          const table = SERVICE_TABLES[selectedService.type];
+          const { data: modPays } = await supabase
+            .from("payments")
+            .select("amount")
+            .eq("booking_id", selectedBooking.id)
+            .eq("payment_type", paymentType);
+          const modPaid = (modPays || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+          const { data: modRow } = await (supabase as any)
+            .from(table)
+            .select("total_amount")
+            .eq("id", selectedService.id)
+            .maybeSingle();
+          const modTotal = Number(modRow?.total_amount || 0);
+          await (supabase as any)
+            .from(table)
+            .update({ paid_amount: modPaid, due_amount: Math.max(0, modTotal - modPaid) })
+            .eq("id", selectedService.id);
+        } catch (e) {
+          console.error("Recalc module totals after payment failed:", e);
+        }
+        await fetchServiceTotals(selectedService);
       }
 
       toast.success("Payment added successfully (pending approval)");
