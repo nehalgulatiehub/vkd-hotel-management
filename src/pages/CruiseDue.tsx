@@ -10,7 +10,7 @@ export default function CruiseDue() {
         dateField: "cruise_date",
         title: "Cruise Due Amount",
         label: "Cruise",
-        allRecordsPath: "/cruise-details",
+        allRecordsPath: "/payments/cruise",
       }}
     />
   );

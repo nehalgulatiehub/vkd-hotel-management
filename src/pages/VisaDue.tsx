@@ -10,7 +10,7 @@ export default function VisaDue() {
         dateField: "visa_date",
         title: "Visa Due Amount",
         label: "Visa",
-        allRecordsPath: "/visa-details",
+        allRecordsPath: "/payments/visa",
       }}
     />
   );
