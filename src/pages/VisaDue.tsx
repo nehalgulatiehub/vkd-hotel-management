@@ -1,9 +1,17 @@
-import { ServiceModuleDue } from "@/components/booking/ServiceModuleDue";
+import { ServiceDuePage } from "@/components/booking/ServiceDuePage";
 
 export default function VisaDue() {
   return (
-    <ServiceModuleDue
-      config={{ table: "visa_bookings", nameField: "visa_name", dateField: "visa_date", title: "Due Amount Visa", label: "Visa" }}
+    <ServiceDuePage
+      config={{
+        table: "visa_bookings",
+        serviceType: "visa",
+        nameField: "visa_name",
+        dateField: "visa_date",
+        title: "Visa Due Amount",
+        label: "Visa",
+        allRecordsPath: "/payments/visa",
+      }}
     />
   );
 }

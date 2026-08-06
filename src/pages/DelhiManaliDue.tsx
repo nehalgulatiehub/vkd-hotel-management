@@ -108,6 +108,7 @@ export default function DelhiManaliDue() {
   const totalDue = filteredBookings.reduce((sum, booking) => sum + (booking.due_amount || 0), 0);
   const totalAmount = filteredBookings.reduce((sum, booking) => sum + (booking.total_amount || 0), 0);
   const totalPaid = filteredBookings.reduce((sum, booking) => sum + (booking.paid_amount || 0), 0);
+  const totalBookingPrice = filteredBookings.reduce((sum, booking) => sum + (Number(booking.rate_per_seat) || 0), 0);
 
   const handleViewDetails = (booking: any) => {
     setSelectedBooking(booking);
@@ -305,10 +306,16 @@ export default function DelhiManaliDue() {
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end gap-6 p-4 border-t" style={{ backgroundColor: "#FDE1E1", borderColor: "#FFC1C1" }}>
-              <div className="text-xs"><span className="font-semibold">Total Amount:</span> ₹{totalAmount.toLocaleString("en-IN")}</div>
-              <div className="text-xs"><span className="font-semibold">Total Paid:</span> ₹{totalPaid.toLocaleString("en-IN")}</div>
-              <div className="text-xs text-destructive"><span className="font-semibold">Total Due:</span> ₹{totalDue.toLocaleString("en-IN")}</div>
+            <div className="p-3 border-t" style={{ backgroundColor: "#fff", borderColor: "#ccc", fontSize: 11 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px" }}>
+                <span><strong>Total Booking Price :</strong> Rs. {totalBookingPrice.toLocaleString("en-IN")} /-</span>
+                <span><strong>Total Selling Price :</strong> Rs. {totalAmount.toLocaleString("en-IN")} /-</span>
+                <span><strong>Net Profit :</strong> Rs. {(totalAmount - totalBookingPrice).toLocaleString("en-IN")} /-</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px", marginTop: 2 }}>
+                <span><strong>Total Received Payment :</strong> Rs. {totalPaid.toLocaleString("en-IN")} /-</span>
+                <span><strong>Total Due Payment :</strong> Rs. {totalDue.toLocaleString("en-IN")} /-</span>
+              </div>
             </div>
           </CardContent>
         </Card>
