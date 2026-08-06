@@ -168,7 +168,12 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         bankName: settings?.bank_name || "",
         bankIfsc: settings?.ifsc_code || "",
         bankBranch: settings?.branch_name || "",
+        footerSalutation: "Thanks & Regards,",
+        footerCompany: brand.name,
+        footerAddress: brand.address,
+        footerMobile: brand.contact,
       });
+
 
     } catch (error) {
       console.error("Error fetching voucher data:", error);
