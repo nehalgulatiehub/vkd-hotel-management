@@ -624,6 +624,8 @@ const App = () => (
           <Route path="/purchase/items" element={<DashboardLayout><ItemMaster /></DashboardLayout>} />
           <Route path="/purchase/requests" element={<DashboardLayout><PurchaseRequests /></DashboardLayout>} />
           <Route path="/purchase/orders" element={<DashboardLayout><PurchaseOrders /></DashboardLayout>} />
+          <Route path="/purchase/po-pending" element={<DashboardLayout><AdminPOApprovals status="pending" /></DashboardLayout>} />
+          <Route path="/purchase/po-approved" element={<DashboardLayout><AdminPOApprovals status="approved" /></DashboardLayout>} />
           <Route path="/purchase/grn" element={<DashboardLayout><GoodsReceipt /></DashboardLayout>} />
           <Route path="/purchase/invoices" element={<DashboardLayout><PurchaseInvoices /></DashboardLayout>} />
           <Route path="/purchase/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />

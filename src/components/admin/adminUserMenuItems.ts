@@ -295,6 +295,7 @@ export const ADMIN_USER_MENU_ITEMS: AdminUserMenuGroup[] = [
       { key: "purchase_items", label: "Item Master" },
       { key: "purchase_requests", label: "Purchase Requests" },
       { key: "purchase_orders", label: "Purchase Orders" },
+      { key: "purchase_po_approvals", label: "PO Approvals (Approve/Reject)" },
       { key: "purchase_grn", label: "Goods Receipt" },
       { key: "purchase_invoices", label: "Purchase Invoices" },
       { key: "purchase_inventory", label: "Inventory" },

@@ -281,6 +281,8 @@ const menuItems: MenuItem[] = [
       { title: "Vendors", url: "/purchase/vendors", menuKey: "purchase_vendors" },
       { title: "Item Master", url: "/purchase/items", menuKey: "purchase_items" },
       { title: "Purchase Orders", url: "/purchase/orders", menuKey: "purchase_orders" },
+      { title: "Pending PO Approvals", url: "/purchase/po-pending", menuKey: "purchase_po_approvals" },
+      { title: "Approved POs", url: "/purchase/po-approved", menuKey: "purchase_po_approvals" },
       { title: "Purchase Invoices", url: "/purchase/invoices", menuKey: "purchase_invoices" },
       { title: "Inventory", url: "/purchase/inventory", menuKey: "purchase_inventory" },
       { title: "Reports", url: "/purchase/reports", menuKey: "purchase_reports" },
