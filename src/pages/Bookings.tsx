@@ -855,29 +855,33 @@ export default function Bookings() {
         for (const hotel of validHotels) {
           const hotelAmount = hotel.selling_price ? parseFloat(hotel.selling_price) : 0;
           totalAmount += hotelAmount;
-          
+
           const anotherHotelData = {
             booking_id: bookingId,
             hotel_id: hotel.hotel_id,
             own_hotel_id: null,
-            check_in_date: hotel.check_in,
-            check_out_date: hotel.check_out,
-            room_type: hotel.room_type,
+            check_in_date: hotel.check_in || formData.booking_from || formData.check_in_date || new Date().toISOString().split("T")[0],
+            check_out_date: hotel.check_out || hotel.check_in || formData.booking_to || formData.check_out_date || new Date().toISOString().split("T")[0],
+            room_type: hotel.room_type || null,
             number_of_rooms: hotel.num_rooms ? parseInt(hotel.num_rooms) : 1,
             room_rate: hotel.booking_price ? parseFloat(hotel.booking_price) : 0,
             total_amount: hotelAmount,
             paid_amount: 0,
             due_amount: hotelAmount,
-            notes: hotel.note
+            notes: hotel.note || null
           };
-          
+
           const { error: anotherHotelError } = await supabase
             .from("hotel_bookings")
             .insert([anotherHotelData]);
-          
-          if (anotherHotelError) console.error("Another hotel booking error:", anotherHotelError);
+
+          if (anotherHotelError) {
+            console.error("Another hotel booking error:", anotherHotelError);
+            toast.error(`Failed to save another hotel booking: ${anotherHotelError.message}`);
+          }
         }
       }
+
 
       // Insert Additional Vehicle Bookings if included (supports multiple vehicles)
       if (formData.include_additional_vehicle) {
@@ -1477,7 +1481,9 @@ export default function Bookings() {
         (supabase as any).from("cruise_bookings").select("*").eq("booking_id", booking.id)
       ]);
 
-      const hotelBooking = hotelData.data?.[0];
+      const hotelRows = hotelData.data || [];
+      const hotelBooking = hotelRows.find((h: any) => h.own_hotel_id) || hotelRows.find((h: any) => !h.hotel_id);
+      const anotherHotelRows = hotelRows.filter((h: any) => h.hotel_id);
       const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "delhi_manali");
       const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "manali_delhi");
       const safariBooking = safariData.data?.[0];
@@ -1589,6 +1595,22 @@ export default function Bookings() {
         } as VehicleEntry;
       });
       setVehiclesList(loadedVehicles.length ? loadedVehicles : [{ ...emptyVehicleEntry }]);
+
+      // Load existing Another Hotel rows so editing does not wipe them
+      setAnotherHotelsList(
+        anotherHotelRows.length
+          ? anotherHotelRows.map((h: any) => ({
+              hotel_id: h.hotel_id || "",
+              num_rooms: h.number_of_rooms?.toString() || "",
+              room_type: h.room_type || "",
+              check_in: h.check_in_date || "",
+              check_out: h.check_out_date || "",
+              booking_price: h.room_rate?.toString() || "",
+              selling_price: h.total_amount?.toString() || "",
+              note: h.notes || ""
+            }))
+          : [{ hotel_id: "", num_rooms: "", room_type: "", check_in: "", check_out: "", booking_price: "", selling_price: "", note: "" }]
+      );
 
       // Load rooms if hotel is selected
       if (hotelBooking?.hotel_id) {
