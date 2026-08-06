@@ -171,6 +171,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setShowViewPaymentDialog,
     selectedBooking,
     selectedService,
+    serviceTotals,
     bookingPayments,
     paymentAmount,
     setPaymentAmount,
