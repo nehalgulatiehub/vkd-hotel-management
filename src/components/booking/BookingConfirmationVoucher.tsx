@@ -3,10 +3,48 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import sitaraLogo from "@/assets/sitara-logo.png.asset.json";
+import winsomeLogo from "@/assets/mukut-logo.webp";
 
 interface BookingConfirmationVoucherProps {
   bookingId: string;
   onClose: () => void;
+}
+
+type Brand = {
+  key: "winsome" | "sitara" | "default";
+  logo: string | null;
+  name: string;
+  subTitle: string;
+  unitLine: string;
+  address: string;
+  contact: string;
+};
+
+const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
+  winsome: {
+    logo: winsomeLogo,
+    name: "Winsome Resort",
+    subTitle: "Jim Corbett, Ramnagar",
+    unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
+    address: "Winsome Resort, Jim Corbett, Ramnagar",
+    contact: "9560002045/46",
+  },
+  sitara: {
+    logo: sitaraLogo.url,
+    name: "Hotel Sitara International",
+    subTitle: "Manali",
+    unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
+    address: "Hotel Sitara International, Manali",
+    contact: "9882171103/9667788928",
+  },
+};
+
+function detectBrand(hotelName?: string | null): "winsome" | "sitara" | null {
+  const n = (hotelName || "").toLowerCase();
+  if (n.includes("sitara")) return "sitara";
+  if (n.includes("winsome")) return "winsome";
+  return null;
 }
 
 export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfirmationVoucherProps) {
@@ -15,6 +53,8 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [roomNamesMap, setRoomNamesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [fields, setFields] = useState<Record<string, string>>({});
   const voucherRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,27 +69,81 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         supabase.from("company_settings").select("*").limit(1).single(),
       ]);
 
-      setBooking(bookingRes.data);
-      setHotelBookings(hotelRes.data || []);
-      setCompanySettings(settingsRes.data);
+      const bk = bookingRes.data;
+      const hbs = hotelRes.data || [];
+      const settings = settingsRes.data;
+
+      setBooking(bk);
+      setHotelBookings(hbs);
+      setCompanySettings(settings);
 
       // Resolve room_type UUIDs to room names
-      const roomTypeIds = (hotelRes.data || [])
-        .map((hb: any) => hb.room_type)
-        .filter(Boolean);
+      let roomMap: Record<string, string> = {};
+      const roomTypeIds = hbs.map((hb: any) => hb.room_type).filter(Boolean);
       if (roomTypeIds.length > 0) {
         const { data: roomsData } = await supabase
           .from("rooms")
           .select("id, room_type, room_number")
           .in("id", roomTypeIds);
-        if (roomsData) {
-          const map: Record<string, string> = {};
-          roomsData.forEach((r: any) => {
-            map[r.id] = r.room_type || r.room_number;
-          });
-          setRoomNamesMap(map);
-        }
+        (roomsData || []).forEach((r: any) => {
+          roomMap[r.id] = r.room_type || r.room_number;
+        });
+        setRoomNamesMap(roomMap);
       }
+
+      // Brand resolution based on the hotel of this booking
+      const hotelName = hbs[0]?.own_hotels?.name || hbs[0]?.another_hotels?.name || "";
+      const brandKey = detectBrand(hotelName);
+      const brand: Brand = brandKey
+        ? { key: brandKey, ...BRANDS[brandKey] }
+        : {
+            key: "default",
+            logo: settings?.logo_url || null,
+            name: settings?.company_name || hotelName || "Your Hotel",
+            subTitle: settings?.sub_title || "",
+            unitLine: "",
+            address: settings?.address || "",
+            contact: settings?.contact_no || "",
+          };
+
+      // Meal plan / package details — stored in hotel_bookings.notes as "Package: XYZ"
+      const packageFromNotes = hbs
+        .map((hb: any) => hb.notes?.match(/Package:\s*([^|]+)/)?.[1]?.trim())
+        .filter(Boolean)
+        .join(", ");
+      const mealPlan =
+        packageFromNotes ||
+        hbs.map((hb: any) => hb.meal_plan).filter(Boolean).join(", ") ||
+        (bk as any)?.package_type ||
+        bk?.special_requests ||
+        "-";
+
+      const numberOfRooms = hbs.reduce((s: number, hb: any) => s + (hb.number_of_rooms || 0), 0);
+      const roomType =
+        hbs.map((hb: any) => (hb.room_type ? roomMap[hb.room_type] || hb.room_type : null)).filter(Boolean).join(", ") ||
+        "-";
+
+      setFields({
+        brandKey: brand.key,
+        logoUrl: brand.logo || "",
+        companyName: brand.name,
+        subTitle: brand.subTitle,
+        unitLine: brand.unitLine,
+        address: brand.address,
+        contact: brand.contact,
+        guestName: bk?.customer_name || "",
+        contactNo: bk?.contact_no || "",
+        bookingNumber: bk?.booking_number || "",
+        checkIn: bk?.check_in_date ? fmt(bk.check_in_date) : "",
+        checkOut: bk?.check_out_date ? fmt(bk.check_out_date) : "",
+        numberOfRooms: numberOfRooms ? String(numberOfRooms) : "-",
+        roomType,
+        persons: String(bk?.adults || 0),
+        kids: String(bk?.children || 0),
+        extraMattress: "-",
+        mealPlan,
+        billingInstruction: bk?.notes || "",
+      });
     } catch (error) {
       console.error("Error fetching voucher data:", error);
     } finally {
@@ -57,48 +151,62 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      return format(new Date(dateStr), "dd/MM/yyyy");
-    } catch {
-      return dateStr;
-    }
-  };
+  const set = (k: string, v: string) => setFields((f) => ({ ...f, [k]: v }));
 
-  const companyName = companySettings?.company_name || "Your Hotel";
-  const companySubTitle = companySettings?.sub_title || "";
-  const companyAddress = companySettings?.address || "";
-  const companyContact = companySettings?.contact_no || "";
+  const Val = ({ k, className = "" }: { k: string; className?: string }) =>
+    editing ? (
+      <input
+        value={fields[k] ?? ""}
+        onChange={(e) => set(k, e.target.value)}
+        className={`w-full border border-blue-400 rounded px-1 py-0.5 text-sm bg-blue-50 ${className}`}
+      />
+    ) : (
+      <span className={className}>{fields[k] || "-"}</span>
+    );
 
   if (loading) return null;
   if (!booking) return null;
 
-  const hotelName = hotelBookings[0]?.own_hotels?.name || hotelBookings[0]?.another_hotels?.name || companyName;
-  const numberOfRooms = hotelBookings.reduce((sum, hb) => sum + (hb.number_of_rooms || 0), 0);
-  const roomType = hotelBookings.map(hb => hb.room_type ? (roomNamesMap[hb.room_type] || hb.room_type) : null).filter(Boolean).join(", ") || "-";
+  const companyName = fields.companyName;
+  const companyContact = fields.contact;
+  const companyAddress = fields.address;
+  const hotelName = companyName;
 
   return (
     <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:block" id="voucher-container">
-      <div ref={voucherRef} className="max-w-3xl mx-auto p-8 bg-white text-black" id="voucher-content">
+      <div ref={voucherRef} className="max-w-3xl mx-auto p-8 pb-28 bg-white text-black" id="voucher-content">
         {/* Header */}
         <div data-pdf-section className="text-center mb-6 border-b-2 border-gray-800 pb-4">
-          {companySettings?.logo_url && (
-            <img src={companySettings.logo_url} alt={companyName} className="h-16 mx-auto mb-2" />
+          {fields.logoUrl && (
+            <img src={fields.logoUrl} alt={companyName} className="h-16 mx-auto mb-2 object-contain" />
           )}
-          <h1 className="text-2xl font-bold tracking-wide">{companyName}</h1>
-          {companySubTitle && <p className="text-sm text-gray-600">{companySubTitle}</p>}
+          <h1 className="text-2xl font-bold tracking-wide">
+            <Val k="companyName" className="text-center font-bold" />
+          </h1>
+          <p className="text-sm text-gray-600">
+            <Val k="subTitle" />
+          </p>
+          {(fields.unitLine || editing) && (
+            <p className="text-xs text-gray-600 italic">
+              <Val k="unitLine" />
+            </p>
+          )}
           <p className="text-lg font-bold mt-3 underline">Booking Confirmation Voucher</p>
         </div>
 
         {/* Resort Address */}
         <div data-pdf-section className="text-center mb-4 text-sm">
-          <p className="font-semibold">Resort Address - {companyAddress}</p>
-          <p>Contact number - {companyContact}</p>
+          <p className="font-semibold">
+            Resort Address - <Val k="address" />
+          </p>
+          <p>
+            Contact number - <Val k="contact" />
+          </p>
         </div>
 
         {/* Greeting */}
         <div data-pdf-section className="mb-6 text-sm bg-gray-50 p-4 rounded border">
-          <p className="font-semibold mb-2">Dear {booking.customer_name || "Sir/Ma'am"},</p>
+          <p className="font-semibold mb-2">Dear {fields.guestName || "Sir/Ma'am"},</p>
           <p className="mb-2">Namaskar!!!</p>
           <p>Thank you for choosing {companyName}. We are pleased to confirm your reservation as per the details below:-</p>
         </div>
@@ -109,56 +217,59 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
             <tbody>
               <tr className="bg-gray-100">
                 <td className="border border-gray-400 p-2 font-semibold w-1/2">Booking Confirmation Number</td>
-                <td className="border border-gray-400 p-2">{booking.booking_number}</td>
+                <td className="border border-gray-400 p-2"><Val k="bookingNumber" /></td>
               </tr>
               <tr>
                 <td className="border border-gray-400 p-2 font-semibold">Guest Name</td>
-                <td className="border border-gray-400 p-2">{booking.customer_name || "-"}</td>
+                <td className="border border-gray-400 p-2"><Val k="guestName" /></td>
               </tr>
               <tr className="bg-gray-50">
                 <td className="border border-gray-400 p-2 font-semibold">Contact No</td>
-                <td className="border border-gray-400 p-2">{booking.contact_no || "-"}</td>
+                <td className="border border-gray-400 p-2"><Val k="contactNo" /></td>
               </tr>
               <tr>
                 <td className="border border-gray-400 p-2 font-semibold">Check In</td>
-                <td className="border border-gray-400 p-2">{formatDate(booking.check_in_date)}</td>
+                <td className="border border-gray-400 p-2"><Val k="checkIn" /></td>
               </tr>
               <tr className="bg-gray-50">
                 <td className="border border-gray-400 p-2 font-semibold">Check Out</td>
-                <td className="border border-gray-400 p-2">{formatDate(booking.check_out_date)}</td>
+                <td className="border border-gray-400 p-2"><Val k="checkOut" /></td>
               </tr>
               <tr>
                 <td className="border border-gray-400 p-2 font-semibold">No of Room</td>
-                <td className="border border-gray-400 p-2">{numberOfRooms || "-"}</td>
+                <td className="border border-gray-400 p-2"><Val k="numberOfRooms" /></td>
               </tr>
               <tr className="bg-gray-50">
                 <td className="border border-gray-400 p-2 font-semibold">Room Type</td>
-                <td className="border border-gray-400 p-2">{roomType}</td>
+                <td className="border border-gray-400 p-2"><Val k="roomType" /></td>
               </tr>
               <tr>
                 <td className="border border-gray-400 p-2 font-semibold">No of Person</td>
-                <td className="border border-gray-400 p-2">{booking.adults || 0}</td>
+                <td className="border border-gray-400 p-2"><Val k="persons" /></td>
               </tr>
               <tr className="bg-gray-50">
                 <td className="border border-gray-400 p-2 font-semibold">No of Kids</td>
-                <td className="border border-gray-400 p-2">{booking.children || 0}</td>
+                <td className="border border-gray-400 p-2"><Val k="kids" /></td>
               </tr>
               <tr>
                 <td className="border border-gray-400 p-2 font-semibold">Extra Mattress</td>
-                <td className="border border-gray-400 p-2">-</td>
+                <td className="border border-gray-400 p-2"><Val k="extraMattress" /></td>
               </tr>
               <tr className="bg-gray-50">
-                <td className="border border-gray-400 p-2 font-semibold">Meal Plan</td>
-                <td className="border border-gray-400 p-2">{booking.special_requests || "-"}</td>
+                <td className="border border-gray-400 p-2 font-semibold">Meal Plan / Package</td>
+                <td className="border border-gray-400 p-2"><Val k="mealPlan" /></td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* Billing Instruction */}
-        {booking.notes && (
+        {(fields.billingInstruction || editing) && (
           <div data-pdf-section className="mb-6 text-sm">
-            <p><span className="font-semibold">Billing Instruction:</span> {booking.notes}</p>
+            <p className="flex gap-2">
+              <span className="font-semibold whitespace-nowrap">Billing Instruction:</span>
+              <Val k="billingInstruction" />
+            </p>
           </div>
         )}
 
@@ -186,7 +297,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
                 <tr className="bg-gray-100">
                   <td className="border border-gray-400 p-2 w-8">1</td>
                   <td className="border border-gray-400 p-2 font-semibold">Beneficiary / Account Name</td>
-                  <td className="border border-gray-400 p-2">{companyName}</td>
+                  <td className="border border-gray-400 p-2">{companySettings.company_name || companyName}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-400 p-2">2</td>
@@ -254,7 +365,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
         {/* Footer */}
         <div data-pdf-section className="text-sm border-t border-gray-300 pt-4">
-          <p className="font-semibold">Thanks & Regards,</p>
+          <p className="font-semibold">Thanks &amp; Regards,</p>
           <p>{companyName}</p>
           {companyAddress && <p className="text-gray-600">{companyAddress}</p>}
           {companyContact && <p className="text-gray-600">Mobile: {companyContact}</p>}
@@ -262,9 +373,17 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       </div>
 
       {/* Action Buttons - hidden during print */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex justify-center gap-4 print:hidden z-[10000]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex flex-wrap justify-center gap-3 print:hidden z-[10000]">
+        <button
+          onClick={() => setEditing((e) => !e)}
+          className={`px-6 py-2 rounded-md font-medium text-white ${editing ? "bg-emerald-600 hover:bg-emerald-700" : "bg-amber-600 hover:bg-amber-700"}`}
+        >
+          {editing ? "✔ Done Editing" : "✏️ Edit Voucher"}
+        </button>
         <button
           onClick={async () => {
+            setEditing(false);
+            await new Promise((r) => setTimeout(r, 50));
             const container = voucherRef.current;
             if (!container) return;
             const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
@@ -288,7 +407,6 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
               const imgW = CONTENT_W;
               let imgH = (canvas.height * imgW) / canvas.width;
 
-              // If a single section is taller than a page, slice it across pages
               if (imgH > CONTENT_H) {
                 const pxPerMm = canvas.width / imgW;
                 const sliceHeightPx = Math.floor(CONTENT_H * pxPerMm);
@@ -327,7 +445,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
               }
             }
 
-            pdf.save(`Booking_${booking.booking_number || bookingId}.pdf`);
+            pdf.save(`Booking_${fields.bookingNumber || bookingId}.pdf`);
           }}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
         >
@@ -335,17 +453,18 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </button>
         <button
           onClick={() => {
-            const phone = booking.contact_no?.replace(/[^0-9]/g, '') || '';
+            const phone = fields.contactNo?.replace(/[^0-9]/g, '') || '';
             const message = encodeURIComponent(
               `*Booking Confirmation Voucher*\n\n` +
-              `Dear ${booking.customer_name || 'Guest'},\n\n` +
+              `Dear ${fields.guestName || 'Guest'},\n\n` +
               `Your booking has been confirmed!\n\n` +
-              `📋 *Booking No:* ${booking.booking_number}\n` +
-              `📅 *Check In:* ${formatDate(booking.check_in_date)}\n` +
-              `📅 *Check Out:* ${formatDate(booking.check_out_date)}\n` +
-              `👥 *Persons:* ${booking.adults || 0} Adults, ${booking.children || 0} Kids\n` +
+              `📋 *Booking No:* ${fields.bookingNumber}\n` +
+              `📅 *Check In:* ${fields.checkIn}\n` +
+              `📅 *Check Out:* ${fields.checkOut}\n` +
+              `👥 *Persons:* ${fields.persons} Adults, ${fields.kids} Kids\n` +
               `🏨 *Hotel:* ${hotelName}\n` +
-              `🛏️ *Rooms:* ${numberOfRooms || '-'}\n\n` +
+              `🛏️ *Rooms:* ${fields.numberOfRooms}\n` +
+              `🍽️ *Meal Plan:* ${fields.mealPlan}\n\n` +
               `💰 *Total Amount:* ₹${booking.total_amount || 0}\n` +
               `✅ *Paid:* ₹${booking.paid_amount || 0}\n` +
               `⏳ *Due:* ₹${booking.due_amount || 0}\n\n` +
@@ -363,16 +482,17 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </button>
         <button
           onClick={() => {
-            const subject = encodeURIComponent(`Booking Confirmation - ${booking.booking_number}`);
+            const subject = encodeURIComponent(`Booking Confirmation - ${fields.bookingNumber}`);
             const body = encodeURIComponent(
-              `Dear ${booking.customer_name || 'Guest'},\n\n` +
+              `Dear ${fields.guestName || 'Guest'},\n\n` +
               `Your booking has been confirmed!\n\n` +
-              `Booking No: ${booking.booking_number}\n` +
-              `Check In: ${formatDate(booking.check_in_date)}\n` +
-              `Check Out: ${formatDate(booking.check_out_date)}\n` +
-              `Persons: ${booking.adults || 0} Adults, ${booking.children || 0} Kids\n` +
+              `Booking No: ${fields.bookingNumber}\n` +
+              `Check In: ${fields.checkIn}\n` +
+              `Check Out: ${fields.checkOut}\n` +
+              `Persons: ${fields.persons} Adults, ${fields.kids} Kids\n` +
               `Hotel: ${hotelName}\n` +
-              `Rooms: ${numberOfRooms || '-'}\n\n` +
+              `Rooms: ${fields.numberOfRooms}\n` +
+              `Meal Plan: ${fields.mealPlan}\n\n` +
               `Total Amount: Rs. ${booking.total_amount || 0}\n` +
               `Paid: Rs. ${booking.paid_amount || 0}\n` +
               `Due: Rs. ${booking.due_amount || 0}\n\n` +
@@ -396,4 +516,12 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
       </div>
     </div>
   );
+}
+
+function fmt(dateStr: string) {
+  try {
+    return format(new Date(dateStr), "dd/MM/yyyy");
+  } catch {
+    return dateStr;
+  }
 }
