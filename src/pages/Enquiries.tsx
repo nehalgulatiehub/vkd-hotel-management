@@ -383,7 +383,7 @@ export default function Enquiries() {
         
         await supabase.from("volvo_bookings").insert([{
           booking_id: bookingId,
-          route: "Delhi-Manali",
+          route: "delhi_manali",
           travel_date: enquiry.dm_journey_date,
           number_of_seats: enquiry.dm_num_tickets ? parseInt(enquiry.dm_num_tickets) : 1,
           rate_per_seat: enquiry.dm_booking_price ? parseFloat(enquiry.dm_booking_price) : 0,
@@ -400,7 +400,7 @@ export default function Enquiries() {
         
         await supabase.from("volvo_bookings").insert([{
           booking_id: bookingId,
-          route: "Manali-Delhi",
+          route: "manali_delhi",
           travel_date: enquiry.md_journey_date,
           number_of_seats: enquiry.md_num_tickets ? parseInt(enquiry.md_num_tickets) : 1,
           rate_per_seat: enquiry.md_booking_price ? parseFloat(enquiry.md_booking_price) : 0,
