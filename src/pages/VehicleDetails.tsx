@@ -66,6 +66,12 @@ export default function VehicleDetails() {
 
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredBookings);
 
+  const totalBookingPrice = filteredBookings.reduce((s, b) => s + (Number(b.rate) || 0), 0);
+  const totalSellingPrice = filteredBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0);
+  const netProfit = totalSellingPrice - totalBookingPrice;
+  const totalReceivedPayment = filteredBookings.reduce((s, b) => s + (Number(b.paid_amount) || 0), 0);
+  const totalDuePayment = filteredBookings.reduce((s, b) => s + (Number(b.due_amount) || 0), 0);
+
   return (
     <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
       <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 View Vehicle Details</div>
