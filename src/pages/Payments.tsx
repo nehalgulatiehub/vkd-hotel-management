@@ -411,7 +411,7 @@ export default function Payments() {
               {paginatedItems.map((payment, index) => (
                 <tr key={payment.id} className="bg-[#F5E6E0] hover:bg-[#EBDAD4]">
                   <td className="border border-border p-2">{startIndex + index}</td>
-                  <td className="border border-border p-2">{payment.amount?.toLocaleString() || "-"}</td>
+                  <td className="border border-border p-2">{payment.cities?.name || "-"}</td>
                   <td className="border border-border p-2">
                     {formatDisplayDate(payment.payment_date)}
                   </td>
