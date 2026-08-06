@@ -143,7 +143,26 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         extraMattress: "-",
         mealPlan,
         billingInstruction: bk?.notes || "",
+        inclusions: [
+          "Welcome drink (Non-alcoholic) on arrival",
+          "Meals as per plan (at Restaurant)",
+          "Evening Hi Tea with cookies (at Restaurant)",
+          "Complimentary use of Swimming Pool (costumes mandatory)",
+          "Complimentary use of Gym",
+          "Complimentary use of Indoor/Outdoor games",
+          "Complimentary use of Adventure activities",
+          "Complimentary use of Wifi facility",
+        ].join("\n"),
+        specialRequests:
+          bk?.special_requests ||
+          "Requests for anything not included above will be subject to availability and to be intimated at the time of check-in",
+        bankAccountName: settings?.company_name || brand.name || "",
+        bankAccountNo: settings?.account_no || "",
+        bankName: settings?.bank_name || "",
+        bankIfsc: settings?.ifsc_code || "",
+        bankBranch: settings?.branch_name || "",
       });
+
     } catch (error) {
       console.error("Error fetching voucher data:", error);
     } finally {
