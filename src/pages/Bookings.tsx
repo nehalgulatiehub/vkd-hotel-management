@@ -1094,7 +1094,25 @@ export default function Bookings() {
            matchesContact && matchesEmail;
   });
 
-  const pagination = usePagination(filteredBookings);
+  // When a Booking From date range is applied, sort results ascending by Booking From date
+  const bookingFromTime = (b: any) => {
+    const raw = b.hotel_bookings?.[0]?.check_in_date || b.check_in_date;
+    if (!raw) return Number.MAX_SAFE_INTEGER;
+    const [y, m, d] = String(raw).slice(0, 10).split("-").map(Number);
+    if (!y || !m || !d) return Number.MAX_SAFE_INTEGER;
+    return new Date(y, m - 1, d).getTime();
+  };
+  const dateRangeActive = Boolean(
+    filters.searchWithDate &&
+    ((filters.fromYear && filters.fromMonth && filters.fromDay) ||
+      (filters.toYear && filters.toMonth && filters.toDay))
+  );
+  const displayedBookings = dateRangeActive
+    ? [...filteredBookings].sort((a: any, b: any) => bookingFromTime(a) - bookingFromTime(b))
+    : filteredBookings;
+
+  const pagination = usePagination(displayedBookings);
+
 
   // Summary totals: admins see everything, other users only their own bookings
   const totalsBookings = (isAdmin() || isAccount())
