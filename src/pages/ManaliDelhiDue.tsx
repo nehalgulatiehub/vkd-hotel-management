@@ -65,7 +65,7 @@ export default function ManaliDelhiDue() {
     const { data, error } = await supabase
       .from("volvo_bookings")
       .select("*, bookings(id, booking_number, customer_name, email, status, contact_no, address, booking_type, adults, children, check_in_date, check_out_date, notes, reference, created_at, created_by, agents(name))")
-      .eq("route", "Manali-Delhi")
+      .eq("route", "manali_delhi")
       .gt("due_amount", 0)
       .order("travel_date", { ascending: true });
     

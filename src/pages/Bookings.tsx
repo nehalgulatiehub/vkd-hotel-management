@@ -738,7 +738,7 @@ export default function Bookings() {
         
         const volvoData = {
           booking_id: bookingId,
-          route: "Delhi-Manali",
+          route: "delhi_manali",
           travel_date: formData.dm_journey_date,
           number_of_seats: formData.dm_num_tickets ? parseInt(formData.dm_num_tickets) : 1,
           rate_per_seat: formData.dm_booking_price ? parseFloat(formData.dm_booking_price) : 0,
@@ -762,7 +762,7 @@ export default function Bookings() {
         
         const volvoData = {
           booking_id: bookingId,
-          route: "Manali-Delhi",
+          route: "manali_delhi",
           travel_date: formData.md_journey_date,
           number_of_seats: formData.md_num_tickets ? parseInt(formData.md_num_tickets) : 1,
           rate_per_seat: formData.md_booking_price ? parseFloat(formData.md_booking_price) : 0,
@@ -1211,7 +1211,7 @@ export default function Bookings() {
       supabase.from("safari_bookings").select("*").eq("booking_id", booking.id),
       supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", booking.id),
       // Do not filter by route here because historical data uses multiple route formats
-      // (e.g. "Delhi-Manali" vs "delhi_manali"). We'll split in-memory.
+      // (e.g. "delhi_manali" vs "delhi_manali"). We'll split in-memory.
       // NOTE: volvo_bookings has no FK relationship to transporters in this schema,
       // so selecting transporters(name) triggers a PGRST200 error and returns no data.
       supabase.from("volvo_bookings").select("*").eq("booking_id", booking.id),
@@ -1476,8 +1476,8 @@ export default function Bookings() {
       ]);
 
       const hotelBooking = hotelData.data?.[0];
-      const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "Delhi-Manali");
-      const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "Manali-Delhi");
+      const delhiManaliVolvo = volvoData.data?.find((v: any) => v.route === "delhi_manali");
+      const manaliDelhiVolvo = volvoData.data?.find((v: any) => v.route === "manali_delhi");
       const safariBooking = safariData.data?.[0];
       const visaBooking = visaData.data?.[0];
       const cruiseBooking = cruiseData.data?.[0];
