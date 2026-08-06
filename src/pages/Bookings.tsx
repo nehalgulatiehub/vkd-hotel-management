@@ -3102,22 +3102,16 @@ export default function Bookings() {
                               <div style={{ fontSize: 10 }}>
                                 {booking.hotel_info && (<><div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div><div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>{booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}{booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}</>)}
                                 {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
-                                {booking.include_delhi_manali && <div>✓ Delhi-Manali</div>}
-                                {booking.include_manali_delhi && <div>✓ Manali-Delhi</div>}
-                                {booking.include_safari && <div>✓ Safari</div>}
-                                {booking.include_another_hotel && <div>✓ Another Hotel</div>}
-                                {booking.include_additional_vehicle && <div>✓ Add. Vehicle</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
                                 {booking.hotel_info?.package && <div><strong>Package :</strong> {booking.hotel_info.package}</div>}
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
                               <div style={{ fontSize: 10 }}>
-                                <div><strong>Booking Price:</strong> Rs. {booking.total_amount || 0}/-</div>
-                                <div><strong>Total Received:</strong> Rs. {booking.paid_amount || 0}/-</div>
-                                
+                                <div><strong>Booking Price:</strong> Rs. {booking.own_total_amount || 0}/-</div>
+                                <div><strong>Total Received:</strong> Rs. {booking.own_paid_amount || 0}/-</div>
+                                <div style={{ color: "#c00" }}><strong>Due Payment:</strong> Rs. {booking.own_due_amount || 0}/-</div>
 
-                                <div style={{ color: "#c00" }}><strong>Due Payment:</strong> Rs. {booking.due_amount || 0}/-</div>
                               </div>
                             </td>
                             <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
