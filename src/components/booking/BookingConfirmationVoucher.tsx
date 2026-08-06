@@ -6,14 +6,24 @@ import html2canvas from "html2canvas";
 import sitaraLogo from "@/assets/sitara-logo.png.asset.json";
 import winsomeLogo from "@/assets/winsome-logo.png.asset.json";
 
+// Lovable asset CDN is only served from the *.lovable.app host. On custom
+// domains (e.g. vkddelhi.com) the /__l5e/ path returns an error, so fall back
+// to the published Lovable host for asset URLs.
+const ASSET_HOST = "https://terra-lodge-manager.lovable.app";
+
 function hostedAssetUrl(path: string) {
   if (!path) return "";
   try {
-    return new URL(path, window.location.origin).href;
+    const origin = window.location.origin;
+    const base = /lovable\.app$|localhost|127\.0\.0\.1/.test(window.location.hostname)
+      ? origin
+      : ASSET_HOST;
+    return new URL(path, base).href;
   } catch {
     return path;
   }
 }
+
 
 interface BookingConfirmationVoucherProps {
   bookingId: string;
