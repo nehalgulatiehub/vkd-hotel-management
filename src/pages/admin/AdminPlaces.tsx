@@ -24,6 +24,8 @@ export default function AdminPlaces() {
 
   useEffect(() => { if (!authLoading && canManage) fetchPlaces(); }, [authLoading, canManage]);
 
+  useEffect(() => { if (isAddMode) { setEditingPlace(null); setIsDialogOpen(true); } }, [isAddMode, location.pathname]);
+
   const fetchPlaces = async () => { setLoading(true); const { data } = await supabase.from("cities").select("*").order("name"); setPlaces(data || []); setLoading(false); };
 
   const handleSubmit = async (e: React.FormEvent) => {
