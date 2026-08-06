@@ -176,6 +176,8 @@ export default function Bookings() {
   const [paymentCityId, setPaymentCityId] = useState("");
   const [paymentType, setPaymentType] = useState("");
   const [paymentOtherNote, setPaymentOtherNote] = useState("");
+  const [paymentModuleTotals, setPaymentModuleTotals] = useState<Record<string, { total: number; paid: number; due: number }>>({});
+
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [cancellationCharge, setCancellationCharge] = useState("");
