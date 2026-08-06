@@ -1,9 +1,17 @@
-import { ServiceModuleDue } from "@/components/booking/ServiceModuleDue";
+import { ServiceDuePage } from "@/components/booking/ServiceDuePage";
 
 export default function CruiseDue() {
   return (
-    <ServiceModuleDue
-      config={{ table: "cruise_bookings", nameField: "cruise_name", dateField: "cruise_date", title: "Due Amount Cruise", label: "Cruise" }}
+    <ServiceDuePage
+      config={{
+        table: "cruise_bookings",
+        serviceType: "cruise",
+        nameField: "cruise_name",
+        dateField: "cruise_date",
+        title: "Cruise Due Amount",
+        label: "Cruise",
+        allRecordsPath: "/cruise-details",
+      }}
     />
   );
 }
