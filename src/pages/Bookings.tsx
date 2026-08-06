@@ -3677,14 +3677,42 @@ export default function Bookings() {
                 <Label>Customer Name</Label>
                 <Input value={selectedBooking?.customer_name || ""} disabled />
               </div>
-              <div className="space-y-2">
-                <Label>Total Amount</Label>
-                <Input value={`Rs. ${selectedBooking?.total_amount || 0}/-`} disabled />
-              </div>
-              <div className="space-y-2">
-                <Label>Due Amount</Label>
-                <Input value={`Rs. ${selectedBooking?.due_amount || 0}/-`} disabled className="text-destructive font-semibold" />
-              </div>
+              {(() => {
+                const moduleLabels: Record<string, string> = {
+                  booking: "Hotel Booking",
+                  safari: "Safari",
+                  delhi_manali: "D-M Volvo",
+                  manali_delhi: "M-D Volvo",
+                  another_hotel: "Another Hotel",
+                  vehicle: "Vehicle",
+                  visa: "Visa",
+                  cruise: "Cruise",
+                };
+                const key = paymentModuleTotals[paymentType] ? paymentType : "booking";
+                const mt = paymentModuleTotals[key] || {
+                  total: Number(selectedBooking?.own_total_amount ?? selectedBooking?.total_amount ?? 0),
+                  paid: Number(selectedBooking?.own_paid_amount ?? selectedBooking?.paid_amount ?? 0),
+                  due: Number(selectedBooking?.own_due_amount ?? selectedBooking?.due_amount ?? 0),
+                };
+                const suffix = moduleLabels[key] ? ` (${moduleLabels[key]})` : "";
+                return (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Total Amount{suffix}</Label>
+                      <Input value={`Rs. ${mt.total.toLocaleString("en-IN")}/-`} disabled />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Received Amount{suffix}</Label>
+                      <Input value={`Rs. ${mt.paid.toLocaleString("en-IN")}/-`} disabled />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Due Amount{suffix}</Label>
+                      <Input value={`Rs. ${mt.due.toLocaleString("en-IN")}/-`} disabled className="text-destructive font-semibold" />
+                    </div>
+                  </>
+                );
+              })()}
+
               <div className="space-y-2">
                 <Label>Payment Amount <span className="text-destructive">*</span></Label>
                 <Input 
