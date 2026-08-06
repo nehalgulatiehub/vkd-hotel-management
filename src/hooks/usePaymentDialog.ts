@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -37,7 +37,16 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
+  const [paymentCityId, setPaymentCityId] = useState("");
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("cities").select("id, name").order("name");
+      setCities(data || []);
+    })();
+  }, []);
 
   const fetchBookingPayments = async (bookingId: string) => {
     const { data } = await supabase
@@ -83,6 +92,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setPaymentAmount("");
     setPaymentMode("");
     setPaymentReference("");
+    setPaymentCityId("");
     setShowPaymentDialog(true);
     fetchServiceTotals(serviceInfo);
   };
@@ -122,6 +132,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
           amount: amount,
           payment_mode: paymentMode,
           reference_number: paymentReference,
+          city_id: paymentCityId || null,
           payment_date: new Date().toISOString().split('T')[0],
           payment_type: paymentType,
           approval_status: "pending" // Payments start as pending - amounts update only on approval
@@ -179,6 +190,9 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
     setPaymentMode,
     paymentReference,
     setPaymentReference,
+    paymentCityId,
+    setPaymentCityId,
+    cities,
     isSubmittingPayment,
     handleViewPayment,
     handleAddPayment,

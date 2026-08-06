@@ -20,6 +20,9 @@ interface PaymentDialogsProps {
   setPaymentMode: (mode: string) => void;
   paymentReference: string;
   setPaymentReference: (ref: string) => void;
+  paymentCityId?: string;
+  setPaymentCityId?: (id: string) => void;
+  cities?: { id: string; name: string }[];
   isSubmittingPayment: boolean;
   onSubmitPayment: () => void;
   serviceTotals?: { label: string; total: number; paid: number; due: number } | null;
@@ -40,6 +43,9 @@ export function PaymentDialogs({
   setPaymentMode,
   paymentReference,
   setPaymentReference,
+  paymentCityId,
+  setPaymentCityId,
+  cities = [],
   isSubmittingPayment,
   onSubmitPayment,
   serviceTotals,
@@ -221,7 +227,15 @@ export function PaymentDialogs({
           <DialogHeader>
             <DialogTitle>Add Payment - {selectedBooking?.booking_number}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div>
+              <Label>Booking Number</Label>
+              <Input value={selectedBooking?.booking_number || ""} disabled />
+            </div>
+            <div>
+              <Label>Customer Name</Label>
+              <Input value={selectedBooking?.customer_name || ""} disabled />
+            </div>
             {serviceTotals && (
               <div className="space-y-2">
                 <div>
@@ -259,6 +273,23 @@ export function PaymentDialogs({
               <Label>Reference Number</Label>
               <Input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="Transaction/Cheque number" />
             </div>
+            <div>
+              <Label>Place (City)</Label>
+              <Select value={paymentCityId || ""} onValueChange={(v) => setPaymentCityId?.(v)}>
+                <SelectTrigger><SelectValue placeholder="Select city where payment was collected" /></SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {cities.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {serviceTotals && (
+              <div>
+                <Label>Payment Type</Label>
+                <Input value={`${serviceTotals.label} Payment`} disabled />
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
               <Button onClick={onSubmitPayment} disabled={isSubmittingPayment}>{isSubmittingPayment ? "Adding..." : "Add Payment"}</Button>
