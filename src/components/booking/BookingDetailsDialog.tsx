@@ -24,11 +24,13 @@ export function BookingDetailsDialog({
   const { roomName } = useRoomNames();
   const [data, setData] = useState<any>(null);
   const [transporters, setTransporters] = useState<any[]>([]);
+  const [fullBooking, setFullBooking] = useState<any>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!open || !booking?.id) return;
-      const [hotels, safaris, volvos, vehicles, visas, cruises, transp] = await Promise.all([
+      const [bookingRes, hotels, safaris, volvos, vehicles, visas, cruises, transp] = await Promise.all([
+        supabase.from("bookings").select("*, agents(name)").eq("id", booking.id).maybeSingle(),
         supabase
           .from("hotel_bookings")
           .select("*, own_hotels(name), another_hotels(name)")
@@ -42,6 +44,7 @@ export function BookingDetailsDialog({
       ]);
 
       const hotelRows = hotels.data || [];
+      setFullBooking(bookingRes.data || null);
       setTransporters(transp.data || []);
       setData({
         ownHotels: hotelRows.filter((h: any) => h.own_hotel_id),
@@ -57,7 +60,9 @@ export function BookingDetailsDialog({
     load();
   }, [open, booking?.id]);
 
+
   if (!booking) return null;
+  const b: any = { ...(booking || {}), ...(fullBooking || {}) };
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
@@ -95,7 +100,7 @@ export function BookingDetailsDialog({
       renderRow("Hotel Name :", h.own_hotels?.name, `own-n-${i}`),
       renderRow("Number of Rooms :", h.number_of_rooms, `own-r-${i}`),
       renderRow("Room Name :", roomName(h.room_type), `own-rt-${i}`),
-      renderRow("Hotel Booking Date :", formatDate(booking.created_at), `own-bd-${i}`),
+      renderRow("Hotel Booking Date :", formatDate(b.created_at), `own-bd-${i}`),
       renderRow("Hotel Check In :", formatDate(h.check_in_date), `own-ci-${i}`),
       renderRow("Hotel Check Out :", formatDate(h.check_out_date), `own-co-${i}`),
       renderRow("Room Selling Price :", formatPrice(h.total_amount), `own-sp-${i}`),
@@ -109,7 +114,7 @@ export function BookingDetailsDialog({
       renderRow("Another Hotel Name :", h.another_hotels?.name, `ah-n-${i}`),
       renderRow("Number of Rooms :", h.number_of_rooms, `ah-r-${i}`),
       renderRow("Room Type :", roomName(h.room_type), `ah-rt-${i}`),
-      renderRow("Hotel Booking Date :", formatDate(booking.created_at), `ah-bd-${i}`),
+      renderRow("Hotel Booking Date :", formatDate(b.created_at), `ah-bd-${i}`),
       renderRow("Hotel Check In :", formatDate(h.check_in_date), `ah-ci-${i}`),
       renderRow("Hotel Check Out :", formatDate(h.check_out_date), `ah-co-${i}`),
       renderRow("Room Booking Price :", formatPrice(h.room_rate), `ah-bp-${i}`),
@@ -122,7 +127,7 @@ export function BookingDetailsDialog({
     sections.push(
       renderSectionHeader("Safari :", `sf-h-${i}`),
       renderRow("Transporter :", s.safari_name, `sf-n-${i}`),
-      renderRow("Safari Booking Date :", formatDate(booking.created_at), `sf-bd-${i}`),
+      renderRow("Safari Booking Date :", formatDate(b.created_at), `sf-bd-${i}`),
       renderRow("Safari Date :", formatDate(s.safari_date), `sf-d-${i}`),
       renderRow("No of Safari :", s.number_of_persons, `sf-p-${i}`),
       renderRow("Safari Booking Price :", formatPrice(s.rate_per_person), `sf-bp-${i}`),
@@ -141,7 +146,7 @@ export function BookingDetailsDialog({
       renderRow("Ticket No. :", ticket, `${prefix}-tn`),
       renderRow("Seat No. :", seat, `${prefix}-sn`),
       renderRow("Transporter :", transporterName(v.transporter_id), `${prefix}-tr`),
-      renderRow("Volvo Booking Date :", formatDate(booking.created_at), `${prefix}-bd`),
+      renderRow("Volvo Booking Date :", formatDate(b.created_at), `${prefix}-bd`),
       renderRow("Volvo Journey Date :", formatDate(v.travel_date), `${prefix}-jd`),
       renderRow("Volvo Booking Price :", formatPrice(v.rate_per_seat), `${prefix}-bp`),
       renderRow("Volvo Selling Price :", formatPrice(v.total_amount), `${prefix}-sp`),
@@ -163,7 +168,7 @@ export function BookingDetailsDialog({
       renderRow("Vehicle Booking Price :", formatPrice(v.rate), `vh-bp-${i}`),
       renderRow("Vehicle Selling Price :", formatPrice(v.total_amount), `vh-sp-${i}`),
       renderRow("Transporter :", v.transporters?.name || transporterName(v.transporter_id), `vh-tr-${i}`),
-      renderRow("Vehicle Booking Date :", formatDate(booking.created_at), `vh-bd-${i}`),
+      renderRow("Vehicle Booking Date :", formatDate(b.created_at), `vh-bd-${i}`),
       renderRow("Vehicle Journey Date :", formatDate(v.pickup_date), `vh-jd-${i}`),
       ...(v.notes ? [renderRow("Vehicle Notes :", v.notes, `vh-nt-${i}`)] : []),
     );
@@ -173,7 +178,7 @@ export function BookingDetailsDialog({
     sections.push(
       renderSectionHeader("Visa :", `vs-h-${i}`),
       renderRow("Visa Name :", v.visa_name, `vs-n-${i}`),
-      renderRow("Visa Booking Date :", formatDate(booking.created_at), `vs-bd-${i}`),
+      renderRow("Visa Booking Date :", formatDate(b.created_at), `vs-bd-${i}`),
       renderRow("Visa Date :", formatDate(v.visa_date), `vs-d-${i}`),
       renderRow("No of Persons :", v.number_of_persons, `vs-p-${i}`),
       renderRow("Visa Booking Price :", formatPrice(v.rate_per_person), `vs-bp-${i}`),
@@ -186,7 +191,7 @@ export function BookingDetailsDialog({
     sections.push(
       renderSectionHeader("Cruise :", `cr-h-${i}`),
       renderRow("Cruise Name :", c.cruise_name, `cr-n-${i}`),
-      renderRow("Cruise Booking Date :", formatDate(booking.created_at), `cr-bd-${i}`),
+      renderRow("Cruise Booking Date :", formatDate(b.created_at), `cr-bd-${i}`),
       renderRow("Cruise Date :", formatDate(c.cruise_date), `cr-d-${i}`),
       renderRow("No of Persons :", c.number_of_persons, `cr-p-${i}`),
       renderRow("Cruise Booking Price :", formatPrice(c.rate_per_person), `cr-bp-${i}`),
@@ -207,23 +212,23 @@ export function BookingDetailsDialog({
             <div className="p-4 text-[12px]">
               <table className="w-full">
                 <tbody>
-                  {renderRow("Type :", booking.booking_type === "agent" ? "Agent" : "Direct")}
-                  {booking.booking_type === "agent" && renderRow("Agent Name :", booking.agents?.name)}
-                  {renderRow("Reference :", booking.reference)}
-                  {renderRow("Reference Email :", booking.reference_email)}
-                  {renderRow("Email-Id :", booking.email)}
-                  {renderRow("Customer Name :", booking.customer_name)}
-                  {renderRow("Contact No :", booking.contact_no)}
-                  {renderRow("Address :", booking.address)}
-                  {renderRow("No. of People :", `${booking.adults || 0} Adult ${booking.children || 0} Children`)}
-                  {renderRow("Booking From :", formatDate(booking.check_in_date))}
-                  {renderRow("Booking To :", formatDate(booking.check_out_date))}
-                  {booking.cheque_no && renderRow("Cheque No :", booking.cheque_no)}
+                  {renderRow("Type :", b.booking_type === "agent" ? "Agent" : "Direct")}
+                  {b.booking_type === "agent" && renderRow("Agent Name :", b.agents?.name)}
+                  {renderRow("Reference :", b.reference)}
+                  {renderRow("Reference Email :", b.reference_email)}
+                  {renderRow("Email-Id :", b.email)}
+                  {renderRow("Customer Name :", b.customer_name)}
+                  {renderRow("Contact No :", b.contact_no)}
+                  {renderRow("Address :", b.address)}
+                  {renderRow("No. of People :", `${b.adults || 0} Adult ${b.children || 0} Children`)}
+                  {renderRow("Booking From :", formatDate(b.check_in_date))}
+                  {renderRow("Booking To :", formatDate(b.check_out_date))}
+                  {b.cheque_no && renderRow("Cheque No :", b.cheque_no)}
                   {sections}
                   {serviceData?.notes && !data && renderRow("Package / Notes :", serviceData.notes)}
-                  {booking.special_requests && renderRow("Special Requests :", booking.special_requests)}
-                  {booking.notes && renderRow("Booking Notes :", booking.notes)}
-                  {renderRow("Date :", formatDate(booking.created_at))}
+                  {b.special_requests && renderRow("Special Requests :", b.special_requests)}
+                  {b.notes && renderRow("Booking Notes :", b.notes)}
+                  {renderRow("Date :", formatDate(b.created_at))}
                 </tbody>
               </table>
             </div>
