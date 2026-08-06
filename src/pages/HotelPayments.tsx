@@ -28,12 +28,12 @@ export default function HotelPayments() {
   const fetchHotels = async () => { const { data } = await supabase.from("another_hotels").select("id, name").order("name"); setHotels(data || []); };
 
   const fetchPayments = async () => {
-    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).eq("payment_type", "hotel").order("payment_date", { ascending: false });
+    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).in("payment_type", ["another_hotel", "hotel"]).order("payment_date", { ascending: false });
     if (error) { toast.error("Failed to load hotel payments"); } else {
       const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
         if (payment.bookings?.id) {
-          const { data: hotelData } = await supabase.from("hotel_bookings").select("*, another_hotels:hotel_id(name)").eq("booking_id", payment.bookings.id).not("hotel_id", "is", null).maybeSingle();
-          return { ...payment, hotel_booking: hotelData };
+          const { data: hotelData } = await supabase.from("hotel_bookings").select("*, another_hotels:hotel_id(name)").eq("booking_id", payment.bookings.id).not("hotel_id", "is", null).limit(1);
+          return { ...payment, hotel_booking: hotelData?.[0] || null };
         }
         return payment;
       }));

@@ -28,12 +28,12 @@ export default function VehiclePayments() {
   const fetchTransporters = async () => { const { data } = await supabase.from("transporters").select("id, name").order("name"); setTransporters(data || []); };
 
   const fetchPayments = async () => {
-    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).eq("payment_type", "vehicle").order("payment_date", { ascending: false });
+    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).in("payment_type", ["vehicle", "another_vehicle"]).order("payment_date", { ascending: false });
     if (error) { toast.error("Failed to load vehicle payments"); } else {
       const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
         if (payment.bookings?.id) {
-          const { data: vehicleData } = await supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", payment.bookings.id).maybeSingle();
-          return { ...payment, vehicle_booking: vehicleData };
+          const { data: vehicleData } = await supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", payment.bookings.id).limit(1);
+          return { ...payment, vehicle_booking: vehicleData?.[0] || null };
         }
         return payment;
       }));
