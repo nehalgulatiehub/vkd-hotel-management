@@ -379,6 +379,9 @@ export default function ViewDueAmount() {
         setPaymentMode={paymentDialog.setPaymentMode}
         paymentReference={paymentDialog.paymentReference}
         setPaymentReference={paymentDialog.setPaymentReference}
+        paymentCityId={paymentDialog.paymentCityId}
+        setPaymentCityId={paymentDialog.setPaymentCityId}
+        cities={paymentDialog.cities}
         isSubmittingPayment={paymentDialog.isSubmittingPayment}
         onSubmitPayment={paymentDialog.submitPayment}
       />
