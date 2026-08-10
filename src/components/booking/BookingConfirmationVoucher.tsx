@@ -503,6 +503,19 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
                clone.style.margin = '0';
                clone.style.width = '100%';
                clone.style.boxSizing = 'border-box';
+
+               // Safety net: if any editable field is still rendered as an input/textarea,
+               // flatten it to plain text so the PDF shows crisp text instead of form boxes.
+               clone.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => {
+                 const text = document.createElement('span');
+                 text.textContent = el.value || el.getAttribute('value') || '';
+                 text.style.display = 'block';
+                 text.style.font = 'inherit';
+                 text.style.color = '#000000';
+                 text.style.whiteSpace = 'pre-wrap';
+                 el.replaceWith(text);
+               });
+
                captureHost.appendChild(clone);
                document.body.appendChild(captureHost);
 
@@ -511,7 +524,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
                  const cloneImages = Array.from(captureHost.querySelectorAll<HTMLImageElement>('img'));
                  await Promise.all(cloneImages.map((image) => image.decode().catch(() => undefined)));
                  canvas = await html2canvas(captureHost, {
-                   scale: 2,
+                   scale: 3,
                    useCORS: true,
                    allowTaint: false,
                    backgroundColor: '#ffffff',
