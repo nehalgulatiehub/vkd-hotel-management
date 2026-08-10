@@ -558,7 +558,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
               }
 
               const offsetX = MARGIN + (CONTENT_W - imgW) / 2;
-               pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, cursorY, imgW, imgH, undefined, 'FAST');
+               pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, cursorY, imgW, imgH, undefined, 'NONE');
               cursorY += imgH + GAP;
             }
 
