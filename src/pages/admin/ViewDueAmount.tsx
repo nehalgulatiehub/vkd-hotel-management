@@ -75,11 +75,9 @@ export default function ViewDueAmount() {
           roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
         }
         const hotelBookingsMap: Record<string, any> = {};
-        const ownHotelDue: Record<string, number> = {};
         hotelData?.filter((hb: any) => hb.own_hotel_id).forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
           hotelBookingsMap[hb.booking_id] = { hotel_id: hb.own_hotel_id, room_id: isUuid ? hb.room_type : null, hotel_name: hb.own_hotels?.name || null, room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type, number_of_rooms: hb.number_of_rooms, notes: hb.notes };
-          ownHotelDue[hb.booking_id] = (ownHotelDue[hb.booking_id] || 0) + (Number(hb.due_amount) || 0);
         });
         // Only own-hotel bookings belong on this page; service bookings (another hotel,
         // safari, volvo, vehicle, visa, cruise) have their own Due Amount managers.
