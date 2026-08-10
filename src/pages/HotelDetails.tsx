@@ -45,9 +45,29 @@ export default function HotelDetails() {
   const fetchHotelBookings = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("hotel_bookings").select(`*, bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)), another_hotels:hotel_id(id, name, city_id, cities(name))`).not("hotel_id", "is", null).order("check_in_date", { ascending: false });
-    if (error) { toast.error("Failed to load hotel bookings"); } else { setHotelBookings(data || []); }
+    if (error) { toast.error("Failed to load hotel bookings"); setLoading(false); return; }
+    const rows = data || [];
+    const bookingIds = [...new Set(rows.map((r: any) => r.booking_id).filter(Boolean))];
+    let paidMap: Record<string, number> = {};
+    if (bookingIds.length > 0) {
+      const { data: pays } = await supabase
+        .from("payments")
+        .select("booking_id, amount, payment_type")
+        .in("booking_id", bookingIds as string[])
+        .in("payment_type", ["another_hotel", "hotel"]);
+      paidMap = (pays || []).reduce((acc: Record<string, number>, p: any) => {
+        acc[p.booking_id] = (acc[p.booking_id] || 0) + (Number(p.amount) || 0);
+        return acc;
+      }, {});
+    }
+    setHotelBookings(rows.map((r: any) => {
+      const paid = paidMap[r.booking_id] ?? (Number(r.paid_amount) || 0);
+      const total = Number(r.total_amount) || 0;
+      return { ...r, paid_amount: paid, due_amount: Math.max(0, total - paid) };
+    }));
     setLoading(false);
   };
+
 
   const handleViewDetails = (booking: any) => { setSelectedBookingData(booking.bookings); setSelectedServiceData(booking); setShowDetailsDialog(true); };
 
