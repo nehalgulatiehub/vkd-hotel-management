@@ -219,6 +219,8 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
         query = Array.isArray(paymentType)
           ? query.in("payment_type", paymentType)
           : query.eq("payment_type", paymentType);
+      } else if (excludePaymentTypes && excludePaymentTypes.length > 0) {
+        query = query.or(`payment_type.is.null,payment_type.not.in.(${excludePaymentTypes.join(",")})`);
       }
       
       const { data, error } = await query
