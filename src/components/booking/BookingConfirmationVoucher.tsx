@@ -55,7 +55,7 @@ const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
     subTitle: "Manali",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
     address: "Hotel Sitara International, Manali",
-    contact: "9882171103/9667788928",
+    contact: "Reservation Office - 9717130909",
   },
 };
 
@@ -169,16 +169,23 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         extraMattress: "-",
         mealPlan,
         billingInstruction: bk?.notes || "",
-        inclusions: [
-          "Welcome drink (Non-alcoholic) on arrival",
-          "Meals as per plan (at Restaurant)",
-          "Evening Hi Tea with cookies (at Restaurant)",
-          "Complimentary use of Swimming Pool (costumes mandatory)",
-          "Complimentary use of Gym",
-          "Complimentary use of Indoor/Outdoor games",
-          "Complimentary use of Adventure activities",
-          "Complimentary use of Wifi facility",
-        ].join("\n"),
+        inclusions: (brand.key === "sitara"
+          ? [
+              "Welcome drink (Non-alcoholic) on arrival",
+              "Meals as per plan (at Restaurant)",
+              "Complimentary use of Wifi facility",
+            ]
+          : [
+              "Welcome drink (Non-alcoholic) on arrival",
+              "Meals as per plan (at Restaurant)",
+              "Evening Hi Tea with cookies (at Restaurant)",
+              "Complimentary use of Swimming Pool (costumes mandatory)",
+              "Complimentary use of Gym",
+              "Complimentary use of Indoor/Outdoor games",
+              "Complimentary use of Adventure activities",
+              "Complimentary use of Wifi facility",
+            ]
+        ).join("\n"),
         specialRequests:
           bk?.special_requests ||
           "Requests for anything not included above will be subject to availability and to be intimated at the time of check-in",
