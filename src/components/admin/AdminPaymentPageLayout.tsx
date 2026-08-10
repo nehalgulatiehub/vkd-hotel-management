@@ -45,11 +45,13 @@ export interface PaymentWithDetails {
 interface AdminPaymentPageLayoutProps {
   title: string;
   paymentType?: string | string[];
+  /** Payment types to exclude (e.g. service payments on the generic Booking pages) */
+  excludePaymentTypes?: string[];
   approvalStatus: "pending" | "approved";
   serviceLabel?: string; // e.g. "Hotel" for the Hotel filter label, "Another Hotel" etc.
 }
 
-export default function AdminPaymentPageLayout({ title, paymentType, approvalStatus, serviceLabel }: AdminPaymentPageLayoutProps) {
+export default function AdminPaymentPageLayout({ title, paymentType, excludePaymentTypes, approvalStatus, serviceLabel }: AdminPaymentPageLayoutProps) {
   const { isAdmin, isAccount, user, loading: authLoading } = useAuthContext();
   const navigate = useNavigate();
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
@@ -217,6 +219,8 @@ export default function AdminPaymentPageLayout({ title, paymentType, approvalSta
         query = Array.isArray(paymentType)
           ? query.in("payment_type", paymentType)
           : query.eq("payment_type", paymentType);
+      } else if (excludePaymentTypes && excludePaymentTypes.length > 0) {
+        query = query.or(`payment_type.is.null,payment_type.not.in.(${excludePaymentTypes.join(",")})`);
       }
       
       const { data, error } = await query
