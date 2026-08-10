@@ -51,7 +51,7 @@ interface AdminPaymentPageLayoutProps {
   serviceLabel?: string; // e.g. "Hotel" for the Hotel filter label, "Another Hotel" etc.
 }
 
-export default function AdminPaymentPageLayout({ title, paymentType, approvalStatus, serviceLabel }: AdminPaymentPageLayoutProps) {
+export default function AdminPaymentPageLayout({ title, paymentType, excludePaymentTypes, approvalStatus, serviceLabel }: AdminPaymentPageLayoutProps) {
   const { isAdmin, isAccount, user, loading: authLoading } = useAuthContext();
   const navigate = useNavigate();
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
