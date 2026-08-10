@@ -45,6 +45,8 @@ export interface PaymentWithDetails {
 interface AdminPaymentPageLayoutProps {
   title: string;
   paymentType?: string | string[];
+  /** Payment types to exclude (e.g. service payments on the generic Booking pages) */
+  excludePaymentTypes?: string[];
   approvalStatus: "pending" | "approved";
   serviceLabel?: string; // e.g. "Hotel" for the Hotel filter label, "Another Hotel" etc.
 }
