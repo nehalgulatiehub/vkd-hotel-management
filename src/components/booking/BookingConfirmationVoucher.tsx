@@ -55,7 +55,7 @@ const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
     subTitle: "Manali",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
     address: "Hotel Sitara International, Manali",
-    contact: "9882171103/9667788928",
+    contact: "Reservation Office - 9717130909",
   },
 };
 
