@@ -459,7 +459,10 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         <button
           onClick={async () => {
             setEditing(false);
-            await new Promise((r) => setTimeout(r, 50));
+            // Let React commit the read-only render before capturing (two frames + tick),
+            // otherwise the edit inputs get baked into the PDF and look blurry.
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+            await new Promise((r) => setTimeout(r, 250));
             const container = voucherRef.current;
             if (!container) return;
             const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
