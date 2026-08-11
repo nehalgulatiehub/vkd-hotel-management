@@ -68,19 +68,22 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
             )}
           </div>
           {/* Filter content */}
-          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box" }}>
+          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box", overflowX: "auto" }}>
             {isValidElement(filterSection)
               ? cloneElement(filterSection, {
                   style: {
                     ...(filterSection.props.style || {}),
                     width: "100%",
                     boxSizing: "border-box",
+                    display: (filterSection.props.style || {}).display ?? undefined,
+                    flexWrap: "wrap",
                   },
                 })
               : filterSection}
           </div>
         </div>
       )}
+
 
       {/* If no filter, show actions in a simple bar */}
       {!filterSection && actions && actions.length > 0 && (
