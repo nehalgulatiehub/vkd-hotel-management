@@ -371,8 +371,8 @@ export function AdminSidebar() {
     );
   };
 
-  return (
-    <div className="w-56 bg-background border-r flex flex-col h-screen print:hidden">
+  const content = (
+    <div className="w-56 max-w-[80vw] bg-background border-r flex flex-col h-screen print:hidden">
       <ScrollArea className="flex-1">
         <div className="p-1">
           {adminMenuItems.map((item) => (
@@ -404,8 +404,9 @@ export function AdminSidebar() {
                     <NavLink
                       key={subItem.url}
                       to={subItem.url}
+                      onClick={() => { if (isMobile) setOpenMobile(false); }}
                       className={({ isActive }) => cn(
-                        "block px-3 py-0.5 text-[11px] hover:bg-muted transition-colors",
+                        "block px-3 py-1 text-[11px] hover:bg-muted transition-colors",
                         isActive && "bg-muted font-medium"
                       )}
                     >
@@ -432,4 +433,17 @@ export function AdminSidebar() {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <SheetContent side="left" className="p-0 w-56 max-w-[80vw]">
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return content;
 }
+
