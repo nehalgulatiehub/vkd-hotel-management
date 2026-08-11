@@ -46,12 +46,15 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
             fontSize: 11,
             fontWeight: "bold",
             display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
             justifyContent: "space-between",
             alignItems: "center"
           }}>
             <span>Search</span>
             {actions && actions.length > 0 && (
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+
                 {actions.map((action, i) => (
                   <span
                     key={i}
