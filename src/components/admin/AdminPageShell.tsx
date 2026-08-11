@@ -28,7 +28,8 @@ const ROW_ALT = "#f6f0f0";
 
 export function AdminPageShell({ title, actions, filterSection, children, pagination }: AdminPageShellProps) {
   return (
-    <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+    <div className="p-2 md:p-3 max-w-full overflow-x-hidden" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+
       {/* Page Title */}
       <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>
         📋 {title}
