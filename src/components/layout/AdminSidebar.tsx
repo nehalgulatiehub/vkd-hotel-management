@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface SubMenuItem {
   title: string;
