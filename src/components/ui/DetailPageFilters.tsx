@@ -167,7 +167,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
         <span style={{ cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
       </div>
 
-      <div style={{ ...rowStyle, gridTemplateColumns: "auto auto 1fr" }}>
+      <div className="legacy-filter-row" style={{ ...rowStyle, gridTemplateColumns: "auto auto 1fr" }}>
         <div style={fieldStyle}>
           <span style={labelStyle}>From :</span>
           <div style={{ width: 150 }}>
@@ -210,7 +210,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
         </div>
       </div>
 
-      <div style={{ ...rowStyle, gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+      <div className="legacy-filter-row" style={{ ...rowStyle, gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
         {options.showType && (
           <div style={fieldStyle}>
             <span style={labelStyle}>Type</span>
@@ -250,7 +250,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
         )}
       </div>
 
-      <div style={{ ...rowStyle, borderBottom: "none", gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto" }}>
+      <div className="legacy-filter-row" style={{ ...rowStyle, borderBottom: "none", gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto" }}>
         {options.showCustomer && (
           <div style={fieldStyle}>
             <span style={labelStyle}>Customer :</span>

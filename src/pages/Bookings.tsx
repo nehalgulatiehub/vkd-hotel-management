@@ -3049,7 +3049,7 @@ export default function Bookings() {
                   </div>
                   <div style={{ backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box", fontSize: 11 }}>
                     {/* Row 1: Date */}
-                    <div style={{ display: "grid", gridTemplateColumns: "auto auto 1fr", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
+                    <div className="legacy-filter-row" style={{ display: "grid", gridTemplateColumns: "auto auto 1fr", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>From :</label>
                         <LegacyDatePicker
@@ -3071,7 +3071,7 @@ export default function Bookings() {
                       </div>
                     </div>
                     {/* Row 2: Type, Agent, Reference, User */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
+                    <div className="legacy-filter-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Type :</label>
                         <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }}>
@@ -3098,7 +3098,7 @@ export default function Bookings() {
                       </div>
                     </div>
                     {/* Row 3: Contact, Email */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
+                    <div className="legacy-filter-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px 16px", padding: "4px 10px", borderBottom: "1px solid #ccc", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Contact No :</label>
                         <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }} />
@@ -3109,7 +3109,7 @@ export default function Bookings() {
                       </div>
                     </div>
                     {/* Row 4: Hotel, Room, Package, Customer, Search */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto", gap: "6px 16px", padding: "4px 10px", alignItems: "center" }}>
+                    <div className="legacy-filter-row" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto", gap: "6px 16px", padding: "4px 10px", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Hotel :</label>
                         <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }}>

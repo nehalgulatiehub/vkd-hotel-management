@@ -580,3 +580,24 @@ All colors MUST be HSL.
     print-color-adjust: exact !important;
   }
 }
+
+/* Legacy filter panels: stack fields on small screens */
+@media (max-width: 767px) {
+  .legacy-filter-row {
+    grid-template-columns: 1fr !important;
+    padding: 6px 8px !important;
+  }
+  .legacy-filter-row > div {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex-wrap: wrap;
+  }
+  .legacy-filter-row select,
+  .legacy-filter-row input:not([type="radio"]):not([type="checkbox"]) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .legacy-filter-row button {
+    width: 100%;
+  }
+}
