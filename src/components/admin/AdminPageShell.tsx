@@ -28,7 +28,8 @@ const ROW_ALT = "#f6f0f0";
 
 export function AdminPageShell({ title, actions, filterSection, children, pagination }: AdminPageShellProps) {
   return (
-    <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+    <div className="p-2 md:p-3 max-w-full overflow-x-hidden" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+
       {/* Page Title */}
       <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>
         📋 {title}
@@ -45,12 +46,15 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
             fontSize: 11,
             fontWeight: "bold",
             display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
             justifyContent: "space-between",
             alignItems: "center"
           }}>
             <span>Search</span>
             {actions && actions.length > 0 && (
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+
                 {actions.map((action, i) => (
                   <span
                     key={i}
@@ -64,19 +68,22 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
             )}
           </div>
           {/* Filter content */}
-          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box" }}>
+          <div style={{ padding: "8px 10px", backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box", overflowX: "auto" }}>
             {isValidElement(filterSection)
               ? cloneElement(filterSection, {
                   style: {
                     ...(filterSection.props.style || {}),
                     width: "100%",
                     boxSizing: "border-box",
+                    display: (filterSection.props.style || {}).display ?? undefined,
+                    flexWrap: "wrap",
                   },
                 })
               : filterSection}
           </div>
         </div>
       )}
+
 
       {/* If no filter, show actions in a simple bar */}
       {!filterSection && actions && actions.length > 0 && (

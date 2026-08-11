@@ -6,6 +6,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface SubMenuItem {
   title: string;
@@ -234,8 +236,10 @@ export function AccountSidebar() {
     }))
     .filter((item) => !item.submenu || item.submenu.length > 0);
 
-  return (
-    <div className="w-56 bg-background border-r flex flex-col h-screen print:hidden">
+  const { isMobile, openMobile, setOpenMobile } = useSidebar();
+
+  const content = (
+    <div className="w-56 max-w-[80vw] bg-background border-r flex flex-col h-screen print:hidden">
       <ScrollArea className="flex-1">
         <div className="p-1">
           {visibleItems.map((item) => (
@@ -268,8 +272,9 @@ export function AccountSidebar() {
                     <NavLink
                       key={subItem.url}
                       to={subItem.url}
+                      onClick={() => { if (isMobile) setOpenMobile(false); }}
                       className={({ isActive }) => cn(
-                        "block px-3 py-0.5 text-[11px] hover:bg-muted transition-colors",
+                        "block px-3 py-1 text-[11px] hover:bg-muted transition-colors",
                         isActive && "bg-muted font-medium"
                       )}
                     >
@@ -296,7 +301,20 @@ export function AccountSidebar() {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <SheetContent side="left" className="p-0 w-56 max-w-[80vw]">
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return content;
 }
+
 
 export const getAccountMenuItemForPath = (pathname: string) => {
   const items = accountMenuItems.flatMap((group) => group.submenu || []);
