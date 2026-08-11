@@ -357,6 +357,7 @@ const adminMenuItems: MenuItem[] = [
 export function AdminSidebar() {
   const navigate = useNavigate();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["Home"]);
+  const { isMobile, openMobile, setOpenMobile } = useSidebar();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
