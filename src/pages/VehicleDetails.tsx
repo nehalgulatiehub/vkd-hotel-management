@@ -13,6 +13,7 @@ import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 
 const MAROON_LIGHT = "#c47a7e";
@@ -78,7 +79,7 @@ export default function VehicleDetails() {
 
       <DetailPageFilters options={{ showType: true, showAgent: true, showUser: true, showCustomer: true, showReference: true, showTransporter: true, showVehicle: true }} filters={filters} onFilterChange={setFilters} onSearch={fetchVehicleBookings} />
 
-      <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+      <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
         {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999" }}>Loading...</div> : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
             <thead><tr style={{ backgroundColor: MAROON_LIGHT, color: "#fff", fontWeight: "bold" }}>
@@ -136,7 +137,7 @@ export default function VehicleDetails() {
             </tbody>
           </table>
         )}
-      </div>
+      </ZoomableTable>
 
       {/* Summary Footer */}
       <div style={{ padding: "8px 10px", border: "1px solid #ccc", borderTop: "none", backgroundColor: "#fff", fontSize: 11 }}>

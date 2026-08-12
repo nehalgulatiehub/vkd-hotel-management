@@ -14,6 +14,7 @@ import { syncServiceTableOnApproval } from "@/utils/paymentSync";
 import { reversePaymentOnRejection } from "@/utils/paymentSync";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 export interface PaymentWithDetails {
   id: string;
@@ -546,7 +547,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
         ) : paginatedItems.length === 0 ? (
           <div style={{ textAlign: "center", padding: "20px 8px", color: "#999", fontSize: 11 }}>No {statusLabel.toLowerCase()} payments found.</div>
         ) : (
-          <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+          <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
               <thead>
                 <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
@@ -650,7 +651,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => handleBulkApproval("approved")} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#4CAF50", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Approved ({selectedPayments.size})</button>
                     <button onClick={() => handleBulkApproval("rejected")} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#c00", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Reject ({selectedPayments.size})</button>
-                  </div>
+                  </ZoomableTable>
                 )}
                 {approvalStatus === "approved" && (
                   <div style={{ display: "flex", gap: 6 }}>

@@ -12,6 +12,7 @@ import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { useAuth } from "@/hooks/useAuth";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 const MAROON_LIGHT = "#c47a7e";
 const ROW_ALT = "#f6f0f0";
@@ -100,7 +101,7 @@ export function ServiceModuleDetails({ config }: { config: ServiceModuleConfig }
         onSearch={fetchRows}
       />
 
-      <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+      <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
         {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999" }}>Loading...</div> : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
             <thead><tr style={{ backgroundColor: MAROON_LIGHT, color: "#fff", fontWeight: "bold" }}>
@@ -156,7 +157,7 @@ export function ServiceModuleDetails({ config }: { config: ServiceModuleConfig }
             </tbody>
           </table>
         )}
-      </div>
+      </ZoomableTable>
 
       {/* Summary Footer */}
       <div style={{ padding: "8px 10px", border: "1px solid #ccc", borderTop: "none", backgroundColor: "#fff", fontSize: 11 }}>

@@ -13,6 +13,7 @@ import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { useRoomNames } from "@/hooks/useRoomNames";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 const MAROON_LIGHT = "#c47a7e";
 const ROW_ALT = "#f6f0f0";
@@ -97,7 +98,7 @@ export default function HotelDetails() {
 
       <DetailPageFilters options={{ showType: true, showAgent: true, showUser: true, showCustomer: true, showReference: true, showHotel: true, showCity: true }} filters={filters} onFilterChange={setFilters} onSearch={fetchHotelBookings} />
 
-      <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+      <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
         {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999" }}>Loading...</div> : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
             <thead><tr style={{ backgroundColor: MAROON_LIGHT, color: "#fff", fontWeight: "bold" }}>
@@ -157,7 +158,7 @@ export default function HotelDetails() {
             </tbody>
           </table>
         )}
-      </div>
+      </ZoomableTable>
 
       {/* Summary Footer */}
       <div style={{ padding: "8px 10px", border: "1px solid #ccc", borderTop: "none", backgroundColor: "#fff", fontSize: 11 }}>

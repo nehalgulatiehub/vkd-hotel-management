@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Search, Trash2 } from "lucide-react";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 import { UserViewPaymentDialog } from "@/components/booking/UserViewPaymentDialog";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 // Type for another hotel entry
 interface AnotherHotelEntry {
@@ -3138,7 +3139,7 @@ export default function Bookings() {
                     </div>
                   </div>
                 </div>
-                <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+                <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
                     <thead>
                       <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
@@ -3210,7 +3211,7 @@ export default function Bookings() {
                       )}
                     </tbody>
                   </table>
-                </div>
+                </ZoomableTable>
                 <div style={{ padding: "6px 10px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", color: "#c00", fontStyle: "italic" }}>
                   <strong>Total Booking Price :</strong> Rs. {summaryTotals.total.toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
                   <strong>Total Received Payment :</strong> Rs. {summaryTotals.paid.toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
