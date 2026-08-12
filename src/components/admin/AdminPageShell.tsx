@@ -1,5 +1,7 @@
 import { ReactNode, cloneElement, isValidElement } from "react";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
+
 
 interface ActionButton {
   label: string;
