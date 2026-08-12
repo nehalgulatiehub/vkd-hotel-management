@@ -3311,7 +3311,7 @@ export default function Bookings() {
             </div>
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
+                <ZoomableTable>
                   <table className="w-full border-collapse">
                     <thead className="bg-muted">
                       <tr>
@@ -3394,7 +3394,7 @@ export default function Bookings() {
                       )}
                     </tbody>
                   </table>
-                </div>
+                </ZoomableTable>
                 <div className="bg-muted border border-border p-3 space-y-1">
                   <div className="font-semibold text-sm">Total Booking Price : Rs. {summaryTotals.total.toLocaleString('en-IN')} /-</div>
                   <div className="flex gap-8 text-sm">
