@@ -180,6 +180,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <MobileTableZoom />
         <BrowserRouter>
           <Routes>
           <Route path="/" element={<Index />} />
