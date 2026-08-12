@@ -155,22 +155,22 @@ export function LegacyDatePicker({
   };
 
   const selCls =
-    "border border-gray-400 bg-white px-1 py-0.5 text-[12px] leading-none h-[22px]";
+    "border border-gray-400 bg-white px-1 py-0 text-[12px] leading-none h-[26px] sm:h-[22px] box-border shrink-0";
 
   return (
-    <div ref={wrapRef} className={`relative inline-flex items-center gap-1 ${className}`}>
+    <div ref={wrapRef} className={`relative inline-flex flex-wrap items-center gap-1 max-w-full ${className}`}>
       <input ref={inputRef} type="hidden" name={name} value={toIso(y, m, d)} readOnly />
-      <select className={selCls} value={m} onChange={(e) => emit(y, +e.target.value, d)}>
+      <select className={`${selCls} w-[56px]`} value={m} onChange={(e) => emit(y, +e.target.value, d)}>
         {MONTHS.map((mo, i) => (
           <option key={mo} value={i + 1}>{mo}</option>
         ))}
       </select>
-      <select className={selCls} value={d} onChange={(e) => emit(y, m, +e.target.value)}>
+      <select className={`${selCls} w-[48px]`} value={d} onChange={(e) => emit(y, m, +e.target.value)}>
         {Array.from({ length: daysInMonth(y, m - 1) }, (_, i) => i + 1).map((dd) => (
           <option key={dd} value={dd}>{dd}</option>
         ))}
       </select>
-      <select className={selCls} value={y} onChange={(e) => emit(+e.target.value, m, d)}>
+      <select className={`${selCls} w-[68px]`} value={y} onChange={(e) => emit(+e.target.value, m, d)}>
         {years.map((yy) => (
           <option key={yy} value={yy}>{yy}</option>
         ))}
