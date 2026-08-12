@@ -178,7 +178,7 @@ export function LegacyDatePicker({
       <button
         type="button"
         onClick={() => (open ? setOpen(false) : openCal())}
-        className="border border-gray-400 bg-white h-[22px] w-[22px] flex items-center justify-center text-[12px]"
+        className="border border-gray-400 bg-white h-[26px] w-[26px] sm:h-[22px] sm:w-[22px] shrink-0 flex items-center justify-center text-[12px]"
         aria-label="Open calendar"
       >
         📅
