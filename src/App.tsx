@@ -171,6 +171,7 @@ import { AccountLayout } from "./components/layout/AccountLayout";
 import AccountAuth from "./pages/account/AccountAuth";
 import AccountHome from "./pages/account/AccountHome";
 import AccountChangePassword from "./pages/account/AccountChangePassword";
+import { MobileTableZoom } from "@/components/ui/MobileTableZoom";
 
 const queryClient = new QueryClient();
 
@@ -180,6 +181,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <MobileTableZoom />
         <BrowserRouter>
           <Routes>
           <Route path="/" element={<Index />} />

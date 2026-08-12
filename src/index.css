@@ -600,4 +600,28 @@ All colors MUST be HSL.
   .legacy-filter-row button {
     width: 100%;
   }
+
+  /* Any multi-column grid (filter panels, form rows) stacks on mobile */
+  div[style*="grid-template-columns"]:not(.mobile-keep-grid) {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fields never overflow their container */
+  select,
+  textarea,
+  input:not([type="radio"]):not([type="checkbox"]) {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Wide legacy tables: scale down so the whole table fits, pinch to zoom in */
+  table:not(.mobile-no-zoom) {
+    zoom: var(--mobile-table-zoom, 0.55);
+  }
+
+  /* Tables stay scrollable in case they are still wider than the screen */
+  .table-scroll,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
 }
