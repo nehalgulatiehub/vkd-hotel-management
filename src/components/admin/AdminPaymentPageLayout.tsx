@@ -547,6 +547,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
         ) : paginatedItems.length === 0 ? (
           <div style={{ textAlign: "center", padding: "20px 8px", color: "#999", fontSize: 11 }}>No {statusLabel.toLowerCase()} payments found.</div>
         ) : (
+          <>
           <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
               <thead>
@@ -642,6 +643,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                 ))}
               </tbody>
             </table>
+          </ZoomableTable>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderTop: "1px solid #ddd" }}>
               <div style={{ fontSize: 11, fontWeight: "bold" }}>Total Payment: Rs. {totalPaymentAmount.toLocaleString("en-IN")}/-</div>
@@ -651,7 +653,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => handleBulkApproval("approved")} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#4CAF50", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Approved ({selectedPayments.size})</button>
                     <button onClick={() => handleBulkApproval("rejected")} disabled={selectedPayments.size === 0} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#c00", color: "#fff", cursor: selectedPayments.size === 0 ? "not-allowed" : "pointer", opacity: selectedPayments.size === 0 ? 0.5 : 1 }}>Reject ({selectedPayments.size})</button>
-                  </ZoomableTable>
+                  </div>
                 )}
                 {approvalStatus === "approved" && (
                   <div style={{ display: "flex", gap: 6 }}>
@@ -660,7 +662,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                 )}
               </div>
             </div>
-          </div>
+          </>
         )}
 
       <AdminViewPaymentDialog
