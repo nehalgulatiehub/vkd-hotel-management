@@ -1,5 +1,7 @@
 import { ReactNode, cloneElement, isValidElement } from "react";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
+
 
 interface ActionButton {
   label: string;
@@ -111,9 +113,10 @@ export function AdminPageShell({ title, actions, filterSection, children, pagina
       )}
 
       {/* Table */}
-      <div style={{ border: "1px solid #ccc", borderTop: filterSection ? "none" : "1px solid #ccc", overflowX: "auto" }}>
+      <ZoomableTable style={{ border: "1px solid #ccc", borderTop: filterSection ? "none" : "1px solid #ccc" }}>
         {children}
-      </div>
+      </ZoomableTable>
+
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (

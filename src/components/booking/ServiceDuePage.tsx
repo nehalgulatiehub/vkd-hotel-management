@@ -11,6 +11,7 @@ import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 export interface ServiceDuePageConfig {
   table: string;
@@ -173,7 +174,7 @@ export function ServiceDuePage({ config }: { config: ServiceDuePageConfig }) {
 
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <ZoomableTable>
               <table className="w-full border-collapse">
                 <thead>
                   <tr style={{ backgroundColor: "#D4A59A" }}>
@@ -241,7 +242,7 @@ export function ServiceDuePage({ config }: { config: ServiceDuePageConfig }) {
                   )}
                 </tbody>
               </table>
-            </div>
+            </ZoomableTable>
 
             <div className="p-3 border-t" style={{ backgroundColor: "#fff", borderColor: "#ccc", fontSize: 11 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px" }}>

@@ -14,6 +14,7 @@ import { syncServiceTableOnApproval } from "@/utils/paymentSync";
 import { reversePaymentOnRejection } from "@/utils/paymentSync";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 export interface PaymentWithDetails {
   id: string;
@@ -546,7 +547,8 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
         ) : paginatedItems.length === 0 ? (
           <div style={{ textAlign: "center", padding: "20px 8px", color: "#999", fontSize: 11 }}>No {statusLabel.toLowerCase()} payments found.</div>
         ) : (
-          <div style={{ border: "1px solid #ccc", borderTop: "none", overflowX: "auto" }}>
+          <>
+          <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
               <thead>
                 <tr style={{ backgroundColor: "#c47a7e", color: "#fff", fontWeight: "bold" }}>
@@ -641,6 +643,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                 ))}
               </tbody>
             </table>
+          </ZoomableTable>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderTop: "1px solid #ddd" }}>
               <div style={{ fontSize: 11, fontWeight: "bold" }}>Total Payment: Rs. {totalPaymentAmount.toLocaleString("en-IN")}/-</div>
@@ -659,7 +662,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                 )}
               </div>
             </div>
-          </div>
+          </>
         )}
 
       <AdminViewPaymentDialog
