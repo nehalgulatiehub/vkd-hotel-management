@@ -657,6 +657,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </button>
       </div>
     </div>
+    </VoucherFieldContext.Provider>
   );
 }
 
