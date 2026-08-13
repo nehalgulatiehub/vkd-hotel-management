@@ -1,4 +1,43 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, createContext, useContext } from "react";
+
+// Stable, module-level editable field components. Defining these inside the
+// page component would create a new component type on every render, which makes
+// React remount the <input> after each keystroke (focus loss).
+type VoucherFieldCtx = {
+  editing: boolean;
+  fields: Record<string, string>;
+  set: (k: string, v: string) => void;
+};
+const VoucherFieldContext = createContext<VoucherFieldCtx>({
+  editing: false,
+  fields: {},
+  set: () => {},
+});
+
+const Val = ({ k, className = "" }: { k: string; className?: string }) => {
+  const { editing, fields, set } = useContext(VoucherFieldContext);
+  return editing ? (
+    <input
+      value={fields[k] ?? ""}
+      onChange={(e) => set(k, e.target.value)}
+      className={`w-full border border-blue-400 rounded px-1 py-0.5 text-sm bg-blue-50 ${className}`}
+    />
+  ) : (
+    <span className={className}>{fields[k] || "-"}</span>
+  );
+};
+
+const Multi = ({ k, rows = 4 }: { k: string; rows?: number }) => {
+  const { editing, fields, set } = useContext(VoucherFieldContext);
+  return editing ? (
+    <textarea
+      value={fields[k] ?? ""}
+      rows={rows}
+      onChange={(e) => set(k, e.target.value)}
+      className="w-full border border-blue-400 rounded px-2 py-1 text-sm bg-blue-50"
+    />
+  ) : null;
+};
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
@@ -210,34 +249,11 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
 
   const set = (k: string, v: string) => setFields((f) => ({ ...f, [k]: v }));
 
-  const Val = ({ k, className = "" }: { k: string; className?: string }) =>
-    editing ? (
-      <input
-        value={fields[k] ?? ""}
-        onChange={(e) => set(k, e.target.value)}
-        className={`w-full border border-blue-400 rounded px-1 py-0.5 text-sm bg-blue-50 ${className}`}
-      />
-    ) : (
-      <span className={className}>{fields[k] || "-"}</span>
-    );
-
-  const Multi = ({ k, rows = 4 }: { k: string; rows?: number }) =>
-    editing ? (
-      <textarea
-        value={fields[k] ?? ""}
-        rows={rows}
-        onChange={(e) => set(k, e.target.value)}
-        className="w-full border border-blue-400 rounded px-2 py-1 text-sm bg-blue-50"
-      />
-    ) : null;
-
   const lines = (k: string) =>
     (fields[k] || "")
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean);
-
-
 
   if (loading) return null;
   if (!booking) return null;
@@ -248,6 +264,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
   const hotelName = companyName;
 
   return (
+    <VoucherFieldContext.Provider value={{ editing, fields, set }}>
     <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:block" id="voucher-container">
       <div ref={voucherRef} className="max-w-3xl mx-auto p-8 pb-28 bg-white text-black" id="voucher-content">
         {/* Header */}
@@ -640,6 +657,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         </button>
       </div>
     </div>
+    </VoucherFieldContext.Provider>
   );
 }
 
