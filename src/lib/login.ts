@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { AuthTokenResponsePassword } from "@supabase/supabase-js";
 
 const RETRY_DELAYS_MS = [0, 500, 1200];
 
@@ -50,4 +51,50 @@ export async function resolveLoginEmail(identifier: string): Promise<string> {
   }
 
   throw new Error(`Login service is temporarily unavailable. Please try again. (${lastError})`);
+}
+
+const normalizeUsername = (identifier: string) => identifier.trim().toLowerCase();
+
+export async function signInWithIdentifier(
+  identifier: string,
+  password: string,
+): Promise<AuthTokenResponsePassword["data"]> {
+  const trimmedIdentifier = identifier.trim();
+
+  if (!trimmedIdentifier) {
+    throw new Error("Please enter your username or email.");
+  }
+
+  if (trimmedIdentifier.includes("@")) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: trimmedIdentifier,
+      password,
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  const normalizedUsername = normalizeUsername(trimmedIdentifier);
+  if (/^[a-z0-9_]+$/.test(normalizedUsername)) {
+    const directResult = await supabase.auth.signInWithPassword({
+      email: `${normalizedUsername}@hotel.local`,
+      password,
+    });
+
+    if (!directResult.error) {
+      return directResult.data;
+    }
+
+    if (directResult.error.message.toLowerCase() !== "invalid login credentials") {
+      throw directResult.error;
+    }
+  }
+
+  const resolvedEmail = await resolveLoginEmail(trimmedIdentifier);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: resolvedEmail,
+    password,
+  });
+  if (error) throw error;
+  return data;
 }

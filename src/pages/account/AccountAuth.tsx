@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import mukutLogo from "@/assets/mukut-logo.webp";
-import { resolveLoginEmail } from "@/lib/login";
+import { signInWithIdentifier } from "@/lib/login";
 
 export default function AccountAuth() {
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -43,13 +43,7 @@ export default function AccountAuth() {
     setLoading(true);
 
     try {
-      const emailToUse = await resolveLoginEmail(loginIdentifier);
-
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: emailToUse,
-        password,
-      });
-      if (error) throw error;
+      const authData = await signInWithIdentifier(loginIdentifier, password);
 
       // Check active status
       const { data: profile } = await supabase
