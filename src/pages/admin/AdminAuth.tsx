@@ -43,15 +43,19 @@ export default function AdminAuth() {
     setLoading(true);
 
     try {
-      let emailToUse = loginIdentifier;
+      const identifier = loginIdentifier.trim();
+      let emailToUse = identifier;
 
-      if (!loginIdentifier.includes("@")) {
+      if (!identifier.includes("@")) {
         const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
-          _username: loginIdentifier
+          _username: identifier
         });
 
-        if (lookupError || !data) {
-          throw new Error("Username not found");
+        if (lookupError) {
+          throw new Error(`Login failed: ${lookupError.message}`);
+        }
+        if (!data) {
+          throw new Error("Username not found. Please check the spelling or use your email.");
         }
         emailToUse = data;
       }
