@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import mukutLogo from "@/assets/mukut-logo.webp";
+import { resolveLoginEmail } from "@/lib/login";
 
 export default function AdminAuth() {
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -43,22 +44,7 @@ export default function AdminAuth() {
     setLoading(true);
 
     try {
-      const identifier = loginIdentifier.trim();
-      let emailToUse = identifier;
-
-      if (!identifier.includes("@")) {
-        const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
-          _username: identifier
-        });
-
-        if (lookupError) {
-          throw new Error(`Login failed: ${lookupError.message}`);
-        }
-        if (!data) {
-          throw new Error("Username not found. Please check the spelling or use your email.");
-        }
-        emailToUse = data;
-      }
+      const emailToUse = await resolveLoginEmail(loginIdentifier);
 
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,

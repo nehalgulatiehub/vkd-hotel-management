@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { resolveLoginEmail } from "@/lib/login";
 
 // Import images
 import mukutLogo from "@/assets/mukut-logo.webp";
@@ -34,22 +35,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const identifier = loginIdentifier.trim();
-      let emailToUse = identifier;
-      
-      if (!identifier.includes("@")) {
-        const { data, error: lookupError } = await supabase.rpc('get_email_by_username', {
-          _username: identifier
-        });
-        
-        if (lookupError) {
-          throw new Error(`Login failed: ${lookupError.message}`);
-        }
-        if (!data) {
-          throw new Error("Username not found. Please check the spelling or use your email.");
-        }
-        emailToUse = data;
-      }
+      const emailToUse = await resolveLoginEmail(loginIdentifier);
 
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
