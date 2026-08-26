@@ -3,8 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
 import { useLocation } from "react-router-dom";
-import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterInputStyle } from "@/components/admin/AdminPageShell";
 import { Header } from "@/components/layout/Header";
+import { Card, CardContent } from "@/components/ui/card";
+import { TablePagination } from "@/components/ui/TablePagination";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+} from "@/components/legacy/legacyFilterStyles";
 
 export default function Expenses() {
   const location = useLocation();
@@ -29,66 +36,86 @@ export default function Expenses() {
   const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredExpenses);
 
+  const content = (
+    <>
+      <LegacyPanelHeader title="View Group Expense" className="mb-3" />
+
+      <div className="mb-3" style={legacyFilterContainerStyle}>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <span className={legacyFilterLabelClass}>Search :</span>
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by booking, customer, or description..."
+              className={`${legacyFilterInputClass} w-72`}
+            />
+          </div>
+          <span className="ml-auto text-[13px] font-bold text-black">
+            Total: Rs. {totalExpenses.toLocaleString("en-IN")}/-
+          </span>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr style={{ backgroundColor: "#D4A59A" }}>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking No</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Category</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Description</th>
+                  <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                      No expenses found
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedItems.map((expense, index) => (
+                    <tr key={expense.id} style={{ backgroundColor: "#F5E6E0" }}>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">{startIndex + index}</td>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">{expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "-"}</td>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">{expense.bookings?.booking_number || "-"}</td>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">{expense.bookings?.customer_name || "-"}</td>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">{expense.category || "-"}</td>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">{expense.description || "-"}</td>
+                      <td className="border border-[#c99] px-3 py-2 text-xs align-top">Rs. {expense.amount?.toLocaleString() || 0}/-</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
+        </CardContent>
+      </Card>
+    </>
+  );
+
   if (!isAdminRoute) {
     return (
       <div className="min-h-screen bg-background">
         <Header title="Group Expenses" />
-        <main className="p-6">
-          <AdminPageShell title="Group Expenses" filterSection={
-            <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
-              <span>Search :</span>
-              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ ...filterInputStyle, flex: 1 }} placeholder="Search by booking, customer, or description..." />
-              <span style={{ marginLeft: "auto", fontWeight: "bold" }}>Total: Rs. {totalExpenses.toLocaleString("en-IN")}/-</span>
-            </div>
-          } pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
-            <ThemedTable>
-              <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Booking No</ThemedTH><ThemedTH>Customer</ThemedTH><ThemedTH>Category</ThemedTH><ThemedTH>Description</ThemedTH><ThemedTH>Amount</ThemedTH></ThemedTHead>
-              <tbody>
-                {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={7} message="No expenses found" /> : paginatedItems.map((expense, index) => (
-                  <ThemedTR key={expense.id} index={index}>
-                    <ThemedTD>{startIndex + index}</ThemedTD>
-                    <ThemedTD>{expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "-"}</ThemedTD>
-                    <ThemedTD>{expense.bookings?.booking_number || "-"}</ThemedTD>
-                    <ThemedTD>{expense.bookings?.customer_name || "-"}</ThemedTD>
-                    <ThemedTD>{expense.category || "-"}</ThemedTD>
-                    <ThemedTD>{expense.description || "-"}</ThemedTD>
-                    <ThemedTD>Rs. {expense.amount?.toLocaleString() || 0}/-</ThemedTD>
-                  </ThemedTR>
-                ))}
-              </tbody>
-            </ThemedTable>
-          </AdminPageShell>
-        </main>
+        <main className="p-4">{content}</main>
       </div>
     );
   }
 
-  const filterSection = (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
-      <span>Search :</span>
-      <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ ...filterInputStyle, flex: 1 }} placeholder="Search by booking, customer, or description..." />
-      <span style={{ marginLeft: "auto", fontWeight: "bold" }}>Total: Rs. {totalExpenses.toLocaleString("en-IN")}/-</span>
-    </div>
-  );
-
-  return (
-    <AdminPageShell title="Group Expenses" filterSection={filterSection} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
-      <ThemedTable>
-        <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Booking No</ThemedTH><ThemedTH>Customer</ThemedTH><ThemedTH>Category</ThemedTH><ThemedTH>Description</ThemedTH><ThemedTH>Amount</ThemedTH></ThemedTHead>
-        <tbody>
-          {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={7} message="No expenses found" /> : paginatedItems.map((expense, index) => (
-            <ThemedTR key={expense.id} index={index}>
-              <ThemedTD>{startIndex + index}</ThemedTD>
-              <ThemedTD>{expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : "-"}</ThemedTD>
-              <ThemedTD>{expense.bookings?.booking_number || "-"}</ThemedTD>
-              <ThemedTD>{expense.bookings?.customer_name || "-"}</ThemedTD>
-              <ThemedTD>{expense.category || "-"}</ThemedTD>
-              <ThemedTD>{expense.description || "-"}</ThemedTD>
-              <ThemedTD>Rs. {expense.amount?.toLocaleString() || 0}/-</ThemedTD>
-            </ThemedTR>
-          ))}
-        </tbody>
-      </ThemedTable>
-    </AdminPageShell>
-  );
+  return content;
 }

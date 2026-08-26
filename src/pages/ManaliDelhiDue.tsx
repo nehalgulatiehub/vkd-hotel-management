@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 export default function ManaliDelhiDue() {
   const navigate = useNavigate();
@@ -172,72 +179,74 @@ export default function ManaliDelhiDue() {
     <div className="min-h-screen bg-background">
       <Header title="Manali - Delhi Due Amount" />
       <main className="p-4">
-        {/* Blue Header Bar */}
-        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Manali - Delhi Due Amount</span>
-          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/volvo-manali-delhi")}>
-            View All Records
-          </Button>
-        </div>
+        <LegacyPanelHeader
+          title="Manali - Delhi Due Amount"
+          className="mb-3"
+          right={
+            <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={() => navigate("/volvo-manali-delhi")}>
+              View All Records
+            </Button>
+          }
+        />
 
         {/* Compact Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
+        <div className="mb-3" style={legacyFilterContainerStyle}>
           {/* Row 1: Dates and Search with Date */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">From :</span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-black/20">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>From :</span>
               <PartsDatePicker month={filters.fromMonth} day={filters.fromDay} year={filters.fromYear} onChange={(p) => setFilters({...filters, fromMonth: p.month, fromDay: p.day, fromYear: p.year})} />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">To :</span>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>To :</span>
               <PartsDatePicker month={filters.toMonth} day={filters.toDay} year={filters.toYear} onChange={(p) => setFilters({...filters, toMonth: p.month, toDay: p.day, toYear: p.year})} />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Search with Date :</span>
-              <label className="flex items-center gap-0.5 text-[11px]"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" />YES</label>
-              <label className="flex items-center gap-0.5 text-[11px]"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" />NO</label>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Search with Date :</span>
+              <label className="flex items-center gap-0.5 text-[13px] font-bold text-black"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" />YES</label>
+              <label className="flex items-center gap-0.5 text-[13px] font-bold text-black"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" />NO</label>
             </div>
           </div>
 
           {/* Row 2: Type, Agent, Reference */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Type :</span>
-              <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-black/20">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Type :</span>
+              <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className={legacyFilterInputClass}>
                 <option value="">--Select--</option>
                 <option value="agent">Agent</option>
                 <option value="direct">Direct</option>
               </select>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Agent Name :</span>
-              <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Agent Name :</span>
+              <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className={`${legacyFilterInputClass} min-w-[120px]`}>
                 <option value="">--Select--</option>
                 {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
               </select>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Reference :</span>
-              <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Reference :</span>
+              <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className={`${legacyFilterInputClass} w-28`} />
             </div>
           </div>
 
           {/* Row 3: User, Customer, Search */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">User :</span>
-                <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] rounded-sm">
+              <div className="flex items-center gap-1.5">
+                <span className={legacyFilterLabelClass}>User :</span>
+                <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className={`${legacyFilterInputClass} min-w-[100px]`}>
                   <option value="">--Select--</option>
                   {users.map(user => (<option key={user.id} value={user.id}>{user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown'}</option>))}
                 </select>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Customer :</span>
-                <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              <div className="flex items-center gap-1.5">
+                <span className={legacyFilterLabelClass}>Customer :</span>
+                <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className={`${legacyFilterInputClass} w-28`} />
               </div>
             </div>
-            <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
+            <button style={legacySearchButtonStyle}>Search</button>
           </div>
         </div>
 
@@ -403,14 +412,14 @@ export default function ManaliDelhiDue() {
             <div className="px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
               <DialogTitle className="text-white text-sm font-semibold">Add Payment - {selectedBooking?.bookings?.booking_number}</DialogTitle>
             </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label className="text-xs font-medium mb-1 block">Amount *</label>
-                <input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="Enter amount" className="w-full h-8 text-xs border border-input bg-background px-2 rounded-sm" />
+            <div className="p-4 space-y-3" style={{ backgroundColor: "#F5E6E0" }}>
+              <div className="flex items-center gap-3">
+                <label className="w-32 shrink-0 text-right text-xs font-medium">Amount *</label>
+                <input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="Enter amount" className="flex-1 h-8 text-xs border border-input bg-white px-2 rounded-sm" />
               </div>
-              <div>
-                <label className="text-xs font-medium mb-1 block">Payment Mode *</label>
-                <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full h-8 text-xs border border-input bg-background px-2 rounded-sm">
+              <div className="flex items-center gap-3">
+                <label className="w-32 shrink-0 text-right text-xs font-medium">Payment Mode *</label>
+                <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="flex-1 h-8 text-xs border border-input bg-white px-2 rounded-sm">
                   <option value="">Select mode</option>
                   <option value="cash">Cash</option>
                   <option value="card">Card</option>
@@ -419,9 +428,9 @@ export default function ManaliDelhiDue() {
                   <option value="cheque">Cheque</option>
                 </select>
               </div>
-              <div>
-                <label className="text-xs font-medium mb-1 block">Reference Number</label>
-                <input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="Transaction/Cheque number" className="w-full h-8 text-xs border border-input bg-background px-2 rounded-sm" />
+              <div className="flex items-center gap-3">
+                <label className="w-32 shrink-0 text-right text-xs font-medium">Reference Number</label>
+                <input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="Transaction/Cheque number" className="flex-1 h-8 text-xs border border-input bg-white px-2 rounded-sm" />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" size="sm" onClick={() => setShowAddPaymentDialog(false)}>Cancel</Button>

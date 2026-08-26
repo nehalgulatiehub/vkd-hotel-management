@@ -57,6 +57,13 @@ import { BookingReceipt } from "@/components/booking/BookingReceipt";
 import { BookingConfirmationVoucher } from "@/components/booking/BookingConfirmationVoucher";
 import { CompactFormRow } from "@/components/booking/CompactFormRow";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 export default function Bookings() {
   const navigate = useNavigate();
@@ -1776,35 +1783,37 @@ export default function Bookings() {
       <div className="print:hidden">
         {!isAdminRoute && <Header title="Booking Management" />}
         <main className="p-3">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-sm font-semibold">
-            {showForm ? (editingBookingId ? "Edit Booking" : "Create Booking") : "View Booking"}
-          </h2>
-          <div className="flex gap-2">
-            {!showForm && (
-              <Button 
-                onClick={() => {/* View all logic */}}
-                variant="outline"
+        <LegacyPanelHeader
+          className="mb-3"
+          title={showForm ? (editingBookingId ? "Edit Booking" : "Create Booking") : "View Booking"}
+          right={
+            <div className="flex gap-2">
+              {!showForm && (
+                <Button
+                  onClick={() => {/* View all logic */}}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/40 text-white hover:bg-white/20 hover:text-white"
+                >
+                  View All
+                </Button>
+              )}
+              <Button
+                onClick={() => {
+                  setShowForm(!showForm);
+                  if (!showForm) {
+                    setEditingBookingId(null);
+                  }
+                }}
+                className="bg-gradient-primary"
                 size="sm"
               >
-                View All
+                <Plus className="h-3 w-3 mr-1" />
+                {showForm ? "View Bookings" : "Create Booking"}
               </Button>
-            )}
-            <Button 
-              onClick={() => {
-                setShowForm(!showForm);
-                if (!showForm) {
-                  setEditingBookingId(null);
-                }
-              }}
-              className="bg-gradient-primary"
-              size="sm"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              {showForm ? "View Bookings" : "Create Booking"}
-            </Button>
-          </div>
-        </div>
+            </div>
+          }
+        />
 
         {showForm ? (
           <div className="flex justify-center px-4">
@@ -3221,166 +3230,166 @@ export default function Bookings() {
               </div>
             ) : (
             <>
-            <div className="mb-3 border border-border bg-muted/50">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">From :</span>
+            <div className="mb-3" style={legacyFilterContainerStyle}>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>From :</span>
                   <LegacyDatePicker
                     value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
                     onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
                   />
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">To :</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>To :</span>
                   <LegacyDatePicker
                     value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
                     onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
                   />
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Search with Date :</span>
-                  <label className="flex items-center gap-0.5 text-[11px]"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" /> YES</label>
-                  <label className="flex items-center gap-0.5 text-[11px]"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" /> NO</label>
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>Search with Date :</span>
+                  <label className="flex items-center gap-1 text-[13px]"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" /> YES</label>
+                  <label className="flex items-center gap-1 text-[13px]"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" /> NO</label>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Type :</span>
-                  <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>Type :</span>
+                  <select value={filters.type} onChange={(e) => setFilters({...filters, type: e.target.value})} className={`${legacyFilterInputClass} min-w-[100px]`}>
                     <option value="">--Select--</option><option value="agent">Agent</option><option value="direct">Direct</option>
                   </select>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Agent Name :</span>
-                  <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>Agent Name :</span>
+                  <select value={filters.agentName} onChange={(e) => setFilters({...filters, agentName: e.target.value})} className={`${legacyFilterInputClass} min-w-[140px]`}>
                     <option value="">--Select--</option>
                     {allAgents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
                   </select>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Reference :</span>
-                  <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>Reference :</span>
+                  <input value={filters.reference} onChange={(e) => setFilters({...filters, reference: e.target.value})} className={`${legacyFilterInputClass} w-28`} />
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">User :</span>
-                  <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm">
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>User :</span>
+                  <select value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} className={`${legacyFilterInputClass} min-w-[120px]`}>
                     <option value="">--Select--</option>
                     {users.map(u => (<option key={u.id} value={u.id}>{u.username || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown'}</option>))}
                   </select>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Contact No :</span>
-                  <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm" />
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>Contact No :</span>
+                  <input value={filters.contact} onChange={(e) => setFilters({...filters, contact: e.target.value})} className={`${legacyFilterInputClass} w-36`} />
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Email :</span>
-                  <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} className="h-5 w-48 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                <div className="flex items-center gap-1.5">
+                  <span className={legacyFilterLabelClass}>Email :</span>
+                  <input value={filters.email} onChange={(e) => setFilters({...filters, email: e.target.value})} className={`${legacyFilterInputClass} w-52`} />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-muted-foreground">Hotel :</span>
-                    <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 pb-2">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Hotel :</span>
+                    <select value={filters.hotel} onChange={(e) => { setFilters({...filters, hotel: e.target.value, room: ""}); fetchFilterRoomsForHotel(e.target.value); }} className={`${legacyFilterInputClass} min-w-[140px]`}>
                       <option value="">--Select--</option>
                       {ownHotels.map(hotel => (<option key={hotel.id} value={hotel.id}>{hotel.name}</option>))}
                     </select>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-muted-foreground">Room :</span>
-                    <select value={filters.room} onChange={(e) => setFilters({...filters, room: e.target.value})} disabled={!filters.hotel} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] disabled:bg-muted rounded-sm">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Room :</span>
+                    <select value={filters.room} onChange={(e) => setFilters({...filters, room: e.target.value})} disabled={!filters.hotel} className={`${legacyFilterInputClass} min-w-[120px] disabled:bg-muted`}>
                       <option value="">{filters.hotel ? "--Select--" : "Select hotel"}</option>
                       {filterRooms.map(room => (<option key={room.id} value={room.id}>{room.room_type || room.room_number}</option>))}
                     </select>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-muted-foreground">Package :</span>
-                    <select value={filters.package} onChange={(e) => setFilters({...filters, package: e.target.value})} className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Package :</span>
+                    <select value={filters.package} onChange={(e) => setFilters({...filters, package: e.target.value})} className={`${legacyFilterInputClass} min-w-[120px]`}>
                       <option value="">--Select--</option><option value="all">All Packages</option>
                     </select>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-muted-foreground">Customer :</span>
-                    <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" />
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Customer :</span>
+                    <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className={`${legacyFilterInputClass} w-32`} />
                   </div>
                 </div>
-                <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
+                <button style={legacySearchButtonStyle}>Search</button>
               </div>
             </div>
             <Card>
               <CardContent className="p-0">
                 <ZoomableTable>
                   <table className="w-full border-collapse">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">S.No.</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Booking ID</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Type</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">User</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Customer Details</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Package Details</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Booking Price</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Date</th>
-                        <th className="border border-border px-3 py-2 text-left text-sm font-semibold">Actions</th>
+                    <thead>
+                      <tr style={{ backgroundColor: "#D4A59A" }}>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking ID</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer Details</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Package Details</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking Price</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredBookings.length === 0 ? (
-                        <tr><td colSpan={9} className="border border-border px-4 py-8 text-center text-muted-foreground">No bookings found</td></tr>
+                        <tr><td colSpan={9} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">No bookings found</td></tr>
                       ) : (
                         pagination.paginatedItems.map((booking, index) => (
-                          <tr key={booking.id} className="hover:bg-muted/50">
-                            <td className="border border-border px-3 py-2 text-sm">{pagination.startIndex + index}</td>
-                            <td className="border border-border px-3 py-2 text-sm font-medium">{booking.booking_number || "-"}</td>
-                            <td className="border border-border px-3 py-2 text-sm">
-                              {booking.booking_type === "agent" ? (<><div>Agent</div><div className="text-xs text-muted-foreground">{booking.agents?.name || "-"}</div></>) : (<div>Direct</div>)}
+                          <tr key={booking.id} style={{ backgroundColor: "#F5E6E0" }}>
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">{pagination.startIndex + index}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top font-medium">{booking.booking_number || "-"}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                              {booking.booking_type === "agent" ? (<><div>Agent</div><div className="text-muted-foreground">{booking.agents?.name || "-"}</div></>) : (<div>Direct</div>)}
                             </td>
-                            <td className="border border-border px-3 py-2 text-sm">{booking.created_by_name || "-"}</td>
-                            <td className="border border-border px-3 py-2 text-sm">
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">{booking.created_by_name || "-"}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                               <div className="font-medium">{booking.customer_name || "-"}</div>
-                              <div className="text-xs text-muted-foreground">Contact No.: {booking.contact_no || "-"}</div>
+                              <div className="text-muted-foreground">Contact No.: {booking.contact_no || "-"}</div>
                             </td>
-                            <td className="border border-border px-3 py-2 text-sm">
-                              <div className="space-y-1 text-xs">
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                              <div className="space-y-1">
                                 {booking.hotel_info && (<><div><strong>Hotel :</strong> {booking.hotel_info.hotel_name || "-"}</div><div><strong>Room :</strong> {booking.hotel_info.room_type || "-"}</div>{booking.hotel_info.room_number && <div><strong>Room No :</strong> {booking.hotel_info.room_number}</div>}{booking.hotel_info.number_of_rooms && <div><strong>Rooms :</strong> {booking.hotel_info.number_of_rooms}</div>}</>)}
                                 {!booking.hotel_info && booking.include_booking && <div>✓ Hotel Booking</div>}
                                 {booking.include_group_expenses && <div>✓ Group Expenses</div>}
                                 {booking.hotel_info?.package && <div><strong>Package :</strong> {booking.hotel_info.package}</div>}
                               </div>
                             </td>
-                            <td className="border border-border px-3 py-2 text-sm">
-                              <div className="space-y-1 text-xs">
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                              <div className="space-y-1">
                                 <div><strong>Booking Price:</strong> Rs. {booking.own_total_amount || 0}/-</div>
                                 <div><strong>Total Received:</strong> Rs. {booking.own_paid_amount || 0}/-</div>
                                 <div className="text-destructive"><strong>Due Payment:</strong> Rs. {booking.own_due_amount || 0}/-</div>
 
                               </div>
                             </td>
-                            <td className="border border-border px-3 py-2 text-sm">
-                              <div className="space-y-1 text-xs">
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                              <div className="space-y-1">
                                 <div><strong>Date:</strong> {(booking.updated_at || booking.created_at) ? new Date(booking.updated_at || booking.created_at).toLocaleDateString("en-GB") : "-"}</div>
                                 <div><strong>Booking From:</strong> {booking.check_in_date ? new Date(booking.check_in_date).toLocaleDateString() : "-"}</div>
                                 <div><strong>Booking to:</strong> {booking.check_out_date ? new Date(booking.check_out_date).toLocaleDateString() : "-"}</div>
                               </div>
                             </td>
-                            <td className="border border-border px-3 py-2">
+                            <td className="border border-[#c99] px-3 py-2 align-top">
                               <div className="flex flex-col gap-1">
                                 {(() => {
                                   const isOwner = booking.created_by === user?.id || isAdmin();
                                   return (
                                     <>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
                                       {isOwner && (
                                         <>
-                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
-                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
-                                          <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
+                                          <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
                                         </>
                                       )}
                                     </>
@@ -3395,7 +3404,7 @@ export default function Bookings() {
                     </tbody>
                   </table>
                 </ZoomableTable>
-                <div className="bg-muted border border-border p-3 space-y-1">
+                <div className="p-3 space-y-1 border-t border-[#c99]" style={{ backgroundColor: "#F5E6E0" }}>
                   <div className="font-semibold text-sm">Total Booking Price : Rs. {summaryTotals.total.toLocaleString('en-IN')} /-</div>
                   <div className="flex gap-8 text-sm">
                     <span className="font-semibold">Total Received Payment : Rs. {summaryTotals.paid.toLocaleString('en-IN')} /-</span>

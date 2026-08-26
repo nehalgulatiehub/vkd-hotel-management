@@ -86,7 +86,7 @@ export default function HotelPayments() {
   );
 
   return (
-    <AdminPageShell title="Another Hotel Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => {} }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+    <AdminPageShell title="Another Hotel Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setHotelFilter(""); setPaymentModeFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
       <ThemedTable>
         <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Another Hotel</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
         <tbody>

@@ -1,5 +1,4 @@
 import { Header } from "@/components/layout/Header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { LegacyFormPanel } from "@/components/legacy/LegacyFormPanel";
 
 export default function CreateHoldBooking() {
   const navigate = useNavigate();
@@ -141,14 +141,9 @@ export default function CreateHoldBooking() {
   return (
     <div className="min-h-screen bg-background">
       <Header title="Create Hold Booking" />
-      <main className="p-4 flex justify-center">
-        <Card className="w-full max-w-xl" style={{ backgroundColor: '#F5E6E0' }}>
-          <CardContent className="p-6">
-            <div className="flex justify-end mb-2">
-              <span className="text-red-500 text-xs">* - Required fields</span>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-3">
+      <main className="p-4">
+        <LegacyFormPanel title="Create Hold Booking" rightSlot={<span className="text-white/80 text-xs">* - Required fields</span>}>
+            <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-3">
               {/* Type */}
               <div className="flex items-center gap-2">
                 <Label className="w-40 text-right text-xs shrink-0">Type :</Label>
@@ -478,8 +473,7 @@ export default function CreateHoldBooking() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+        </LegacyFormPanel>
       </main>
     </div>
   );

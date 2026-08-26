@@ -100,7 +100,7 @@ export default function SafariPayments() {
   );
 
   return (
-    <AdminPageShell title="Safari Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => {} }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+    <AdminPageShell title="Safari Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setTransporterFilter(""); setPaymentModeFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
       <ThemedTable>
         <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
         <tbody>

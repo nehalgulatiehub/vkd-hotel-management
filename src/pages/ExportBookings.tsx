@@ -1,5 +1,9 @@
 import { Header } from "@/components/layout/Header";
 import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
+import { LegacyFormPanel } from "@/components/legacy/LegacyFormPanel";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -156,68 +160,70 @@ export default function ExportBookings() {
     <div className="min-h-screen bg-background">
       <Header title="Export Booking" />
       <main className="p-6">
-        <div className="rounded-lg overflow-hidden border border-border shadow-sm max-w-5xl">
-          <div className="bg-[#1a72b8] text-white px-4 py-2 font-serif font-bold text-lg">
-            Export Booking
-          </div>
-          <div className="bg-[#f7dede] px-4 py-3 space-y-2">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#7a4a4a]">
-              <div className="flex items-center gap-2">
-                <span>From :</span>
+        <LegacyFormPanel
+          title="Export Booking"
+          rightSlot={
+            <Button
+              variant="link"
+              className="text-white p-0 h-auto text-sm hover:text-white/80"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              {exporting ? "Exporting..." : "Export to Excel"}
+            </Button>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>From</Label>
+              <div className="mt-1">
                 <LegacyDatePicker value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               </div>
-              <div className="flex items-center gap-2">
-                <span>To :</span>
+            </div>
+            <div>
+              <Label>To</Label>
+              <div className="mt-1">
                 <LegacyDatePicker value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
               </div>
-              <div className="flex items-center gap-2 ml-4">
-                <span>Search with Date :</span>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    checked={searchWithDate === "yes"}
-                    onChange={() => setSearchWithDate("yes")}
-                  />
-                  YES
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    checked={searchWithDate === "no"}
-                    onChange={() => setSearchWithDate("no")}
-                  />
-                  NO
-                </label>
-              </div>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[#7a4a4a]">
-              <div className="flex items-center gap-2">
-                <span>Hotel</span>
-                <select
-                  value={hotelId}
-                  onChange={(e) => setHotelId(e.target.value)}
-                  className="h-7 min-w-[200px] border border-black bg-white px-1 text-sm text-foreground"
-                >
-                  <option value="all">All Hotels</option>
-                  {hotels.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                onClick={handleExport}
-                disabled={exporting}
-                className="border-2 border-outset border-[#999] bg-[#d4d0c8] px-4 py-1 font-mono font-bold text-black text-sm disabled:opacity-60"
+            <div>
+              <Label>Hotel</Label>
+              <select
+                value={hotelId}
+                onChange={(e) => setHotelId(e.target.value)}
+                className="mt-1 w-full h-10 rounded-md border border-input bg-white px-3 text-sm"
               >
-                {exporting ? "Exporting..." : "Export"}
-              </button>
+                <option value="all">All Hotels</option>
+                {hotels.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-          <div className="bg-white h-40" />
-          <div className="bg-[#1a72b8] h-8" />
-        </div>
+
+          <div className="flex items-center gap-4">
+            <Label className="mb-0">Search with Date :</Label>
+            <label className="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                checked={searchWithDate === "yes"}
+                onChange={() => setSearchWithDate("yes")}
+              />
+              YES
+            </label>
+            <label className="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                checked={searchWithDate === "no"}
+                onChange={() => setSearchWithDate("no")}
+              />
+              NO
+            </label>
+          </div>
+        </LegacyFormPanel>
       </main>
     </div>
   );

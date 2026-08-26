@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { useRoomNames } from "@/hooks/useRoomNames";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
 
 export default function BookingPayments() {
   const [searchParams] = useSearchParams();
@@ -175,36 +176,40 @@ export default function BookingPayments() {
     <div className="min-h-screen bg-background">
       <Header title="Booking Payments" />
       <main className="p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {bookingId && (
-              <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            )}
-            <h2 className="text-2xl font-semibold">
-              {bookingId ? "Booking Payment History" : "All Payments"}
-            </h2>
+        {bookingId && (
+          <div className="mb-3">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
           </div>
-          <div className="flex items-center gap-2">
-            {bookingId && (
-              <>
-                <Button 
-                  variant="outline"
+        )}
+
+        <LegacyPanelHeader
+          title={bookingId ? "Booking Payment History" : "All Payments"}
+          className="mb-6"
+          right={
+            bookingId ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="link"
+                  className="text-white p-0 h-auto text-sm hover:text-white/80"
                   onClick={() => handleViewPayment(bookingId)}
                 >
-                  <Eye className="h-4 w-4 mr-2" />
                   View Payment
                 </Button>
-                <Button onClick={() => navigate(isAdminRoute ? `/admin/bookings/${bookingId}` : `/booking-details/${bookingId}`)}>
-                  <Eye className="h-4 w-4 mr-2" />
+                <span className="text-white/70 text-sm">/</span>
+                <Button
+                  variant="link"
+                  className="text-white p-0 h-auto text-sm hover:text-white/80"
+                  onClick={() => navigate(isAdminRoute ? `/admin/bookings/${bookingId}` : `/booking-details/${bookingId}`)}
+                >
                   View Booking
                 </Button>
-              </>
-            )}
-          </div>
-        </div>
+              </div>
+            ) : null
+          }
+        />
 
         {booking && (
           <Card className="mb-6">
@@ -297,55 +302,55 @@ export default function BookingPayments() {
               <div className="p-6 text-center text-muted-foreground">Loading...</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="p-3 text-left">S.No.</th>
-                      <th className="p-3 text-left">Date</th>
-                      {!bookingId && <th className="p-3 text-left">Booking</th>}
-                      {!bookingId && <th className="p-3 text-left">Customer</th>}
-                      <th className="p-3 text-left">Amount</th>
-                      <th className="p-3 text-left">Mode</th>
-                      <th className="p-3 text-left">Type</th>
-                      <th className="p-3 text-left">Status</th>
-                      <th className="p-3 text-left">Reference</th>
-                      <th className="p-3 text-left">Notes</th>
-                      {!bookingId && <th className="p-3 text-left">Actions</th>}
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr style={{ backgroundColor: "#D4A59A" }}>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No.</th>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
+                      {!bookingId && <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking</th>}
+                      {!bookingId && <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer</th>}
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Amount</th>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Mode</th>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Status</th>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Reference</th>
+                      <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Notes</th>
+                      {!bookingId && <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {payments.length === 0 ? (
                       <tr>
-                        <td colSpan={bookingId ? 8 : 11} className="p-6 text-center text-muted-foreground">
+                        <td colSpan={bookingId ? 8 : 11} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
                           No payments found for this booking
                         </td>
                       </tr>
                     ) : (
                       payments.map((payment, index) => (
-                        <tr key={payment.id} className="border-t hover:bg-muted/50">
-                          <td className="p-3">{index + 1}</td>
-                          <td className="p-3">{formatDisplayDate(payment.payment_date)}</td>
-                          {!bookingId && <td className="p-3">{payment.bookings?.booking_number || "-"}</td>}
-                          {!bookingId && <td className="p-3">{payment.bookings?.customer_name || "-"}</td>}
-                          <td className="p-3 font-semibold">Rs. {payment.amount?.toFixed(2) || "0.00"}/-</td>
-                          <td className="p-3 capitalize">{payment.payment_mode || "-"}</td>
-                          <td className="p-3 capitalize">{payment.payment_type || "-"}</td>
-                          <td className="p-3">{getStatusBadge(payment.approval_status || "pending")}</td>
-                          <td className="p-3">{payment.reference_number || "-"}</td>
-                          <td className="p-3">{payment.notes || "-"}</td>
+                        <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{index + 1}</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{formatDisplayDate(payment.payment_date)}</td>
+                          {!bookingId && <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.bookings?.booking_number || "-"}</td>}
+                          {!bookingId && <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.bookings?.customer_name || "-"}</td>}
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top font-semibold">Rs. {payment.amount?.toFixed(2) || "0.00"}/-</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top capitalize">{payment.payment_mode || "-"}</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top capitalize">{payment.payment_type || "-"}</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{getStatusBadge(payment.approval_status || "pending")}</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.reference_number || "-"}</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.notes || "-"}</td>
                           {!bookingId && payment.booking_id && (
-                            <td className="p-3">
-                              <Button 
-                                variant="outline" 
+                            <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                              <Button
+                                variant="link"
                                 size="sm"
+                                className="h-auto p-0 text-[11px] text-primary"
                                 onClick={() => handleViewPayment(payment.booking_id)}
                               >
-                                <Eye className="h-4 w-4 mr-1" />
                                 View Payment
                               </Button>
                             </td>
                           )}
-                          {!bookingId && !payment.booking_id && <td className="p-3">-</td>}
+                          {!bookingId && !payment.booking_id && <td className="border border-[#c99] px-3 py-2 text-xs align-top">-</td>}
                         </tr>
                       ))
                     )}

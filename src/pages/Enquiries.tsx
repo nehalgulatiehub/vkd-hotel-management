@@ -1,17 +1,9 @@
-import { DateInput } from "@/components/ui/DateInput";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, CheckCircle, Eye } from "lucide-react";
+import { Plus } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
-import { TablePagination } from "@/components/ui/TablePagination";
 import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
@@ -19,6 +11,15 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import { LegacyFormPanel } from "@/components/legacy/LegacyFormPanel";
+import { LegacyFormRow } from "@/components/legacy/LegacyFormRow";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 
 export default function Enquiries() {
@@ -621,19 +622,12 @@ export default function Enquiries() {
     return <Badge className={statusColors[status] || "bg-gray-500"}>{statusText}</Badge>;
   };
 
-  const filterPanelStyle = { backgroundColor: "#F9D7D7" };
-  const smallSelect = "border border-gray-500 bg-white h-[22px] text-[12px] px-1 leading-none";
-  const smallInput = "border border-gray-500 bg-white h-[22px] text-[12px] px-1 leading-none";
-  const labelStyle = "text-[12px] text-gray-800 whitespace-nowrap";
-
   // ---- Legacy form helpers ----
   const setF = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
-  const lblCell = "w-[200px] text-right pr-2 text-[12px] text-gray-800";
   const inpCls = "border border-gray-600 bg-white text-[12px] h-[22px] px-1";
 
   const rowInput = (label: string, key: string, type = "text", width = "230px") => (
-    <div className="flex items-center mb-2" key={key}>
-      <div className={lblCell}>{label} :</div>
+    <LegacyFormRow label={label} key={key}>
       <input
         type={type}
         value={(formData as any)[key] ?? ""}
@@ -641,18 +635,17 @@ export default function Enquiries() {
         className={inpCls}
         style={{ width }}
       />
-    </div>
+    </LegacyFormRow>
   );
 
   const rowArea = (label: string, key: string) => (
-    <div className="flex items-start mb-2" key={key}>
-      <div className={`${lblCell} pt-6`}>{label} :</div>
+    <LegacyFormRow label={label} key={key}>
       <textarea
         value={(formData as any)[key] ?? ""}
         onChange={(e) => setF(key, e.target.value)}
         className="border border-gray-600 bg-white text-[12px] w-[230px] h-[70px] px-1"
       />
-    </div>
+    </LegacyFormRow>
   );
 
   useEffect(() => {
@@ -670,8 +663,7 @@ export default function Enquiries() {
   }, [formData.booking_hotel_id]);
 
   const rowSelect = (label: string, key: string, list: any[], placeholder = "-----Select-----") => (
-    <div className="flex items-center mb-2" key={key}>
-      <div className={lblCell}>{label} :</div>
+    <LegacyFormRow label={label} key={key}>
       <select
         value={(formData as any)[key] ?? ""}
         onChange={(e) => setF(key, e.target.value)}
@@ -680,12 +672,11 @@ export default function Enquiries() {
         <option value="">{placeholder}</option>
         {list.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
       </select>
-    </div>
+    </LegacyFormRow>
   );
 
   const rowRoomSelect = () => (
-    <div className="flex items-center mb-2">
-      <div className={lblCell}>Room :</div>
+    <LegacyFormRow label="Room">
       <select
         value={formData.booking_room ?? ""}
         onChange={(e) => setF("booking_room", e.target.value)}
@@ -699,29 +690,29 @@ export default function Enquiries() {
           </option>
         ))}
       </select>
-    </div>
+    </LegacyFormRow>
   );
 
 
   const rowDate = (label: string, key: string) => (
-    <div className="flex items-center mb-2" key={key}>
-      <div className={lblCell}>{label} :</div>
+    <LegacyFormRow label={label} key={key}>
       <LegacyDatePicker value={(formData as any)[key] ?? ""} onChange={(e: any) => setF(key, e.target.value)} />
-    </div>
+    </LegacyFormRow>
   );
 
   const toggleRow = (label: string, key: string) => (
-    <div className="flex items-center mb-2">
-      <div className={lblCell}>{label} :</div>
-      <label className="flex items-center gap-1 text-[12px] mr-4">
-        <input type="radio" name={key} checked={!!(formData as any)[key]} onChange={() => setF(key, true)} />
-        Yes
-      </label>
-      <label className="flex items-center gap-1 text-[12px]">
-        <input type="radio" name={key} checked={!(formData as any)[key]} onChange={() => setF(key, false)} />
-        No
-      </label>
-    </div>
+    <LegacyFormRow label={label} key={key}>
+      <div className="flex items-center gap-4 pt-1">
+        <label className="flex items-center gap-1 text-[12px]">
+          <input type="radio" name={key} checked={!!(formData as any)[key]} onChange={() => setF(key, true)} />
+          Yes
+        </label>
+        <label className="flex items-center gap-1 text-[12px]">
+          <input type="radio" name={key} checked={!(formData as any)[key]} onChange={() => setF(key, false)} />
+          No
+        </label>
+      </div>
+    </LegacyFormRow>
   );
 
   const servicePanel = (title: string, children: React.ReactNode) => (
@@ -735,227 +726,230 @@ export default function Enquiries() {
     <div className="min-h-screen bg-background">
       <Header title="Enquiry Management" />
       <main className="p-4">
-        {showForm && (
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">
-              {editingEnquiryId ? "Edit Enquiry" : "Generate Enquiry"}
-            </h2>
-            <Button variant="outline" onClick={resetForm}>
-              Back to List
-            </Button>
-          </div>
-        )}
-
         {!showForm ? (
-          <div className="border border-gray-300">
-            {/* Blue Header */}
-            <div className="flex justify-between items-center px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
-              <span className="text-white font-semibold text-[14px]">View Enquiry</span>
-              <button
-                onClick={() => setFilters({ from: today, to: today, searchWithDate: false, type: "", agentId: "", reference: "", status: "", userId: "", email: "", contactNo: "", cityId: "", customer: "" })}
-                className="text-white hover:underline text-[14px] bg-transparent border-0 cursor-pointer font-semibold"
-              >
-                View All Records
-              </button>
-            </div>
+          <div>
+            <LegacyPanelHeader
+              title="View Enquiry"
+              className="mb-3"
+              right={
+                <Button
+                  variant="link"
+                  className="text-white p-0 h-auto text-sm hover:text-white/80"
+                  onClick={() => setFilters({ from: today, to: today, searchWithDate: false, type: "", agentId: "", reference: "", status: "", userId: "", email: "", contactNo: "", cityId: "", customer: "" })}
+                >
+                  View All Records
+                </Button>
+              }
+            />
 
             {/* Filter Panel */}
-            <div className="p-3 space-y-2" style={filterPanelStyle}>
-              {/* Row 1 */}
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>From :</span>
-                  <LegacyDatePicker value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
+            <div className="mb-3" style={legacyFilterContainerStyle}>
+              <div className="px-3 py-2 space-y-2">
+                {/* Row 1 */}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>From :</span>
+                    <LegacyDatePicker value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>To :</span>
+                    <LegacyDatePicker value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={legacyFilterLabelClass}>Search with Date :</span>
+                    <label className="flex items-center gap-1 text-[12px]">
+                      <input type="radio" checked={filters.searchWithDate} onChange={() => setFilters({ ...filters, searchWithDate: true })} /> YES
+                    </label>
+                    <label className="flex items-center gap-1 text-[12px]">
+                      <input type="radio" checked={!filters.searchWithDate} onChange={() => setFilters({ ...filters, searchWithDate: false })} /> NO
+                    </label>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>To :</span>
-                  <LegacyDatePicker value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} />
+
+                {/* Row 2 */}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Type :</span>
+                    <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className={`${legacyFilterInputClass} min-w-[110px]`}>
+                      <option value="">--Select--</option>
+                      <option value="Direct">Direct</option>
+                      <option value="Agent">Agent</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Agent Name :</span>
+                    <select value={filters.agentId} onChange={(e) => setFilters({ ...filters, agentId: e.target.value })} className={`${legacyFilterInputClass} min-w-[200px]`}>
+                      <option value="">--Select--</option>
+                      {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Reference :</span>
+                    <input value={filters.reference} onChange={(e) => setFilters({ ...filters, reference: e.target.value })} className={`${legacyFilterInputClass} w-[220px]`} />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Search with Date :</span>
-                  <label className="flex items-center gap-1 text-[12px]">
-                    <input type="radio" checked={filters.searchWithDate} onChange={() => setFilters({ ...filters, searchWithDate: true })} /> YES
-                  </label>
-                  <label className="flex items-center gap-1 text-[12px]">
-                    <input type="radio" checked={!filters.searchWithDate} onChange={() => setFilters({ ...filters, searchWithDate: false })} /> NO
-                  </label>
+
+                {/* Row 3 */}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Status :</span>
+                    <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className={`${legacyFilterInputClass} min-w-[130px]`}>
+                      <option value="">--Select--</option>
+                      <option value="on_hold">On Hold</option>
+                      <option value="pending">Pending</option>
+                      <option value="follow_up">Follow Up</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="converted">Converted</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>User :</span>
+                    <select value={filters.userId} onChange={(e) => setFilters({ ...filters, userId: e.target.value })} className={`${legacyFilterInputClass} min-w-[150px]`}>
+                      <option value="">--Select--</option>
+                      {profiles.map((p) => <option key={p.id} value={p.id}>{getUserName(p.id)}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 4 */}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Email-Id :</span>
+                    <input value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} className={`${legacyFilterInputClass} w-[180px]`} />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Contact-No :</span>
+                    <input value={filters.contactNo} onChange={(e) => setFilters({ ...filters, contactNo: e.target.value })} className={`${legacyFilterInputClass} w-[180px]`} />
+                  </div>
+                </div>
+
+                {/* Row 5 */}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>City :</span>
+                    <select value={filters.cityId} onChange={(e) => setFilters({ ...filters, cityId: e.target.value })} className={`${legacyFilterInputClass} min-w-[260px]`}>
+                      <option value="">-City-</option>
+                      {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={legacyFilterLabelClass}>Customer :</span>
+                    <input value={filters.customer} onChange={(e) => setFilters({ ...filters, customer: e.target.value })} className={`${legacyFilterInputClass} w-[200px]`} />
+                  </div>
                 </div>
               </div>
 
-              {/* Row 2 */}
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Type :</span>
-                  <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className={`${smallSelect} min-w-[110px]`}>
-                    <option value="">--Select--</option>
-                    <option value="Direct">Direct</option>
-                    <option value="Agent">Agent</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Agent Name :</span>
-                  <select value={filters.agentId} onChange={(e) => setFilters({ ...filters, agentId: e.target.value })} className={`${smallSelect} min-w-[200px]`}>
-                    <option value="">--Select--</option>
-                    {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Reference :</span>
-                  <input value={filters.reference} onChange={(e) => setFilters({ ...filters, reference: e.target.value })} className={`${smallInput} w-[220px]`} />
-                </div>
-              </div>
-
-              {/* Row 3 */}
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Status :</span>
-                  <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className={`${smallSelect} min-w-[130px]`}>
-                    <option value="">--Select--</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="pending">Pending</option>
-                    <option value="follow_up">Follow Up</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="converted">Converted</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>User :</span>
-                  <select value={filters.userId} onChange={(e) => setFilters({ ...filters, userId: e.target.value })} className={`${smallSelect} min-w-[150px]`}>
-                    <option value="">--Select--</option>
-                    {profiles.map((p) => <option key={p.id} value={p.id}>{getUserName(p.id)}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 4 */}
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Email-Id :</span>
-                  <input value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} className={`${smallInput} w-[180px]`} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Contact-No :</span>
-                  <input value={filters.contactNo} onChange={(e) => setFilters({ ...filters, contactNo: e.target.value })} className={`${smallInput} w-[180px]`} />
-                </div>
-              </div>
-
-              {/* Row 5 */}
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>City :</span>
-                  <select value={filters.cityId} onChange={(e) => setFilters({ ...filters, cityId: e.target.value })} className={`${smallSelect} min-w-[260px]`}>
-                    <option value="">-City-</option>
-                    {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={labelStyle}>Customer :</span>
-                  <input value={filters.customer} onChange={(e) => setFilters({ ...filters, customer: e.target.value })} className={`${smallInput} w-[200px]`} />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => pagination.resetPage()}
-                  className="ml-auto border border-gray-500 bg-gray-200 hover:bg-gray-300 px-4 py-1 text-[12px] font-semibold"
-                >
+              <div className="flex justify-end px-3 pb-2">
+                <button type="button" style={legacySearchButtonStyle} onClick={() => pagination.resetPage()}>
                   Search
                 </button>
               </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px] border-collapse">
-                <thead>
-                  <tr style={{ backgroundColor: "#D4A59A" }} className="text-left">
-                    <th className="p-2 border-b border-gray-400 w-[50px]">S.No.</th>
-                    <th className="p-2 border-b border-gray-400">Enquiry No</th>
-                    <th className="p-2 border-b border-gray-400">Type</th>
-                    <th className="p-2 border-b border-gray-400">Customer / Agent</th>
-                    <th className="p-2 border-b border-gray-400">Contact</th>
-                    <th className="p-2 border-b border-gray-400">Enquiry Detail</th>
-                    <th className="p-2 border-b border-gray-400">Status</th>
-                    <th className="p-2 border-b border-gray-400">User</th>
-                    <th className="p-2 border-b border-gray-400 w-[120px]"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagination.paginatedItems.length === 0 ? (
-                    <tr style={filterPanelStyle}>
-                      <td colSpan={9} className="text-center py-8" style={{ color: "#c00" }}>
-                        Sorry, Currently There are no record to display
-                      </td>
-                    </tr>
-                  ) : (
-                    pagination.paginatedItems.map((enquiry, idx) => (
-                      <tr key={enquiry.id} style={filterPanelStyle} className="align-top">
-                        <td className="p-2 border-b border-gray-300">{pagination.startIndex + idx}</td>
-                        <td className="p-2 border-b border-gray-300">{enquiry.enquiry_number}</td>
-                        <td className="p-2 border-b border-gray-300">
-                          {enquiry.agent_id ? `Agent (${enquiry.agents?.name || ""})` : "Direct"}
-                        </td>
-                        <td className="p-2 border-b border-gray-300">{enquiry.customer_name || enquiry.agents?.name || "-"}</td>
-                        <td className="p-2 border-b border-gray-300">
-                          <div>{enquiry.contact_no || "-"}</div>
-                          <div>{enquiry.email || enquiry.reference_email || ""}</div>
-                        </td>
-                        <td className="p-2 border-b border-gray-300">
-                          <div>{formatDisplayDate(enquiry.check_in_date)} - {formatDisplayDate(enquiry.check_out_date)}</div>
-                          <div>{(enquiry.adults || 0)} Adult {(enquiry.children || 0)} Children</div>
-                          {enquiry.reference && <div>Reference : {enquiry.reference}</div>}
-                        </td>
-                        <td className="p-2 border-b border-gray-300">{getStatusBadge(enquiry.status)}</td>
-                        <td className="p-2 border-b border-gray-300">{enquiry.created_by ? getUserName(enquiry.created_by) : "-"}</td>
-                        <td className="p-2 border-b border-gray-300">
-                          <div className="flex flex-col gap-1 text-[#7a3b2e]">
-                            {enquiry.status === "on_hold" && (
-                              <button onClick={() => handleConvertToBooking(enquiry)} className="text-left hover:underline">
-                                Confirm Booking
-                              </button>
-                            )}
-                            <button onClick={() => handleEditEnquiry(enquiry)} className="text-left hover:underline">
-                              View / Edit
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-between items-center px-3 py-2 text-[12px] border-t border-gray-300 bg-white">
-                <span>Showing {pagination.startIndex + 1}-{pagination.endIndex} of {pagination.totalItems}</span>
-                <div className="flex gap-1">
-                  <button onClick={() => pagination.goToPage(Math.max(1, pagination.currentPage - 1))} disabled={pagination.currentPage === 1} className="border border-gray-400 px-2 py-0.5 disabled:opacity-50">Prev</button>
-                  <span className="px-2 py-0.5">Page {pagination.currentPage} / {pagination.totalPages}</span>
-                  <button onClick={() => pagination.goToPage(Math.min(pagination.totalPages, pagination.currentPage + 1))} disabled={pagination.currentPage === pagination.totalPages} className="border border-gray-400 px-2 py-0.5 disabled:opacity-50">Next</button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end p-2 bg-white border-t border-gray-300">
+            {/* Action Buttons */}
+            <div className="flex justify-end mb-3">
               <Button size="sm" onClick={() => setShowForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Generate Enquiry
               </Button>
             </div>
+
+            {/* Main Table */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr style={{ backgroundColor: "#D4A59A" }}>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold w-[50px]">S.No.</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Enquiry No</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer / Agent</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Contact</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Enquiry Detail</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Status</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User</th>
+                        <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold w-[120px]"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagination.paginatedItems.length === 0 ? (
+                        <tr style={{ backgroundColor: "#F5E6E0" }}>
+                          <td colSpan={9} className="border border-[#c99] text-center py-8" style={{ color: "#c00" }}>
+                            Sorry, Currently There are no record to display
+                          </td>
+                        </tr>
+                      ) : (
+                        pagination.paginatedItems.map((enquiry, idx) => (
+                          <tr key={enquiry.id} style={{ backgroundColor: "#F5E6E0" }} className="align-top">
+                            <td className="border border-[#c99] px-3 py-2 text-xs">{pagination.startIndex + idx}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">{enquiry.enquiry_number}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">
+                              {enquiry.agent_id ? `Agent (${enquiry.agents?.name || ""})` : "Direct"}
+                            </td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">{enquiry.customer_name || enquiry.agents?.name || "-"}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">
+                              <div>{enquiry.contact_no || "-"}</div>
+                              <div>{enquiry.email || enquiry.reference_email || ""}</div>
+                            </td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">
+                              <div>{formatDisplayDate(enquiry.check_in_date)} - {formatDisplayDate(enquiry.check_out_date)}</div>
+                              <div>{(enquiry.adults || 0)} Adult {(enquiry.children || 0)} Children</div>
+                              {enquiry.reference && <div>Reference : {enquiry.reference}</div>}
+                            </td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">{getStatusBadge(enquiry.status)}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">{enquiry.created_by ? getUserName(enquiry.created_by) : "-"}</td>
+                            <td className="border border-[#c99] px-3 py-2 text-xs">
+                              <div className="flex flex-col gap-1">
+                                {enquiry.status === "on_hold" && (
+                                  <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleConvertToBooking(enquiry)}>
+                                    Confirm Booking
+                                  </Button>
+                                )}
+                                <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleEditEnquiry(enquiry)}>
+                                  View / Edit
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                  <div className="flex justify-between items-center px-3 py-2 text-[12px] border-t border-[#c99]">
+                    <span>Showing {pagination.startIndex + 1}-{pagination.endIndex} of {pagination.totalItems}</span>
+                    <div className="flex gap-1">
+                      <button onClick={() => pagination.goToPage(Math.max(1, pagination.currentPage - 1))} disabled={pagination.currentPage === 1} className="border border-gray-400 px-2 py-0.5 disabled:opacity-50">Prev</button>
+                      <span className="px-2 py-0.5">Page {pagination.currentPage} / {pagination.totalPages}</span>
+                      <button onClick={() => pagination.goToPage(Math.min(pagination.totalPages, pagination.currentPage + 1))} disabled={pagination.currentPage === pagination.totalPages} className="border border-gray-400 px-2 py-0.5 disabled:opacity-50">Next</button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
         ) : (
-          <form onSubmit={handleSubmit} className="bg-[#fdf6f6] p-4">
-            <div className="max-w-[880px] mx-auto border border-gray-400 bg-[#f2ccd0] p-4">
-              <div className="text-right text-[12px] mb-3">
-                <span className="text-red-600">*</span> - Required fields
+          <LegacyFormPanel
+            title={editingEnquiryId ? "Edit Enquiry" : "Generate Enquiry"}
+            rightSlot={
+              <div className="flex items-center gap-4">
+                <span className="text-white/80 text-xs"><span className="text-red-300">*</span> - Required fields</span>
+                <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={resetForm}>
+                  Back to List
+                </Button>
               </div>
-
+            }
+          >
+            <form onSubmit={handleSubmit}>
               {/* Type */}
-              <div className="flex items-start mb-2">
-                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Type :</div>
-                <div className="flex items-center gap-4 text-[12px]">
+              <LegacyFormRow label="Type">
+                <div className="flex items-center gap-4 text-[12px] pt-2">
                   <label className="flex items-center gap-1">
                     <input type="radio" name="booking_type" checked={formData.booking_type === "agent"}
                       onChange={() => setFormData({ ...formData, booking_type: "agent" })} />
@@ -967,12 +961,11 @@ export default function Enquiries() {
                     Direct from customer <span className="text-red-600">*</span>
                   </label>
                 </div>
-              </div>
+              </LegacyFormRow>
 
               {/* Agent */}
               {formData.booking_type === "agent" && (
-                <div className="flex items-center mb-2">
-                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Agent :</div>
+                <LegacyFormRow label="Agent" required>
                   <select
                     value={formData.agent_id}
                     onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
@@ -981,8 +974,7 @@ export default function Enquiries() {
                     <option value="">-----Select-----</option>
                     {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
-                  <span className="text-red-600 ml-2 text-[12px]">*</span>
-                </div>
+                </LegacyFormRow>
               )}
 
               {[
@@ -990,74 +982,70 @@ export default function Enquiries() {
                 { label: "Reference Email", key: "reference_email" },
                 { label: "Customer Name", key: "customer_name" },
               ].map((f) => (
-                <div className="flex items-center mb-2" key={f.key}>
-                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">{f.label} :</div>
+                <LegacyFormRow label={f.label} key={f.key}>
                   <input
                     type="text"
                     value={(formData as any)[f.key]}
                     onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })}
                     className="border border-gray-600 bg-white text-[12px] h-[22px] w-[230px] px-1"
                   />
-                </div>
+                </LegacyFormRow>
               ))}
 
               {/* Address */}
-              <div className="flex items-start mb-2">
-                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800 pt-8">Address :</div>
+              <LegacyFormRow label="Address">
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="border border-gray-600 bg-white text-[12px] w-[230px] h-[90px] px-1"
                 />
-              </div>
+              </LegacyFormRow>
 
               {[
                 { label: "Contact No.", key: "contact_no" },
                 { label: "Email", key: "email" },
               ].map((f) => (
-                <div className="flex items-center mb-2" key={f.key}>
-                  <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">{f.label} :</div>
+                <LegacyFormRow label={f.label} key={f.key}>
                   <input
                     type="text"
                     value={(formData as any)[f.key]}
                     onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })}
                     className="border border-gray-600 bg-white text-[12px] h-[22px] w-[230px] px-1"
                   />
-                </div>
+                </LegacyFormRow>
               ))}
 
               {/* No of People */}
-              <div className="flex items-center mb-2">
-                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">No of People :</div>
-                <input
-                  type="number" min={0}
-                  value={formData.adults}
-                  onChange={(e) => setFormData({ ...formData, adults: Number(e.target.value) })}
-                  className="border border-gray-600 bg-white text-[12px] h-[22px] w-[60px] px-1"
-                />
-                <span className="text-[12px] mx-2">Adult</span>
-                <input
-                  type="number" min={0}
-                  value={formData.children}
-                  onChange={(e) => setFormData({ ...formData, children: Number(e.target.value) })}
-                  className="border border-gray-600 bg-white text-[12px] h-[22px] w-[60px] px-1"
-                />
-                <span className="text-[12px] ml-2">Children</span>
-              </div>
+              <LegacyFormRow label="No of People">
+                <div className="flex items-center">
+                  <input
+                    type="number" min={0}
+                    value={formData.adults}
+                    onChange={(e) => setFormData({ ...formData, adults: Number(e.target.value) })}
+                    className="border border-gray-600 bg-white text-[12px] h-[22px] w-[60px] px-1"
+                  />
+                  <span className="text-[12px] mx-2">Adult</span>
+                  <input
+                    type="number" min={0}
+                    value={formData.children}
+                    onChange={(e) => setFormData({ ...formData, children: Number(e.target.value) })}
+                    className="border border-gray-600 bg-white text-[12px] h-[22px] w-[60px] px-1"
+                  />
+                  <span className="text-[12px] ml-2">Children</span>
+                </div>
+              </LegacyFormRow>
 
               {/* Enquiry Message */}
-              <div className="flex items-start mb-2">
-                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800 pt-8">Enquiry Message :</div>
+              <LegacyFormRow label="Enquiry Message">
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="border border-gray-600 bg-white text-[12px] w-[230px] h-[90px] px-1"
                 />
-              </div>
+              </LegacyFormRow>
 
               {/* Place (City) */}
-              <div className="flex items-center mb-2">
-                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Place(City) :</div>
+              <LegacyFormRow label="Place(City)">
                 <select
                   value={formData.city_id}
                   onChange={(e) => setFormData({ ...formData, city_id: e.target.value })}
@@ -1066,7 +1054,7 @@ export default function Enquiries() {
                   <option value="">-City-</option>
                   {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-              </div>
+              </LegacyFormRow>
 
               {/* Booking (own hotel) */}
               {toggleRow("Booking", "include_booking")}
@@ -1075,8 +1063,7 @@ export default function Enquiries() {
                   {rowSelect("Hotel", "booking_hotel_id", ownHotels)}
                   {rowRoomSelect()}
                   {rowInput("No of Rooms", "booking_num_rooms", "number", "80px")}
-                  <div className="flex items-center mb-2">
-                    <div className={lblCell}>Package Type :</div>
+                  <LegacyFormRow label="Package Type">
                     <select
                       value={formData.booking_package_type}
                       onChange={(e) => setF("booking_package_type", e.target.value)}
@@ -1089,7 +1076,7 @@ export default function Enquiries() {
                       <option value="AP">AP (All Meals)</option>
                       <option value="custom">Custom</option>
                     </select>
-                  </div>
+                  </LegacyFormRow>
                   {formData.booking_package_type === "custom" && rowInput("Custom Package", "booking_custom_package")}
                   {rowDate("Booking From", "booking_from")}
                   {rowDate("Booking To", "booking_to")}
@@ -1180,19 +1167,17 @@ export default function Enquiries() {
                 </>
               ))}
 
-
               {/* Agent Commission */}
-              <div className="flex items-center mb-4">
-                <div className="w-[200px] text-right pr-2 text-[12px] text-gray-800">Agent Commission :</div>
+              <LegacyFormRow label="Agent Commission">
                 <input
                   type="number"
                   value={formData.agent_commission}
                   onChange={(e) => setFormData({ ...formData, agent_commission: e.target.value })}
                   className="border border-gray-600 bg-white text-[12px] h-[22px] w-[230px] px-1"
                 />
-              </div>
+              </LegacyFormRow>
 
-              <div className="flex justify-center gap-3">
+              <div className="flex justify-center gap-3 pt-4">
                 <button type="submit" className="border-2 border-gray-500 bg-[#e6e6e6] text-[12px] font-mono px-4 py-[2px]">
                   {editingEnquiryId ? "Update" : "Create"}
                 </button>
@@ -1200,9 +1185,8 @@ export default function Enquiries() {
                   Reset
                 </button>
               </div>
-            </div>
-          </form>
-
+            </form>
+          </LegacyFormPanel>
         )}
       </main>
     </div>

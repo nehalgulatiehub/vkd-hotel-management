@@ -6,6 +6,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -108,41 +117,44 @@ export default function CancellingPayments() {
       <Header title="View Cancelling Payment" />
       <main className="p-4">
         {/* Header Bar */}
-        <div className="bg-[#1e6e99] text-white px-4 py-2 flex justify-between items-center">
-          <span className="font-semibold">View Cancelling Payment</span>
-          <Link to="/cancelled-bookings" className="text-white hover:underline text-sm">View All Records</Link>
-        </div>
+        <LegacyPanelHeader
+          title="View Cancelling Payment"
+          className="mb-3"
+          right={
+            <Link to="/cancelled-bookings" className="text-white hover:underline text-sm">View All Records</Link>
+          }
+        />
 
         {/* Filters */}
-        <div className="border border-[#ccc] p-3 bg-white">
+        <div className="mb-3" style={legacyFilterContainerStyle}>
           {/* Row 1 */}
-          <div className="flex flex-wrap items-center gap-4 mb-2 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>From :</span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>From :</span>
               <PartsDatePicker month={String(months.indexOf(fromMonth) + 1)} day={String(fromDay)} year={String(fromYear)} onChange={(p) => { setFromMonth(months[Number(p.month) - 1] || fromMonth); setFromDay(Number(p.day)); setFromYear(Number(p.year)); }} />
             </div>
 
-            <div className="flex items-center gap-1">
-              <span>To :</span>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>To :</span>
               <PartsDatePicker month={String(months.indexOf(toMonth) + 1)} day={String(toDay)} year={String(toYear)} onChange={(p) => { setToMonth(months[Number(p.month) - 1] || toMonth); setToDay(Number(p.day)); setToYear(Number(p.year)); }} />
             </div>
 
             <div className="flex items-center gap-2">
-              <span>Search with Date :</span>
-              <label className="flex items-center gap-1">
+              <span className={legacyFilterLabelClass}>Search with Date :</span>
+              <label className="flex items-center gap-1 text-[13px]">
                 <input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES
               </label>
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-1 text-[13px]">
                 <input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO
               </label>
             </div>
           </div>
 
           {/* Row 2 */}
-          <div className="flex flex-wrap items-center gap-4 mb-2 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>Payment Mode :</span>
-              <select value={paymentModeFilter} onChange={(e) => setPaymentModeFilter(e.target.value)} className="border px-1 py-0.5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Payment Mode :</span>
+              <select value={paymentModeFilter} onChange={(e) => setPaymentModeFilter(e.target.value)} className={`${legacyFilterInputClass} min-w-[150px]`}>
                 <option value="">---Select Mode---</option>
                 <option value="Cash">Cash in Hand</option>
                 <option value="Net Banking">Net Banking</option>
@@ -152,19 +164,19 @@ export default function CancellingPayments() {
               </select>
             </div>
 
-            <div className="flex items-center gap-1">
-              <span>Customer :</span>
-              <input 
-                type="text" 
-                value={customerFilter} 
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Customer :</span>
+              <input
+                type="text"
+                value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
-                className="border px-1 py-0.5 text-[11px] w-32"
+                className={`${legacyFilterInputClass} w-40`}
               />
             </div>
 
-            <div className="flex items-center gap-1">
-              <span>User :</span>
-              <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)} className="border px-1 py-0.5 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>User :</span>
+              <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)} className={`${legacyFilterInputClass} min-w-[120px]`}>
                 <option value="">--Select--</option>
                 {profiles.map(p => <option key={p.id} value={p.id}>{p.username || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown'}</option>)}
               </select>
@@ -172,30 +184,30 @@ export default function CancellingPayments() {
           </div>
 
           {/* Row 3 */}
-          <div className="flex flex-wrap items-center gap-4 text-[11px]">
-            <div className="flex items-center gap-1">
-              <span>Cheque No :</span>
-              <input 
-                type="text" 
-                value={chequeNoFilter} 
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 pb-2">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Cheque No :</span>
+              <input
+                type="text"
+                value={chequeNoFilter}
                 onChange={(e) => setChequeNoFilter(e.target.value)}
-                className="border px-1 py-0.5 text-[11px] w-32"
+                className={`${legacyFilterInputClass} w-32`}
               />
             </div>
 
-            <div className="flex items-center gap-1">
-              <span>Payment :</span>
-              <input 
-                type="text" 
-                value={paymentFilter} 
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Payment :</span>
+              <input
+                type="text"
+                value={paymentFilter}
                 onChange={(e) => setPaymentFilter(e.target.value)}
-                className="border px-1 py-0.5 text-[11px] w-32"
+                className={`${legacyFilterInputClass} w-32`}
               />
             </div>
 
-            <div className="flex items-center gap-1">
-              <span>Payment For :</span>
-              <select value={paymentForFilter} onChange={(e) => setPaymentForFilter(e.target.value)} className="border px-1 py-0.5 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Payment For :</span>
+              <select value={paymentForFilter} onChange={(e) => setPaymentForFilter(e.target.value)} className={`${legacyFilterInputClass} min-w-[150px]`}>
                 <option value="">---Select Payment---</option>
                 <option value="hotel">Hotel</option>
                 <option value="safari">Safari</option>
@@ -203,18 +215,20 @@ export default function CancellingPayments() {
                 <option value="vehicle">Vehicle</option>
               </select>
             </div>
+          </div>
 
-            <button onClick={handleSearch} className="border px-3 py-1 bg-gray-100 hover:bg-gray-200 text-[11px]">
-              Search
-            </button>
+          <div className="flex justify-end px-3 pb-2">
+            <button onClick={handleSearch} style={legacySearchButtonStyle}>Search</button>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto mt-0">
+        <Card>
+        <CardContent className="p-0">
+        <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
             <thead>
-              <tr className="bg-[#D4A59A] text-black">
+              <tr style={{ backgroundColor: "#D4A59A" }}>
                 <th className="border border-[#c99] px-3 py-2 text-left font-semibold">S.No.</th>
                 <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Booking</th>
                 <th className="border border-[#c99] px-3 py-2 text-left font-semibold">Customer Name</th>
@@ -224,8 +238,14 @@ export default function CancellingPayments() {
               </tr>
             </thead>
             <tbody>
-              {filteredRefunds.map((refund, index) => (
-                <tr key={refund.id} className={index % 2 === 0 ? "bg-[#F5E6E0]" : "bg-[#FDE1E1]"}>
+              {filteredRefunds.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                    No cancelling payments found
+                  </td>
+                </tr>
+              ) : filteredRefunds.map((refund, index) => (
+                <tr key={refund.id} style={{ backgroundColor: "#F5E6E0" }}>
                   <td className="border border-[#c99] px-3 py-2 align-top">{index + 1}</td>
                   <td className="border border-[#c99] px-3 py-2 align-top">
                     <div><strong>Booking:</strong></div>
@@ -250,31 +270,33 @@ export default function CancellingPayments() {
                     rs {refund.refund_amount?.toLocaleString("en-IN")} paid from icici mukut on {refund.refund_date ? format(new Date(refund.refund_date), "dd/MM/yyyy") : "-"} by ref no {refund.reference_number || "-"}
                   </td>
                   <td className="border border-[#c99] px-3 py-2 align-top">
-                    <div className="flex flex-col gap-1">
-                      <button 
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="link"
+                        className="h-auto p-0 text-[11px] text-primary"
                         onClick={() => handleViewDetails(refund)}
-                        className="text-[#1e6e99] hover:underline text-left text-xs"
                       >
                         View Details
-                      </button>
-                      <button 
+                      </Button>
+                      <span className="text-muted-foreground">/</span>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        className="h-auto p-0 text-[11px] text-primary"
                         onClick={() => handleViewPayment(refund)}
-                        className="text-[#1e6e99] hover:underline text-left text-xs"
                       >
                         View Payment
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filteredRefunds.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground bg-[#F5E6E0]">
-              No cancelling payments found
-            </div>
-          )}
         </div>
+        </CardContent>
+        </Card>
 
         {/* Summary Footer */}
         <div className="bg-[#FDE1E1] border border-[#FFC1C1] p-3 mt-0">
@@ -331,7 +353,7 @@ export default function CancellingPayments() {
                   </thead>
                   <tbody>
                     {bookingPayments.map((payment, idx) => (
-                      <tr key={payment.id} className={idx % 2 === 0 ? "bg-[#F5E6E0]" : "bg-[#FDE1E1]"}>
+                      <tr key={payment.id} style={{ backgroundColor: "#F5E6E0" }}>
                         <td className="border border-[#c99] px-2 py-1">{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</td>
                         <td className="border border-[#c99] px-2 py-1">Rs. {payment.amount?.toLocaleString("en-IN")} /-</td>
                         <td className="border border-[#c99] px-2 py-1">{payment.payment_mode}</td>

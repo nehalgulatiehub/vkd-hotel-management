@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Clock, Eye } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { syncServiceTableOnApproval } from "@/utils/paymentSync";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import { legacyFilterContainerStyle, legacyFilterLabelClass } from "@/components/legacy/legacyFilterStyles";
 
 interface PendingPayment {
   id: string;
@@ -387,14 +387,9 @@ export default function PaymentApprovals() {
     <div className="min-h-screen">
       <Header title="Payment Approvals" />
       <main className="p-4 space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Payment Approval Queue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="overflow-hidden">
+          <LegacyPanelHeader title="Payment Approval Queue" rounded={false} />
+          <CardContent className="p-4">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="pending">Pending</TabsTrigger>
@@ -404,25 +399,34 @@ export default function PaymentApprovals() {
 
               <TabsContent value={activeTab} className="mt-4">
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <Input
-                    placeholder="Search by customer or booking..."
-                    value={searchCustomer}
-                    onChange={(e) => setSearchCustomer(e.target.value)}
-                  />
-                  <Select value={filterPaymentMode} onValueChange={setFilterPaymentMode}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Payment Mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Modes</SelectItem>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="upi">UPI</SelectItem>
-                      <SelectItem value="net banking">Net Banking</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="cheque">Cheque</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="mb-4" style={legacyFilterContainerStyle}>
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className={legacyFilterLabelClass}>Search :</span>
+                      <Input
+                        placeholder="Customer or booking..."
+                        value={searchCustomer}
+                        onChange={(e) => setSearchCustomer(e.target.value)}
+                        className="h-[26px] text-[13px] bg-white border-[#999] rounded-none w-56"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={legacyFilterLabelClass}>Payment Mode :</span>
+                      <Select value={filterPaymentMode} onValueChange={setFilterPaymentMode}>
+                        <SelectTrigger className="h-[26px] text-[13px] bg-white border-[#999] rounded-none w-40">
+                          <SelectValue placeholder="Payment Mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Modes</SelectItem>
+                          <SelectItem value="cash">Cash</SelectItem>
+                          <SelectItem value="upi">UPI</SelectItem>
+                          <SelectItem value="net banking">Net Banking</SelectItem>
+                          <SelectItem value="card">Card</SelectItem>
+                          <SelectItem value="cheque">Cheque</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
                 {loading ? (
@@ -433,132 +437,134 @@ export default function PaymentApprovals() {
                   </div>
                 ) : (
                   <>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>S.No</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Booking Details</TableHead>
-                          <TableHead>Customer Details</TableHead>
-                          <TableHead>Package Info</TableHead>
-                          <TableHead>Payment</TableHead>
-                          <TableHead>Mode</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>User</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedItems.map((payment, index) => (
-                          <TableRow key={`${payment.type}-${payment.id}`}>
-                            <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
-                            <TableCell>{getTypeBadge(payment.type)}</TableCell>
-                            <TableCell>
-                              <div className="text-xs space-y-1">
-                                <div className="font-medium">
-                                  {payment.booking_number || payment.invoice_number || "-"}
-                                </div>
-                                {payment.check_in_date && payment.check_out_date && (
-                                  <div>{payment.check_in_date} - {payment.check_out_date}</div>
-                                )}
-                                {(payment.adults || payment.children) && (
-                                  <div>Pax: {payment.adults || 0}A + {payment.children || 0}C</div>
-                                )}
-                                {payment.total_amount && (
-                                  <div>Price: Rs. {payment.total_amount.toLocaleString()}/-</div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-xs space-y-1">
-                                <div className="font-medium">{payment.customer_name || "N/A"}</div>
-                                {payment.contact_no && <div>Contact: {payment.contact_no}</div>}
-                                {payment.address && <div>Place: {payment.address}</div>}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-xs space-y-1">
-                                <div>Agent: {payment.agent_name || "Direct"}</div>
-                                <div>Hotel: {payment.hotel_name || "-"}</div>
-                                <div>Room: {roomName(payment.room_type)}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-xs space-y-1">
-                                <div className="font-medium">Rs. {payment.amount?.toLocaleString() || 0}/-</div>
-                                {payment.reference_number && (
-                                  <div>Ref: {payment.reference_number}</div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{payment.payment_mode}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              {payment.payment_date
-                                ? format(new Date(payment.payment_date), "dd/MM/yyyy")
-                                : "-"}
-                            </TableCell>
-                            <TableCell>{payment.created_by_name || "-"}</TableCell>
-                            <TableCell>{getStatusBadge(payment.approval_status)}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1">
-                                {payment.booking_id && (
-                                  <>
-                                    <Button
-                                      variant="link"
-                                      size="sm"
-                                      className="h-auto p-0 text-xs justify-start"
-                                      onClick={() => navigate(`/admin/bookings/${payment.booking_id}`)}
-                                    >
-                                      <Eye className="h-3 w-3 mr-1" />
-                                      View Booking
-                                    </Button>
-                                    <Button
-                                      variant="link"
-                                      size="sm"
-                                      className="h-auto p-0 text-xs justify-start text-blue-600"
-                                      onClick={() => navigate(`/admin/booking-payments?id=${payment.booking_id}`)}
-                                    >
-                                      <Eye className="h-3 w-3 mr-1" />
-                                      View Payments
-                                    </Button>
-                                  </>
-                                )}
-                                {activeTab === "pending" && (
-                                  <div className="flex gap-1">
-                                    <Button
-                                      size="icon"
-                                      variant="outline"
-                                      className="h-7 w-7 text-green-600 hover:text-green-700"
-                                      onClick={() => handleApproval(payment, "approved")}
-                                      disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
-                                      title={
-                                        !canApprovePayment(payment.payment_mode, payment.city_name)
-                                          ? "Account users cannot approve cash payments in Delhi"
-                                          : "Approve payment"
-                                      }
-                                    >
-                                      <CheckCircle className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="outline"
-                                      className="h-7 w-7 text-red-600 hover:text-red-700"
-                                      onClick={() => handleApproval(payment, "rejected")}
-                                      disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
-                                    >
-                                      <XCircle className="h-3 w-3" />
-                                    </Button>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr style={{ backgroundColor: "#D4A59A" }}>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">S.No</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Type</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Booking Details</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Customer Details</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Package Info</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Payment</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Mode</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Date</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Status</th>
+                            <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedItems.map((payment, index) => (
+                            <tr key={`${payment.type}-${payment.id}`} style={{ backgroundColor: "#F5E6E0" }}>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">{(currentPage - 1) * 10 + index + 1}</td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">{getTypeBadge(payment.type)}</td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                                <div className="space-y-1">
+                                  <div className="font-medium">
+                                    {payment.booking_number || payment.invoice_number || "-"}
                                   </div>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                                  {payment.check_in_date && payment.check_out_date && (
+                                    <div>{payment.check_in_date} - {payment.check_out_date}</div>
+                                  )}
+                                  {(payment.adults || payment.children) && (
+                                    <div>Pax: {payment.adults || 0}A + {payment.children || 0}C</div>
+                                  )}
+                                  {payment.total_amount && (
+                                    <div>Price: Rs. {payment.total_amount.toLocaleString()}/-</div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                                <div className="space-y-1">
+                                  <div className="font-medium">{payment.customer_name || "N/A"}</div>
+                                  {payment.contact_no && <div>Contact: {payment.contact_no}</div>}
+                                  {payment.address && <div>Place: {payment.address}</div>}
+                                </div>
+                              </td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                                <div className="space-y-1">
+                                  <div>Agent: {payment.agent_name || "Direct"}</div>
+                                  <div>Hotel: {payment.hotel_name || "-"}</div>
+                                  <div>Room: {roomName(payment.room_type)}</div>
+                                </div>
+                              </td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                                <div className="space-y-1">
+                                  <div className="font-medium">Rs. {payment.amount?.toLocaleString() || 0}/-</div>
+                                  {payment.reference_number && (
+                                    <div>Ref: {payment.reference_number}</div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                                <Badge variant="outline">{payment.payment_mode}</Badge>
+                              </td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">
+                                {payment.payment_date
+                                  ? format(new Date(payment.payment_date), "dd/MM/yyyy")
+                                  : "-"}
+                              </td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.created_by_name || "-"}</td>
+                              <td className="border border-[#c99] px-3 py-2 text-xs align-top">{getStatusBadge(payment.approval_status)}</td>
+                              <td className="border border-[#c99] px-3 py-2 align-top">
+                                <div className="flex flex-col gap-0.5">
+                                  {payment.booking_id && (
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-[11px] text-primary"
+                                        onClick={() => navigate(`/admin/bookings/${payment.booking_id}`)}
+                                      >
+                                        View Booking
+                                      </Button>
+                                      <span className="text-muted-foreground text-[11px]">/</span>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-[11px] text-primary"
+                                        onClick={() => navigate(`/admin/booking-payments?id=${payment.booking_id}`)}
+                                      >
+                                        View Payments
+                                      </Button>
+                                    </div>
+                                  )}
+                                  {activeTab === "pending" && (
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-[11px] text-green-600"
+                                        onClick={() => handleApproval(payment, "approved")}
+                                        disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
+                                        title={
+                                          !canApprovePayment(payment.payment_mode, payment.city_name)
+                                            ? "Account users cannot approve cash payments in Delhi"
+                                            : "Approve payment"
+                                        }
+                                      >
+                                        Approve
+                                      </Button>
+                                      <span className="text-muted-foreground text-[11px]">/</span>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-[11px] text-destructive"
+                                        onClick={() => handleApproval(payment, "rejected")}
+                                        disabled={!canApprovePayment(payment.payment_mode, payment.city_name)}
+                                      >
+                                        Reject
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                     <TablePagination
                       currentPage={currentPage}
                       totalPages={totalPages}

@@ -82,7 +82,7 @@ export default function VolvoPayments() {
   );
 
   return (
-    <AdminPageShell title="Volvo Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => {} }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+    <AdminPageShell title="Volvo Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setTransporterFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
       <ThemedTable>
         <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
         <tbody>

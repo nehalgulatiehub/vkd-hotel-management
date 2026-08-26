@@ -10,6 +10,13 @@ import { useNavigate } from "react-router-dom";
 import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 export default function BookingDue() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<any[]>([]);
@@ -310,37 +317,39 @@ export default function BookingDue() {
     <div className="min-h-screen bg-background">
       <Header title="Due Amount Booking" />
       <main className="p-4">
-        {/* Blue Header Bar */}
-        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">Due Amount Booking</span>
-          <Button 
-            variant="link" 
-            className="text-white p-0 h-auto text-sm hover:text-white/80"
-            onClick={() => navigate("/bookings")}
-          >
-            View All Records
-          </Button>
-        </div>
+        <LegacyPanelHeader
+          title="Due Amount Booking"
+          className="mb-3"
+          right={
+            <Button
+              variant="link"
+              className="text-white p-0 h-auto text-sm hover:text-white/80"
+              onClick={() => navigate("/bookings")}
+            >
+              View All Records
+            </Button>
+          }
+        />
 
         {/* Compact Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
+        <div className="mb-3" style={legacyFilterContainerStyle}>
           {/* Row 1: Dates and Search with Date */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">From :</span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2 border-b border-[#666]/30">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>From :</span>
               <PartsDatePicker month={filters.fromMonth} day={filters.fromDay} year={filters.fromYear} onChange={(p) => setFilters({...filters, fromMonth: p.month, fromDay: p.day, fromYear: p.year})} />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">To :</span>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>To :</span>
               <PartsDatePicker month={filters.toMonth} day={filters.toDay} year={filters.toYear} onChange={(p) => setFilters({...filters, toMonth: p.month, toDay: p.day, toYear: p.year})} />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Search with Date :</span>
-              <label className="flex items-center gap-0.5 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Search with Date :</span>
+              <label className="flex items-center gap-0.5 text-[13px] font-bold text-black">
                 <input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" />
                 YES
               </label>
-              <label className="flex items-center gap-0.5 text-[11px]">
+              <label className="flex items-center gap-0.5 text-[13px] font-bold text-black">
                 <input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" />
                 NO
               </label>
@@ -348,44 +357,44 @@ export default function BookingDue() {
           </div>
 
           {/* Row 2: Type, Agent, Reference, User */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Type :</span>
-              <select 
-                value={filters.type} 
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2 border-b border-[#666]/30">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Type :</span>
+              <select
+                value={filters.type}
                 onChange={(e) => setFilters({...filters, type: e.target.value})}
-                className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
+                className={legacyFilterInputClass}
               >
                 <option value="">--Select--</option>
                 <option value="agent">Agent</option>
                 <option value="direct">Direct</option>
               </select>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Agent Name :</span>
-              <select 
-                value={filters.agentName} 
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Agent Name :</span>
+              <select
+                value={filters.agentName}
                 onChange={(e) => setFilters({...filters, agentName: e.target.value})}
-                className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm"
+                className={`${legacyFilterInputClass} min-w-[120px]`}
               >
                 <option value="">--Select--</option>
                 {agents.map(agent => (<option key={agent.id} value={agent.id}>{agent.name}</option>))}
               </select>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Reference :</span>
-              <input 
-                value={filters.reference} 
-                onChange={(e) => setFilters({...filters, reference: e.target.value})} 
-                className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" 
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Reference :</span>
+              <input
+                value={filters.reference}
+                onChange={(e) => setFilters({...filters, reference: e.target.value})}
+                className={`${legacyFilterInputClass} w-24`}
               />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">User :</span>
-              <select 
-                value={filters.user} 
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>User :</span>
+              <select
+                value={filters.user}
                 onChange={(e) => setFilters({...filters, user: e.target.value})}
-                className="h-5 text-[11px] border border-input bg-background px-1 rounded-sm"
+                className={legacyFilterInputClass}
               >
                 <option value="">--Select--</option>
                 {users.map(user => (
@@ -397,80 +406,81 @@ export default function BookingDue() {
             </div>
           </div>
 
-          {/* Row 3: Hotel, Room, Package, Customer, Cheque, Search */}
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1.5">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Hotel :</span>
-                <select 
-                  value={filters.hotel} 
-                  onChange={(e) => {
-                    setFilters({...filters, hotel: e.target.value, room: ""});
-                    fetchFilterRoomsForHotel(e.target.value);
-                  }}
-                  className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm"
-                >
-                  <option value="">--Select--</option>
-                  {ownHotels.map(hotel => (<option key={hotel.id} value={hotel.id}>{hotel.name}</option>))}
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Room :</span>
-                <select 
-                  value={filters.room} 
-                  onChange={(e) => setFilters({...filters, room: e.target.value})}
-                  disabled={!filters.hotel}
-                  className="h-5 text-[11px] border border-input bg-background px-1 min-w-[100px] disabled:bg-muted rounded-sm"
-                >
-                  <option value="">{filters.hotel ? "--Select--" : "Select hotel"}</option>
-                  {filterRooms.map(room => (<option key={room.id} value={room.id}>{room.room_type || room.room_number}</option>))}
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Package :</span>
-                <select 
-                  value={filters.package} 
-                  onChange={(e) => setFilters({...filters, package: e.target.value})}
-                  className="h-5 text-[11px] border border-input bg-background px-1 min-w-[120px] rounded-sm"
-                >
-                  <option value="">--Select--</option>
-                  <option value="all">All Packages</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Customer :</span>
-                <input 
-                  value={filters.customer} 
-                  onChange={(e) => setFilters({...filters, customer: e.target.value})} 
-                  className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Contact No :</span>
-                <input
-                  value={filters.contactNo}
-                  onChange={(e) => setFilters({...filters, contactNo: e.target.value})}
-                  className="h-5 w-28 text-[11px] border border-input bg-background px-1 rounded-sm"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Email :</span>
-                <input
-                  value={filters.email}
-                  onChange={(e) => setFilters({...filters, email: e.target.value})}
-                  className="h-5 w-32 text-[11px] border border-input bg-background px-1 rounded-sm"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">Cheque No. :</span>
-                <input 
-                  value={filters.chequeNo} 
-                  onChange={(e) => setFilters({...filters, chequeNo: e.target.value})} 
-                  className="h-5 w-24 text-[11px] border border-input bg-background px-1 rounded-sm" 
-                />
-              </div>
+          {/* Row 3: Hotel, Room, Package, Customer, Cheque */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Hotel :</span>
+              <select
+                value={filters.hotel}
+                onChange={(e) => {
+                  setFilters({...filters, hotel: e.target.value, room: ""});
+                  fetchFilterRoomsForHotel(e.target.value);
+                }}
+                className={`${legacyFilterInputClass} min-w-[120px]`}
+              >
+                <option value="">--Select--</option>
+                {ownHotels.map(hotel => (<option key={hotel.id} value={hotel.id}>{hotel.name}</option>))}
+              </select>
             </div>
-            <button className="h-6 px-4 text-[11px] bg-primary text-primary-foreground border border-primary/80 hover:bg-primary/90 rounded-sm">Search</button>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Room :</span>
+              <select
+                value={filters.room}
+                onChange={(e) => setFilters({...filters, room: e.target.value})}
+                disabled={!filters.hotel}
+                className={`${legacyFilterInputClass} min-w-[100px] disabled:bg-muted`}
+              >
+                <option value="">{filters.hotel ? "--Select--" : "Select hotel"}</option>
+                {filterRooms.map(room => (<option key={room.id} value={room.id}>{room.room_type || room.room_number}</option>))}
+              </select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Package :</span>
+              <select
+                value={filters.package}
+                onChange={(e) => setFilters({...filters, package: e.target.value})}
+                className={`${legacyFilterInputClass} min-w-[120px]`}
+              >
+                <option value="">--Select--</option>
+                <option value="all">All Packages</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Customer :</span>
+              <input
+                value={filters.customer}
+                onChange={(e) => setFilters({...filters, customer: e.target.value})}
+                className={`${legacyFilterInputClass} w-28`}
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Contact No :</span>
+              <input
+                value={filters.contactNo}
+                onChange={(e) => setFilters({...filters, contactNo: e.target.value})}
+                className={`${legacyFilterInputClass} w-28`}
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Email :</span>
+              <input
+                value={filters.email}
+                onChange={(e) => setFilters({...filters, email: e.target.value})}
+                className={`${legacyFilterInputClass} w-32`}
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Cheque No. :</span>
+              <input
+                value={filters.chequeNo}
+                onChange={(e) => setFilters({...filters, chequeNo: e.target.value})}
+                className={`${legacyFilterInputClass} w-24`}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end px-3 pb-2">
+            <button style={legacySearchButtonStyle}>Search</button>
           </div>
         </div>
 

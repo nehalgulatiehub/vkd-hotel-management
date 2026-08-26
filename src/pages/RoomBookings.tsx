@@ -1,10 +1,16 @@
 import { Header } from "@/components/layout/Header";
-import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, parse, isValid, eachDayOfInterval } from "date-fns";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 interface Hotel {
   id: string;
@@ -239,17 +245,14 @@ export default function RoomBookings() {
       <main className="p-4">
         {/* Main Container with rounded corners */}
         <div className="border border-gray-300 rounded-lg overflow-hidden">
-          {/* Blue Header */}
-          <div className="text-white px-4 py-2 font-semibold text-[14px]" style={{ backgroundColor: "#1e6e99" }}>
-            View Room Booking
-          </div>
+          <LegacyPanelHeader title="View Room Booking" rounded={false} />
 
           {/* Filter Section */}
-          <div className="p-3 border-b" style={{ backgroundColor: "#F5E6E0" }}>
-            <div className="flex flex-wrap items-center gap-3 text-[11px]">
+          <div style={legacyFilterContainerStyle}>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
               {/* Booking From */}
-              <div className="flex items-center gap-1">
-                <span className="whitespace-nowrap">Booking From</span>
+              <div className="flex items-center gap-1.5">
+                <span className={legacyFilterLabelClass}>Booking From :</span>
                 <PartsDatePicker
                   month={fromMonth}
                   day={fromDay}
@@ -259,8 +262,8 @@ export default function RoomBookings() {
               </div>
 
               {/* Booking To */}
-              <div className="flex items-center gap-1">
-                <span className="whitespace-nowrap">Booking To</span>
+              <div className="flex items-center gap-1.5">
+                <span className={legacyFilterLabelClass}>Booking To :</span>
                 <PartsDatePicker
                   month={toMonth}
                   day={toDay}
@@ -269,14 +272,13 @@ export default function RoomBookings() {
                 />
               </div>
 
-
               {/* Hotel */}
-              <div className="flex items-center gap-1">
-                <span>Hotel :</span>
+              <div className="flex items-center gap-1.5">
+                <span className={legacyFilterLabelClass}>Hotel :</span>
                 <select
                   value={selectedHotel}
                   onChange={(e) => setSelectedHotel(e.target.value)}
-                  className="border border-gray-400 px-1 py-0.5 text-[11px] bg-white min-w-[140px]"
+                  className={`${legacyFilterInputClass} min-w-[140px]`}
                 >
                   <option value="">All Hotels</option>
                   {hotels.map((hotel) => (
@@ -284,17 +286,12 @@ export default function RoomBookings() {
                   ))}
                 </select>
               </div>
+            </div>
 
-              {/* Search Button */}
-              <Button
-                size="sm"
-                onClick={handleSearch}
-                disabled={loading}
-                className="h-6 px-3 text-[11px]"
-                style={{ backgroundColor: "#1e6e99" }}
-              >
+            <div className="flex justify-end px-3 pb-2">
+              <button style={legacySearchButtonStyle} onClick={handleSearch} disabled={loading}>
                 {loading ? "..." : "Search"}
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -303,14 +300,14 @@ export default function RoomBookings() {
             <table className="w-full text-[12px] border-collapse">
               <thead>
                 <tr style={{ backgroundColor: "#D4A59A" }}>
-                  <th className="text-left p-2 border border-gray-400 w-[120px]">Date.</th>
-                  <th className="text-left p-2 border border-gray-400">Booking Detail</th>
+                  <th className="text-left p-2 border border-[#c99] w-[120px]">Date.</th>
+                  <th className="text-left p-2 border border-[#c99]">Booking Detail</th>
                 </tr>
               </thead>
               <tbody>
                 {dateBookings.length === 0 ? (
                   <tr style={{ backgroundColor: "#F5E6E0" }}>
-                    <td colSpan={2} className="text-center py-8 text-muted-foreground border border-gray-400">
+                    <td colSpan={2} className="text-center py-8 text-muted-foreground border border-[#c99]">
                       {loading ? "Loading..." : "Select date range and click Search to view room bookings"}
                     </td>
                   </tr>
@@ -318,10 +315,10 @@ export default function RoomBookings() {
                   <>
                     {dateBookings.map((dateBooking, idx) => (
                       <tr key={idx} style={{ backgroundColor: "#F5E6E0" }}>
-                        <td className="p-2 border border-gray-400 align-top font-medium">
+                        <td className="p-2 border border-[#c99] align-top font-medium">
                           {formatDisplayDate(dateBooking.date)}
                         </td>
-                        <td className="p-2 border border-gray-400">
+                        <td className="p-2 border border-[#c99]">
                           {dateBooking.hotels.map((hotel, hotelIdx) => (
                             <div key={hotelIdx} className="mb-2">
                               <div className="font-bold">{hotel.hotelName}</div>
@@ -336,8 +333,8 @@ export default function RoomBookings() {
                     ))}
                     {/* Total no. of Rooms row at the bottom */}
                     <tr className="bg-white">
-                      <td colSpan={2} className="p-2 border border-gray-400 font-bold text-sm">
-                        Total no. of Rooms : {dateBookings.reduce((sum, d) => 
+                      <td colSpan={2} className="p-2 border border-[#c99] font-bold text-sm">
+                        Total no. of Rooms : {dateBookings.reduce((sum, d) =>
                           sum + d.hotels.reduce((hSum, h) => hSum + h.totalRooms, 0), 0
                         )}
                       </td>

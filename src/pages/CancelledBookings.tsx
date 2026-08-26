@@ -8,6 +8,13 @@ import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { useRoomNames } from "@/hooks/useRoomNames";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 export default function CancelledBookings() {
   const navigate = useNavigate();
@@ -144,26 +151,29 @@ export default function CancelledBookings() {
     (b.hotel_bookings || []).reduce((s: number, h: any) => s + (h.number_of_rooms || 0), 0);
 
   const filterCellStyle = { backgroundColor: "#F5E6E0" };
-  const smallSelect = "border border-gray-400 bg-white h-[22px] text-[12px] px-1 leading-none";
-  const smallInput = "border border-gray-400 bg-white h-[22px] text-[12px] px-1 leading-none";
-  const labelStyle = "text-[12px] text-gray-800 whitespace-nowrap";
+  const smallSelect = legacyFilterInputClass;
+  const smallInput = legacyFilterInputClass;
+  const labelStyle = legacyFilterLabelClass;
 
   const content = (
     <main className="p-4">
       <div className="border border-gray-300">
         {/* Blue Header */}
-        <div className="flex justify-between items-center px-4 py-2" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-[14px]">View Cancel Booking</span>
-          <button
-            onClick={() => navigate(isAdminRoute ? "/admin/bookings" : "/bookings")}
-            className="text-white hover:underline text-[14px] bg-transparent border-0 cursor-pointer font-semibold"
-          >
-            View All Records
-          </button>
-        </div>
+        <LegacyPanelHeader
+          title="View Cancel Booking"
+          rounded={false}
+          right={
+            <button
+              onClick={() => navigate(isAdminRoute ? "/admin/bookings" : "/bookings")}
+              className="text-white hover:underline text-[14px] bg-transparent border-0 cursor-pointer font-semibold"
+            >
+              View All Records
+            </button>
+          }
+        />
 
         {/* Filter Panel */}
-        <div className="p-3 space-y-2" style={filterCellStyle}>
+        <div className="p-3 space-y-2" style={legacyFilterContainerStyle}>
           {/* Row 1 */}
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
             <div className="flex items-center gap-2">
@@ -245,7 +255,8 @@ export default function CancelledBookings() {
             <button
               type="button"
               onClick={() => { /* filters are reactive; no-op but keeps UX */ }}
-              className="ml-auto border border-gray-500 bg-gray-200 hover:bg-gray-300 px-4 py-1 text-[12px] font-semibold rounded"
+              className="ml-auto"
+              style={legacySearchButtonStyle}
             >
               Search
             </button>
