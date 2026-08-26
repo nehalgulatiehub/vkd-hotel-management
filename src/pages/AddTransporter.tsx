@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { LegacyFormPanel } from "@/components/legacy/LegacyFormPanel";
 
 interface City {
   id: string;
@@ -100,17 +100,7 @@ export default function AddTransporter() {
     <div className="min-h-screen bg-background">
       <Header title={isEditMode ? "Edit Transporter" : "Add Transporter"} />
       <main className="p-4">
-        {/* Blue Header Bar */}
-        <div className="flex justify-between items-center px-4 py-2 mb-0 rounded-t" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">{isEditMode ? "Edit Transporter" : "Add Transporter"}</span>
-        </div>
-
-        {/* Form Card */}
-        <Card className="rounded-t-none border-t-0" style={{ backgroundColor: "#F5E6E0" }}>
-          <CardContent className="pt-4">
-            {/* Required fields note */}
-            <div className="text-right text-red-500 text-xs mb-4">* - Required fields</div>
-            
+        <LegacyFormPanel title={isEditMode ? "Edit Transporter" : "Add Transporter"} rightSlot={<span className="text-white/80 text-xs">* - Required fields</span>}>
             <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-4">
               {/* Transporter Name */}
               <div className="flex items-center gap-2">
@@ -200,8 +190,7 @@ export default function AddTransporter() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+        </LegacyFormPanel>
       </main>
     </div>
   );

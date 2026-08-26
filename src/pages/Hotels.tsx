@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import {
+  legacyFilterContainerStyle,
+  legacyFilterLabelClass,
+  legacyFilterInputClass,
+  legacySearchButtonStyle,
+} from "@/components/legacy/legacyFilterStyles";
 
 export default function Hotels() {
   const navigate = useNavigate();
@@ -92,32 +99,33 @@ export default function Hotels() {
     <div className="min-h-screen bg-background">
       <Header title="Partner Hotel Management" />
       <main className="p-4">
-        {/* Blue Header Bar */}
-        <div className="flex justify-between items-center px-4 py-2 mb-3" style={{ backgroundColor: "#1e6e99" }}>
-          <span className="text-white font-semibold text-sm">View Another Hotel</span>
-          <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={clearFilters}>
-            View All Records
-          </Button>
-        </div>
+        <LegacyPanelHeader
+          title="View Another Hotel"
+          className="mb-3"
+          right={
+            <Button variant="link" className="text-white p-0 h-auto text-sm hover:text-white/80" onClick={clearFilters}>
+              View All Records
+            </Button>
+          }
+        />
 
         {/* Compact Filter Section */}
-        <div className="mb-3 border border-border bg-muted/50">
-          {/* Row 1: Hotel Name, City Name */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Hotel Name :</span>
-              <input 
-                value={filters.hotelName} 
-                onChange={(e) => setFilters({...filters, hotelName: e.target.value})} 
-                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+        <div className="mb-3" style={legacyFilterContainerStyle}>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Hotel Name :</span>
+              <input
+                value={filters.hotelName}
+                onChange={(e) => setFilters({...filters, hotelName: e.target.value})}
+                className={`${legacyFilterInputClass} w-40`}
               />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">City Name :</span>
-              <select 
-                value={filters.cityId} 
-                onChange={(e) => setFilters({...filters, cityId: e.target.value})} 
-                className="h-5 text-[11px] border border-input bg-background px-1 min-w-[150px] rounded-sm"
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>City Name :</span>
+              <select
+                value={filters.cityId}
+                onChange={(e) => setFilters({...filters, cityId: e.target.value})}
+                className={`${legacyFilterInputClass} min-w-[150px]`}
               >
                 <option value="">-City-</option>
                 {cities.map(city => (
@@ -127,31 +135,27 @@ export default function Hotels() {
             </div>
           </div>
 
-          {/* Row 2: Contact No, Email-Id */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-2 py-1.5 border-b border-border">
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Contact No :</span>
-              <input 
-                value={filters.contactNo} 
-                onChange={(e) => setFilters({...filters, contactNo: e.target.value})} 
-                className="h-5 w-40 text-[11px] border border-input bg-background px-1 rounded-sm" 
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Contact No :</span>
+              <input
+                value={filters.contactNo}
+                onChange={(e) => setFilters({...filters, contactNo: e.target.value})}
+                className={`${legacyFilterInputClass} w-40`}
               />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Email-Id :</span>
-              <input 
-                value={filters.email} 
-                onChange={(e) => setFilters({...filters, email: e.target.value})} 
-                className="h-5 w-48 text-[11px] border border-input bg-background px-1 rounded-sm" 
+            <div className="flex items-center gap-1.5">
+              <span className={legacyFilterLabelClass}>Email-Id :</span>
+              <input
+                value={filters.email}
+                onChange={(e) => setFilters({...filters, email: e.target.value})}
+                className={`${legacyFilterInputClass} w-48`}
               />
             </div>
           </div>
 
-          {/* Row 3: Search Button */}
-          <div className="flex justify-end px-2 py-1.5">
-            <button className="h-6 px-4 text-[11px] bg-foreground text-background border border-foreground/80 hover:bg-foreground/90 rounded-sm">
-              Search
-            </button>
+          <div className="flex justify-end px-3 pb-2">
+            <button style={legacySearchButtonStyle}>Search</button>
           </div>
         </div>
 
