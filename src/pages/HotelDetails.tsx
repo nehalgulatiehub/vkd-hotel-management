@@ -14,12 +14,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { useRoomNames } from "@/hooks/useRoomNames";
 import { ZoomableTable } from "@/components/ui/ZoomableTable";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import { Button } from "@/components/ui/button";
 
-const MAROON_LIGHT = "#c47a7e";
-const ROW_ALT = "#f6f0f0";
-const thStyle: React.CSSProperties = { border: "1px solid #a88", padding: "5px 8px", textAlign: "left", fontWeight: "bold", fontSize: 11, color: "#fff", backgroundColor: MAROON_LIGHT };
-const tdStyle: React.CSSProperties = { border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" };
-const actionStyle: React.CSSProperties = { color: "#c00", cursor: "pointer", fontSize: 10, display: "block", background: "none", border: "none", padding: 0, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
+const MAROON_LIGHT = "#D6A7A1";
+const thStyle: React.CSSProperties = { padding: "2px 6px", textAlign: "left", fontWeight: "normal", fontSize: 13, color: "#000", backgroundColor: MAROON_LIGHT };
+const tdStyle: React.CSSProperties = { padding: "2px 6px", fontSize: 13, color: "#7D7D7E", verticalAlign: "top" };
+const actionStyle: React.CSSProperties = { color: "#996666", cursor: "pointer", fontSize: 12, fontWeight: "bold", display: "block", background: "none", border: "none", padding: 0, paddingLeft: 4, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
 
 export default function HotelDetails() {
   const navigate = useNavigate();
@@ -94,21 +95,33 @@ export default function HotelDetails() {
 
   return (
     <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
-      <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 8, color: "#333" }}>📋 View Another Hotel Detail</div>
+      <LegacyPanelHeader
+        title="View Another Hotel Detail"
+        className="mb-2"
+        right={
+          <Button
+            variant="link"
+            className="text-white p-0 h-auto text-sm hover:text-white/80"
+            onClick={() => { setFilters(getDefaultFilters()); fetchHotelBookings(); }}
+          >
+            View All Records
+          </Button>
+        }
+      />
 
       <DetailPageFilters options={{ showType: true, showAgent: true, showUser: true, showCustomer: true, showReference: true, showHotel: true, showCity: true }} filters={filters} onFilterChange={setFilters} onSearch={fetchHotelBookings} />
 
       <ZoomableTable style={{ border: "1px solid #ccc", borderTop: "none" }}>
         {loading ? <div style={{ textAlign: "center", padding: 32, color: "#999" }}>Loading...</div> : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
-            <thead><tr style={{ backgroundColor: MAROON_LIGHT, color: "#fff", fontWeight: "bold" }}>
+            <thead><tr style={{ backgroundColor: MAROON_LIGHT, color: "#000", fontWeight: "normal" }}>
               <th style={thStyle}>S.No.</th><th style={thStyle}>Type</th><th style={thStyle}>User</th><th style={thStyle}>Customer Details</th><th style={thStyle}>Hotel Detail</th><th style={thStyle}>Date</th><th style={thStyle}>Actions</th>
             </tr></thead>
             <tbody>
               {paginatedItems.length === 0 ? (
                 <tr><td colSpan={7} style={{ ...tdStyle, textAlign: "center", padding: 20, color: "#999" }}>No hotel bookings found</td></tr>
               ) : paginatedItems.map((booking, idx) => (
-                <tr key={booking.id} style={{ backgroundColor: idx % 2 === 0 ? "#fff" : ROW_ALT }}>
+                <tr key={booking.id}>
                   <td style={tdStyle}>{startIndex + idx}</td>
                   <td style={tdStyle}>{booking.bookings?.booking_type === "agent" ? <><div>Agent</div><div style={{ fontSize: 10 }}>{booking.bookings?.agents?.name || ""}</div></> : "Direct"}</td>
                   <td style={tdStyle}>{booking.bookings?.created_by ? (profilesMap[booking.bookings.created_by] || "User") : "-"}</td>

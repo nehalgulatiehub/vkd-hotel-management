@@ -56,12 +56,11 @@ const months = [
 
 const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
 const years = Array.from({ length: 10 }, (_, i) => String(2020 + i));
-const MAROON = "#b44a50";
 
 const selectStyle: React.CSSProperties = {
   border: "1px solid #999",
   padding: "2px 4px",
-  fontSize: 11,
+  fontSize: 13,
   fontFamily: "Arial, Helvetica, sans-serif",
   height: 22,
   backgroundColor: "#fff",
@@ -71,7 +70,7 @@ const selectStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   border: "1px solid #999",
   padding: "2px 4px",
-  fontSize: 11,
+  fontSize: 13,
   fontFamily: "Arial, Helvetica, sans-serif",
   height: 22,
   backgroundColor: "#fff",
@@ -79,9 +78,10 @@ const inputStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 13,
+  fontWeight: "bold",
   fontFamily: "Arial, Helvetica, sans-serif",
-  color: "#606060",
+  color: "#000",
   whiteSpace: "nowrap",
 };
 
@@ -90,8 +90,6 @@ const rowStyle: React.CSSProperties = {
   width: "100%",
   gap: "6px 16px",
   padding: "4px 10px",
-  borderBottom: "1px solid #ccc",
-  backgroundColor: "#fff",
   boxSizing: "border-box",
   alignItems: "center",
 };
@@ -149,24 +147,7 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
   };
 
   return (
-    <div style={{ border: "1px solid #ccc", width: "100%", boxSizing: "border-box" }}>
-      <div
-        style={{
-          backgroundColor: MAROON,
-          color: "#fff",
-          padding: "4px 10px",
-          fontSize: 11,
-          fontWeight: "bold",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          fontFamily: "Arial, Helvetica, sans-serif",
-        }}
-      >
-        <span>Search</span>
-        <span style={{ cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
-      </div>
-
+    <div style={{ backgroundColor: "#F8D8D9", border: "1px solid #666", width: "100%", boxSizing: "border-box" }}>
       <div className="legacy-filter-row" style={{ ...rowStyle, gridTemplateColumns: "auto auto 1fr" }}>
         <div style={fieldStyle}>
           <span style={labelStyle}>From :</span>
@@ -326,11 +307,14 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
         <button
           onClick={onSearch}
           style={{
-            border: "1px solid #888",
-            padding: "2px 12px",
-            fontSize: 11,
-            fontFamily: "Arial, Helvetica, sans-serif",
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#adadb0",
+            border: "2px outset #4a4a4b",
+            fontFamily: '"Courier New", Courier, monospace',
+            fontSize: 13,
+            fontWeight: "bold",
+            padding: "1px 14px",
+            color: "#000",
+            borderRadius: 0,
             cursor: "pointer",
             height: 22,
           }}

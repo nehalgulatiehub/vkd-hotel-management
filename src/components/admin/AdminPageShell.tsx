@@ -25,8 +25,7 @@ interface AdminPageShellProps {
 }
 
 const MAROON = "#b44a50";
-const MAROON_LIGHT = "#c47a7e";
-const ROW_ALT = "#f6f0f0";
+const MAROON_LIGHT = "#D6A7A1";
 
 export function AdminPageShell({ title, actions, filterSection, children, pagination }: AdminPageShellProps) {
   return (
@@ -145,7 +144,7 @@ export function ThemedTable({ children }: { children: ReactNode }) {
 export function ThemedTHead({ children }: { children: ReactNode }) {
   return (
     <thead>
-      <tr style={{ backgroundColor: MAROON_LIGHT, color: "#fff", fontWeight: "bold" }}>
+      <tr style={{ backgroundColor: MAROON_LIGHT, color: "#000", fontWeight: "normal" }}>
         {children}
       </tr>
     </thead>
@@ -155,12 +154,11 @@ export function ThemedTHead({ children }: { children: ReactNode }) {
 export function ThemedTH({ children, className = "" }: { children?: ReactNode; className?: string }) {
   return (
     <th style={{
-      border: "1px solid #a88",
-      padding: "5px 8px",
+      padding: "2px 6px",
       textAlign: "left",
-      fontWeight: "bold",
-      fontSize: 11,
-      color: "#fff",
+      fontWeight: "normal",
+      fontSize: 13,
+      color: "#000",
       backgroundColor: MAROON_LIGHT
     }}>
       {children}
@@ -171,10 +169,9 @@ export function ThemedTH({ children, className = "" }: { children?: ReactNode; c
 export function ThemedTD({ children, className = "" }: { children?: ReactNode; className?: string }) {
   return (
     <td style={{
-      border: "1px solid #ddd",
-      padding: "5px 8px",
-      fontSize: 11,
-      color: "#606060",
+      padding: "2px 6px",
+      fontSize: 13,
+      color: "#7D7D7E",
       verticalAlign: "top"
     }}>
       {children}
@@ -182,9 +179,9 @@ export function ThemedTD({ children, className = "" }: { children?: ReactNode; c
   );
 }
 
-export function ThemedTR({ children, index }: { children: ReactNode; index: number }) {
+export function ThemedTR({ children }: { children: ReactNode; index?: number }) {
   return (
-    <tr style={{ backgroundColor: index % 2 === 0 ? "#fff" : ROW_ALT }}>
+    <tr style={{ backgroundColor: "transparent" }}>
       {children}
     </tr>
   );
@@ -194,11 +191,10 @@ export function ThemedEmptyRow({ colSpan, message = "No records found" }: { colS
   return (
     <tr>
       <td colSpan={colSpan} style={{
-        border: "1px solid #ddd",
         padding: "20px 8px",
         textAlign: "center",
         color: "#999",
-        fontSize: 11
+        fontSize: 13
       }}>
         {message}
       </td>
@@ -211,7 +207,7 @@ export function ThemedActionLink({ onClick, children }: { onClick: () => void; c
   return (
     <span
       onClick={onClick}
-      style={{ color: "#c00", cursor: "pointer", fontSize: 10, display: "block" }}
+      style={{ color: "#996666", cursor: "pointer", fontSize: 12, fontWeight: "bold", display: "block", paddingLeft: 4 }}
       onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
       onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
     >
