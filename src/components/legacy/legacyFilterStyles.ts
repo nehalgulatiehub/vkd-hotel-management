@@ -14,6 +14,7 @@ export const legacySearchButtonStyle: CSSProperties = {
   border: "2px outset #4a4a4b",
   fontFamily: '"Courier New", Courier, monospace',
   fontSize: "13px",
+  fontWeight: "bold",
   padding: "1px 14px",
   color: "#000",
   borderRadius: 0,
