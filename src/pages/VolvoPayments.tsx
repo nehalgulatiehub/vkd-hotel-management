@@ -57,24 +57,27 @@ export default function VolvoPayments() {
   const { paginatedItems, currentPage, totalPages, goToPage, totalItems, startIndex, endIndex } = usePagination(filteredPayments);
   const sty = filterSelectStyle;
 
+  const legacyLabel: React.CSSProperties = { fontWeight: "bold", color: "#000" };
+  const legacyButton: React.CSSProperties = { backgroundColor: "#adadb0", border: "2px outset #4a4a4b", fontFamily: '"Courier New", Courier, monospace', fontSize: 13, fontWeight: "bold", padding: "1px 14px", color: "#000", borderRadius: 0, cursor: "pointer" };
+
   const filterSection = (
-    <div style={{ width: "100%", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid #ccc" }}>
-        <span>From :</span>
+    <div style={{ width: "100%", fontSize: 13, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0" }}>
+        <span style={legacyLabel}>From :</span>
         <PartsDatePicker month={String(months.indexOf(fromMonth) + 1)} day={String(fromDay)} year={String(fromYear)} onChange={(p) => { setFromMonth(months[Number(p.month) - 1] || fromMonth); setFromDay(Number(p.day)); setFromYear(Number(p.year)); }} />
-        <span style={{ marginLeft: 16 }}>To :</span>
+        <span style={{ marginLeft: 16, ...legacyLabel }}>To :</span>
         <PartsDatePicker month={String(months.indexOf(toMonth) + 1)} day={String(toDay)} year={String(toYear)} onChange={(p) => { setToMonth(months[Number(p.month) - 1] || toMonth); setToDay(Number(p.day)); setToYear(Number(p.year)); }} />
-        <span style={{ marginLeft: 16 }}>Search with Date :</span>
+        <span style={{ marginLeft: 16, ...legacyLabel }}>Search with Date :</span>
         <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={searchWithDate} onChange={() => setSearchWithDate(true)} /> YES</label>
         <label style={{ display: "flex", alignItems: "center", gap: 2 }}><input type="radio" checked={!searchWithDate} onChange={() => setSearchWithDate(false)} /> NO</label>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "4px 0" }}>
-        <span>Transporter :</span>
+        <span style={legacyLabel}>Transporter :</span>
         <select value={transporterFilter} onChange={e => setTransporterFilter(e.target.value)} style={{ ...sty, minWidth: 200 }}>
           <option value="">-- Select Transporter --</option>
           {transporters.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
         </select>
-        <button onClick={fetchPayments} style={filterButtonStyle}>Search</button>
+        <button onClick={fetchPayments} style={legacyButton}>Search</button>
         <span style={{ flex: 1 }} />
         <span style={{ fontWeight: "bold" }}>Total: Rs. {totalPayments.toLocaleString("en-IN")}/-</span>
       </div>
@@ -82,7 +85,7 @@ export default function VolvoPayments() {
   );
 
   return (
-    <AdminPageShell title="Volvo Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setTransporterFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+    <AdminPageShell legacyHeader title="View Volvo Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setTransporterFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
       <ThemedTable>
         <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
         <tbody>

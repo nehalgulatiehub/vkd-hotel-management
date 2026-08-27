@@ -1,6 +1,8 @@
 import { ReactNode, cloneElement, isValidElement } from "react";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { ZoomableTable } from "@/components/ui/ZoomableTable";
+import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import { Button } from "@/components/ui/button";
 
 
 interface ActionButton {
@@ -14,6 +16,10 @@ interface AdminPageShellProps {
   actions?: ActionButton[];
   filterSection?: ReactNode;
   children: ReactNode;
+  /** Matches the real legacy site exactly: blue title bar (with actions as text links)
+   * + a plain pink filter box, no maroon "Search" header. Opt-in so existing admin-only
+   * pages keep their current look until reviewed. */
+  legacyHeader?: boolean;
   pagination?: {
     currentPage: number;
     totalPages: number;
@@ -27,7 +33,65 @@ interface AdminPageShellProps {
 const MAROON = "#b44a50";
 const MAROON_LIGHT = "#D6A7A1";
 
-export function AdminPageShell({ title, actions, filterSection, children, pagination }: AdminPageShellProps) {
+export function AdminPageShell({ title, actions, filterSection, children, pagination, legacyHeader }: AdminPageShellProps) {
+  if (legacyHeader) {
+    return (
+      <div className="p-2 md:p-3 max-w-full overflow-x-hidden" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
+        <LegacyPanelHeader
+          title={title}
+          className="mb-2"
+          right={
+            actions && actions.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {actions.map((action, i) => (
+                  <Button
+                    key={i}
+                    variant="link"
+                    className="text-white p-0 h-auto text-sm hover:text-white/80"
+                    onClick={action.onClick}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            ) : undefined
+          }
+        />
+
+        {filterSection && (
+          <div style={{ backgroundColor: "#F8D8D9", border: "1px solid #666", marginBottom: 8, width: "100%", padding: "8px 10px", boxSizing: "border-box", overflowX: "auto" }}>
+            {isValidElement(filterSection)
+              ? cloneElement(filterSection, {
+                  style: {
+                    ...(filterSection.props.style || {}),
+                    width: "100%",
+                    boxSizing: "border-box",
+                    display: (filterSection.props.style || {}).display ?? undefined,
+                    flexWrap: "wrap",
+                  },
+                })
+              : filterSection}
+          </div>
+        )}
+
+        <ZoomableTable style={{ border: "1px solid #ccc" }}>
+          {children}
+        </ZoomableTable>
+
+        {pagination && pagination.totalPages > 1 && (
+          <TablePagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.onPageChange}
+            totalItems={pagination.totalItems}
+            startIndex={pagination.startIndex}
+            endIndex={pagination.endIndex}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="p-2 md:p-3 max-w-full overflow-x-hidden" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
 
