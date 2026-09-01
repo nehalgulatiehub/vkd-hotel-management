@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { recalcAllModulesForBooking } from "@/utils/paymentSync";
 
 interface ServiceInfo {
   type: 'safari' | 'hotel' | 'vehicle' | 'volvo_dm' | 'volvo_md' | 'visa' | 'cruise';
@@ -140,53 +141,17 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
 
       if (paymentError) throw paymentError;
 
-      // Recalculate booking totals so the received/due amounts reflect the new payment
-      // immediately on the bookings list (regardless of approval status).
+      // Recalculate the booking's total AND every linked service module's own
+      // paid/due amount, each strictly from payments matching its own type —
+      // this can't drift or leak across services regardless of which one this
+      // payment was for (see recalcAllModulesForBooking for why).
       try {
-        const { data: bookingData } = await supabase
-          .from("bookings")
-          .select("total_amount")
-          .eq("id", selectedBooking.id)
-          .maybeSingle();
-        const { data: allPays } = await supabase
-          .from("payments")
-          .select("amount")
-          .eq("booking_id", selectedBooking.id);
-        const totalPaid = (allPays || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
-        const totalAmount = Number(bookingData?.total_amount || 0);
-        const due = Math.max(0, totalAmount - totalPaid);
-        const status = totalPaid <= 0 ? "pending" : due <= 0 ? "paid" : "partial";
-        await supabase
-          .from("bookings")
-          .update({ paid_amount: totalPaid, due_amount: due, payment_status: status })
-          .eq("id", selectedBooking.id);
+        await recalcAllModulesForBooking(selectedBooking.id);
       } catch (e) {
-        console.error("Recalc booking totals after payment failed:", e);
+        console.error("Recalc booking/module totals after payment failed:", e);
       }
 
-      // Update the respective service module's paid/due amounts
       if (selectedService) {
-        try {
-          const table = SERVICE_TABLES[selectedService.type];
-          const { data: modPays } = await supabase
-            .from("payments")
-            .select("amount")
-            .eq("booking_id", selectedBooking.id)
-            .eq("payment_type", paymentType);
-          const modPaid = (modPays || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
-          const { data: modRow } = await (supabase as any)
-            .from(table)
-            .select("total_amount")
-            .eq("id", selectedService.id)
-            .maybeSingle();
-          const modTotal = Number(modRow?.total_amount || 0);
-          await (supabase as any)
-            .from(table)
-            .update({ paid_amount: modPaid, due_amount: Math.max(0, modTotal - modPaid) })
-            .eq("id", selectedService.id);
-        } catch (e) {
-          console.error("Recalc module totals after payment failed:", e);
-        }
         await fetchServiceTotals(selectedService);
       }
 

@@ -94,6 +94,75 @@ export async function recalcBookingAmounts(bookingId: string, paymentType?: stri
     .eq("id", modRow.id);
 }
 
+const ALL_MODULE_TABLES: { table: string; types: string[]; route?: string }[] = [
+  { table: "safari_bookings", types: ["safari"] },
+  { table: "hotel_bookings", types: ["hotel", "another_hotel"] },
+  { table: "vehicle_bookings", types: ["vehicle"] },
+  { table: "volvo_bookings", types: ["volvo_dm", "delhi_manali"], route: "delhi_manali" },
+  { table: "volvo_bookings", types: ["volvo_md", "manali_delhi"], route: "manali_delhi" },
+  { table: "visa_bookings", types: ["visa"] },
+  { table: "cruise_bookings", types: ["cruise"] },
+];
+
+/**
+ * Recomputes the booking's own paid/due amounts AND every linked service
+ * module's paid/due amounts, each strictly from payments matching that
+ * module's own payment_type(s). Call this after ANY payment add/edit/delete
+ * so cached per-service totals can never drift or leak across services,
+ * regardless of which single service the payment action targeted.
+ */
+export async function recalcAllModulesForBooking(bookingId: string) {
+  const { data: allPays } = await supabase
+    .from("payments")
+    .select("amount")
+    .eq("booking_id", bookingId);
+  const totalPaid = sum(allPays);
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("total_amount")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (booking) {
+    const totalAmount = Number(booking.total_amount) || 0;
+    const due = Math.max(0, totalAmount - totalPaid);
+    await supabase
+      .from("bookings")
+      .update({
+        paid_amount: totalPaid,
+        due_amount: due,
+        payment_status: totalPaid <= 0 ? "pending" : due <= 0 ? "paid" : "partial",
+      })
+      .eq("id", bookingId);
+  }
+
+  for (const mod of ALL_MODULE_TABLES) {
+    let query = (supabase as any)
+      .from(mod.table)
+      .select("id, total_amount")
+      .eq("booking_id", bookingId);
+    if (mod.route) query = query.eq("route", mod.route);
+    const { data: rows } = await query;
+    if (!rows || rows.length === 0) continue;
+
+    const { data: modPays } = await supabase
+      .from("payments")
+      .select("amount")
+      .eq("booking_id", bookingId)
+      .in("payment_type", mod.types);
+    const modPaid = sum(modPays);
+
+    for (const row of rows) {
+      const modTotal = Number(row.total_amount) || 0;
+      await (supabase as any)
+        .from(mod.table)
+        .update({ paid_amount: modPaid, due_amount: Math.max(0, modTotal - modPaid) })
+        .eq("id", row.id);
+    }
+  }
+}
+
 /** Called after payments are approved. */
 export async function syncServiceTableOnApproval(payments: PaymentInfo[]) {
   for (const p of payments) {

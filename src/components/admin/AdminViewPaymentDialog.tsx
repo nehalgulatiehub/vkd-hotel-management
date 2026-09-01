@@ -131,10 +131,12 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
         status: p.approval_status || "pending"
       }));
 
+      const nonModulePayments = (payments || []).filter(
+        p => !MODULE_PAYMENT_TYPES.has((p.payment_type || "").toLowerCase())
+      );
+
       if (showBookingRow) {
-        const bookingPayments = (payments || []).filter(
-          p => !MODULE_PAYMENT_TYPES.has((p.payment_type || "").toLowerCase())
-        );
+        const bookingPayments = nonModulePayments;
         const bookingReceived = bookingPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
         const bookingTotal = ownHotelTotalAmount > 0
           ? ownHotelTotalAmount
@@ -201,7 +203,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       // Another hotel section - if the booking is on another_hotel we show all payments here,
       // otherwise only the payments explicitly tagged as another_hotel.
       const anotherHotelDisplayPayments = (hasAnotherHotel && !hasOwnHotel)
-        ? (payments || [])
+        ? nonModulePayments
         : anotherHotelPayments;
       const anotherHotelTotal = hasAnotherHotel && !hasOwnHotel
         ? (anotherHotelTotalAmount > 0 ? anotherHotelTotalAmount : bookingGrandTotal)

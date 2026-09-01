@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { recalcAllModulesForBooking } from "@/utils/paymentSync";
 
 interface ServiceSummary {
   type: string;
@@ -163,10 +164,12 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
         + anotherHotelTotalAmount + visaTotalAmount + cruiseTotalAmount;
       const ownHotelTotalAmount = ownHotelData.reduce((s: number, r: any) => s + toAmount(r.total_amount), 0);
 
+      const nonModulePayments = (payments || []).filter(
+        p => !MODULE_PAYMENT_TYPES.has((p.payment_type || "").toLowerCase())
+      );
+
       if (showBookingRow) {
-        const bookingPayments = (payments || []).filter(
-          p => !MODULE_PAYMENT_TYPES.has((p.payment_type || "").toLowerCase())
-        );
+        const bookingPayments = nonModulePayments;
         const bookingReceived = bookingPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
         const bookingTotal = ownHotelTotalAmount > 0
           ? ownHotelTotalAmount
@@ -327,31 +330,8 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
 
   const recalcBookingTotals = async () => {
     if (!bookingId) return;
-
     try {
-      const { data: bookingData } = await supabase
-        .from("bookings")
-        .select("total_amount")
-        .eq("id", bookingId)
-        .maybeSingle();
-
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("booking_id", bookingId);
-
-      const totalPayment = Number(bookingData?.total_amount || 0);
-      const totalReceived = (payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-      const totalDue = Math.max(0, totalPayment - totalReceived);
-
-      await supabase
-        .from("bookings")
-        .update({
-          paid_amount: totalReceived,
-          due_amount: totalDue,
-          payment_status: totalReceived <= 0 ? "pending" : totalDue <= 0 ? "paid" : "partial",
-        })
-        .eq("id", bookingId);
+      await recalcAllModulesForBooking(bookingId);
     } catch (error) {
       console.error("Error recalculating booking totals:", error);
     }
