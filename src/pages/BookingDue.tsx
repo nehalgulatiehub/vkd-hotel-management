@@ -519,7 +519,10 @@ export default function BookingDue() {
                           </div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          company
+                          {(() => {
+                            const creator = users.find((u) => u.id === booking.created_by);
+                            return creator?.username || `${creator?.first_name || ""} ${creator?.last_name || ""}`.trim() || "-";
+                          })()}
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div className="font-medium">{booking.customer_name || "-"}</div>

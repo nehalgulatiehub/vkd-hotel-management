@@ -214,7 +214,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
     try {
       let query = supabase
         .from("payments")
-        .select(`id, amount, payment_mode, payment_date, reference_number, approval_status, approved_at, created_at, created_by, city_id, booking:bookings(id, booking_number, check_in_date, check_out_date, customer_name, contact_no, total_amount, adults, children, address, agent:agents(name, company_name))`);
+        .select(`id, amount, payment_mode, payment_date, reference_number, approval_status, approved_at, created_at, created_by, city_id, booking:bookings(id, booking_number, created_at, check_in_date, check_out_date, customer_name, contact_no, total_amount, adults, children, address, agent:agents(name, company_name))`);
       
       if (paymentType) {
         query = Array.isArray(paymentType)
@@ -566,8 +566,9 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                   <tr key={payment.id} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#f6f0f0" }}>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>{startIndex + index}</td>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
-                      <div>Booking:</div>
-                      <div>{payment.booking?.check_in_date ? format(new Date(payment.booking.check_in_date), "dd/MM/yyyy") : ""}</div>
+                      <div>Booking: {payment.booking?.created_at ? format(new Date(payment.booking.created_at), "dd/MM/yyyy") : ""}</div>
+                      <div>Check-in: {payment.booking?.check_in_date ? format(new Date(payment.booking.check_in_date), "dd/MM/yyyy") : "-"}</div>
+                      <div>Check-out: {payment.booking?.check_out_date ? format(new Date(payment.booking.check_out_date), "dd/MM/yyyy") : "-"}</div>
                       <div>No. of Rooms: {payment.hotel_info?.number_of_rooms || 0}</div>
                       <div>{payment.booking?.adults || 0} Adult Children</div>
                       <div>Price: Rs. {payment.booking?.total_amount?.toLocaleString("en-IN") || 0}/-</div>
