@@ -233,7 +233,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       // Another hotel section - if the booking is on another_hotel we show all payments here,
       // otherwise only the payments explicitly tagged as another_hotel.
       const anotherHotelDisplayPayments = (hasAnotherHotel && !hasOwnHotel)
-        ? (payments || [])
+        ? nonModulePayments
         : anotherHotelPayments;
       const anotherHotelTotal = hasAnotherHotel && !hasOwnHotel
         ? (anotherHotelTotalAmount > 0 ? anotherHotelTotalAmount : bookingGrandTotal)
