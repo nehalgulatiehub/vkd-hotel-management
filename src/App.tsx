@@ -172,6 +172,7 @@ import AccountAuth from "./pages/account/AccountAuth";
 import AccountHome from "./pages/account/AccountHome";
 import AccountChangePassword from "./pages/account/AccountChangePassword";
 import { MobileTableZoom } from "@/components/ui/MobileTableZoom";
+import { PwaManifestSwitcher } from "@/components/layout/PwaManifestSwitcher";
 
 const queryClient = new QueryClient();
 
@@ -183,6 +184,7 @@ const App = () => (
         <Sonner />
         <MobileTableZoom />
         <BrowserRouter>
+          <PwaManifestSwitcher />
           <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
