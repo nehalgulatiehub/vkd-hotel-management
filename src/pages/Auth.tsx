@@ -120,13 +120,23 @@ export default function Auth() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="w-24"></div>
-                      <Button 
-                        type="submit" 
-                        className="bg-red-600 hover:bg-red-700 text-white px-6 text-sm h-8"
-                        disabled={loading}
-                      >
-                        {loading ? "Loading..." : "Sign in"}
-                      </Button>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          type="submit" 
+                          className="bg-red-600 hover:bg-red-700 text-white px-6 text-sm h-8"
+                          disabled={loading}
+                        >
+                          {loading ? "Loading..." : "Sign in"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="px-6 text-sm h-8 border-[#1e6e99] text-[#1e6e99] hover:bg-[#1e6e99] hover:text-white"
+                          onClick={() => navigate("/admin")}
+                        >
+                          ADMIN
+                        </Button>
+                      </div>
                     </div>
                   </form>
                   
