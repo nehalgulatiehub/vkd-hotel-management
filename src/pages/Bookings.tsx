@@ -96,6 +96,7 @@ export default function Bookings() {
     if (isAddRoute) {
       setShowForm(true);
       setEditingBookingId(null);
+      setRebookSourceId(null);
     } else if (rebookId) {
       // Handle ?rebook=bookingId - clone a cancelled booking into a NEW booking form
       const loadBookingForRebook = async () => {
