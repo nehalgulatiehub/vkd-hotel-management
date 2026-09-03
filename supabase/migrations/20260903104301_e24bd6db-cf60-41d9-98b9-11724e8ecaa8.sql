@@ -1,0 +1,2 @@
+ALTER TABLE public.hotel_bookings DROP CONSTRAINT IF EXISTS hotel_bookings_hotel_check;
+ALTER TABLE public.hotel_bookings ADD CONSTRAINT hotel_bookings_hotel_check CHECK (NOT (hotel_id IS NOT NULL AND own_hotel_id IS NOT NULL));
