@@ -28,6 +28,7 @@ export interface PaymentWithDetails {
   booking: {
     id: string;
     booking_number: string;
+    created_at?: string | null;
     check_in_date: string;
     check_out_date: string;
     customer_name: string | null;
