@@ -859,12 +859,12 @@ export default function Bookings() {
 
       // Insert Another Hotel Bookings if included (supports multiple hotels)
       if (formData.include_another_hotel) {
-        // Keep any row the user actually filled in, even if the hotel dropdown was left empty
-        const validHotels = anotherHotelsList.filter(h =>
+        const filledRows = anotherHotelsList.filter(h =>
           h.hotel_id || h.selling_price || h.booking_price || h.num_rooms || h.room_type || h.check_in || h.note
         );
-        if (validHotels.length === 0) {
-          toast.error("Another Hotel was selected but no hotel details were filled in - nothing was saved.");
+        const validHotels = filledRows.filter(h => h.hotel_id);
+        if (validHotels.length < filledRows.length || filledRows.length === 0) {
+          toast.error("Please select a hotel in the Another Hotel section - that hotel booking was not saved.");
         }
         for (const hotel of validHotels) {
           const hotelAmount = hotel.selling_price ? parseFloat(hotel.selling_price) : 0;
@@ -872,7 +872,7 @@ export default function Bookings() {
 
           const anotherHotelData = {
             booking_id: bookingId,
-            hotel_id: hotel.hotel_id || null,
+            hotel_id: hotel.hotel_id,
             own_hotel_id: null,
             check_in_date: hotel.check_in || formData.booking_from || formData.check_in_date || new Date().toISOString().split("T")[0],
             check_out_date: hotel.check_out || hotel.check_in || formData.booking_to || formData.check_out_date || new Date().toISOString().split("T")[0],
