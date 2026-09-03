@@ -976,6 +976,24 @@ export default function Bookings() {
 
       if (updateTotalsError) console.error("Error updating totals:", updateTotalsError);
 
+      // If this was a re-booking of a cancelled booking, mark the old one as re-booked
+      // so it no longer appears in the Cancelled Bookings list
+      if (!isEditing && rebookSourceId) {
+        const { data: oldBooking } = await supabase
+          .from("bookings")
+          .select("notes")
+          .eq("id", rebookSourceId)
+          .maybeSingle();
+        const oldNotes = (oldBooking?.notes || "").trim();
+        if (!oldNotes.includes("[REBOOKED]")) {
+          await supabase
+            .from("bookings")
+            .update({ notes: `${oldNotes ? oldNotes + " " : ""}[REBOOKED]` })
+            .eq("id", rebookSourceId);
+        }
+        setRebookSourceId(null);
+      }
+
       toast.success(isEditing ? "Booking updated successfully" : "Booking created successfully with all details");
       setShowForm(false);
       setEditingBookingId(null);
