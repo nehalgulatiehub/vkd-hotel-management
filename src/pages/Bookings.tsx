@@ -85,6 +85,7 @@ export default function Bookings() {
 
   const [showForm, setShowForm] = useState(isAddRoute);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+  const [rebookSourceId, setRebookSourceId] = useState<string | null>(null);
   
   // Auto-show form when navigating to /bookings/add, hide when on /bookings
   useEffect(() => {
