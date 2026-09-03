@@ -109,6 +109,7 @@ export default function Bookings() {
           await handleEditBooking(booking);
           // Clear edit target so submitting creates a brand new booking
           setEditingBookingId(null);
+          setRebookSourceId(rebookId);
           setShowForm(true);
           toast.success("Booking details loaded — review and click Create to re-book");
         } else {
