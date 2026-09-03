@@ -46,7 +46,7 @@ export default function HotelDetails() {
 
   const fetchHotelBookings = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("hotel_bookings").select(`*, bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)), another_hotels:hotel_id(id, name, city_id, cities(name))`).not("hotel_id", "is", null).order("check_in_date", { ascending: false });
+    const { data, error } = await supabase.from("hotel_bookings").select(`*, bookings(id, booking_number, customer_name, email, status, contact_no, booking_type, created_at, notes, agent_id, created_by, total_amount, paid_amount, due_amount, agents(name)), another_hotels:hotel_id(id, name, city_id, cities(name))`).is("own_hotel_id", null).order("check_in_date", { ascending: false });
     if (error) { toast.error("Failed to load hotel bookings"); setLoading(false); return; }
     const rows = data || [];
     const bookingIds = [...new Set(rows.map((r: any) => r.booking_id).filter(Boolean))];
