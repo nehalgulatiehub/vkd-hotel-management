@@ -95,7 +95,7 @@ export default function CancelledBookings() {
       .eq("status", "cancelled")
       .order("updated_at", { ascending: false });
     if (error) toast.error("Failed to load cancelled bookings");
-    else setBookings(data || []);
+    else setBookings((data || []).filter((b: any) => !((b.notes || "").includes("[REBOOKED]"))));
   };
 
   const fetchAgents = async () => {

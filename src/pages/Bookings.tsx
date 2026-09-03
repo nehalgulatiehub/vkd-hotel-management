@@ -85,6 +85,7 @@ export default function Bookings() {
 
   const [showForm, setShowForm] = useState(isAddRoute);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+  const [rebookSourceId, setRebookSourceId] = useState<string | null>(null);
   
   // Auto-show form when navigating to /bookings/add, hide when on /bookings
   useEffect(() => {
@@ -95,6 +96,7 @@ export default function Bookings() {
     if (isAddRoute) {
       setShowForm(true);
       setEditingBookingId(null);
+      setRebookSourceId(null);
     } else if (rebookId) {
       // Handle ?rebook=bookingId - clone a cancelled booking into a NEW booking form
       const loadBookingForRebook = async () => {
@@ -108,6 +110,7 @@ export default function Bookings() {
           await handleEditBooking(booking);
           // Clear edit target so submitting creates a brand new booking
           setEditingBookingId(null);
+          setRebookSourceId(rebookId);
           setShowForm(true);
           toast.success("Booking details loaded — review and click Create to re-book");
         } else {
@@ -972,6 +975,24 @@ export default function Bookings() {
       if (updateTotalsError) console.error("Error updating totals:", updateTotalsError);
 
       if (updateTotalsError) console.error("Error updating totals:", updateTotalsError);
+
+      // If this was a re-booking of a cancelled booking, mark the old one as re-booked
+      // so it no longer appears in the Cancelled Bookings list
+      if (!isEditing && rebookSourceId) {
+        const { data: oldBooking } = await supabase
+          .from("bookings")
+          .select("notes")
+          .eq("id", rebookSourceId)
+          .maybeSingle();
+        const oldNotes = (oldBooking?.notes || "").trim();
+        if (!oldNotes.includes("[REBOOKED]")) {
+          await supabase
+            .from("bookings")
+            .update({ notes: `${oldNotes ? oldNotes + " " : ""}[REBOOKED]` })
+            .eq("id", rebookSourceId);
+        }
+        setRebookSourceId(null);
+      }
 
       toast.success(isEditing ? "Booking updated successfully" : "Booking created successfully with all details");
       setShowForm(false);
