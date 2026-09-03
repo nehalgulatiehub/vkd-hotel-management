@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
+import { safeSignOut } from "@/lib/signOut";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -310,12 +311,8 @@ export function AppSidebar() {
   const { hasMenuAccess, isAdmin, isAccount, loading } = useAuthContext();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Error signing out");
-    } else {
-      navigate("/auth");
-    }
+    await safeSignOut();
+    navigate("/auth");
   };
 
   const toggleGroup = (title: string) => {

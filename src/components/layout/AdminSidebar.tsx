@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LogOut, Home, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeSignOut } from "@/lib/signOut";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -360,12 +361,8 @@ export function AdminSidebar() {
   const { isMobile, openMobile, setOpenMobile } = useSidebar();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Error signing out");
-    } else {
-      navigate("/auth");
-    }
+    await safeSignOut();
+    navigate("/auth");
   };
 
   const toggleGroup = (title: string) => {

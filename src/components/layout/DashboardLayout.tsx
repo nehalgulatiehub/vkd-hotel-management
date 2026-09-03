@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeSignOut } from "@/lib/signOut";
 import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -168,12 +169,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [navigate]);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Error signing out");
-    } else {
-      navigate("/auth");
-    }
+    await safeSignOut();
+    navigate("/auth");
   };
 
   const filteredMenuItems = menuItems

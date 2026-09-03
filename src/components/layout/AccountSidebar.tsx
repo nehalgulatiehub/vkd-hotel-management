@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LogOut, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeSignOut } from "@/lib/signOut";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -215,12 +216,8 @@ export function AccountSidebar() {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Error signing out");
-    } else {
-      navigate("/account/login");
-    }
+    await safeSignOut();
+    navigate("/account/login");
   };
 
   const toggleGroup = (title: string) => {
