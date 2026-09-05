@@ -313,6 +313,10 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
                 <td className="border border-gray-400 p-2"><Val k="bookingNumber" /></td>
               </tr>
               <tr>
+                <td className="border border-gray-400 p-2 font-semibold">Booking Reference</td>
+                <td className="border border-gray-400 p-2"><Val k="bookingReference" /></td>
+              </tr>
+              <tr className="bg-gray-50">
                 <td className="border border-gray-400 p-2 font-semibold">Guest Name</td>
                 <td className="border border-gray-400 p-2"><Val k="guestName" /></td>
               </tr>
