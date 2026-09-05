@@ -44,13 +44,15 @@ export default function Refunds() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from("refunds").insert({ booking_id: formData.booking_id, cancellation_id: formData.cancellation_id || null, refund_amount: parseFloat(formData.refund_amount), refund_mode: formData.refund_mode, reference_number: formData.reference_number, notes: formData.notes, refund_date: new Date().toISOString().split('T')[0] });
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("refunds").insert({ booking_id: formData.booking_id, cancellation_id: formData.cancellation_id || null, refund_amount: parseFloat(formData.refund_amount), refund_mode: formData.refund_mode, reference_number: formData.reference_number, notes: formData.notes, refund_date: new Date().toISOString().split('T')[0], processed_by: user?.id ?? null });
       if (error) throw error;
       toast.success("Refund processed successfully");
       setShowForm(false); setSelectedBooking(null); fetchRefunds();
       setFormData({ booking_id: "", cancellation_id: "", refund_amount: "", refund_mode: "", reference_number: "", notes: "" });
-    } catch (error) { console.error("Error processing refund:", error); toast.error("Failed to process refund"); }
+    } catch (error: any) { console.error("Error processing refund:", error); toast.error(error?.message || "Failed to process refund"); }
   };
+
 
   const closeForm = () => {
     setShowForm(false);
