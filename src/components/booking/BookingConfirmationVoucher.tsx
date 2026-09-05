@@ -199,6 +199,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
         guestName: bk?.customer_name || "",
         contactNo: bk?.contact_no || "",
         bookingNumber: bk?.booking_number || "",
+        bookingReference: bk?.agents?.name ? `Travel Agent - ${bk.agents.name}` : "Direct Booking",
         checkIn: bk?.check_in_date ? fmt(bk.check_in_date) : "",
         checkOut: bk?.check_out_date ? fmt(bk.check_out_date) : "",
         numberOfRooms: numberOfRooms ? String(numberOfRooms) : "-",
