@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { recalcAllModulesForBooking } from "@/utils/paymentSync";
+import { PaymentModeOptions } from "@/components/payment/PaymentModeOptions";
+import { paymentModeLabel } from "@/utils/paymentMode";
 
 interface ServiceSummary {
   type: string;
@@ -507,7 +509,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                                   <TableCell className="border-r">{payment.customer}</TableCell>
                                   <TableCell className="border-r text-center">{formatCurrency(payment.payment)}</TableCell>
                                   <TableCell className="border-r text-center">{formatDate(payment.date)}</TableCell>
-                                  <TableCell className="border-r text-center">{payment.mode}</TableCell>
+                                  <TableCell className="border-r text-center">{paymentModeLabel(payment.mode)}</TableCell>
                                   <TableCell className="border-r max-w-[200px]" title={payment.paymentDetail}>
                                     {payment.paymentDetail || "-"}
                                   </TableCell>
@@ -575,11 +577,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                   <SelectValue placeholder="Select payment mode" />
                 </SelectTrigger>
                 <SelectContent className="bg-white z-50">
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <PaymentModeOptions />
                 </SelectContent>
               </Select>
             </div>

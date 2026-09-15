@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDisplayDate } from "@/utils/dateFormat";
+import { paymentModeLabel } from "@/utils/paymentMode";
 
 interface ServiceSummary {
   type: string;
@@ -404,7 +405,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
                                 <TableCell className="border-r">{payment.customer}</TableCell>
                                 <TableCell className="border-r text-center">{formatCurrency(payment.payment)}</TableCell>
                                 <TableCell className="border-r text-center">{formatDate(payment.date)}</TableCell>
-                                <TableCell className="border-r text-center">{payment.mode}</TableCell>
+                                <TableCell className="border-r text-center">{paymentModeLabel(payment.mode)}</TableCell>
                                 <TableCell className="border-r max-w-[200px]" title={payment.paymentDetail}>
                                   {payment.paymentDetail || "-"}
                                 </TableCell>

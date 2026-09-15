@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { CASH_IN_BANK_MODE, paymentModeLabel } from "@/utils/paymentMode";
 
 interface PaymentWithBooking {
   id: string;
@@ -342,7 +343,8 @@ export default function Payments() {
               <span>Payment Mode</span>
               <select value={filters.paymentMode} onChange={(e) => setFilters({ ...filters, paymentMode: e.target.value })} className="h-5 border border-input bg-background px-1 rounded-sm text-[11px]">
                 <option value="">---Select Mode---</option>
-                <option value="cash">Cash</option>
+                <option value="cash">Cash in Hand</option>
+                <option value={CASH_IN_BANK_MODE}>Cash in Bank</option>
                 <option value="upi">UPI</option>
                 <option value="net_banking">Net Banking</option>
                 <option value="card">Card</option>
@@ -417,7 +419,7 @@ export default function Payments() {
                   </td>
                   <td className="border border-border p-2">{payment.payment_type || "Booking"}</td>
                   <td className="border border-border p-2">
-                    {payment.payment_mode || "N/A"} Code=[{payment.reference_number || ""}]
+                    {paymentModeLabel(payment.payment_mode)} Code=[{payment.reference_number || ""}]
                   </td>
                   <td className="border border-border p-2">{payment.reference_number || "-"}</td>
                   <td className="border border-border p-2">
@@ -525,7 +527,7 @@ export default function Payments() {
                             {formatDisplayDate(bp.payment_date)}
                           </td>
                           <td className="border border-border p-2">
-                            {bp.payment_mode || "N/A"} Code={bp.reference_number ? `[${bp.reference_number}]` : "[]"}
+                            {paymentModeLabel(bp.payment_mode)} Code={bp.reference_number ? `[${bp.reference_number}]` : "[]"}
                           </td>
                           <td className="border border-border p-2">
                             {bp.notes || `rs ${bp.amount?.toLocaleString() || 0}/-recd`}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { isCashPaymentMode } from "@/utils/paymentMode";
 
 export type AppRole = "admin" | "front_desk" | "housekeeping" | "manager" | "account";
 
@@ -125,7 +126,7 @@ export function useAuth() {
       if (authState.roles.includes("admin")) return true;
       if (authState.roles.includes("account")) {
         // Account can approve all payments except cash where the city is Delhi
-        const isCash = (paymentMode || "").toLowerCase() === "cash";
+        const isCash = isCashPaymentMode(paymentMode);
         const isDelhi = (cityName || "").toLowerCase() === "delhi";
         return !(isCash && isDelhi);
       }

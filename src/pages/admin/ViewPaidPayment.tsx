@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, ThemedActionLink, filterInputStyle, filterSelectStyle } from "@/components/admin/AdminPageShell";
+import { CASH_IN_BANK_MODE, paymentModeLabel } from "@/utils/paymentMode";
 
 export default function ViewPaidPayment() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -44,7 +45,7 @@ export default function ViewPaidPayment() {
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         <span>Mode :</span>
         <select value={filterPaymentMode} onChange={(e) => setFilterPaymentMode(e.target.value)} style={filterSelectStyle}>
-          <option value="">All Modes</option><option value="cash">Cash</option><option value="upi">UPI</option><option value="net banking">Net Banking</option><option value="card">Card</option><option value="cheque">Cheque</option>
+          <option value="">All Modes</option><option value="cash">Cash in Hand</option><option value={CASH_IN_BANK_MODE}>Cash in Bank</option><option value="upi">UPI</option><option value="net banking">Net Banking</option><option value="card">Card</option><option value="cheque">Cheque</option>
         </select>
       </div>
       <div style={{ marginLeft: "auto", fontWeight: "bold", fontSize: 11 }}>Total Paid: Rs. {totalPaid.toLocaleString()}/-</div>
@@ -64,7 +65,7 @@ export default function ViewPaidPayment() {
                 <ThemedTD>{payment.booking?.customer_name || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "N/A"}</ThemedTD>
                 <ThemedTD>Rs. {payment.amount?.toLocaleString() || 0}/-</ThemedTD>
-                <ThemedTD>{payment.payment_mode || "N/A"}</ThemedTD>
+                <ThemedTD>{paymentModeLabel(payment.payment_mode)}</ThemedTD>
                 <ThemedTD>{payment.payment_type || "N/A"}</ThemedTD>
                 <ThemedTD>{payment.reference_number || "N/A"}</ThemedTD>
                 <ThemedTD>

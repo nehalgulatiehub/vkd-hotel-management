@@ -16,6 +16,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { syncServiceTableOnApproval } from "@/utils/paymentSync";
 import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
 import { legacyFilterContainerStyle, legacyFilterLabelClass } from "@/components/legacy/legacyFilterStyles";
+import { isCashPaymentMode, paymentModeLabel, CASH_IN_BANK_MODE } from "@/utils/paymentMode";
 
 interface PendingPayment {
   id: string;
@@ -248,7 +249,7 @@ export default function PaymentApprovals() {
       // Account users cannot approve cash payments where city is Delhi — hide those from the list
       const filteredPayments = isAccount() && !isAdmin()
         ? allPayments.filter(p => !(
-            (p.payment_mode || "").toLowerCase() === "cash" &&
+            isCashPaymentMode(p.payment_mode) &&
             (p.city_name || "").toLowerCase() === "delhi"
           ))
         : allPayments;
@@ -418,7 +419,8 @@ export default function PaymentApprovals() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Modes</SelectItem>
-                          <SelectItem value="cash">Cash</SelectItem>
+                          <SelectItem value="cash">Cash in Hand</SelectItem>
+                          <SelectItem value={CASH_IN_BANK_MODE}>Cash in Bank</SelectItem>
                           <SelectItem value="upi">UPI</SelectItem>
                           <SelectItem value="net banking">Net Banking</SelectItem>
                           <SelectItem value="card">Card</SelectItem>
@@ -498,7 +500,7 @@ export default function PaymentApprovals() {
                                 </div>
                               </td>
                               <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                                <Badge variant="outline">{payment.payment_mode}</Badge>
+                                <Badge variant="outline">{paymentModeLabel(payment.payment_mode)}</Badge>
                               </td>
                               <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                                 {payment.payment_date

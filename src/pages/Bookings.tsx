@@ -13,6 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Search, Trash2 } from "lucide-react";
 import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialog";
 import { UserViewPaymentDialog } from "@/components/booking/UserViewPaymentDialog";
+import { PaymentModeOptions } from "@/components/payment/PaymentModeOptions";
+import { paymentModeLabel } from "@/utils/paymentMode";
 import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 // Type for another hotel entry
@@ -3089,14 +3091,14 @@ export default function Bookings() {
                         <label style={{ fontSize: 11 }}>From :</label>
                         <LegacyDatePicker
                           value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
-                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, fromYear:y, fromMonth:String(+m), fromDay:String(+d)})); }}
                         />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>To :</label>
                         <LegacyDatePicker
                           value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
-                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, toYear:y, toMonth:String(+m), toDay:String(+d)})); }}
                         />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -3228,10 +3230,10 @@ export default function Bookings() {
                                   { label: "View Booking", fn: () => handleViewDetails(booking), always: true },
                                   { label: "Print Booking", fn: () => handlePrintBooking(booking), always: true },
                                   { label: "Booking Voucher", fn: () => setVoucherBookingId(booking.id), always: true },
-                                  { label: "View Payment", fn: () => handleViewPayment(booking), always: true },
-                                  { label: "View Refund Payment", fn: () => handleRefundPayment(booking), always: true },
                                   { label: "Edit Booking", fn: () => handleEditBooking(booking), always: false },
                                   { label: "Add Payment", fn: () => handleAddPayment(booking), always: false },
+                                  { label: "View Payment", fn: () => handleViewPayment(booking), always: true },
+                                  { label: "View Refund Payment", fn: () => handleRefundPayment(booking), always: true },
                                   { label: "Cancel", fn: () => handleCancelBooking(booking), always: false },
                                 ].filter(a => isOwner || a.always);
                                 return actions.map((a, i) => (
@@ -3261,14 +3263,14 @@ export default function Bookings() {
                   <span className={legacyFilterLabelClass}>From :</span>
                   <LegacyDatePicker
                     value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
-                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, fromYear:y, fromMonth:String(+m), fromDay:String(+d)}); }}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, fromYear:y, fromMonth:String(+m), fromDay:String(+d)})); }}
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className={legacyFilterLabelClass}>To :</span>
                   <LegacyDatePicker
                     value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
-                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters({...filters, toYear:y, toMonth:String(+m), toDay:String(+d)}); }}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, toYear:y, toMonth:String(+m), toDay:String(+d)})); }}
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -3408,15 +3410,15 @@ export default function Bookings() {
                                       <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleViewDetails(booking)}>View Details</Button>
                                       <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handlePrintBooking(booking)}>Print Booking</Button>
                                       <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => setVoucherBookingId(booking.id)}>Booking Voucher</Button>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
-                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
                                       {isOwner && (
                                         <>
                                           <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleEditBooking(booking)}>Edit Booking</Button>
                                           <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleAddPayment(booking)}>Add Payment</Button>
-                                          <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>
                                         </>
                                       )}
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleViewPayment(booking)}>View Payment</Button>
+                                      <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary" onClick={() => handleRefundPayment(booking)}>Refund Payment</Button>
+                                      {isOwner && <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-destructive" onClick={() => handleCancelBooking(booking)}>Cancel</Button>}
                                     </>
                                   );
                                 })()}
@@ -3665,7 +3667,7 @@ export default function Bookings() {
                             {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('en-GB') : "-"}
                           </td>
                           <td className="border border-border px-2 py-1.5">
-                            <div className="capitalize">{payment.payment_mode || "-"}</div>
+                            <div>{paymentModeLabel(payment.payment_mode)}</div>
                             {payment.reference_number && (
                               <div className="text-xs text-muted-foreground">Code={payment.reference_number}</div>
                             )}
@@ -3786,11 +3788,7 @@ export default function Bookings() {
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="upi">UPI</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <PaymentModeOptions />
                   </SelectContent>
                 </Select>
               </div>
@@ -3877,11 +3875,7 @@ export default function Bookings() {
                     <SelectValue placeholder="Select mode" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="upi">UPI</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <PaymentModeOptions />
                   </SelectContent>
                 </Select>
               </div>

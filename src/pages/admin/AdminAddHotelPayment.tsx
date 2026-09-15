@@ -60,7 +60,7 @@ export default function AdminAddHotelPayment() {
             <label style={labelStyle}>Payment Mode :</label>
             <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} style={{ ...filterSelectStyle, border: "1px solid #999" }} required>
               <option value="">---Select Mode---</option>
-              <option value="cash">Cash</option><option value="upi">UPI</option><option value="net banking">Net Banking</option><option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
+              <option value="cash">Cash in Hand</option><option value="Cash in Bank">Cash in Bank</option><option value="upi">UPI</option><option value="net banking">Net Banking</option><option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
             </select>
             <span style={{ color: "red" }}>*</span>
           </div>

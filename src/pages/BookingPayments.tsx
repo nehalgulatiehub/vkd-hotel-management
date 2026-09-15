@@ -10,6 +10,7 @@ import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialo
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { useRoomNames } from "@/hooks/useRoomNames";
 import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import { paymentModeLabel } from "@/utils/paymentMode";
 
 export default function BookingPayments() {
   const [searchParams] = useSearchParams();
@@ -333,7 +334,7 @@ export default function BookingPayments() {
                           {!bookingId && <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.bookings?.booking_number || "-"}</td>}
                           {!bookingId && <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.bookings?.customer_name || "-"}</td>}
                           <td className="border border-[#c99] px-3 py-2 text-xs align-top font-semibold">Rs. {payment.amount?.toFixed(2) || "0.00"}/-</td>
-                          <td className="border border-[#c99] px-3 py-2 text-xs align-top capitalize">{payment.payment_mode || "-"}</td>
+                          <td className="border border-[#c99] px-3 py-2 text-xs align-top">{paymentModeLabel(payment.payment_mode)}</td>
                           <td className="border border-[#c99] px-3 py-2 text-xs align-top capitalize">{payment.payment_type || "-"}</td>
                           <td className="border border-[#c99] px-3 py-2 text-xs align-top">{getStatusBadge(payment.approval_status || "pending")}</td>
                           <td className="border border-[#c99] px-3 py-2 text-xs align-top">{payment.reference_number || "-"}</td>

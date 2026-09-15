@@ -15,6 +15,7 @@ import { reversePaymentOnRejection } from "@/utils/paymentSync";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ZoomableTable } from "@/components/ui/ZoomableTable";
+import { isCashPaymentMode, paymentModeLabel } from "@/utils/paymentMode";
 
 export interface PaymentWithDetails {
   id: string;
@@ -320,7 +321,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
       // Account users: can approve all modes EXCEPT cash for restricted cities
       if (status === "approved" && isAccount() && !isAdmin() && restrictedCityIds.size > 0 && paymentDetails) {
         const { data: rawPayments } = await supabase.from("payments").select("id, city_id, payment_mode, booking_id").in("id", Array.from(selectedPayments));
-        const cashPayments = (rawPayments || []).filter(p => p.payment_mode?.toLowerCase() === "cash");
+        const cashPayments = (rawPayments || []).filter(p => isCashPaymentMode(p.payment_mode));
         
         if (cashPayments.length > 0) {
           // Resolve city_id for payments that don't have it set - check hotel_bookings
@@ -529,7 +530,8 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                 <label style={{ fontSize: 11 }}>Payment Mode :</label>
                 <select value={filterPaymentMode} onChange={e => setFilterPaymentMode(e.target.value)} style={{ ...sty, flex: 1 }}>
                   <option value="all">---Select Mode---</option>
-                  <option value="cash">Cash</option><option value="cash in hand">Cash In Hand</option>
+                  <option value="cash">Cash in Hand</option><option value="cash in hand">Cash In Hand (Legacy)</option>
+                  <option value="Cash in Bank">Cash in Bank</option>
                   <option value="upi">UPI</option><option value="net banking">Net Banking</option>
                   <option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
                 </select>
@@ -586,7 +588,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
                     </td>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top", fontWeight: 500 }}>Rs. {payment.amount?.toLocaleString("en-IN") || 0}/-</td>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
-                      <div>{payment.payment_mode || "N/A"}</div>
+                      <div>{paymentModeLabel(payment.payment_mode)}</div>
                       {payment.reference_number && <div>Code={payment.reference_number}</div>}
                     </td>
                     <td style={{ border: "1px solid #ddd", padding: "5px 8px", fontSize: 11, color: "#606060", verticalAlign: "top" }}>
@@ -606,7 +608,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
         ...(approvalStatus === "pending" ? [{ label: "Approved", fn: async () => {
           if (payment.id) {
             // Account users: block cash approval only for restricted cities
-            if (isAccount() && !isAdmin() && payment.payment_mode?.toLowerCase() === "cash" && restrictedCityIds.size > 0) {
+            if (isAccount() && !isAdmin() && isCashPaymentMode(payment.payment_mode) && restrictedCityIds.size > 0) {
               const { data: rawPay } = await supabase.from("payments").select("city_id, booking_id").eq("id", payment.id).single();
               let resolvedCityId = rawPay?.city_id;
               // If city_id is null, resolve from hotel booking
