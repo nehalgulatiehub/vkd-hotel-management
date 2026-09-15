@@ -1156,21 +1156,13 @@ export default function Bookings() {
       booking.email?.toLowerCase().includes(emailQ) ||
       booking.reference_email?.toLowerCase().includes(emailQ);
     
-    // Date filter — filter by Booking From date (check_in_date), inclusive range
+    // Date filter — match the Date column (updated_at or created_at), inclusive range.
     let matchesDate = true;
     const hasFrom = filters.fromYear && filters.fromMonth && filters.fromDay;
     const hasTo = filters.toYear && filters.toMonth && filters.toDay;
     if (filters.searchWithDate && (hasFrom || hasTo)) {
-      // Prefer first hotel_bookings check-in (actual Booking From), fall back to booking's check_in_date
-      const firstHotelCheckIn = booking.hotel_bookings?.[0]?.check_in_date;
-      const rawBookingDate = firstHotelCheckIn || booking.check_in_date;
-      // Parse as local date (YYYY-MM-DD) to avoid timezone shifts
-      let bookingDate: Date | null = null;
-      if (rawBookingDate) {
-        const dateStr = String(rawBookingDate).slice(0, 10);
-        const [y, m, d] = dateStr.split('-').map(Number);
-        if (y && m && d) bookingDate = new Date(y, m - 1, d);
-      }
+      const rawBookingDate = booking.updated_at || booking.created_at;
+      const bookingDate = rawBookingDate ? new Date(rawBookingDate) : null;
       if (!bookingDate || isNaN(bookingDate.getTime())) {
         matchesDate = false;
       } else {
@@ -1191,13 +1183,11 @@ export default function Bookings() {
            matchesContact && matchesEmail;
   });
 
-  // When a Booking From date range is applied, sort results ascending by Booking From date
-  const bookingFromTime = (b: any) => {
-    const raw = b.hotel_bookings?.[0]?.check_in_date || b.check_in_date;
-    if (!raw) return Number.MAX_SAFE_INTEGER;
-    const [y, m, d] = String(raw).slice(0, 10).split("-").map(Number);
-    if (!y || !m || !d) return Number.MAX_SAFE_INTEGER;
-    return new Date(y, m - 1, d).getTime();
+  // When a Date range is applied, sort results ascending by the displayed Date.
+  const bookingRecordTime = (b: any) => {
+    const raw = b.updated_at || b.created_at;
+    const time = raw ? new Date(raw).getTime() : NaN;
+    return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : time;
   };
   const dateRangeActive = Boolean(
     filters.searchWithDate &&
@@ -1205,7 +1195,7 @@ export default function Bookings() {
       (filters.toYear && filters.toMonth && filters.toDay))
   );
   const displayedBookings = dateRangeActive
-    ? [...filteredBookings].sort((a: any, b: any) => bookingFromTime(a) - bookingFromTime(b))
+    ? [...filteredBookings].sort((a: any, b: any) => bookingRecordTime(a) - bookingRecordTime(b))
     : filteredBookings;
 
   const pagination = usePagination(displayedBookings);
@@ -3103,8 +3093,8 @@ export default function Bookings() {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <label style={{ fontSize: 11 }}>Search with Date :</label>
-                        <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="adminSWD" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} style={{ width: 12, height: 12 }} /> YES</label>
-                        <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="adminSWD" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} style={{ width: 12, height: 12 }} /> NO</label>
+                        <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="adminSWD" checked={filters.searchWithDate} onChange={() => setFilters((current) => ({...current, searchWithDate: true}))} style={{ width: 12, height: 12 }} /> YES</label>
+                        <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 2 }}><input type="radio" name="adminSWD" checked={!filters.searchWithDate} onChange={() => setFilters((current) => ({...current, searchWithDate: false}))} style={{ width: 12, height: 12 }} /> NO</label>
                       </div>
                     </div>
                     {/* Row 2: Type, Agent, Reference, User */}
@@ -3275,8 +3265,8 @@ export default function Bookings() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className={legacyFilterLabelClass}>Search with Date :</span>
-                  <label className="flex items-center gap-1 text-[13px]"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: true})} className="w-3 h-3" /> YES</label>
-                  <label className="flex items-center gap-1 text-[13px]"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters({...filters, searchWithDate: false})} className="w-3 h-3" /> NO</label>
+                  <label className="flex items-center gap-1 text-[13px]"><input type="radio" name="searchWithDate" checked={filters.searchWithDate} onChange={() => setFilters((current) => ({...current, searchWithDate: true}))} className="w-3 h-3" /> YES</label>
+                  <label className="flex items-center gap-1 text-[13px]"><input type="radio" name="searchWithDate" checked={!filters.searchWithDate} onChange={() => setFilters((current) => ({...current, searchWithDate: false}))} className="w-3 h-3" /> NO</label>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-2">
