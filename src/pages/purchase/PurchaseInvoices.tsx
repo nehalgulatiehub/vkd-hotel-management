@@ -31,8 +31,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Eye, CreditCard } from "lucide-react";
+import { Plus, Search, Eye, CreditCard, Layers } from "lucide-react";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
@@ -84,6 +85,7 @@ export default function PurchaseInvoices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isBulkPaymentDialogOpen, setIsBulkPaymentDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
   const [selectedPO, setSelectedPO] = useState("");
   const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState("");
@@ -95,10 +97,33 @@ export default function PurchaseInvoices() {
   const [igst, setIgst] = useState(0);
   const [notes, setNotes] = useState("");
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [paymentMode, setPaymentMode] = useState("bank_transfer");
   const [paymentRef, setPaymentRef] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Bulk payment state
+  const [bulkVendorId, setBulkVendorId] = useState("");
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  const [bulkPaymentAmount, setBulkPaymentAmount] = useState(0);
+  const [bulkPaymentDate, setBulkVendorDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [bulkPaymentMode, setBulkPaymentMode] = useState("bank_transfer");
+  const [bulkPaymentRef, setBulkPaymentRef] = useState("");
+  const [bulkNotes, setBulkNotes] = useState("");
+
+  const { data: vendors = [] } = useQuery({
+    queryKey: ["vendors-active-for-invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vendors")
+        .select("id, vendor_name")
+        .eq("is_active", true)
+        .order("vendor_name");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: approvedPOs = [] } = useQuery({
     queryKey: ["approved-pos-for-invoice"],
@@ -118,7 +143,6 @@ export default function PurchaseInvoices() {
       return data;
     },
   });
-
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["purchase-invoices"],
@@ -197,6 +221,9 @@ export default function PurchaseInvoices() {
           sgst_amount: sgst,
           igst_amount: igst,
           total_amount: totalAmount,
+          paid_amount: 0,
+          balance_amount: totalAmount,
+          payment_status: "pending",
           notes: notes || null,
           created_by: user?.id,
         }]);
@@ -225,7 +252,7 @@ export default function PurchaseInvoices() {
         .insert([{
           invoice_id: selectedInvoice.id,
           vendor_id: selectedInvoice.vendor_id,
-          payment_date: format(new Date(), "yyyy-MM-dd"),
+          payment_date: paymentDate || format(new Date(), "yyyy-MM-dd"),
           amount: paymentAmount,
           payment_mode: paymentMode,
           reference_number: paymentRef || null,
@@ -234,15 +261,17 @@ export default function PurchaseInvoices() {
 
       if (paymentError) throw paymentError;
 
-      // Update invoice paid amount
+      // Update invoice paid amount and balance amount
       const newPaidAmount = (selectedInvoice.paid_amount || 0) + paymentAmount;
       const totalAmount = selectedInvoice.total_amount || 0;
-      const newStatus: PaymentStatus = newPaidAmount >= totalAmount ? "paid" : "partially_paid";
+      const newBalanceAmount = Math.max(0, totalAmount - newPaidAmount);
+      const newStatus: PaymentStatus = newBalanceAmount <= 0.001 ? "paid" : "partially_paid";
 
       const { error: updateError } = await supabase
         .from("purchase_invoices")
         .update({
           paid_amount: newPaidAmount,
+          balance_amount: newBalanceAmount,
           payment_status: newStatus,
         })
         .eq("id", selectedInvoice.id);
@@ -259,6 +288,78 @@ export default function PurchaseInvoices() {
     },
     onError: (error) => {
       toast.error("Failed to record payment: " + error.message);
+    },
+  });
+
+  // Bulk Payment Mutation: allocates payment across selected vendor invoices (FIFO)
+  const bulkPaymentMutation = useMutation({
+    mutationFn: async () => {
+      if (!bulkVendorId || selectedInvoiceIds.length === 0 || bulkPaymentAmount <= 0) {
+        throw new Error("Please select vendor, invoices, and enter a valid payment amount");
+      }
+
+      const targetInvoices = invoices
+        .filter((inv) => selectedInvoiceIds.includes(inv.id))
+        .sort((a, b) => new Date(a.invoice_date || a.created_at || 0).getTime() - new Date(b.invoice_date || b.created_at || 0).getTime());
+
+      let remainingPayment = bulkPaymentAmount;
+
+      for (const inv of targetInvoices) {
+        if (remainingPayment <= 0) break;
+
+        const currentPaid = inv.paid_amount || 0;
+        const total = inv.total_amount || 0;
+        const pendingDue = Math.max(0, total - currentPaid);
+        if (pendingDue <= 0) continue;
+
+        const allocated = Math.min(pendingDue, remainingPayment);
+        remainingPayment -= allocated;
+
+        // 1. Create payment record
+        const { error: pError } = await supabase
+          .from("purchase_payments")
+          .insert([{
+            invoice_id: inv.id,
+            vendor_id: bulkVendorId,
+            payment_date: bulkPaymentDate || format(new Date(), "yyyy-MM-dd"),
+            amount: allocated,
+            payment_mode: bulkPaymentMode,
+            reference_number: bulkPaymentRef || null,
+            notes: bulkNotes ? `Vendor Bulk Payment: ${bulkNotes}` : `Vendor Bulk Payment across ${selectedInvoiceIds.length} bills`,
+            created_by: user?.id,
+          }]);
+
+        if (pError) throw pError;
+
+        // 2. Update invoice paid & balance
+        const updatedPaid = currentPaid + allocated;
+        const updatedBalance = Math.max(0, total - updatedPaid);
+        const updatedStatus: PaymentStatus = updatedBalance <= 0.001 ? "paid" : "partially_paid";
+
+        const { error: uError } = await supabase
+          .from("purchase_invoices")
+          .update({
+            paid_amount: updatedPaid,
+            balance_amount: updatedBalance,
+            payment_status: updatedStatus,
+          })
+          .eq("id", inv.id);
+
+        if (uError) throw uError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] });
+      toast.success("Vendor consolidated payment recorded successfully");
+      setIsBulkPaymentDialogOpen(false);
+      setBulkVendorId("");
+      setSelectedInvoiceIds([]);
+      setBulkPaymentAmount(0);
+      setBulkPaymentRef("");
+      setBulkNotes("");
+    },
+    onError: (error) => {
+      toast.error("Failed to record bulk payment: " + error.message);
     },
   });
 
@@ -282,8 +383,70 @@ export default function PurchaseInvoices() {
 
   const handlePayment = (invoice: PurchaseInvoice) => {
     setSelectedInvoice(invoice);
-    setPaymentAmount((invoice.total_amount || 0) - (invoice.paid_amount || 0));
+    const balance = (invoice.total_amount || 0) - (invoice.paid_amount || 0);
+    setPaymentAmount(balance > 0 ? balance : 0);
+    setPaymentDate(format(new Date(), "yyyy-MM-dd"));
+    setPaymentMode("bank_transfer");
+    setPaymentRef("");
     setIsPaymentDialogOpen(true);
+  };
+
+  const handleOpenBulkPayment = (vendorId?: string) => {
+    setBulkVendorDate(format(new Date(), "yyyy-MM-dd"));
+    setBulkPaymentMode("bank_transfer");
+    setBulkPaymentRef("");
+    setBulkNotes("");
+    if (vendorId) {
+      handleBulkVendorChange(vendorId);
+    } else {
+      setBulkVendorId("");
+      setSelectedInvoiceIds([]);
+      setBulkPaymentAmount(0);
+    }
+    setIsBulkPaymentDialogOpen(true);
+  };
+
+  const handleBulkVendorChange = (vendorId: string) => {
+    setBulkVendorId(vendorId);
+    const vendorUnpaidInvoices = invoices.filter(
+      (inv) => inv.vendor_id === vendorId && inv.payment_status !== "paid"
+    );
+    const ids = vendorUnpaidInvoices.map((inv) => inv.id);
+    setSelectedInvoiceIds(ids);
+    const totalDue = vendorUnpaidInvoices.reduce(
+      (sum, inv) => sum + Math.max(0, (inv.total_amount || 0) - (inv.paid_amount || 0)),
+      0
+    );
+    setBulkPaymentAmount(totalDue);
+  };
+
+  const handleToggleInvoice = (id: string) => {
+    const nextIds = selectedInvoiceIds.includes(id)
+      ? selectedInvoiceIds.filter((item) => item !== id)
+      : [...selectedInvoiceIds, id];
+    setSelectedInvoiceIds(nextIds);
+    const totalDue = invoices
+      .filter((inv) => nextIds.includes(inv.id))
+      .reduce((sum, inv) => sum + Math.max(0, (inv.total_amount || 0) - (inv.paid_amount || 0)), 0);
+    setBulkPaymentAmount(totalDue);
+  };
+
+  const handleSelectAllInvoices = (selectAll: boolean) => {
+    if (!selectAll) {
+      setSelectedInvoiceIds([]);
+      setBulkPaymentAmount(0);
+    } else {
+      const vendorUnpaidInvoices = invoices.filter(
+        (inv) => inv.vendor_id === bulkVendorId && inv.payment_status !== "paid"
+      );
+      const ids = vendorUnpaidInvoices.map((inv) => inv.id);
+      setSelectedInvoiceIds(ids);
+      const totalDue = vendorUnpaidInvoices.reduce(
+        (sum, inv) => sum + Math.max(0, (inv.total_amount || 0) - (inv.paid_amount || 0)),
+        0
+      );
+      setBulkPaymentAmount(totalDue);
+    }
   };
 
   return (
@@ -295,13 +458,18 @@ export default function PurchaseInvoices() {
               Manage vendor invoices and payments
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Invoice
-              </Button>
-            </DialogTrigger>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => handleOpenBulkPayment()}>
+              <Layers className="h-4 w-4 mr-2 text-primary" />
+              Vendor Bulk Payment
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => resetForm()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Invoice
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create Purchase Invoice</DialogTitle>
@@ -423,8 +591,9 @@ export default function PurchaseInvoices() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
 
-        <Card>
+      <Card>
           <CardHeader className="pb-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <CardTitle className="text-base">Invoices List</CardTitle>
@@ -506,13 +675,24 @@ export default function PurchaseInvoices() {
                                   <Eye className="h-4 w-4" />
                                 </Button>
                                 {invoice.payment_status !== "paid" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handlePayment(invoice)}
-                                  >
-                                    <CreditCard className="h-4 w-4" />
-                                  </Button>
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handlePayment(invoice)}
+                                      title="Record Payment for this Invoice"
+                                    >
+                                      <CreditCard className="h-4 w-4 text-emerald-600" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleOpenBulkPayment(invoice.vendor_id)}
+                                      title={`Pay all bills for ${invoice.vendors?.vendor_name || "Vendor"}`}
+                                    >
+                                      <Layers className="h-4 w-4 text-blue-600" />
+                                    </Button>
+                                  </>
                                 )}
                               </div>
                             </TableCell>
@@ -621,9 +801,18 @@ export default function PurchaseInvoices() {
             </DialogHeader>
             {selectedInvoice && (
               <div className="space-y-4">
-                <div className="text-sm">
-                  <p>Invoice: {selectedInvoice.invoice_number}</p>
-                  <p>Balance: ₹{selectedInvoice.balance_amount?.toFixed(2)}</p>
+                <div className="text-sm bg-muted/40 p-3 rounded-md space-y-1">
+                  <p><span className="text-muted-foreground">Invoice:</span> <span className="font-semibold">{selectedInvoice.invoice_number}</span></p>
+                  <p><span className="text-muted-foreground">Vendor:</span> <span className="font-semibold">{selectedInvoice.vendors?.vendor_name}</span></p>
+                  <p><span className="text-muted-foreground">Pending Balance:</span> <span className="font-bold text-red-600">₹{(selectedInvoice.balance_amount !== null && selectedInvoice.balance_amount !== undefined ? selectedInvoice.balance_amount : ((selectedInvoice.total_amount || 0) - (selectedInvoice.paid_amount || 0))).toFixed(2)}</span></p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Payment Date *</Label>
+                  <DateInput
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -631,7 +820,7 @@ export default function PurchaseInvoices() {
                   <Input
                     type="number"
                     min="0.01"
-                    max={selectedInvoice.balance_amount || 0}
+                    max={selectedInvoice.balance_amount || selectedInvoice.total_amount || 0}
                     step="0.01"
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
@@ -645,10 +834,10 @@ export default function PurchaseInvoices() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="bank_transfer">Bank Transfer / NEFT / RTGS</SelectItem>
+                      <SelectItem value="upi">UPI / GPay / PhonePe</SelectItem>
                       <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                       <SelectItem value="cheque">Cheque</SelectItem>
-                      <SelectItem value="upi">UPI</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -658,7 +847,7 @@ export default function PurchaseInvoices() {
                   <Input
                     value={paymentRef}
                     onChange={(e) => setPaymentRef(e.target.value)}
-                    placeholder="Transaction/Cheque reference"
+                    placeholder="Transaction / Cheque / UTR reference"
                   />
                 </div>
 
@@ -670,11 +859,249 @@ export default function PurchaseInvoices() {
                     onClick={() => paymentMutation.mutate()}
                     disabled={paymentMutation.isPending || paymentAmount <= 0}
                   >
-                    Record Payment
+                    {paymentMutation.isPending ? "Recording..." : "Record Payment"}
                   </Button>
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Vendor Bulk Payment Dialog */}
+        <Dialog open={isBulkPaymentDialogOpen} onOpenChange={setIsBulkPaymentDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-primary" />
+                Vendor Consolidated / Bulk Payment
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-5">
+              <p className="text-sm text-muted-foreground">
+                Pay multiple bills for a vendor in a single transaction (e.g. monthly Nanda Gas bill, grocery settlement).
+              </p>
+
+              {/* Step 1: Select Vendor */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Select Vendor *</Label>
+                <Select value={bulkVendorId} onValueChange={handleBulkVendorChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vendor to pay" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors.map((vendor) => {
+                      const vInvoices = invoices.filter(
+                        (inv) => inv.vendor_id === vendor.id && inv.payment_status !== "paid"
+                      );
+                      const due = vInvoices.reduce(
+                        (sum, inv) => sum + Math.max(0, (inv.total_amount || 0) - (inv.paid_amount || 0)),
+                        0
+                      );
+                      return (
+                        <SelectItem key={vendor.id} value={vendor.id}>
+                          {vendor.vendor_name} {vInvoices.length > 0 ? `(${vInvoices.length} unpaid • ₹${due.toFixed(2)} due)` : "(0 unpaid bills)"}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {bulkVendorId && (() => {
+                const vendorUnpaidInvoices = invoices.filter(
+                  (inv) => inv.vendor_id === bulkVendorId && inv.payment_status !== "paid"
+                );
+                const selectedDue = invoices
+                  .filter((inv) => selectedInvoiceIds.includes(inv.id))
+                  .reduce(
+                    (sum, inv) => sum + Math.max(0, (inv.total_amount || 0) - (inv.paid_amount || 0)),
+                    0
+                  );
+
+                if (vendorUnpaidInvoices.length === 0) {
+                  return (
+                    <div className="p-6 text-center border rounded-lg bg-muted/30">
+                      <p className="font-medium text-green-600">Great! All invoices for this vendor are fully paid.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-semibold">
+                        Unpaid Bills ({vendorUnpaidInvoices.length})
+                      </Label>
+                      <div className="flex gap-2 text-xs">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleSelectAllInvoices(true)}
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleSelectAllInvoices(false)}
+                        >
+                          Deselect All
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border overflow-x-auto max-h-60 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12 text-center">
+                              <Checkbox
+                                checked={
+                                  selectedInvoiceIds.length === vendorUnpaidInvoices.length &&
+                                  vendorUnpaidInvoices.length > 0
+                                }
+                                onCheckedChange={(checked) => handleSelectAllInvoices(!!checked)}
+                              />
+                            </TableHead>
+                            <TableHead>Bill / Invoice #</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                            <TableHead className="text-right">Paid</TableHead>
+                            <TableHead className="text-right">Balance Due</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {vendorUnpaidInvoices.map((inv) => {
+                            const invBalance = Math.max(0, (inv.total_amount || 0) - (inv.paid_amount || 0));
+                            const isChecked = selectedInvoiceIds.includes(inv.id);
+                            return (
+                              <TableRow
+                                key={inv.id}
+                                className={`cursor-pointer ${isChecked ? "bg-muted/40" : ""}`}
+                                onClick={() => handleToggleInvoice(inv.id)}
+                              >
+                                <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                                  <Checkbox
+                                    checked={isChecked}
+                                    onCheckedChange={() => handleToggleInvoice(inv.id)}
+                                  />
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  {inv.invoice_number}
+                                  {inv.vendor_invoice_number && (
+                                    <span className="text-xs text-muted-foreground block">
+                                      Ref: {inv.vendor_invoice_number}
+                                    </span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {inv.invoice_date ? format(new Date(inv.invoice_date), "dd/MM/yyyy") : "-"}
+                                </TableCell>
+                                <TableCell className="text-right">₹{(inv.total_amount || 0).toFixed(2)}</TableCell>
+                                <TableCell className="text-right text-green-600">₹{(inv.paid_amount || 0).toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-semibold text-red-600">₹{invBalance.toFixed(2)}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="bg-muted/40 p-3 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm gap-2">
+                      <div>
+                        Selected: <span className="font-bold">{selectedInvoiceIds.length}</span> of {vendorUnpaidInvoices.length} bills
+                      </div>
+                      <div className="font-bold">
+                        Total Selected Balance: <span className="text-red-600">₹{selectedDue.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Payment Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                      <div className="space-y-2">
+                        <Label>Payment Date *</Label>
+                        <DateInput
+                          value={bulkPaymentDate}
+                          onChange={(e) => setBulkVendorDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Payment Amount (₹) *</Label>
+                        <Input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={bulkPaymentAmount}
+                          onChange={(e) => setBulkPaymentAmount(parseFloat(e.target.value) || 0)}
+                        />
+                        <span className="text-[11px] text-muted-foreground block">
+                          Payment will be allocated across selected bills from oldest first.
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Payment Mode</Label>
+                        <Select value={bulkPaymentMode} onValueChange={setBulkPaymentMode}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bank_transfer">Bank Transfer / NEFT / RTGS</SelectItem>
+                            <SelectItem value="upi">UPI / GPay / PhonePe</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                            <SelectItem value="cash">Cash</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Reference Number</Label>
+                        <Input
+                          value={bulkPaymentRef}
+                          onChange={(e) => setBulkPaymentRef(e.target.value)}
+                          placeholder="UTR / Cheque # / UPI Ref"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Notes / Description</Label>
+                      <Textarea
+                        value={bulkNotes}
+                        onChange={(e) => setBulkNotes(e.target.value)}
+                        placeholder="e.g. Full settlement of monthly gas bills for Sept 2026..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsBulkPaymentDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => bulkPaymentMutation.mutate()}
+                        disabled={
+                          bulkPaymentMutation.isPending ||
+                          selectedInvoiceIds.length === 0 ||
+                          bulkPaymentAmount <= 0
+                        }
+                      >
+                        {bulkPaymentMutation.isPending
+                          ? "Processing..."
+                          : `Record Payment (₹${bulkPaymentAmount.toFixed(2)})`}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </DialogContent>
         </Dialog>
       </div>

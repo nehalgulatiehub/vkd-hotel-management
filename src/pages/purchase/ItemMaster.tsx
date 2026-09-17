@@ -76,7 +76,7 @@ const initialFormData = {
   category: "other" as ItemCategory,
   unit: "piece" as ItemUnit,
   reorder_level: 10,
-  gst_percentage: 18,
+  gst_percentage: 0,
   hsn_code: "",
   description: "",
 };
@@ -190,8 +190,8 @@ export default function ItemMaster() {
       item_name: item.item_name,
       category: item.category,
       unit: item.unit,
-      reorder_level: item.reorder_level || 10,
-      gst_percentage: item.gst_percentage || 18,
+      reorder_level: item.reorder_level ?? 10,
+      gst_percentage: item.gst_percentage !== null && item.gst_percentage !== undefined ? Number(item.gst_percentage) : 0,
       hsn_code: item.hsn_code || "",
       description: item.description || "",
     });
@@ -288,17 +288,37 @@ export default function ItemMaster() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="gst_percentage">GST %</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="gst_percentage">GST %</Label>
+                      <span className="text-[11px] text-muted-foreground">0% for Vegetables/Exempt</span>
+                    </div>
                     <Input
                       id="gst_percentage"
                       type="number"
                       min="0"
                       max="28"
+                      step="0.01"
                       value={formData.gst_percentage}
                       onChange={(e) =>
-                        setFormData({ ...formData, gst_percentage: parseFloat(e.target.value) || 0 })
+                        setFormData({ ...formData, gst_percentage: e.target.value === "" ? 0 : parseFloat(e.target.value) || 0 })
                       }
                     />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {[0, 5, 12, 18, 28].map((rate) => (
+                        <button
+                          key={rate}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, gst_percentage: rate })}
+                          className={`px-2 py-0.5 text-[11px] rounded border ${
+                            formData.gst_percentage === rate
+                              ? "bg-primary text-primary-foreground font-semibold"
+                              : "bg-muted hover:bg-muted/80 text-foreground"
+                          }`}
+                        >
+                          {rate === 0 ? "0% (Exempt/Veg)" : `${rate}%`}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">

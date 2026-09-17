@@ -27,6 +27,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { getUnitMultiplier } from "@/utils/unitConversion";
 
 interface AdminPOApprovalsProps {
   status: "pending" | "approved" | "rejected";
@@ -94,7 +95,12 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
       // First, get the PO items
       const { data: poItems, error: itemsError } = await supabase
         .from("purchase_order_items")
-        .select("item_id, quantity")
+        .select(`
+          item_id,
+          quantity,
+          unit,
+          purchase_items (unit)
+        `)
         .eq("po_id", id);
       if (itemsError) throw itemsError;
 
@@ -107,6 +113,10 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
 
       // Add items to inventory
       for (const item of poItems || []) {
+        const baseUnit = (item.purchase_items as any)?.unit;
+        const mult = getUnitMultiplier(item.unit, baseUnit);
+        const stockToAdd = item.quantity * mult;
+
         // Check if inventory entry exists
         const { data: existing } = await supabase
           .from("inventory")
@@ -119,7 +129,7 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
           await supabase
             .from("inventory")
             .update({ 
-              current_stock: existing.current_stock + item.quantity,
+              current_stock: existing.current_stock + stockToAdd,
               last_updated: new Date().toISOString()
             })
             .eq("id", existing.id);
@@ -129,7 +139,7 @@ export default function AdminPOApprovals({ status }: AdminPOApprovalsProps) {
             .from("inventory")
             .insert({
               item_id: item.item_id,
-              current_stock: item.quantity,
+              current_stock: stockToAdd,
               last_updated: new Date().toISOString()
             });
         }

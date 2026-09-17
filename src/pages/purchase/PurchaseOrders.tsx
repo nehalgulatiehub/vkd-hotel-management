@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
+import { getUnitMultiplier, formatEffectiveUnitLabel } from "@/utils/unitConversion";
 
 type PoStatus = "pending" | "approved" | "rejected" | "created" | "sent_to_vendor" | "partially_received" | "closed" | "cancelled";
 
@@ -60,6 +61,7 @@ interface POItem {
   item_id: string;
   item_name: string;
   unit: string;
+  base_unit: string;
   quantity: number;
   rate: number;
   gst_percentage: number;
@@ -223,11 +225,17 @@ export default function PurchaseOrders() {
         throw new Error("Please select vendor and add items");
       }
 
-      const subtotal = poItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-      const totalGst = poItems.reduce((sum, item) => {
-        const amount = item.quantity * item.rate;
-        return sum + (amount * item.gst_percentage / 100);
+      const subtotal = poItems.reduce((sum, item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        return sum + (item.quantity * mult) * item.rate;
       }, 0);
+
+      const totalGst = poItems.reduce((sum, item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        const amount = (item.quantity * mult) * item.rate;
+        return sum + (amount * (item.gst_percentage || 0) / 100);
+      }, 0);
+
       const totalAmount = subtotal + totalGst;
 
       const { data: po, error: poError } = await supabase
@@ -243,33 +251,44 @@ export default function PurchaseOrders() {
           created_by: user?.id,
           status: "pending",
         }])
-        .select()
+        .select(`*, vendors (vendor_name)`)
         .single();
 
       if (poError) throw poError;
 
-      const itemsToInsert = poItems.map((item) => ({
-        po_id: po.id,
-        pr_id: item.pr_id || null,
-        item_id: item.item_id,
-        unit: item.unit || null,
-        quantity: item.quantity,
-        rate: item.rate,
-        gst_percentage: item.gst_percentage,
-        gst_amount: (item.quantity * item.rate * item.gst_percentage / 100),
-        total_amount: item.quantity * item.rate + (item.quantity * item.rate * item.gst_percentage / 100),
-      }));
+      const itemsToInsert = poItems.map((item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        const effectiveQty = item.quantity * mult;
+        const taxableAmount = effectiveQty * item.rate;
+        const gstAmount = taxableAmount * ((item.gst_percentage || 0) / 100);
+        return {
+          po_id: po.id,
+          pr_id: item.pr_id || null,
+          item_id: item.item_id,
+          unit: item.unit || null,
+          quantity: item.quantity,
+          rate: item.rate,
+          gst_percentage: item.gst_percentage ?? 0,
+          gst_amount: gstAmount,
+          total_amount: taxableAmount + gstAmount,
+        };
+      });
 
       const { error: itemsError } = await supabase
         .from("purchase_order_items")
         .insert(itemsToInsert);
 
       if (itemsError) throw itemsError;
+
+      return po as PurchaseOrder;
     },
-    onSuccess: () => {
+    onSuccess: (createdPO) => {
       queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
       toast.success("Purchase order created successfully");
       resetForm();
+      if (createdPO) {
+        handlePrintPO(createdPO);
+      }
     },
     onError: (error) => {
       toast.error("Failed to create PO: " + error.message);
@@ -324,11 +343,17 @@ export default function PurchaseOrders() {
         throw new Error("Invalid data");
       }
 
-      const subtotal = poItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-      const totalGst = poItems.reduce((sum, item) => {
-        const amount = item.quantity * item.rate;
-        return sum + (amount * item.gst_percentage / 100);
+      const subtotal = poItems.reduce((sum, item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        return sum + (item.quantity * mult) * item.rate;
       }, 0);
+
+      const totalGst = poItems.reduce((sum, item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        const amount = (item.quantity * mult) * item.rate;
+        return sum + (amount * (item.gst_percentage || 0) / 100);
+      }, 0);
+
       const totalAmount = subtotal + totalGst;
 
       // Update PO
@@ -352,17 +377,23 @@ export default function PurchaseOrders() {
         .delete()
         .eq("po_id", editingPO.id);
 
-      const itemsToInsert = poItems.map((item) => ({
-        po_id: editingPO.id,
-        pr_id: item.pr_id || null,
-        item_id: item.item_id,
-        unit: item.unit || null,
-        quantity: item.quantity,
-        rate: item.rate,
-        gst_percentage: item.gst_percentage,
-        gst_amount: (item.quantity * item.rate * item.gst_percentage / 100),
-        total_amount: item.quantity * item.rate + (item.quantity * item.rate * item.gst_percentage / 100),
-      }));
+      const itemsToInsert = poItems.map((item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        const effectiveQty = item.quantity * mult;
+        const taxableAmount = effectiveQty * item.rate;
+        const gstAmount = taxableAmount * ((item.gst_percentage || 0) / 100);
+        return {
+          po_id: editingPO.id,
+          pr_id: item.pr_id || null,
+          item_id: item.item_id,
+          unit: item.unit || null,
+          quantity: item.quantity,
+          rate: item.rate,
+          gst_percentage: item.gst_percentage ?? 0,
+          gst_amount: gstAmount,
+          total_amount: taxableAmount + gstAmount,
+        };
+      });
 
       const { error: itemsError } = await supabase
         .from("purchase_order_items")
@@ -389,9 +420,12 @@ export default function PurchaseOrders() {
 
       // Update each item's rate and recalculate amounts
       for (const item of editPriceItems) {
-        const gstAmount = item.quantity * item.rate * (item.gst_percentage / 100);
-        const totalAmount = item.quantity * item.rate + gstAmount;
-        
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        const effectiveQty = item.quantity * mult;
+        const taxableAmount = effectiveQty * item.rate;
+        const gstAmount = taxableAmount * ((item.gst_percentage || 0) / 100);
+        const totalAmount = taxableAmount + gstAmount;
+
         const { error } = await supabase
           .from("purchase_order_items")
           .update({
@@ -400,16 +434,22 @@ export default function PurchaseOrders() {
             total_amount: totalAmount,
           })
           .eq("id", item.id);
-        
+
         if (error) throw error;
       }
 
       // Recalculate PO totals
-      const subtotal = editPriceItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-      const totalGst = editPriceItems.reduce((sum, item) => {
-        const amount = item.quantity * item.rate;
-        return sum + (amount * item.gst_percentage / 100);
+      const subtotal = editPriceItems.reduce((sum, item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        return sum + (item.quantity * mult) * item.rate;
       }, 0);
+
+      const totalGst = editPriceItems.reduce((sum, item) => {
+        const mult = getUnitMultiplier(item.unit, item.base_unit);
+        const amount = (item.quantity * mult) * item.rate;
+        return sum + (amount * (item.gst_percentage || 0) / 100);
+      }, 0);
+
       const totalAmount = subtotal + totalGst;
 
       const { error: poError } = await supabase
@@ -465,10 +505,11 @@ export default function PurchaseOrders() {
         pr_id: item.pr_id || "",
         item_id: item.item_id,
         item_name: item.purchase_items?.item_name || "",
-        unit: item.unit || item.purchase_items?.unit || "",
-        quantity: item.quantity,
-        rate: item.rate,
-        gst_percentage: item.gst_percentage || 18,
+        unit: item.unit || item.purchase_items?.unit || "piece",
+        base_unit: item.purchase_items?.unit || item.unit || "piece",
+        quantity: Number(item.quantity) || 0,
+        rate: Number(item.rate) || 0,
+        gst_percentage: item.gst_percentage !== null && item.gst_percentage !== undefined ? Number(item.gst_percentage) : 0,
       })));
     }
 
@@ -485,14 +526,18 @@ export default function PurchaseOrders() {
     const item = allItems.find((i) => i.id === itemId);
     if (!item) return;
 
+    const baseUnit = item.unit || "piece";
+    const defaultGst = item.gst_percentage !== null && item.gst_percentage !== undefined ? Number(item.gst_percentage) : 0;
+
     setPoItems([...poItems, {
       pr_id: "",
       item_id: item.id,
       item_name: item.item_name,
-      unit: item.unit,
+      unit: baseUnit,
+      base_unit: baseUnit,
       quantity: 1,
       rate: 0,
-      gst_percentage: item.gst_percentage || 18,
+      gst_percentage: defaultGst,
     }]);
   };
 
@@ -518,12 +563,21 @@ export default function PurchaseOrders() {
     setPoItems(updated);
   };
 
+  const handleUpdateItemGst = (index: number, gst: number) => {
+    const updated = [...poItems];
+    updated[index].gst_percentage = gst;
+    setPoItems(updated);
+  };
 
   const calculateTotals = () => {
-    const subtotal = poItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+    const subtotal = poItems.reduce((sum, item) => {
+      const mult = getUnitMultiplier(item.unit, item.base_unit);
+      return sum + (item.quantity * mult) * item.rate;
+    }, 0);
     const totalGst = poItems.reduce((sum, item) => {
-      const amount = item.quantity * item.rate;
-      return sum + (amount * item.gst_percentage / 100);
+      const mult = getUnitMultiplier(item.unit, item.base_unit);
+      const amount = (item.quantity * mult) * item.rate;
+      return sum + (amount * (item.gst_percentage || 0) / 100);
     }, 0);
     return { subtotal, totalGst, total: subtotal + totalGst };
   };
@@ -549,7 +603,7 @@ export default function PurchaseOrders() {
   // Handler for editing prices (for approved or other POs)
   const handleEditPrices = async (po: PurchaseOrder) => {
     setEditPricePO(po);
-    
+
     // Load existing PO items with all details
     const { data: items } = await supabase
       .from("purchase_order_items")
@@ -564,10 +618,11 @@ export default function PurchaseOrders() {
         id: item.id,
         item_id: item.item_id,
         item_name: item.purchase_items?.item_name || "",
-        unit: item.unit || item.purchase_items?.unit || "",
-        quantity: item.quantity,
-        rate: item.rate,
-        gst_percentage: item.gst_percentage || 18,
+        unit: item.unit || item.purchase_items?.unit || "piece",
+        base_unit: item.purchase_items?.unit || item.unit || "piece",
+        quantity: Number(item.quantity) || 0,
+        rate: Number(item.rate) || 0,
+        gst_percentage: item.gst_percentage !== null && item.gst_percentage !== undefined ? Number(item.gst_percentage) : 0,
       })));
     }
 
@@ -581,10 +636,14 @@ export default function PurchaseOrders() {
   };
 
   const calculateEditPriceTotals = () => {
-    const subtotal = editPriceItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+    const subtotal = editPriceItems.reduce((sum, item) => {
+      const mult = getUnitMultiplier(item.unit, item.base_unit);
+      return sum + (item.quantity * mult) * item.rate;
+    }, 0);
     const totalGst = editPriceItems.reduce((sum, item) => {
-      const amount = item.quantity * item.rate;
-      return sum + (amount * item.gst_percentage / 100);
+      const mult = getUnitMultiplier(item.unit, item.base_unit);
+      const amount = (item.quantity * mult) * item.rate;
+      return sum + (amount * (item.gst_percentage || 0) / 100);
     }, 0);
     return { subtotal, totalGst, total: subtotal + totalGst };
   };
@@ -693,11 +752,17 @@ export default function PurchaseOrders() {
                             <TableCell>
                               <Input
                                 type="number"
-                                min="1"
+                                min="0.001"
+                                step="any"
                                 value={item.quantity}
-                                onChange={(e) => handleUpdateItemQuantity(index, parseInt(e.target.value) || 1)}
-                                className="w-20"
+                                onChange={(e) => handleUpdateItemQuantity(index, parseFloat(e.target.value) || 0)}
+                                className="w-24"
                               />
+                              {formatEffectiveUnitLabel(item.quantity, item.unit, item.base_unit) && (
+                                <span className="text-[11px] text-muted-foreground block whitespace-nowrap mt-1">
+                                  {formatEffectiveUnitLabel(item.quantity, item.unit, item.base_unit)}
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Input
@@ -708,10 +773,26 @@ export default function PurchaseOrders() {
                                 onChange={(e) => handleUpdateItemRate(index, parseFloat(e.target.value) || 0)}
                                 className="w-24"
                               />
+                              <span className="text-[11px] text-muted-foreground block whitespace-nowrap mt-1">
+                                per {item.base_unit}
+                              </span>
                             </TableCell>
-                            <TableCell>{item.gst_percentage}%</TableCell>
                             <TableCell>
-                              ₹{(item.quantity * item.rate * (1 + item.gst_percentage / 100)).toFixed(2)}
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="1"
+                                  value={item.gst_percentage}
+                                  onChange={(e) => handleUpdateItemGst(index, parseFloat(e.target.value) || 0)}
+                                  className="w-16"
+                                />
+                                <span className="text-xs text-muted-foreground">%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium whitespace-nowrap">
+                              ₹{(((item.quantity * getUnitMultiplier(item.unit, item.base_unit)) * item.rate) * (1 + (item.gst_percentage || 0) / 100)).toFixed(2)}
                             </TableCell>
                             <TableCell>
                               <Button
@@ -1021,27 +1102,43 @@ export default function PurchaseOrders() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {editPriceItems.map((item, index) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.item_name}</TableCell>
-                            <TableCell>{item.unit}</TableCell>
-                            <TableCell>{item.quantity}</TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={item.rate}
-                                onChange={(e) => handleUpdateEditPriceItemRate(index, parseFloat(e.target.value) || 0)}
-                                className="w-24"
-                              />
-                            </TableCell>
-                            <TableCell>{item.gst_percentage}%</TableCell>
-                            <TableCell>
-                              ₹{(item.quantity * item.rate * (1 + item.gst_percentage / 100)).toFixed(2)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {editPriceItems.map((item, index) => {
+                          const mult = getUnitMultiplier(item.unit, item.base_unit);
+                          const effectiveQty = item.quantity * mult;
+                          const taxableAmount = effectiveQty * item.rate;
+                          const total = taxableAmount * (1 + (item.gst_percentage || 0) / 100);
+                          return (
+                            <TableRow key={item.id}>
+                              <TableCell>{item.item_name}</TableCell>
+                              <TableCell>
+                                {item.unit}
+                                {formatEffectiveUnitLabel(item.quantity, item.unit, item.base_unit) && (
+                                  <span className="text-[11px] text-muted-foreground block">
+                                    {formatEffectiveUnitLabel(item.quantity, item.unit, item.base_unit)}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell>{item.quantity}</TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={item.rate}
+                                  onChange={(e) => handleUpdateEditPriceItemRate(index, parseFloat(e.target.value) || 0)}
+                                  className="w-24"
+                                />
+                                <span className="text-[11px] text-muted-foreground block whitespace-nowrap">
+                                  per {item.base_unit}
+                                </span>
+                              </TableCell>
+                              <TableCell>{item.gst_percentage}%</TableCell>
+                              <TableCell>
+                                ₹{total.toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -1093,13 +1190,15 @@ export default function PurchaseOrders() {
                   top: 0 !important;
                   width: 100% !important;
                   padding: 20px !important;
+                  background: white !important;
+                  color: black !important;
                 }
-                .no-print { display: none !important; }
+                .print-hide { display: none !important; }
               }
             `}</style>
-            <div className="fixed inset-0 bg-background/80 z-50 overflow-auto no-print">
-              <div className="max-w-3xl mx-auto my-8 bg-background border rounded-lg shadow-lg">
-                <div className="flex justify-between items-center p-4 border-b no-print">
+            <div className="fixed inset-0 bg-background/80 z-50 overflow-auto print:static print:bg-transparent print:p-0 print:m-0">
+              <div className="max-w-3xl mx-auto my-8 bg-background border rounded-lg shadow-lg print:border-none print:shadow-none print:m-0 print:max-w-full">
+                <div className="flex justify-between items-center p-4 border-b print-hide print:hidden">
                   <h3 className="font-semibold">Purchase Order Preview</h3>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => window.print()}>
@@ -1110,7 +1209,7 @@ export default function PurchaseOrders() {
                     </Button>
                   </div>
                 </div>
-                <div ref={printRef} className="po-print-area p-8" style={{ fontFamily: "Arial, sans-serif" }}>
+                <div ref={printRef} className="po-print-area p-8 bg-white text-black" style={{ fontFamily: "Arial, sans-serif" }}>
                   {/* Company Header */}
                   <div style={{ textAlign: "center", marginBottom: "20px", borderBottom: "2px solid #333", paddingBottom: "15px" }}>
                     <h1 style={{ fontSize: "22px", fontWeight: "bold", margin: 0 }}>
@@ -1176,14 +1275,21 @@ export default function PurchaseOrders() {
                     </thead>
                     <tbody>
                       {printItems.map((item: any, idx: number) => {
-                        const amount = item.quantity * item.rate;
-                        const gst = item.gst_amount || (amount * (item.gst_percentage || 0) / 100);
-                        const total = item.total_amount || (amount + gst);
+                        const baseUnit = item.purchase_items?.unit;
+                        const mult = getUnitMultiplier(item.unit, baseUnit);
+                        const effectiveQty = item.quantity * mult;
+                        const amount = effectiveQty * item.rate;
+                        const gst = item.gst_amount !== null && item.gst_amount !== undefined ? item.gst_amount : (amount * (item.gst_percentage || 0) / 100);
+                        const total = item.total_amount !== null && item.total_amount !== undefined ? item.total_amount : (amount + gst);
+                        const effectiveLabel = formatEffectiveUnitLabel(item.quantity, item.unit, baseUnit);
                         return (
                           <tr key={item.id}>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{idx + 1}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.item_name}</td>
-                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.unit || item.purchase_items?.unit}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>
+                              {item.unit || baseUnit}
+                              {effectiveLabel ? ` ${effectiveLabel}` : ""}
+                            </td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.quantity}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{item.rate?.toFixed(2)}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px", textAlign: "right" }}>{amount.toFixed(2)}</td>
