@@ -1156,23 +1156,29 @@ export default function Bookings() {
       booking.email?.toLowerCase().includes(emailQ) ||
       booking.reference_email?.toLowerCase().includes(emailQ);
     
-    // Date filter — match the Date column (updated_at or created_at), inclusive range.
+    // Date filter — filter by Booking From date (check_in_date), inclusive range.
     let matchesDate = true;
-    const hasFrom = filters.fromYear && filters.fromMonth && filters.fromDay;
-    const hasTo = filters.toYear && filters.toMonth && filters.toDay;
+    const hasFrom = Boolean(filters.fromYear && filters.fromMonth && filters.fromDay);
+    const hasTo = Boolean(filters.toYear && filters.toMonth && filters.toDay);
     if (filters.searchWithDate && (hasFrom || hasTo)) {
-      const rawBookingDate = booking.updated_at || booking.created_at;
-      const bookingDate = rawBookingDate ? new Date(rawBookingDate) : null;
-      if (!bookingDate || isNaN(bookingDate.getTime())) {
+      const rawBookingDate = booking.hotel_info?.check_in_date || booking.check_in_date;
+      if (!rawBookingDate) {
         matchesDate = false;
       } else {
-        if (hasFrom) {
-          const fromDate = new Date(Number(filters.fromYear), Number(filters.fromMonth) - 1, Number(filters.fromDay));
-          matchesDate = matchesDate && bookingDate >= fromDate;
-        }
-        if (hasTo) {
-          const toDate = new Date(Number(filters.toYear), Number(filters.toMonth) - 1, Number(filters.toDay), 23, 59, 59, 999);
-          matchesDate = matchesDate && bookingDate <= toDate;
+        const dateStr = String(rawBookingDate).trim().slice(0, 10);
+        const [y, m, d] = dateStr.split("-").map(Number);
+        if (!y || !m || !d) {
+          matchesDate = false;
+        } else {
+          const bookingDateStr = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          if (hasFrom) {
+            const fromStr = `${String(filters.fromYear).padStart(4, "0")}-${String(filters.fromMonth).padStart(2, "0")}-${String(filters.fromDay).padStart(2, "0")}`;
+            if (bookingDateStr < fromStr) matchesDate = false;
+          }
+          if (hasTo) {
+            const toStr = `${String(filters.toYear).padStart(4, "0")}-${String(filters.toMonth).padStart(2, "0")}-${String(filters.toDay).padStart(2, "0")}`;
+            if (bookingDateStr > toStr) matchesDate = false;
+          }
         }
       }
     }
@@ -1183,11 +1189,14 @@ export default function Bookings() {
            matchesContact && matchesEmail;
   });
 
-  // When a Date range is applied, sort results ascending by the displayed Date.
-  const bookingRecordTime = (b: any) => {
-    const raw = b.updated_at || b.created_at;
-    const time = raw ? new Date(raw).getTime() : NaN;
-    return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : time;
+  // When a Booking From date range is applied, sort results ascending by Booking From date.
+  const bookingFromTime = (b: any) => {
+    const raw = b.hotel_info?.check_in_date || b.check_in_date;
+    if (!raw) return Number.MAX_SAFE_INTEGER;
+    const dateStr = String(raw).trim().slice(0, 10);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    if (!y || !m || !d) return Number.MAX_SAFE_INTEGER;
+    return new Date(y, m - 1, d).getTime();
   };
   const dateRangeActive = Boolean(
     filters.searchWithDate &&
@@ -1195,7 +1204,7 @@ export default function Bookings() {
       (filters.toYear && filters.toMonth && filters.toDay))
   );
   const displayedBookings = dateRangeActive
-    ? [...filteredBookings].sort((a: any, b: any) => bookingRecordTime(a) - bookingRecordTime(b))
+    ? [...filteredBookings].sort((a: any, b: any) => bookingFromTime(a) - bookingFromTime(b))
     : filteredBookings;
 
   const pagination = usePagination(displayedBookings);
