@@ -830,16 +830,23 @@ export default function Bookings() {
         const safariAmount = formData.safari_selling_price ? parseFloat(formData.safari_selling_price) : 0;
         totalAmount += safariAmount;
         
+        const selectedTransporter = transporters.find(t => t.id === formData.safari_transporter_id);
+        const safariTransporterName = selectedTransporter?.name || (formData.safari_transporter_id ? formData.safari_transporter_id : "Safari");
+
+        const noteWithTransporter = formData.safari_transporter_id
+          ? `${formData.safari_note ? formData.safari_note.trim() + " " : ""}[Transporter ID: ${formData.safari_transporter_id}]`
+          : (formData.safari_note || "");
+
         const safariData = {
           booking_id: bookingId,
-          safari_name: "Safari",
+          safari_name: safariTransporterName || "Safari",
           safari_date: formData.safari_journey_date || null,
           number_of_persons: formData.safari_num ? parseInt(formData.safari_num) : 1,
           rate_per_person: formData.safari_booking_price ? parseFloat(formData.safari_booking_price) : 0,
           total_amount: safariAmount,
           paid_amount: 0,
           due_amount: safariAmount,
-          notes: formData.safari_note
+          notes: noteWithTransporter
         };
         
         const { error: safariError } = await supabase
@@ -1613,13 +1620,15 @@ export default function Bookings() {
         md_booking_price: manaliDelhiVolvo?.rate_per_seat?.toString() || "",
         md_selling_price: manaliDelhiVolvo?.total_amount?.toString() || "",
         // Safari data
-        safari_transporter_id: "",
+        safari_transporter_id: safariBooking?.notes?.match(/\[Transporter ID:\s*([^\]]+)\]/)?.[1]
+          || transporters.find(t => t.name?.trim().toLowerCase() === safariBooking?.safari_name?.trim().toLowerCase())?.id
+          || "",
         safari_num: safariBooking?.number_of_persons?.toString() || "",
         safari_booking_date: "",
         safari_journey_date: safariBooking?.safari_date || "",
         safari_booking_price: safariBooking?.rate_per_person?.toString() || "",
         safari_selling_price: safariBooking?.total_amount?.toString() || "",
-        safari_note: safariBooking?.notes || "",
+        safari_note: (safariBooking?.notes || "").replace(/\[Transporter ID:\s*[^\]]+\]/g, "").trim(),
         visa_name: visaBooking?.visa_name || "",
         visa_num: visaBooking?.number_of_persons?.toString() || "",
         visa_journey_date: visaBooking?.visa_date || "",

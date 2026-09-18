@@ -17,6 +17,7 @@ export default function SafariDue() {
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [transporters, setTransporters] = useState<any[]>([]);
   
   // Dialog states
   const [showViewDetailDialog, setShowViewDetailDialog] = useState(false);
@@ -54,7 +55,13 @@ export default function SafariDue() {
     fetchSafariBookings();
     fetchAgents();
     fetchUsers();
+    fetchTransporters();
   }, []);
+
+  const fetchTransporters = async () => {
+    const { data } = await supabase.from("transporters").select("id, name").order("name");
+    setTransporters(data || []);
+  };
 
   const fetchAgents = async () => {
     const { data } = await supabase.from("agents").select("*").order("name");
@@ -86,6 +93,26 @@ export default function SafariDue() {
     const user = users.find(u => u.id === userId);
     if (!user) return "Unknown User";
     return user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Unknown User";
+  };
+
+  const getTransporterName = (booking: any) => {
+    const noteTransporterId = booking.notes?.match(/\[Transporter ID:\s*([^\]]+)\]/)?.[1];
+    if (noteTransporterId) {
+      const t = transporters.find(tr => tr.id === noteTransporterId);
+      if (t) return t.name;
+    }
+    if (booking.transporter_id) {
+      const t = transporters.find(tr => tr.id === booking.transporter_id);
+      if (t) return t.name;
+    }
+    if (booking.safari_name && booking.safari_name.trim().toLowerCase() !== "safari") {
+      return booking.safari_name;
+    }
+    if (booking.safari_name) {
+      const t = transporters.find(tr => tr.name?.trim().toLowerCase() === booking.safari_name?.trim().toLowerCase());
+      if (t) return t.name;
+    }
+    return "-";
   };
 
   const filteredBookings = safariBookings.filter(booking => {
@@ -296,11 +323,12 @@ export default function SafariDue() {
                           <div className="text-muted-foreground">Contact No.: {booking.bookings?.contact_no || ""}</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          <div><strong>No of Persons :</strong> {booking.number_of_persons || 1}</div>
-                          <div><strong>Booking Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
-                          <div><strong>Selling Price :</strong> Rs. {booking.total_amount?.toLocaleString("en-IN") || 0}/-</div>
-                          <div><strong>Total Received Payment :</strong> Rs. {booking.paid_amount?.toLocaleString("en-IN") || 0}/-</div>
-                          <div className="text-destructive"><strong>Due Payment :</strong> Rs. {booking.due_amount?.toLocaleString("en-IN") || 0}/-</div>
+                          <div><strong>No of Safari :</strong> {booking.number_of_persons ?? 0}</div>
+                          <div><strong>Transporter :</strong> {getTransporterName(booking)}</div>
+                          <div><strong>Booking Price :</strong> Rs. {(booking.rate_per_person || 0).toLocaleString("en-IN")}/-</div>
+                          <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString("en-IN")}/-</div>
+                          <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString("en-IN")}/-</div>
+                          <div className="text-destructive"><strong>Due Payment :</strong> Rs. {(booking.due_amount || 0).toLocaleString("en-IN")}/-</div>
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           <div><strong>Date :</strong>{booking.bookings?.created_at ? new Date(booking.bookings.created_at).toLocaleDateString("en-GB") : "-"}</div>

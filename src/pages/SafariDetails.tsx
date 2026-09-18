@@ -26,6 +26,7 @@ export default function SafariDetails() {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const [safariBookings, setSafariBookings] = useState<any[]>([]);
+  const [transporters, setTransporters] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterValues>(getDefaultFilters());
   const [loading, setLoading] = useState(true);
   const { getUserName } = useProfilesMap();
@@ -37,7 +38,15 @@ export default function SafariDetails() {
 
   const handlePrintBooking = (bookingId: string) => { setPrintBookingId(bookingId); setTimeout(() => window.print(), 800); };
 
-  useEffect(() => { fetchSafariBookings(); }, []);
+  useEffect(() => {
+    fetchSafariBookings();
+    fetchTransporters();
+  }, []);
+
+  const fetchTransporters = async () => {
+    const { data } = await supabase.from("transporters").select("id, name").order("name");
+    setTransporters(data || []);
+  };
 
   const fetchSafariBookings = async () => {
     setLoading(true);
@@ -48,11 +57,46 @@ export default function SafariDetails() {
 
   const handleViewDetails = (booking: any) => { setSelectedBookingData(booking.bookings); setSelectedServiceData(booking); setShowDetailsDialog(true); };
 
+  const getTransporterName = (booking: any) => {
+    // 1. If notes contains [Transporter ID: ...], lookup in transporters
+    const noteTransporterId = booking.notes?.match(/\[Transporter ID:\s*([^\]]+)\]/)?.[1];
+    if (noteTransporterId) {
+      const t = transporters.find(tr => tr.id === noteTransporterId);
+      if (t) return t.name;
+    }
+    // 2. If transporter_id field exists
+    if (booking.transporter_id) {
+      const t = transporters.find(tr => tr.id === booking.transporter_id);
+      if (t) return t.name;
+    }
+    // 3. If safari_name is non-empty and not generic default "Safari"
+    if (booking.safari_name && booking.safari_name.trim().toLowerCase() !== "safari") {
+      return booking.safari_name;
+    }
+    // 4. If safari_name matches a transporter name even if named "Safari"
+    if (booking.safari_name) {
+      const t = transporters.find(tr => tr.name?.trim().toLowerCase() === booking.safari_name?.trim().toLowerCase());
+      if (t) return t.name;
+    }
+    return "-";
+  };
+
   const filteredBookings = safariBookings.filter(booking => {
     if (filters.searchWithDate) { const d = new Date(booking.safari_date); const f = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`); const t = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`); if (d < f || d > t) return false; }
     if (filters.type && (booking.bookings?.booking_type || "direct") !== filters.type) return false;
+    if (filters.agentId && booking.bookings?.agent_id !== filters.agentId) return false;
     if (filters.customer && !booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase())) return false;
-    if (filters.transporterId && booking.transporter_id !== filters.transporterId) return false;
+    if (filters.transporterId) {
+      const selectedTransporter = transporters.find(t => t.id === filters.transporterId);
+      const targetName = selectedTransporter?.name?.toLowerCase()?.trim();
+      const currentTransporter = getTransporterName(booking)?.toLowerCase()?.trim();
+      const hasIdInNotes = booking.notes?.includes(filters.transporterId);
+      const matchesName = targetName && currentTransporter && (currentTransporter === targetName || currentTransporter.includes(targetName));
+      if (!hasIdInNotes && !matchesName && booking.transporter_id !== filters.transporterId) {
+        return false;
+      }
+    }
+    if (filters.noOfSafari && String(booking.number_of_persons ?? 0) !== filters.noOfSafari.trim()) return false;
     if (filters.reference && !booking.bookings?.notes?.toLowerCase().includes(filters.reference.toLowerCase())) return false;
     if (filters.contact && !booking.bookings?.contact_no?.toLowerCase().includes(filters.contact.toLowerCase())) return false;
     if (filters.email && !booking.bookings?.email?.toLowerCase().includes(filters.email.toLowerCase())) return false;
@@ -101,8 +145,8 @@ export default function SafariDetails() {
                   <td style={tdStyle}>{getUserName(booking.bookings?.created_by)}</td>
                   <td style={tdStyle}><div style={{ fontWeight: "bold" }}>{booking.bookings?.customer_name || "-"}</div><div style={{ fontSize: 10 }}>Contact No.: {booking.bookings?.contact_no || ""}</div></td>
                   <td style={tdStyle}>
-                    <div><strong>No of Persons :</strong> {booking.number_of_persons || 0}</div>
-                    <div><strong>Safari Name :</strong> {booking.safari_name || "-"}</div>
+                    <div><strong>No of Safari :</strong> {booking.number_of_persons ?? 0}</div>
+                    <div><strong>Transporter :</strong> {getTransporterName(booking)}</div>
                     <div><strong>Booking Price :</strong> Rs. {(booking.rate_per_person || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')} /-</div>

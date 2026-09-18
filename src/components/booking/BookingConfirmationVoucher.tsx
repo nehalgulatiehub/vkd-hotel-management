@@ -42,27 +42,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import sitaraLogo from "@/assets/sitara-logo.png.asset.json";
-import winsomeLogo from "@/assets/winsome-logo.png.asset.json";
-
-// Lovable asset CDN is only served from the *.lovable.app host. On custom
-// domains (e.g. vkddelhi.com) the /__l5e/ path returns an error, so fall back
-// to the published Lovable host for asset URLs.
-const ASSET_HOST = "https://terra-lodge-manager.lovable.app";
-
-function hostedAssetUrl(path: string) {
-  if (!path) return "";
-  try {
-    const origin = window.location.origin;
-    const base = /lovable\.app$|localhost|127\.0\.0\.1/.test(window.location.hostname)
-      ? origin
-      : ASSET_HOST;
-    return new URL(path, base).href;
-  } catch {
-    return path;
-  }
-}
-
+import { toast } from "sonner";
+import sitaraLogo from "@/assets/sitara-logo.png";
+import winsomeLogo from "@/assets/winsome-logo.png";
 
 interface BookingConfirmationVoucherProps {
   bookingId: string;
@@ -81,7 +63,7 @@ type Brand = {
 
 const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
   winsome: {
-    logo: hostedAssetUrl(winsomeLogo.url),
+    logo: winsomeLogo,
     name: "Winsome Resort",
     subTitle: "Jim Corbett, Ramnagar",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
@@ -89,7 +71,7 @@ const BRANDS: Record<"winsome" | "sitara", Omit<Brand, "key">> = {
     contact: "9560002045/46",
   },
   sitara: {
-    logo: hostedAssetUrl(sitaraLogo.url),
+    logo: sitaraLogo,
     name: "Hotel Sitara International",
     subTitle: "Manali",
     unitLine: "(a unit of Mukut Hotels and Resort Pvt Ltd)",
@@ -112,6 +94,7 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
   const [roomNamesMap, setRoomNamesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({});
   const voucherRef = useRef<HTMLDivElement>(null);
 
@@ -263,6 +246,92 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
   const companyContact = fields.contact;
   const companyAddress = fields.address;
   const hotelName = companyName;
+
+  const handleDownloadPdf = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    const toastId = toast.loading("Generating booking voucher PDF...");
+
+    try {
+      setEditing(false);
+      // Let React flush read-only view before capturing
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+      await new Promise((r) => setTimeout(r, 250));
+
+      const container = voucherRef.current;
+      if (!container) {
+        toast.error("Voucher content not ready", { id: toastId });
+        setIsDownloading(false);
+        return;
+      }
+
+      await document.fonts?.ready;
+
+      // Ensure any images are fully loaded
+      const images = Array.from(container.querySelectorAll<HTMLImageElement>("img"));
+      await Promise.all(
+        images.map(async (img) => {
+          if (img.complete && img.naturalWidth > 0) return;
+          return new Promise<void>((resolve) => {
+            const timer = setTimeout(() => resolve(), 2500);
+            img.onload = () => { clearTimeout(timer); resolve(); };
+            img.onerror = () => { clearTimeout(timer); resolve(); };
+          });
+        })
+      );
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: container.scrollWidth,
+      });
+
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error("Failed to render voucher canvas");
+      }
+
+      const A4_W = 210; // mm
+      const A4_H = 297; // mm
+      const MARGIN = 10; // mm
+      const contentW = A4_W - MARGIN * 2;
+      const contentH = A4_H - MARGIN * 2;
+
+      const imgWidth = contentW;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      let heightLeft = imgHeight;
+      let position = MARGIN;
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+      // Add first page
+      pdf.addImage(imgData, "JPEG", MARGIN, position, imgWidth, imgHeight);
+      heightLeft -= contentH;
+
+      // Add subsequent pages if content exceeds single page
+      while (heightLeft > 0) {
+        position = MARGIN - (imgHeight - heightLeft);
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", MARGIN, position, imgWidth, imgHeight);
+        heightLeft -= contentH;
+      }
+
+      const safeNumber = (fields.bookingNumber || bookingId).replace(/[^a-zA-Z0-9_-]/g, "_");
+      pdf.save(`Booking_Voucher_${safeNumber}.pdf`);
+      toast.success("Voucher PDF downloaded successfully!", { id: toastId });
+    } catch (err: any) {
+      console.error("Failed to generate PDF voucher:", err);
+      toast.error(`Could not generate PDF: ${err?.message || "Please use Print Voucher instead"}`, { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <VoucherFieldContext.Provider value={{ editing, fields, set }}>
@@ -486,117 +555,17 @@ export function BookingConfirmationVoucher({ bookingId, onClose }: BookingConfir
           {editing ? "✔ Done Editing" : "✏️ Edit Voucher"}
         </button>
         <button
-          onClick={async () => {
-            setEditing(false);
-            // Let React commit the read-only render before capturing (two frames + tick),
-            // otherwise the edit inputs get baked into the PDF and look blurry.
-            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
-            await new Promise((r) => setTimeout(r, 250));
-            const container = voucherRef.current;
-            if (!container) return;
-            const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
-            if (sections.length === 0) return;
-
-             await document.fonts?.ready;
-             const voucherImages = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
-             await Promise.all(voucherImages.map((image) => {
-               if (image.complete) return Promise.resolve();
-               return new Promise<void>((resolve) => {
-                 image.addEventListener('load', () => resolve(), { once: true });
-                 image.addEventListener('error', () => resolve(), { once: true });
-               });
-             }));
-
-            const A4_W = 210, A4_H = 297, MARGIN = 12;
-            const CONTENT_W = A4_W - MARGIN * 2;
-            const CONTENT_H = A4_H - MARGIN * 2;
-            const GAP = 3;
-
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            let cursorY = MARGIN;
-
-            for (const section of sections) {
-               // Capture a padded clone instead of the live element. html2canvas can
-               // otherwise trim the final line's descenders at an element boundary.
-               const captureHost = document.createElement('div');
-               captureHost.style.position = 'fixed';
-               captureHost.style.left = '-10000px';
-               captureHost.style.top = '0';
-               captureHost.style.width = `${container.clientWidth}px`;
-               captureHost.style.padding = '4px 2px 8px';
-               captureHost.style.boxSizing = 'border-box';
-               captureHost.style.background = '#ffffff';
-               captureHost.style.color = '#000000';
-
-               const clone = section.cloneNode(true) as HTMLElement;
-               clone.style.margin = '0';
-               clone.style.width = '100%';
-               clone.style.boxSizing = 'border-box';
-
-               // Safety net: if any editable field is still rendered as an input/textarea,
-               // flatten it to plain text so the PDF shows crisp text instead of form boxes.
-               clone.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => {
-                 const text = document.createElement('span');
-                 text.textContent = el.value || el.getAttribute('value') || '';
-                 text.style.display = 'block';
-                 text.style.font = 'inherit';
-                 text.style.color = '#000000';
-                 text.style.whiteSpace = 'pre-wrap';
-                 el.replaceWith(text);
-               });
-
-               captureHost.appendChild(clone);
-               document.body.appendChild(captureHost);
-
-               let canvas: HTMLCanvasElement;
-               try {
-                 const cloneImages = Array.from(captureHost.querySelectorAll<HTMLImageElement>('img'));
-                 await Promise.all(cloneImages.map((image) => image.decode().catch(() => undefined)));
-                 canvas = await html2canvas(captureHost, {
-                   scale: 3,
-                   useCORS: true,
-                   allowTaint: false,
-                   backgroundColor: '#ffffff',
-                   logging: false,
-                   width: captureHost.scrollWidth,
-                   height: captureHost.scrollHeight,
-                   windowWidth: container.clientWidth,
-                   scrollX: 0,
-                   scrollY: 0,
-                 });
-               } finally {
-                 captureHost.remove();
-               }
-
-              let imgW = CONTENT_W;
-              let imgH = (canvas.height * imgW) / canvas.width;
-
-              // Never slice through a section (that cuts text in half).
-              // If it is taller than a full page, scale it down to fit the page.
-              if (imgH > CONTENT_H) {
-                const ratio = CONTENT_H / imgH;
-                imgH = CONTENT_H;
-                imgW = CONTENT_W * ratio;
-                if (cursorY > MARGIN) {
-                  pdf.addPage();
-                  cursorY = MARGIN;
-                }
-              } else if (cursorY + imgH > A4_H - MARGIN && cursorY > MARGIN) {
-                pdf.addPage();
-                cursorY = MARGIN;
-              }
-
-              const offsetX = MARGIN + (CONTENT_W - imgW) / 2;
-               pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, cursorY, imgW, imgH, undefined, 'NONE');
-              cursorY += imgH + GAP;
-            }
-
-
-            pdf.save(`Booking_${fields.bookingNumber || bookingId}.pdf`);
-          }}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+          onClick={handleDownloadPdf}
+          disabled={isDownloading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium disabled:opacity-50"
         >
-          📥 Download PDF
+          {isDownloading ? "⏳ Generating PDF..." : "📥 Download PDF"}
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
+        >
+          🖨️ Print Voucher
         </button>
         <button
           onClick={() => {

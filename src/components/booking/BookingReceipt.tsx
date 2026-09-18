@@ -147,16 +147,16 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
           {safariBookings.map((safari, idx) => (
             <div key={idx}>
               <div className="grid grid-cols-2">
-                <p className="text-sm text-gray-600">Safari name</p>
-                <p className="text-sm">{safari.safari_name}</p>
+                <p className="text-sm text-gray-600">Transporter</p>
+                <p className="text-sm">{safari.safari_name || "N/A"}</p>
               </div>
               <div className="grid grid-cols-2">
-                <p className="text-sm text-gray-600">Number of persons</p>
-                <p className="text-sm">{safari.number_of_persons}</p>
+                <p className="text-sm text-gray-600">No of Safari</p>
+                <p className="text-sm">{safari.number_of_persons ?? 0}</p>
               </div>
               <div className="grid grid-cols-2">
                 <p className="text-sm text-gray-600">Safari date</p>
-                <p className="text-sm">{new Date(safari.safari_date).toLocaleDateString('en-GB')}</p>
+                <p className="text-sm">{safari.safari_date ? new Date(safari.safari_date).toLocaleDateString('en-GB') : "N/A"}</p>
               </div>
             </div>
           ))}
