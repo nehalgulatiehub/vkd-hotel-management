@@ -48,6 +48,23 @@ const emptyVehicleEntry: VehicleEntry = {
   journey_date: "",
   note: ""
 };
+
+const getTodayIso = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const getTomorrowIso = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
@@ -158,8 +175,8 @@ export default function Bookings() {
     hotel_id: "",
     num_rooms: "",
     room_type: "",
-    check_in: "",
-    check_out: "",
+    check_in: getTodayIso(),
+    check_out: getTomorrowIso(),
     booking_price: "",
     selling_price: "",
     note: ""
@@ -236,8 +253,8 @@ export default function Bookings() {
     adults: 1,
     children: 0,
     notes: "",
-    check_in_date: "",
-    check_out_date: "",
+    check_in_date: getTodayIso(),
+    check_out_date: getTomorrowIso(),
     include_booking: false,
     include_delhi_manali: false,
     include_manali_delhi: false,
@@ -258,8 +275,8 @@ export default function Bookings() {
     booking_selected_package: "",
     booking_custom_package: "",
     booking_price: "",
-    booking_from: "",
-    booking_to: "",
+    booking_from: getTodayIso(),
+    booking_to: getTomorrowIso(),
     // Delhi-Manali section fields
     dm_num_tickets: "",
     dm_ticket_no: "",
@@ -598,39 +615,53 @@ export default function Bookings() {
     e.preventDefault();
 
     // Use the most specific dates available (priority order):
-    // 1. If "Booking" section is enabled and From/To are provided, use them.
-    // 2. If "Another Hotel" section is enabled and check-in/out are provided, use first hotel's dates.
-    // 3. Otherwise fall back to the main check-in/check-out dates.
+    // 1. If "Booking" section is enabled, use formData.booking_from and booking_to
+    // 2. If "Another Hotel" section is enabled, use first hotel's dates
+    // 3. Otherwise fall back to other service dates or today/tomorrow
     const firstAnotherHotelCheckIn = anotherHotelsList[0]?.check_in || "";
     const firstAnotherHotelCheckOut = anotherHotelsList[0]?.check_out || "";
-    // Fall back through all service dates so non-hotel bookings (vehicle-only, safari-only, volvo-only) are allowed.
-    const effectiveCheckIn =
-      formData.booking_from ||
-      firstAnotherHotelCheckIn ||
-      formData.check_in_date ||
-      (vehiclesList[0]?.booking_date || "") ||
-      (vehiclesList[0]?.journey_date || "") ||
-      formData.safari_journey_date ||
-      formData.safari_booking_date ||
-      formData.dm_journey_date ||
-      formData.md_journey_date ||
-      "";
-    const effectiveCheckOut =
-      formData.booking_to ||
-      firstAnotherHotelCheckOut ||
-      formData.check_out_date ||
-      (vehiclesList[0]?.journey_date || "") ||
-      (vehiclesList[0]?.booking_date || "") ||
-      formData.safari_journey_date ||
-      formData.safari_booking_date ||
-      formData.dm_journey_date ||
-      formData.md_journey_date ||
-      "";
 
-    // Fallback: if no date was picked anywhere, use today's date instead of blocking submission
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const finalCheckIn = effectiveCheckIn || effectiveCheckOut || todayIso;
-    const finalCheckOut = effectiveCheckOut || effectiveCheckIn || todayIso;
+    const todayIso = getTodayIso();
+    const tomorrowIso = getTomorrowIso();
+
+    let finalCheckIn = "";
+    if (formData.include_booking && formData.booking_from) {
+      finalCheckIn = formData.booking_from;
+    } else if (formData.include_another_hotel && firstAnotherHotelCheckIn) {
+      finalCheckIn = firstAnotherHotelCheckIn;
+    } else {
+      finalCheckIn =
+        formData.booking_from ||
+        firstAnotherHotelCheckIn ||
+        formData.check_in_date ||
+        (vehiclesList[0]?.booking_date || "") ||
+        (vehiclesList[0]?.journey_date || "") ||
+        formData.safari_journey_date ||
+        formData.safari_booking_date ||
+        formData.dm_journey_date ||
+        formData.md_journey_date ||
+        todayIso;
+    }
+
+    let finalCheckOut = "";
+    if (formData.include_booking && formData.booking_to) {
+      finalCheckOut = formData.booking_to;
+    } else if (formData.include_another_hotel && firstAnotherHotelCheckOut) {
+      finalCheckOut = firstAnotherHotelCheckOut;
+    } else {
+      finalCheckOut =
+        formData.booking_to ||
+        firstAnotherHotelCheckOut ||
+        formData.check_out_date ||
+        (vehiclesList[0]?.journey_date || "") ||
+        (vehiclesList[0]?.booking_date || "") ||
+        formData.safari_journey_date ||
+        formData.safari_booking_date ||
+        formData.dm_journey_date ||
+        formData.md_journey_date ||
+        finalCheckIn ||
+        tomorrowIso;
+    }
 
 
     try {
@@ -723,8 +754,8 @@ export default function Bookings() {
           booking_id: bookingId,
           own_hotel_id: formData.booking_hotel_id, // Use own_hotel_id instead of hotel_id
           hotel_id: null,
-          check_in_date: formData.booking_from || formData.check_in_date,
-          check_out_date: formData.booking_to || formData.check_out_date,
+          check_in_date: finalCheckIn,
+          check_out_date: finalCheckOut,
           room_type: formData.booking_room === "none" ? null : formData.booking_room,
           number_of_rooms: formData.booking_room === "none" ? 0 : (formData.booking_num_rooms ? parseInt(formData.booking_num_rooms) : 1),
           room_rate: hotelAmount,
@@ -876,8 +907,8 @@ export default function Bookings() {
             booking_id: bookingId,
             hotel_id: hotel.hotel_id || null,
             own_hotel_id: null,
-            check_in_date: hotel.check_in || formData.booking_from || formData.check_in_date || new Date().toISOString().split("T")[0],
-            check_out_date: hotel.check_out || hotel.check_in || formData.booking_to || formData.check_out_date || new Date().toISOString().split("T")[0],
+            check_in_date: hotel.check_in || finalCheckIn,
+            check_out_date: hotel.check_out || finalCheckOut,
             room_type: hotel.room_type || null,
             number_of_rooms: hotel.num_rooms ? parseInt(hotel.num_rooms) : 1,
             room_rate: hotel.booking_price ? parseFloat(hotel.booking_price) : 0,
@@ -1010,8 +1041,8 @@ export default function Bookings() {
         adults: 1,
         children: 0,
         notes: "",
-        check_in_date: "",
-        check_out_date: "",
+        check_in_date: getTodayIso(),
+        check_out_date: getTomorrowIso(),
         include_booking: false,
         include_delhi_manali: false,
         include_manali_delhi: false,
@@ -1031,8 +1062,8 @@ export default function Bookings() {
         booking_selected_package: "",
         booking_custom_package: "",
         booking_price: "",
-        booking_from: "",
-        booking_to: "",
+        booking_from: getTodayIso(),
+        booking_to: getTomorrowIso(),
         dm_num_tickets: "",
         dm_ticket_no: "",
         dm_seat_no: "",
@@ -1561,8 +1592,8 @@ export default function Bookings() {
         booking_selected_package: hotelBooking?.notes?.match(/Package:\s*([^|]+)/)?.[1]?.trim() || "",
         booking_custom_package: hotelBooking?.notes?.match(/Package:\s*([^|]+)/) ? "" : (hotelBooking?.notes || ""),
         booking_price: hotelBooking?.total_amount?.toString() || "",
-        booking_from: hotelBooking?.check_in_date || "",
-        booking_to: hotelBooking?.check_out_date || "",
+        booking_from: hotelBooking?.check_in_date || booking.check_in_date || getTodayIso(),
+        booking_to: hotelBooking?.check_out_date || booking.check_out_date || getTomorrowIso(),
         // Delhi-Manali volvo data
         dm_num_tickets: delhiManaliVolvo?.number_of_seats?.toString() || "",
         dm_ticket_no: delhiManaliVolvo?.notes?.split("Ticket No: ")[1]?.split(",")[0] || "",
@@ -1976,7 +2007,12 @@ export default function Bookings() {
                   <CompactFormRow label="Booking">
                     <RadioGroup
                       value={formData.include_booking ? "yes" : "no"}
-                      onValueChange={(value) => setFormData({ ...formData, include_booking: value === "yes" })}
+                      onValueChange={(value) => setFormData(prev => ({
+                        ...prev,
+                        include_booking: value === "yes",
+                        booking_from: prev.booking_from || getTodayIso(),
+                        booking_to: prev.booking_to || getTomorrowIso()
+                      }))}
                       className="flex gap-3"
                     >
                       <div className="flex items-center space-x-1">
@@ -2117,14 +2153,14 @@ export default function Bookings() {
                       <CompactFormRow label="From" className="!w-auto">
                         <LegacyDatePicker
                           value={formData.booking_from}
-                          onChange={(e) => setFormData({ ...formData, booking_from: e.target.value })}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, booking_from: e.target.value }))}
                           className="w-32"
                         />
                       </CompactFormRow>
                       <CompactFormRow label="To" className="!w-auto">
                         <LegacyDatePicker
                           value={formData.booking_to}
-                          onChange={(e) => setFormData({ ...formData, booking_to: e.target.value })}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, booking_to: e.target.value }))}
                           className="w-32"
                         />
                       </CompactFormRow>
@@ -2595,7 +2631,7 @@ export default function Bookings() {
                     <CompactFormRow label="Another Hotel">
                       <RadioGroup
                         value={formData.include_another_hotel ? "yes" : "no"}
-                        onValueChange={(value) => setFormData({ ...formData, include_another_hotel: value === "yes" })}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, include_another_hotel: value === "yes" }))}
                         className="flex gap-3"
                       >
                         <div className="flex items-center space-x-1">
@@ -2635,9 +2671,11 @@ export default function Bookings() {
                         
                         {anotherHotelsList.map((hotel, index) => {
                           const updateHotel = (field: keyof AnotherHotelEntry, value: string) => {
-                            const newList = [...anotherHotelsList];
-                            newList[index] = { ...newList[index], [field]: value };
-                            setAnotherHotelsList(newList);
+                            setAnotherHotelsList((prev) => {
+                              const newList = [...prev];
+                              newList[index] = { ...newList[index], [field]: value };
+                              return newList;
+                            });
                           };
                           
                           const removeHotel = () => {
@@ -2794,9 +2832,11 @@ export default function Bookings() {
 
                         {vehiclesList.map((vehicle, index) => {
                           const updateVehicle = (field: keyof VehicleEntry, value: string) => {
-                            const newList = [...vehiclesList];
-                            newList[index] = { ...newList[index], [field]: value };
-                            setVehiclesList(newList);
+                            setVehiclesList((prev) => {
+                              const newList = [...prev];
+                              newList[index] = { ...newList[index], [field]: value };
+                              return newList;
+                            });
                           };
 
                           const removeVehicle = () => {
@@ -2985,8 +3025,8 @@ export default function Bookings() {
                         adults: 1,
                         children: 0,
                         notes: "",
-                        check_in_date: "",
-                        check_out_date: "",
+                        check_in_date: getTodayIso(),
+                        check_out_date: getTomorrowIso(),
                         include_booking: false,
                         include_delhi_manali: false,
                         include_manali_delhi: false,
@@ -3006,8 +3046,8 @@ export default function Bookings() {
                         booking_selected_package: "",
                         booking_custom_package: "",
                         booking_price: "",
-                        booking_from: "",
-                        booking_to: "",
+                        booking_from: getTodayIso(),
+                        booking_to: getTomorrowIso(),
                         dm_num_tickets: "",
                         dm_ticket_no: "",
                         dm_seat_no: "",

@@ -57,7 +57,13 @@ export function LegacyDatePicker({
 
   useEffect(() => {
     const p = parseIso(value);
-    if (p) { setY(p.y); setM(p.m); setD(p.d); setCalY(p.y); setCalM(p.m); }
+    if (p) {
+      setY(p.y);
+      setM(p.m);
+      setD(p.d);
+      setCalY(p.y);
+      setCalM(p.m);
+    }
   }, [value]);
 
   const years = useMemo(() => {
@@ -67,30 +73,32 @@ export function LegacyDatePicker({
     return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
   }, [minYear, maxYear]);
 
+  const curParsed = parseIso(value);
+  const curY = curParsed?.y ?? y;
+  const curM = curParsed?.m ?? m;
+  const curD = curParsed?.d ?? d;
+
   const emit = (ny: number, nm: number, nd: number) => {
     const maxD = daysInMonth(ny, nm - 1);
     const safeD = Math.min(nd, maxD);
-    setY(ny); setM(nm); setD(safeD);
+    setY(ny);
+    setM(nm);
+    setD(safeD);
+    setCalY(ny);
+    setCalM(nm);
     const iso = toIso(ny, nm, safeD);
-    if (onChange && inputRef.current) {
-      const input = inputRef.current;
-      input.value = iso;
-      const ev = new Event("input", { bubbles: true }) as unknown as ChangeEvent<HTMLInputElement>;
-      Object.defineProperty(ev, "target", { writable: false, value: input });
-      Object.defineProperty(ev, "currentTarget", { writable: false, value: input });
+    if (inputRef.current) {
+      inputRef.current.value = iso;
+    }
+    if (onChange) {
+      const ev = {
+        target: { value: iso, name: name || "" },
+        currentTarget: { value: iso, name: name || "" },
+        bubbles: true,
+      } as unknown as ChangeEvent<HTMLInputElement>;
       onChange(ev);
     }
   };
-
-  // If no value is set, publish the date shown in the dropdowns so the visible
-  // selection always matches the stored value (prevents "no date selected" errors).
-  const didInit = useRef(false);
-  useEffect(() => {
-    if (didInit.current) return;
-    didInit.current = true;
-    if (!parseIso(value)) emit(initY, initM, initD);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -133,7 +141,12 @@ export function LegacyDatePicker({
     };
   }, [open]);
 
-  const openCal = () => { setCalY(y); setCalM(m); placeCal(); setOpen(true); };
+  const openCal = () => {
+    setCalY(curY);
+    setCalM(curM);
+    placeCal();
+    setOpen(true);
+  };
   const shiftMonth = (delta: number) => {
     let nm = calM + delta;
     let ny = calY;
@@ -159,18 +172,18 @@ export function LegacyDatePicker({
 
   return (
     <div ref={wrapRef} className={`relative inline-flex flex-wrap items-center gap-1 max-w-full ${className}`}>
-      <input ref={inputRef} type="hidden" name={name} value={toIso(y, m, d)} readOnly />
-      <select className={`${selCls} w-[56px]`} value={m} onChange={(e) => emit(y, +e.target.value, d)}>
+      <input ref={inputRef} type="hidden" name={name} value={toIso(curY, curM, curD)} readOnly />
+      <select className={`${selCls} w-[56px]`} value={curM} onChange={(e) => emit(curY, +e.target.value, curD)}>
         {MONTHS.map((mo, i) => (
           <option key={mo} value={i + 1}>{mo}</option>
         ))}
       </select>
-      <select className={`${selCls} w-[48px]`} value={d} onChange={(e) => emit(y, m, +e.target.value)}>
-        {Array.from({ length: daysInMonth(y, m - 1) }, (_, i) => i + 1).map((dd) => (
+      <select className={`${selCls} w-[48px]`} value={curD} onChange={(e) => emit(curY, curM, +e.target.value)}>
+        {Array.from({ length: daysInMonth(curY, curM - 1) }, (_, i) => i + 1).map((dd) => (
           <option key={dd} value={dd}>{dd}</option>
         ))}
       </select>
-      <select className={`${selCls} w-[68px]`} value={y} onChange={(e) => emit(+e.target.value, m, d)}>
+      <select className={`${selCls} w-[68px]`} value={curY} onChange={(e) => emit(+e.target.value, curM, curD)}>
         {years.map((yy) => (
           <option key={yy} value={yy}>{yy}</option>
         ))}
@@ -207,7 +220,7 @@ export function LegacyDatePicker({
               {Array.from({ length: cells.length / 7 }, (_, r) => (
                 <tr key={r}>
                   {cells.slice(r * 7, r * 7 + 7).map((c, i) => {
-                    const isSel = c === d && calM === m && calY === y;
+                    const isSel = c === curD && calM === curM && calY === curY;
                     return (
                       <td key={i} className="p-0 text-center">
                         {c ? (
