@@ -785,7 +785,7 @@ export default function Bookings() {
         const volvoData = {
           booking_id: bookingId,
           route: "delhi_manali",
-          travel_date: formData.dm_journey_date,
+          travel_date: formData.dm_journey_date || null,
           number_of_seats: formData.dm_num_tickets ? parseInt(formData.dm_num_tickets) : 1,
           rate_per_seat: formData.dm_booking_price ? parseFloat(formData.dm_booking_price) : 0,
           total_amount: volvoAmount,
@@ -809,7 +809,7 @@ export default function Bookings() {
         const volvoData = {
           booking_id: bookingId,
           route: "manali_delhi",
-          travel_date: formData.md_journey_date,
+          travel_date: formData.md_journey_date || null,
           number_of_seats: formData.md_num_tickets ? parseInt(formData.md_num_tickets) : 1,
           rate_per_seat: formData.md_booking_price ? parseFloat(formData.md_booking_price) : 0,
           total_amount: volvoAmount,
@@ -833,7 +833,7 @@ export default function Bookings() {
         const safariData = {
           booking_id: bookingId,
           safari_name: "Safari",
-          safari_date: formData.safari_journey_date,
+          safari_date: formData.safari_journey_date || null,
           number_of_persons: formData.safari_num ? parseInt(formData.safari_num) : 1,
           rate_per_person: formData.safari_booking_price ? parseFloat(formData.safari_booking_price) : 0,
           total_amount: safariAmount,
@@ -2234,14 +2234,14 @@ export default function Bookings() {
                           <CompactFormRow label="Booking Date" className="!w-auto">
                             <LegacyDatePicker
                               value={formData.dm_booking_date}
-                              onChange={(e) => setFormData({ ...formData, dm_booking_date: e.target.value })}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, dm_booking_date: e.target.value }))}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
                             <LegacyDatePicker
                               value={formData.dm_journey_date}
-                              onChange={(e) => setFormData({ ...formData, dm_journey_date: e.target.value })}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, dm_journey_date: e.target.value }))}
                               className="w-32"
                             />
                           </CompactFormRow>
@@ -2337,14 +2337,14 @@ export default function Bookings() {
                           <CompactFormRow label="Booking Date" className="!w-auto">
                             <LegacyDatePicker
                               value={formData.md_booking_date}
-                              onChange={(e) => setFormData({ ...formData, md_booking_date: e.target.value })}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, md_booking_date: e.target.value }))}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
                             <LegacyDatePicker
                               value={formData.md_journey_date}
-                              onChange={(e) => setFormData({ ...formData, md_journey_date: e.target.value })}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, md_journey_date: e.target.value }))}
                               className="w-32"
                             />
                           </CompactFormRow>
@@ -2426,14 +2426,14 @@ export default function Bookings() {
                           <CompactFormRow label="Booking Date" className="!w-auto">
                             <LegacyDatePicker
                               value={formData.safari_booking_date}
-                              onChange={(e) => setFormData({ ...formData, safari_booking_date: e.target.value })}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, safari_booking_date: e.target.value }))}
                               className="w-32"
                             />
                           </CompactFormRow>
                           <CompactFormRow label="Journey Date" className="!w-auto">
                             <LegacyDatePicker
                               value={formData.safari_journey_date}
-                              onChange={(e) => setFormData({ ...formData, safari_journey_date: e.target.value })}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, safari_journey_date: e.target.value }))}
                               className="w-32"
                             />
                           </CompactFormRow>
@@ -2511,7 +2511,7 @@ export default function Bookings() {
                         <CompactFormRow label="Visa Date" className="!w-auto">
                           <LegacyDatePicker
                             value={formData.visa_journey_date}
-                            onChange={(e) => setFormData({ ...formData, visa_journey_date: e.target.value })}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, visa_journey_date: e.target.value }))}
                             className="w-32"
                           />
                         </CompactFormRow>
@@ -2588,7 +2588,7 @@ export default function Bookings() {
                         <CompactFormRow label="Cruise Date" className="!w-auto">
                           <LegacyDatePicker
                             value={formData.cruise_journey_date}
-                            onChange={(e) => setFormData({ ...formData, cruise_journey_date: e.target.value })}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, cruise_journey_date: e.target.value }))}
                             className="w-32"
                           />
                         </CompactFormRow>

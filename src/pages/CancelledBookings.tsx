@@ -178,11 +178,11 @@ export default function CancelledBookings() {
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
             <div className="flex items-center gap-2">
               <span className={labelStyle}>From :</span>
-              <LegacyDatePicker value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
+              <LegacyDatePicker value={filters.from} onChange={(e) => setFilters(prev => ({ ...prev, from: e.target.value }))} />
             </div>
             <div className="flex items-center gap-2">
               <span className={labelStyle}>To :</span>
-              <LegacyDatePicker value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} />
+              <LegacyDatePicker value={filters.to} onChange={(e) => setFilters(prev => ({ ...prev, to: e.target.value }))} />
             </div>
             <div className="flex items-center gap-2">
               <span className={labelStyle}>Search with Date :</span>

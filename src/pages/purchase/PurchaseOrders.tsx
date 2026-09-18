@@ -1275,7 +1275,7 @@ export default function PurchaseOrders() {
                     </thead>
                     <tbody>
                       {printItems.map((item: any, idx: number) => {
-                        const baseUnit = item.purchase_items?.unit;
+                        const baseUnit = item.purchase_items?.unit || item.base_unit || item.unit || "piece";
                         const mult = getUnitMultiplier(item.unit, baseUnit);
                         const effectiveQty = item.quantity * mult;
                         const amount = effectiveQty * item.rate;
@@ -1285,7 +1285,7 @@ export default function PurchaseOrders() {
                         return (
                           <tr key={item.id}>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>{idx + 1}</td>
-                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.item_name}</td>
+                            <td style={{ border: "1px solid #ccc", padding: "6px" }}>{item.purchase_items?.item_name || item.item_name || "Item"}</td>
                             <td style={{ border: "1px solid #ccc", padding: "6px" }}>
                               {item.unit || baseUnit}
                               {effectiveLabel ? ` ${effectiveLabel}` : ""}
