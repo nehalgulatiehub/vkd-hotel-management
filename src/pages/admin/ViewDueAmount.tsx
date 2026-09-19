@@ -63,7 +63,7 @@ export default function ViewDueAmount() {
   const fetchBookingsWithDue = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("bookings").select("*, agents(name)").neq("status", "cancelled").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("bookings").select("*, agents(name)").neq("status", "cancelled");
       if (error) throw error;
       const bookingIds = (data || []).map(b => b.id);
       if (bookingIds.length > 0) {
@@ -85,6 +85,8 @@ export default function ViewDueAmount() {
           if (existing) {
             existing.total_amount += Number(hb.total_amount) || 0;
             existing.number_of_rooms += Number(hb.number_of_rooms) || 0;
+            if (hb.check_in_date && (!existing.check_in_date || hb.check_in_date < existing.check_in_date)) existing.check_in_date = hb.check_in_date;
+            if (hb.check_out_date && (!existing.check_out_date || hb.check_out_date > existing.check_out_date)) existing.check_out_date = hb.check_out_date;
           } else {
             hotelBookingsMap[hb.booking_id] = { hotel_id: hb.own_hotel_id, room_id: isUuid ? hb.room_type : null, hotel_name: hb.own_hotels?.name || null, room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type, number_of_rooms: Number(hb.number_of_rooms) || 0, notes: hb.notes, total_amount: Number(hb.total_amount) || 0, check_in_date: hb.check_in_date, check_out_date: hb.check_out_date };
           }
@@ -105,7 +107,11 @@ export default function ViewDueAmount() {
             return { ...booking, total_amount: ownTotal, paid_amount: ownPaid, due_amount: ownDue, check_in_date: hotelInfo.check_in_date || booking.check_in_date, check_out_date: hotelInfo.check_out_date || booking.check_out_date, hotel_info: hotelInfo };
           })
           .filter(Boolean)
-          .sort((a: any, b: any) => b.due_amount - a.due_amount));
+          .sort((a: any, b: any) => {
+            const aBookingFrom = a.check_in_date ? new Date(a.check_in_date).getTime() : Number.MAX_SAFE_INTEGER;
+            const bBookingFrom = b.check_in_date ? new Date(b.check_in_date).getTime() : Number.MAX_SAFE_INTEGER;
+            return aBookingFrom - bBookingFrom;
+          }));
       } else { setBookings(data || []); }
     } catch (error) { console.error("Error fetching bookings with due:", error); }
     finally { setLoading(false); }

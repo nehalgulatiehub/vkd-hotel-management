@@ -114,8 +114,7 @@ export default function BookingDue() {
     const { data, error } = await supabase
       .from("bookings")
       .select("*, agents(name)")
-      .neq("status", "cancelled")
-      .order("created_at", { ascending: false });
+      .neq("status", "cancelled");
 
     if (error) {
       toast.error("Failed to load bookings with due amount");
@@ -156,6 +155,12 @@ export default function BookingDue() {
           if (existing) {
             existing.total_amount += Number(hb.total_amount) || 0;
             existing.number_of_rooms += Number(hb.number_of_rooms) || 0;
+            if (hb.check_in_date && (!existing.check_in_date || hb.check_in_date < existing.check_in_date)) {
+              existing.check_in_date = hb.check_in_date;
+            }
+            if (hb.check_out_date && (!existing.check_out_date || hb.check_out_date > existing.check_out_date)) {
+              existing.check_out_date = hb.check_out_date;
+            }
           } else {
             hotelBookingsMap[hb.booking_id] = {
               hotel_id: hb.own_hotel_id,
@@ -197,7 +202,11 @@ export default function BookingDue() {
             };
           })
           .filter(Boolean)
-          .sort((a: any, b: any) => b.due_amount - a.due_amount);
+          .sort((a: any, b: any) => {
+            const aBookingFrom = toYMD(a.check_in_date) || "9999-12-31";
+            const bBookingFrom = toYMD(b.check_in_date) || "9999-12-31";
+            return aBookingFrom.localeCompare(bBookingFrom);
+          });
         setBookings(bookingsWithHotelInfo);
       } else {
         setBookings([]);
