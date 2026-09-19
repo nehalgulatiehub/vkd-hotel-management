@@ -10,6 +10,7 @@ import { usePaymentDialog } from "@/hooks/usePaymentDialog";
 import { PaymentDialogs } from "@/components/payment/PaymentDialogs";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterInputStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { isOwnHotelPayment } from "@/utils/paymentCategories";
 
 export default function ViewDueAmount() {
   const { isAdmin, loading: authLoading } = useAuthContext();
@@ -62,11 +63,14 @@ export default function ViewDueAmount() {
   const fetchBookingsWithDue = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("bookings").select("*, agents(name)").gt("due_amount", 0).neq("status", "cancelled").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("bookings").select("*, agents(name)").neq("status", "cancelled").order("created_at", { ascending: false });
       if (error) throw error;
       const bookingIds = (data || []).map(b => b.id);
       if (bookingIds.length > 0) {
-        const { data: hotelData } = await supabase.from("hotel_bookings").select("*, own_hotels(name), another_hotels(name)").in("booking_id", bookingIds);
+        const [{ data: hotelData }, { data: paymentRows }] = await Promise.all([
+          supabase.from("hotel_bookings").select("*, own_hotels(name)").in("booking_id", bookingIds).not("own_hotel_id", "is", null),
+          supabase.from("payments").select("booking_id, amount, payment_type").in("booking_id", bookingIds),
+        ]);
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const roomIds = [...new Set((hotelData || []).map((hb: any) => hb.room_type).filter((rt: any) => rt && uuidRegex.test(rt)))];
         let roomsMap: Record<string, string> = {};
@@ -75,15 +79,33 @@ export default function ViewDueAmount() {
           roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
         }
         const hotelBookingsMap: Record<string, any> = {};
-        hotelData?.filter((hb: any) => hb.own_hotel_id).forEach((hb: any) => {
+        hotelData?.forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
-          hotelBookingsMap[hb.booking_id] = { hotel_id: hb.own_hotel_id, room_id: isUuid ? hb.room_type : null, hotel_name: hb.own_hotels?.name || null, room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type, number_of_rooms: hb.number_of_rooms, notes: hb.notes };
+          const existing = hotelBookingsMap[hb.booking_id];
+          if (existing) {
+            existing.total_amount += Number(hb.total_amount) || 0;
+            existing.number_of_rooms += Number(hb.number_of_rooms) || 0;
+          } else {
+            hotelBookingsMap[hb.booking_id] = { hotel_id: hb.own_hotel_id, room_id: isUuid ? hb.room_type : null, hotel_name: hb.own_hotels?.name || null, room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type, number_of_rooms: Number(hb.number_of_rooms) || 0, notes: hb.notes, total_amount: Number(hb.total_amount) || 0, check_in_date: hb.check_in_date, check_out_date: hb.check_out_date };
+          }
         });
-        // Only own-hotel bookings belong on this page; service bookings (another hotel,
-        // safari, volvo, vehicle, visa, cruise) have their own Due Amount managers.
+        const ownPaidMap: Record<string, number> = {};
+        (paymentRows || []).forEach((payment: any) => {
+          if (!isOwnHotelPayment(payment.payment_type)) return;
+          ownPaidMap[payment.booking_id] = (ownPaidMap[payment.booking_id] || 0) + (Number(payment.amount) || 0);
+        });
         setBookings((data || [])
-          .filter(b => hotelBookingsMap[b.id])
-          .map(b => ({ ...b, hotel_info: hotelBookingsMap[b.id] })));
+          .map(booking => {
+            const hotelInfo = hotelBookingsMap[booking.id];
+            if (!hotelInfo) return null;
+            const ownTotal = hotelInfo.total_amount;
+            const ownPaid = ownPaidMap[booking.id] || 0;
+            const ownDue = Math.max(ownTotal - ownPaid, 0);
+            if (ownDue <= 0) return null;
+            return { ...booking, total_amount: ownTotal, paid_amount: ownPaid, due_amount: ownDue, check_in_date: hotelInfo.check_in_date || booking.check_in_date, check_out_date: hotelInfo.check_out_date || booking.check_out_date, hotel_info: hotelInfo };
+          })
+          .filter(Boolean)
+          .sort((a: any, b: any) => b.due_amount - a.due_amount));
       } else { setBookings(data || []); }
     } catch (error) { console.error("Error fetching bookings with due:", error); }
     finally { setLoading(false); }

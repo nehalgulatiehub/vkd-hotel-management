@@ -10,6 +10,7 @@ import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog"
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
 import { LegacyFormRow } from "@/components/legacy/LegacyFormRow";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 import { legacyFilterContainerStyle, legacyFilterLabelClass, legacyFilterInputClass, legacySearchButtonStyle } from "@/components/legacy/legacyFilterStyles";
 
 const toYMD = (val: any): string => {
@@ -169,6 +170,7 @@ export default function SafariDue() {
       .from("payments")
       .select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)")
       .eq("booking_id", bookingId)
+      .in("payment_type", [...SERVICE_PAYMENT_TYPES.safari])
       .order("payment_date", { ascending: false });
     setBookingPayments(data || []);
   };
@@ -195,6 +197,7 @@ export default function SafariDue() {
       const { error } = await supabase.from("payments").insert({ 
         booking_id: bookingId, 
         amount: amount, 
+        payment_type: "safari",
         payment_mode: paymentMode, 
         reference_number: paymentReference, 
         payment_date: new Date().toISOString().split('T')[0] 

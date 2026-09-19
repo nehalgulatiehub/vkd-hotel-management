@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { useRoomNames } from "@/hooks/useRoomNames";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
 import {
@@ -163,6 +164,7 @@ const fetchHotels = async () => {
       .from("payments")
       .select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)")
       .eq("booking_id", bookingId)
+      .in("payment_type", [...SERVICE_PAYMENT_TYPES.anotherHotel])
       .order("payment_date", { ascending: false });
     setBookingPayments(data || []);
   };
@@ -198,6 +200,7 @@ const fetchHotels = async () => {
       const { error } = await supabase.from("payments").insert({
         booking_id: bookingId,
         amount,
+        payment_type: "another_hotel",
         payment_mode: paymentMode,
         reference_number: paymentReference,
         payment_date: new Date().toISOString().split('T')[0]

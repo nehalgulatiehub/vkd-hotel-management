@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 
 interface PaymentInfo {
   id: string;
@@ -7,11 +8,16 @@ interface PaymentInfo {
   payment_type: string;
 }
 
-const MODULE_TABLE_BY_TYPE: Record<string, { table: string; route?: string }> = {
+type ModuleTable = { table: string; route?: string; notNullColumn?: string };
+
+const MODULE_TABLE_BY_TYPE: Record<string, ModuleTable> = {
   safari: { table: "safari_bookings" },
-  hotel: { table: "hotel_bookings" },
-  another_hotel: { table: "hotel_bookings" },
+  safari_direct: { table: "safari_bookings" },
+  hotel: { table: "hotel_bookings", notNullColumn: "hotel_id" },
+  hotel_direct: { table: "hotel_bookings", notNullColumn: "hotel_id" },
+  another_hotel: { table: "hotel_bookings", notNullColumn: "hotel_id" },
   vehicle: { table: "vehicle_bookings" },
+  vehicle_direct: { table: "vehicle_bookings" },
   volvo_dm: { table: "volvo_bookings", route: "delhi_manali" },
   delhi_manali: { table: "volvo_bookings", route: "delhi_manali" },
   volvo_md: { table: "volvo_bookings", route: "manali_delhi" },
@@ -64,8 +70,12 @@ export async function recalcBookingAmounts(bookingId: string, paymentType?: stri
   if (!mod) return;
 
   const typeFilters =
-    paymentType === "hotel" || paymentType === "another_hotel"
-      ? ["hotel", "another_hotel"]
+    paymentType === "hotel" || paymentType === "hotel_direct" || paymentType === "another_hotel"
+      ? [...SERVICE_PAYMENT_TYPES.anotherHotel]
+      : paymentType === "safari" || paymentType === "safari_direct"
+      ? [...SERVICE_PAYMENT_TYPES.safari]
+      : paymentType === "vehicle" || paymentType === "vehicle_direct"
+      ? [...SERVICE_PAYMENT_TYPES.vehicle]
       : paymentType === "volvo_dm" || paymentType === "delhi_manali"
       ? ["volvo_dm", "delhi_manali"]
       : paymentType === "volvo_md" || paymentType === "manali_delhi"
@@ -84,6 +94,7 @@ export async function recalcBookingAmounts(bookingId: string, paymentType?: stri
     .select("id, total_amount")
     .eq("booking_id", bookingId);
   if (mod.route) query = query.eq("route", mod.route);
+  if (mod.notNullColumn) query = query.not(mod.notNullColumn, "is", null);
   const { data: modRow } = await query.maybeSingle();
   if (!modRow) return;
 
@@ -94,10 +105,10 @@ export async function recalcBookingAmounts(bookingId: string, paymentType?: stri
     .eq("id", modRow.id);
 }
 
-const ALL_MODULE_TABLES: { table: string; types: string[]; route?: string }[] = [
-  { table: "safari_bookings", types: ["safari"] },
-  { table: "hotel_bookings", types: ["hotel", "another_hotel"] },
-  { table: "vehicle_bookings", types: ["vehicle"] },
+const ALL_MODULE_TABLES: (ModuleTable & { types: string[] })[] = [
+  { table: "safari_bookings", types: [...SERVICE_PAYMENT_TYPES.safari] },
+  { table: "hotel_bookings", types: [...SERVICE_PAYMENT_TYPES.anotherHotel], notNullColumn: "hotel_id" },
+  { table: "vehicle_bookings", types: [...SERVICE_PAYMENT_TYPES.vehicle] },
   { table: "volvo_bookings", types: ["volvo_dm", "delhi_manali"], route: "delhi_manali" },
   { table: "volvo_bookings", types: ["volvo_md", "manali_delhi"], route: "manali_delhi" },
   { table: "visa_bookings", types: ["visa"] },
@@ -143,6 +154,7 @@ export async function recalcAllModulesForBooking(bookingId: string) {
       .select("id, total_amount")
       .eq("booking_id", bookingId);
     if (mod.route) query = query.eq("route", mod.route);
+    if (mod.notNullColumn) query = query.not(mod.notNullColumn, "is", null);
     const { data: rows } = await query;
     if (!rows || rows.length === 0) continue;
 

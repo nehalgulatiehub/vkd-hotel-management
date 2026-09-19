@@ -17,6 +17,7 @@ import {
   legacyFilterInputClass,
   legacySearchButtonStyle,
 } from "@/components/legacy/legacyFilterStyles";
+import { isOwnHotelPayment } from "@/utils/paymentCategories";
 const toYMD = (val: any): string => {
   if (!val) return "";
   if (typeof val === "string") {
@@ -113,20 +114,28 @@ export default function BookingDue() {
     const { data, error } = await supabase
       .from("bookings")
       .select("*, agents(name)")
-      .gt("due_amount", 0)
       .neq("status", "cancelled")
-      .order("due_amount", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (error) {
       toast.error("Failed to load bookings with due amount");
     } else {
-      // Fetch hotel bookings to show hotel and room names
+      // Derive this page strictly from own-hotel rows and own-hotel payments.
+      // The parent booking totals include every selected service and therefore
+      // cannot be used for the Booking Due page.
       const bookingIds = (data || []).map(b => b.id);
       if (bookingIds.length > 0) {
-        const { data: hotelData } = await supabase
-          .from("hotel_bookings")
-          .select("*, own_hotels(name), another_hotels(name)")
-          .in("booking_id", bookingIds);
+        const [{ data: hotelData }, { data: paymentRows }] = await Promise.all([
+          supabase
+            .from("hotel_bookings")
+            .select("*, own_hotels(name)")
+            .in("booking_id", bookingIds)
+            .not("own_hotel_id", "is", null),
+          supabase
+            .from("payments")
+            .select("booking_id, amount, payment_type")
+            .in("booking_id", bookingIds),
+        ]);
         
         // Get room names for UUIDs
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -138,28 +147,60 @@ export default function BookingDue() {
           roomsMap = (roomsData || []).reduce((acc: Record<string, string>, r: any) => ({ ...acc, [r.id]: r.room_type || r.room_number }), {});
         }
         
-        // Map hotel bookings to their booking_id with resolved room names
+        // Map own-hotel rows and add their prices when a booking contains more
+        // than one own-hotel row.
         const hotelBookingsMap: Record<string, any> = {};
         hotelData?.forEach((hb: any) => {
           const isUuid = hb.room_type && uuidRegex.test(hb.room_type);
-          hotelBookingsMap[hb.booking_id] = {
-            hotel_id: hb.own_hotel_id || hb.hotel_id,
-            room_id: isUuid ? hb.room_type : null,
-            hotel_name: hb.own_hotels?.name || hb.another_hotels?.name || null,
-            room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
-            number_of_rooms: hb.number_of_rooms,
-            notes: hb.notes
-          };
+          const existing = hotelBookingsMap[hb.booking_id];
+          if (existing) {
+            existing.total_amount += Number(hb.total_amount) || 0;
+            existing.number_of_rooms += Number(hb.number_of_rooms) || 0;
+          } else {
+            hotelBookingsMap[hb.booking_id] = {
+              hotel_id: hb.own_hotel_id,
+              room_id: isUuid ? hb.room_type : null,
+              hotel_name: hb.own_hotels?.name || null,
+              room_type: isUuid ? (roomsMap[hb.room_type] || hb.room_type) : hb.room_type,
+              number_of_rooms: Number(hb.number_of_rooms) || 0,
+              notes: hb.notes,
+              total_amount: Number(hb.total_amount) || 0,
+              check_in_date: hb.check_in_date,
+              check_out_date: hb.check_out_date,
+            };
+          }
         });
-        
-        // Attach hotel info to bookings
-        const bookingsWithHotelInfo = (data || []).map(b => ({
-          ...b,
-          hotel_info: hotelBookingsMap[b.id] || null
-        }));
+
+        const ownPaidMap: Record<string, number> = {};
+        (paymentRows || []).forEach((payment: any) => {
+          if (!isOwnHotelPayment(payment.payment_type)) return;
+          ownPaidMap[payment.booking_id] =
+            (ownPaidMap[payment.booking_id] || 0) + (Number(payment.amount) || 0);
+        });
+
+        const bookingsWithHotelInfo = (data || [])
+          .map(booking => {
+            const hotelInfo = hotelBookingsMap[booking.id];
+            if (!hotelInfo) return null;
+            const ownTotal = hotelInfo.total_amount;
+            const ownPaid = ownPaidMap[booking.id] || 0;
+            const ownDue = Math.max(ownTotal - ownPaid, 0);
+            if (ownDue <= 0) return null;
+            return {
+              ...booking,
+              total_amount: ownTotal,
+              paid_amount: ownPaid,
+              due_amount: ownDue,
+              check_in_date: hotelInfo.check_in_date || booking.check_in_date,
+              check_out_date: hotelInfo.check_out_date || booking.check_out_date,
+              hotel_info: hotelInfo,
+            };
+          })
+          .filter(Boolean)
+          .sort((a: any, b: any) => b.due_amount - a.due_amount);
         setBookings(bookingsWithHotelInfo);
       } else {
-        setBookings(data || []);
+        setBookings([]);
       }
     }
   };

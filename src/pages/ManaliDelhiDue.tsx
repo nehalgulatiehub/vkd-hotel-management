@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 import {
   legacyFilterContainerStyle,
   legacyFilterLabelClass,
@@ -127,6 +128,7 @@ export default function ManaliDelhiDue() {
       .from("payments")
       .select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)")
       .eq("booking_id", bookingId)
+      .in("payment_type", [...SERVICE_PAYMENT_TYPES.manaliDelhi])
       .order("payment_date", { ascending: false });
     setBookingPayments(data || []);
   };
@@ -152,6 +154,7 @@ export default function ManaliDelhiDue() {
       const { error } = await supabase.from("payments").insert({ 
         booking_id: bookingId, 
         amount: amount, 
+        payment_type: "manali_delhi",
         payment_mode: paymentMode, 
         reference_number: paymentReference, 
         payment_date: new Date().toISOString().split('T')[0] 

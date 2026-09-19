@@ -15,6 +15,7 @@ import { AdminViewPaymentDialog } from "@/components/admin/AdminViewPaymentDialo
 import { UserViewPaymentDialog } from "@/components/booking/UserViewPaymentDialog";
 import { PaymentModeOptions } from "@/components/payment/PaymentModeOptions";
 import { paymentModeLabel } from "@/utils/paymentMode";
+import { isOwnHotelPayment } from "@/utils/paymentCategories";
 import { ZoomableTable } from "@/components/ui/ZoomableTable";
 
 // Type for another hotel entry
@@ -587,19 +588,13 @@ export default function Bookings() {
         });
 
         // Own-hotel received payment = payments not attributed to another module
-        const MODULE_PAYMENT_TYPES = new Set([
-          "safari", "safari_direct", "hotel", "hotel_direct", "another_hotel",
-          "vehicle", "volvo_dm", "volvo_md", "delhi_manali", "manali_delhi",
-          "visa", "cruise",
-        ]);
         const { data: paymentRows } = await supabase
           .from("payments")
           .select("booking_id, amount, payment_type")
           .in("booking_id", bookingIds);
         const ownPaidMap: Record<string, number> = {};
         (paymentRows || []).forEach((p: any) => {
-          const type = (p.payment_type || "").toLowerCase();
-          if (MODULE_PAYMENT_TYPES.has(type)) return;
+          if (!isOwnHotelPayment(p.payment_type)) return;
           ownPaidMap[p.booking_id] = (ownPaidMap[p.booking_id] || 0) + (Number(p.amount) || 0);
         });
 

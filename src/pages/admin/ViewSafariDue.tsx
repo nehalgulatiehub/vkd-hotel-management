@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { BookingDetailsDialog } from "@/components/booking/BookingDetailsDialog";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 
 interface SafariWithBooking {
   id: string;
@@ -102,7 +103,7 @@ export default function ViewSafariDue() {
   const totalPaid = filteredSafaris.reduce((sum, s) => sum + (s.paid_amount || 0), 0);
 
   const handleViewDetails = (safari: any) => { setSelectedBooking(safari); setShowViewDetailDialog(true); };
-  const fetchBookingPayments = async (bookingId: string) => { const { data } = await supabase.from("payments").select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)").eq("booking_id", bookingId).order("payment_date", { ascending: false }); setBookingPayments(data || []); };
+  const fetchBookingPayments = async (bookingId: string) => { const { data } = await supabase.from("payments").select("id, amount, payment_date, payment_mode, reference_number, notes, approval_status, cities(name)").eq("booking_id", bookingId).in("payment_type", [...SERVICE_PAYMENT_TYPES.safari]).order("payment_date", { ascending: false }); setBookingPayments(data || []); };
   const handleViewPayment = async (safari: any) => { setSelectedBooking(safari); setBookingPayments([]); setShowViewPaymentDialog(true); if (safari.booking?.id) await fetchBookingPayments(safari.booking.id); };
   const handleAddPayment = (safari: any) => { setSelectedBooking(safari); setPaymentAmount(""); setPaymentMode(""); setPaymentReference(""); setShowAddPaymentDialog(true); };
   const submitPayment = async () => {
@@ -111,7 +112,7 @@ export default function ViewSafariDue() {
     setIsSubmittingPayment(true);
     try {
       const amount = parseFloat(paymentAmount);
-      const { error } = await supabase.from("payments").insert({ booking_id: selectedBooking?.booking?.id, amount, payment_mode: paymentMode, reference_number: paymentReference, payment_date: new Date().toISOString().split('T')[0] });
+      const { error } = await supabase.from("payments").insert({ booking_id: selectedBooking?.booking?.id, amount, payment_type: "safari", payment_mode: paymentMode, reference_number: paymentReference, payment_date: new Date().toISOString().split('T')[0] });
       if (error) throw error;
       const newPaidAmount = (selectedBooking?.paid_amount || 0) + amount;
       const newDueAmount = (selectedBooking?.total_amount || 0) - newPaidAmount;
