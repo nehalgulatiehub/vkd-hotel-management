@@ -17,6 +17,17 @@ import {
   legacySearchButtonStyle,
 } from "@/components/legacy/legacyFilterStyles";
 
+const toYMD = (val: any): string => {
+  if (!val) return "";
+  if (typeof val === "string") {
+    const match = val.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+  }
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 export default function HotelDue() {
   const navigate = useNavigate();
   const [hotelBookings, setHotelBookings] = useState<any[]>([]);
@@ -37,13 +48,18 @@ export default function HotelDue() {
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   // Filter states
+  const now = new Date();
+  const defY = String(now.getFullYear());
+  const defM = String(now.getMonth() + 1);
+  const defD = String(now.getDate());
+
   const [filters, setFilters] = useState({
-    fromMonth: "",
-    fromDay: "",
-    fromYear: "",
-    toMonth: "",
-    toDay: "",
-    toYear: "",
+    fromMonth: defM,
+    fromDay: defD,
+    fromYear: defY,
+    toMonth: defM,
+    toDay: defD,
+    toYear: defY,
     type: "",
     agentName: "",
     user: "",
@@ -121,14 +137,12 @@ const fetchHotels = async () => {
     const matchesUser = !filters.user || booking.bookings?.created_by === filters.user;
     
     let matchesDate = true;
-    if (filters.searchWithDate && filters.fromYear && filters.fromMonth && filters.fromDay) {
-      const fromDate = new Date(`${filters.fromYear}-${filters.fromMonth.padStart(2, '0')}-${filters.fromDay.padStart(2, '0')}`);
-      const bookingDate = new Date(booking.check_in_date);
-      matchesDate = bookingDate >= fromDate;
-      
-      if (filters.toYear && filters.toMonth && filters.toDay) {
-        const toDate = new Date(`${filters.toYear}-${filters.toMonth.padStart(2, '0')}-${filters.toDay.padStart(2, '0')}`);
-        matchesDate = matchesDate && bookingDate <= toDate;
+    if (filters.searchWithDate) {
+      const fromStr = `${filters.fromYear || defY}-${String(filters.fromMonth || defM).padStart(2, '0')}-${String(filters.fromDay || defD).padStart(2, '0')}`;
+      const toStr = `${filters.toYear || defY}-${String(filters.toMonth || defM).padStart(2, '0')}-${String(filters.toDay || defD).padStart(2, '0')}`;
+      const bookingDate = toYMD(booking.check_in_date) || toYMD(booking.bookings?.created_at);
+      if (!bookingDate || bookingDate < fromStr || bookingDate > toStr) {
+        matchesDate = false;
       }
     }
     

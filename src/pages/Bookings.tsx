@@ -65,6 +65,44 @@ const getTomorrowIso = () => {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 };
+
+const toYMD = (val: any): string => {
+  if (!val) return "";
+  if (typeof val === "string") {
+    const match = val.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) {
+      return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+    }
+  }
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const getInitialBookingFilters = () => {
+  const now = new Date();
+  return {
+    fromMonth: String(now.getMonth() + 1).padStart(2, "0"),
+    fromDay: String(now.getDate()).padStart(2, "0"),
+    fromYear: String(now.getFullYear()),
+    toMonth: String(now.getMonth() + 1).padStart(2, "0"),
+    toDay: String(now.getDate()).padStart(2, "0"),
+    toYear: String(now.getFullYear()),
+    type: "",
+    agentName: "",
+    hotel: "",
+    room: "",
+    package: "",
+    customer: "",
+    reference: "",
+    user: "",
+    chequeNo: "",
+    contact: "",
+    email: "",
+    searchWithDate: false
+  };
+};
+
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { useState, useEffect } from "react";
@@ -219,26 +257,7 @@ export default function Bookings() {
   const [cities, setCities] = useState<any[]>([]);
   
   // Filter states
-  const [filters, setFilters] = useState({
-    fromMonth: "",
-    fromDay: "",
-    fromYear: "",
-    toMonth: "",
-    toDay: "",
-    toYear: "",
-    type: "",
-    agentName: "",
-    hotel: "",
-    room: "",
-    package: "",
-    customer: "",
-    reference: "",
-    user: "",
-    chequeNo: "",
-    contact: "",
-    email: "",
-    searchWithDate: false
-  });
+  const [filters, setFilters] = useState(getInitialBookingFilters);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -1196,27 +1215,31 @@ export default function Bookings() {
     
     // Date filter — filter by Booking From date (check_in_date), inclusive range.
     let matchesDate = true;
-    const hasFrom = Boolean(filters.fromYear && filters.fromMonth && filters.fromDay);
-    const hasTo = Boolean(filters.toYear && filters.toMonth && filters.toDay);
-    if (filters.searchWithDate && (hasFrom || hasTo)) {
-      const rawBookingDate = booking.hotel_info?.check_in_date || booking.check_in_date;
-      if (!rawBookingDate) {
+    if (filters.searchWithDate) {
+      const now = new Date();
+      const defY = String(now.getFullYear());
+      const defM = String(now.getMonth() + 1).padStart(2, "0");
+      const defD = String(now.getDate()).padStart(2, "0");
+
+      const fromY = filters.fromYear || defY;
+      const fromM = String(filters.fromMonth || defM).padStart(2, "0");
+      const fromD = String(filters.fromDay || defD).padStart(2, "0");
+      const fromStr = `${fromY}-${fromM}-${fromD}`;
+
+      const toY = filters.toYear || defY;
+      const toM = String(filters.toMonth || defM).padStart(2, "0");
+      const toD = String(filters.toDay || defD).padStart(2, "0");
+      const toStr = `${toY}-${toM}-${toD}`;
+
+      const rawStayDate = booking.hotel_info?.check_in_date || booking.check_in_date;
+      const bookingStayDate = toYMD(rawStayDate);
+      const bookingDate = bookingStayDate || toYMD(booking.created_at);
+
+      if (!bookingDate) {
         matchesDate = false;
       } else {
-        const dateStr = String(rawBookingDate).trim().slice(0, 10);
-        const [y, m, d] = dateStr.split("-").map(Number);
-        if (!y || !m || !d) {
+        if (bookingDate < fromStr || bookingDate > toStr) {
           matchesDate = false;
-        } else {
-          const bookingDateStr = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-          if (hasFrom) {
-            const fromStr = `${String(filters.fromYear).padStart(4, "0")}-${String(filters.fromMonth).padStart(2, "0")}-${String(filters.fromDay).padStart(2, "0")}`;
-            if (bookingDateStr < fromStr) matchesDate = false;
-          }
-          if (hasTo) {
-            const toStr = `${String(filters.toYear).padStart(4, "0")}-${String(filters.toMonth).padStart(2, "0")}-${String(filters.toDay).padStart(2, "0")}`;
-            if (bookingDateStr > toStr) matchesDate = false;
-          }
         }
       }
     }
@@ -1231,16 +1254,12 @@ export default function Bookings() {
   const bookingFromTime = (b: any) => {
     const raw = b.hotel_info?.check_in_date || b.check_in_date;
     if (!raw) return Number.MAX_SAFE_INTEGER;
-    const dateStr = String(raw).trim().slice(0, 10);
+    const dateStr = toYMD(raw);
+    if (!dateStr) return Number.MAX_SAFE_INTEGER;
     const [y, m, d] = dateStr.split("-").map(Number);
-    if (!y || !m || !d) return Number.MAX_SAFE_INTEGER;
     return new Date(y, m - 1, d).getTime();
   };
-  const dateRangeActive = Boolean(
-    filters.searchWithDate &&
-    ((filters.fromYear && filters.fromMonth && filters.fromDay) ||
-      (filters.toYear && filters.toMonth && filters.toDay))
-  );
+  const dateRangeActive = Boolean(filters.searchWithDate);
   const displayedBookings = dateRangeActive
     ? [...filteredBookings].sort((a: any, b: any) => bookingFromTime(a) - bookingFromTime(b))
     : filteredBookings;
@@ -3130,7 +3149,7 @@ export default function Bookings() {
                 <div style={{ border: "1px solid #ccc", marginBottom: 0 }}>
                   <div style={{ backgroundColor: "#b44a50", color: "#fff", padding: "4px 10px", fontSize: 11, fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Search</span>
-                    <span onClick={() => setFilters({ fromMonth: "", fromDay: "", fromYear: "", toMonth: "", toDay: "", toYear: "", type: "", agentName: "", hotel: "", room: "", package: "", customer: "", reference: "", user: "", chequeNo: "", contact: "", email: "", searchWithDate: false })} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
+                    <span onClick={() => { setFilters(getInitialBookingFilters()); fetchBookings(); }} style={{ color: "#fff", cursor: "pointer", textDecoration: "underline", fontSize: 11 }}>View All Records</span>
                   </div>
                   <div style={{ backgroundColor: "#fff", borderTop: "1px solid #ccc", width: "100%", boxSizing: "border-box", fontSize: 11 }}>
                     {/* Row 1: Date */}
@@ -3138,15 +3157,15 @@ export default function Bookings() {
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>From :</label>
                         <LegacyDatePicker
-                          value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
-                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, fromYear:y, fromMonth:String(+m), fromDay:String(+d)})); }}
+                          value={`${filters.fromYear || ''}-${String(filters.fromMonth || '').padStart(2,'0')}-${String(filters.fromDay || '').padStart(2,'0')}`}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, fromYear:y, fromMonth:m.padStart(2,'0'), fromDay:d.padStart(2,'0')})); }}
                         />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <label style={{ fontSize: 11 }}>To :</label>
                         <LegacyDatePicker
-                          value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
-                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, toYear:y, toMonth:String(+m), toDay:String(+d)})); }}
+                          value={`${filters.toYear || ''}-${String(filters.toMonth || '').padStart(2,'0')}-${String(filters.toDay || '').padStart(2,'0')}`}
+                          onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, toYear:y, toMonth:m.padStart(2,'0'), toDay:d.padStart(2,'0')})); }}
                         />
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -3219,7 +3238,7 @@ export default function Bookings() {
                         <label style={{ fontSize: 11, whiteSpace: "nowrap" }}>Customer :</label>
                         <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} style={{ border: "1px solid #999", padding: "2px 4px", fontSize: 11, flex: 1 }} />
                       </div>
-                      <button style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer", height: 22 }}>Search</button>
+                      <button type="button" onClick={() => fetchBookings()} style={{ border: "1px solid #888", padding: "2px 12px", fontSize: 11, backgroundColor: "#f5f5f5", cursor: "pointer", height: 22 }}>Search</button>
                     </div>
                   </div>
                 </div>
@@ -3310,15 +3329,15 @@ export default function Bookings() {
                 <div className="flex items-center gap-1.5">
                   <span className={legacyFilterLabelClass}>From :</span>
                   <LegacyDatePicker
-                    value={filters.fromYear && filters.fromMonth && filters.fromDay ? `${filters.fromYear}-${filters.fromMonth.padStart(2,'0')}-${filters.fromDay.padStart(2,'0')}` : ""}
-                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, fromYear:y, fromMonth:String(+m), fromDay:String(+d)})); }}
+                    value={`${filters.fromYear || ''}-${String(filters.fromMonth || '').padStart(2,'0')}-${String(filters.fromDay || '').padStart(2,'0')}`}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, fromYear:y, fromMonth:m.padStart(2,'0'), fromDay:d.padStart(2,'0')})); }}
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className={legacyFilterLabelClass}>To :</span>
                   <LegacyDatePicker
-                    value={filters.toYear && filters.toMonth && filters.toDay ? `${filters.toYear}-${filters.toMonth.padStart(2,'0')}-${filters.toDay.padStart(2,'0')}` : ""}
-                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, toYear:y, toMonth:String(+m), toDay:String(+d)})); }}
+                    value={`${filters.toYear || ''}-${String(filters.toMonth || '').padStart(2,'0')}-${String(filters.toDay || '').padStart(2,'0')}`}
+                    onChange={(e) => { const [y,m,d] = e.target.value.split('-'); setFilters((current) => ({...current, toYear:y, toMonth:m.padStart(2,'0'), toDay:d.padStart(2,'0')})); }}
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -3390,7 +3409,10 @@ export default function Bookings() {
                     <input value={filters.customer} onChange={(e) => setFilters({...filters, customer: e.target.value})} className={`${legacyFilterInputClass} w-32`} />
                   </div>
                 </div>
-                <button style={legacySearchButtonStyle}>Search</button>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => fetchBookings()} style={legacySearchButtonStyle}>Search</button>
+                  <button type="button" onClick={() => { setFilters(getInitialBookingFilters()); fetchBookings(); }} style={{ ...legacySearchButtonStyle, backgroundColor: "#e2e8f0", color: "#333" }}>View All Records</button>
+                </div>
               </div>
             </div>
             <Card>

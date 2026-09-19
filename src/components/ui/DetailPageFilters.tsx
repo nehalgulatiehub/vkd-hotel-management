@@ -153,11 +153,11 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
           <span style={labelStyle}>From :</span>
           <div style={{ width: 150 }}>
             <DateInput
-              value={`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`}
+              value={`${filters.fromYear}-${String(filters.fromMonth).padStart(2, '0')}-${String(filters.fromDay).padStart(2, '0')}`}
               onChange={(e) => {
                 const iso = e.target.value;
-                const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-                if (m) onFilterChange({ ...filters, fromYear: m[1], fromMonth: m[2], fromDay: m[3] });
+                const m = iso.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+                if (m) onFilterChange({ ...filters, fromYear: m[1], fromMonth: m[2].padStart(2, "0"), fromDay: m[3].padStart(2, "0") });
               }}
               style={{ height: 22, fontSize: 11, padding: "2px 4px" }}
             />
@@ -168,11 +168,11 @@ export function DetailPageFilters({ options, filters, onFilterChange, onSearch }
           <span style={labelStyle}>To :</span>
           <div style={{ width: 150 }}>
             <DateInput
-              value={`${filters.toYear}-${filters.toMonth}-${filters.toDay}`}
+              value={`${filters.toYear}-${String(filters.toMonth).padStart(2, '0')}-${String(filters.toDay).padStart(2, '0')}`}
               onChange={(e) => {
                 const iso = e.target.value;
-                const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-                if (m) onFilterChange({ ...filters, toYear: m[1], toMonth: m[2], toDay: m[3] });
+                const m = iso.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+                if (m) onFilterChange({ ...filters, toYear: m[1], toMonth: m[2].padStart(2, "0"), toDay: m[3].padStart(2, "0") });
               }}
               style={{ height: 22, fontSize: 11, padding: "2px 4px" }}
             />

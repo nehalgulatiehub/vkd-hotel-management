@@ -21,6 +21,17 @@ const thStyle: React.CSSProperties = { padding: "2px 6px", textAlign: "left", fo
 const tdStyle: React.CSSProperties = { padding: "2px 6px", fontSize: 13, color: "#7D7D7E", verticalAlign: "top" };
 const actionStyle: React.CSSProperties = { color: "#996666", cursor: "pointer", fontSize: 12, fontWeight: "bold", display: "block", background: "none", border: "none", padding: 0, paddingLeft: 4, textAlign: "left", fontFamily: "Arial, Helvetica, sans-serif" };
 
+const toYMD = (val: any): string => {
+  if (!val) return "";
+  if (typeof val === "string") {
+    const match = val.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+  }
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 export default function VolvoDelhiManali() {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
@@ -52,7 +63,16 @@ export default function VolvoDelhiManali() {
   const handleViewDetails = (booking: any) => { setSelectedBookingData(booking.bookings); setSelectedServiceData(booking); setShowDetailsDialog(true); };
 
   const filteredBookings = volvoBookings.filter(booking => {
-    if (filters.searchWithDate) { const d = new Date(booking.travel_date); const f = new Date(`${filters.fromYear}-${filters.fromMonth}-${filters.fromDay}`); const t = new Date(`${filters.toYear}-${filters.toMonth}-${filters.toDay}`); if (d < f || d > t) return false; }
+    if (filters.searchWithDate) {
+      const now = new Date();
+      const defY = String(now.getFullYear());
+      const defM = String(now.getMonth() + 1).padStart(2, "0");
+      const defD = String(now.getDate()).padStart(2, "0");
+      const fromStr = `${filters.fromYear || defY}-${String(filters.fromMonth || defM).padStart(2, "0")}-${String(filters.fromDay || defD).padStart(2, "0")}`;
+      const toStr = `${filters.toYear || defY}-${String(filters.toMonth || defM).padStart(2, "0")}-${String(filters.toDay || defD).padStart(2, "0")}`;
+      const bDate = toYMD(booking.travel_date) || toYMD(booking.bookings?.created_at);
+      if (!bDate || bDate < fromStr || bDate > toStr) return false;
+    }
     if (filters.type && (booking.bookings?.booking_type || "direct") !== filters.type) return false;
     if (filters.customer && !booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase())) return false;
     if (filters.transporterId && booking.transporter_id !== filters.transporterId) return false;
