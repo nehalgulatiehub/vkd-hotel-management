@@ -6,7 +6,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
 import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
-import { paymentModeLabel } from "@/utils/paymentMode";
+import { matchesPaymentMode, paymentModeLabel } from "@/utils/paymentMode";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -63,8 +63,7 @@ export default function HotelPayments() {
       matchesDate = paymentDate >= new Date(fromYear, months.indexOf(fromMonth), fromDay) && paymentDate <= new Date(toYear, months.indexOf(toMonth), toDay);
     }
     const matchesHotel = !hotelFilter || payment.hotel_name?.toLowerCase() === hotelFilter.toLowerCase();
-    const matchesPaymentMode = !paymentModeFilter || payment.payment_mode?.trim().toLowerCase() === paymentModeFilter;
-    return matchesDate && matchesHotel && matchesPaymentMode;
+    return matchesDate && matchesHotel && matchesPaymentMode(payment.payment_mode, paymentModeFilter);
   });
 
   const totalPayments = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -94,7 +93,7 @@ export default function HotelPayments() {
         <span style={{ marginLeft: 16, ...legacyLabel }}>Payment Mode :</span>
         <select value={paymentModeFilter} onChange={e => setPaymentModeFilter(e.target.value)} style={sty}>
           <option value="">---Select Mode---</option>
-          <option value="cash">Cash in Hand</option><option value="cash in bank">Cash in Bank</option><option value="net banking">Net Banking</option><option value="upi">UPI</option><option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
+          <option value="cash">Cash in Hand</option><option value="cash in bank">Cash in Bank</option><option value="net banking">Net Banking</option><option value="bank_transfer">Bank Transfer</option><option value="upi">UPI</option><option value="card">Card</option><option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
         </select>
         <button onClick={fetchPayments} style={legacyButton}>Search</button>
         <span style={{ flex: 1 }} />

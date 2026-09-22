@@ -17,6 +17,7 @@ const MODULE_TABLE_BY_TYPE: Record<string, ModuleTable> = {
   hotel_direct: { table: "hotel_bookings", notNullColumn: "hotel_id" },
   another_hotel: { table: "hotel_bookings", notNullColumn: "hotel_id" },
   vehicle: { table: "vehicle_bookings" },
+  another_vehicle: { table: "vehicle_bookings" },
   vehicle_direct: { table: "vehicle_bookings" },
   volvo_dm: { table: "volvo_bookings", route: "delhi_manali" },
   delhi_manali: { table: "volvo_bookings", route: "delhi_manali" },
@@ -74,7 +75,7 @@ export async function recalcBookingAmounts(bookingId: string, paymentType?: stri
       ? [...SERVICE_PAYMENT_TYPES.anotherHotel]
       : paymentType === "safari" || paymentType === "safari_direct"
       ? [...SERVICE_PAYMENT_TYPES.safari]
-      : paymentType === "vehicle" || paymentType === "vehicle_direct"
+      : paymentType === "vehicle" || paymentType === "another_vehicle" || paymentType === "vehicle_direct"
       ? [...SERVICE_PAYMENT_TYPES.vehicle]
       : paymentType === "volvo_dm" || paymentType === "delhi_manali"
       ? ["volvo_dm", "delhi_manali"]

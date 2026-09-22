@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { matchesPaymentMode, paymentModeLabel } from "@/utils/paymentMode";
 
 export interface ServicePaymentsConfig {
   paymentType: string;
@@ -36,7 +37,7 @@ export function ServiceModulePayments({ config }: { config: ServicePaymentsConfi
       const t = new Date(Number(to.year), Number(to.month) - 1, Number(to.day));
       if (d < f || d > t) return false;
     }
-    if (paymentModeFilter && p.payment_mode !== paymentModeFilter) return false;
+    if (!matchesPaymentMode(p.payment_mode, paymentModeFilter)) return false;
     return true;
   });
 
@@ -58,11 +59,14 @@ export function ServiceModulePayments({ config }: { config: ServicePaymentsConfi
         <span>Payment Mode :</span>
         <select value={paymentModeFilter} onChange={e => setPaymentModeFilter(e.target.value)} style={filterSelectStyle}>
           <option value="">---Select Mode---</option>
-          <option value="Cash">Cash in Hand</option>
-          <option value="Net Banking">Net Banking</option>
-          <option value="UPI">UPI</option>
-          <option value="Card">Card</option>
-          <option value="Cheque">Cheque</option>
+          <option value="cash">Cash in Hand</option>
+          <option value="cash in bank">Cash in Bank</option>
+          <option value="net banking">Net Banking</option>
+          <option value="bank_transfer">Bank Transfer</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+          <option value="credit card">Credit Card</option>
+          <option value="cheque">Cheque</option>
         </select>
         <button onClick={fetchPayments} style={filterButtonStyle}>Search</button>
         <span style={{ flex: 1 }} />
@@ -84,7 +88,7 @@ export function ServiceModulePayments({ config }: { config: ServicePaymentsConfi
               <ThemedTD>Rs. {p.amount?.toLocaleString("en-IN")}/-</ThemedTD>
               <ThemedTD>{p.payment_date ? format(new Date(p.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
               <ThemedTD>
-                <div><strong>Payment Mode :</strong> {p.payment_mode || "-"}</div>
+                <div><strong>Payment Mode :</strong> {paymentModeLabel(p.payment_mode)}</div>
                 <div><strong>Status :</strong> {p.approval_status || "pending"}</div>
               </ThemedTD>
             </ThemedTR>

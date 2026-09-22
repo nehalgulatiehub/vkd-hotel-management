@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
+import { paymentModeLabel } from "@/utils/paymentMode";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -27,13 +29,12 @@ export default function VolvoPayments() {
   const fetchTransporters = async () => { const { data } = await supabase.from("transporters").select("id, name").order("name"); setTransporters(data || []); };
 
   const fetchPayments = async () => {
-    const { data: dmPayments, error: dmError } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).eq("payment_type", "delhi_manali").order("payment_date", { ascending: false });
-    const { data: mdPayments, error: mdError } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).eq("payment_type", "manali_delhi").order("payment_date", { ascending: false });
-    if (dmError || mdError) { toast.error("Failed to load volvo payments"); } else {
-      const allPayments = [...(dmPayments || []), ...(mdPayments || [])];
-      const paymentsWithDetails = await Promise.all(allPayments.map(async (payment) => {
+    const { data: allPayments, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no), transporter:transporters(id, name)`).in("payment_type", [...SERVICE_PAYMENT_TYPES.delhiManali, ...SERVICE_PAYMENT_TYPES.manaliDelhi]).order("payment_date", { ascending: false });
+    if (error) { toast.error("Failed to load volvo payments"); } else {
+      const paymentsWithDetails = await Promise.all((allPayments || []).map(async (payment) => {
         if (payment.bookings?.id) {
-          const { data: volvoData } = await supabase.from("volvo_bookings").select("*, transporters(name)").eq("booking_id", payment.bookings.id).maybeSingle();
+          const route = SERVICE_PAYMENT_TYPES.delhiManali.some(type => type === payment.payment_type) ? "delhi_manali" : "manali_delhi";
+          const { data: volvoData } = await supabase.from("volvo_bookings").select("*").eq("booking_id", payment.bookings.id).eq("route", route).maybeSingle();
           return { ...payment, volvo_booking: volvoData };
         }
         return payment;
@@ -49,7 +50,7 @@ export default function VolvoPayments() {
       const paymentDate = new Date(payment.payment_date);
       matchesDate = paymentDate >= new Date(fromYear, months.indexOf(fromMonth), fromDay) && paymentDate <= new Date(toYear, months.indexOf(toMonth), toDay);
     }
-    const matchesTransporter = !transporterFilter || payment.volvo_booking?.transporters?.name?.toLowerCase().includes(transporterFilter.toLowerCase());
+    const matchesTransporter = !transporterFilter || payment.transporter?.name?.toLowerCase().includes(transporterFilter.toLowerCase());
     return matchesDate && matchesTransporter;
   });
 
@@ -92,11 +93,11 @@ export default function VolvoPayments() {
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No volvo payments found" /> : paginatedItems.map((payment, index) => (
             <ThemedTR key={payment.id} index={index}>
               <ThemedTD>{startIndex + index}</ThemedTD>
-              <ThemedTD>{payment.volvo_booking?.transporters?.name || "-"}</ThemedTD>
+              <ThemedTD>{payment.transporter?.name || "-"}</ThemedTD>
               <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
               <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
               <ThemedTD>
-                <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
+                <div><strong>Payment Mode :</strong> {paymentModeLabel(payment.payment_mode)}</div>
                 <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
               </ThemedTD>
             </ThemedTR>

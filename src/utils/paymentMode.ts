@@ -1,7 +1,15 @@
 export const CASH_IN_BANK_MODE = "Cash in Bank";
 
+export const normalizePaymentMode = (mode: string | null | undefined) =>
+  (mode || "").trim().toLowerCase();
+
+export const matchesPaymentMode = (
+  mode: string | null | undefined,
+  filter: string | null | undefined,
+) => !filter || normalizePaymentMode(mode) === normalizePaymentMode(filter);
+
 export function isCashPaymentMode(mode: string | null | undefined) {
-  return ["cash", "cash in hand"].includes((mode || "").trim().toLowerCase());
+  return ["cash", "cash in hand"].includes(normalizePaymentMode(mode));
 }
 
 export function paymentModeLabel(mode: string | null | undefined) {
@@ -17,5 +25,5 @@ export function paymentModeLabel(mode: string | null | undefined) {
     "net banking": "Net Banking",
     cheque: "Cheque",
   };
-  return labels[mode.trim().toLowerCase()] || mode;
+  return labels[normalizePaymentMode(mode)] || mode;
 }

@@ -1,7 +1,7 @@
 export const SERVICE_PAYMENT_TYPES = {
   anotherHotel: ["another_hotel", "hotel", "hotel_direct"],
   safari: ["safari", "safari_direct"],
-  vehicle: ["vehicle", "vehicle_direct"],
+  vehicle: ["vehicle", "another_vehicle", "vehicle_direct"],
   delhiManali: ["delhi_manali", "volvo_dm"],
   manaliDelhi: ["manali_delhi", "volvo_md"],
   visa: ["visa"],

@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
+import { matchesPaymentMode, paymentModeLabel } from "@/utils/paymentMode";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -28,7 +30,7 @@ export default function VehiclePayments() {
   const fetchTransporters = async () => { const { data } = await supabase.from("transporters").select("id, name").order("name"); setTransporters(data || []); };
 
   const fetchPayments = async () => {
-    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no)`).in("payment_type", ["vehicle", "another_vehicle"]).order("payment_date", { ascending: false });
+    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no), transporter:transporters(id, name)`).in("payment_type", [...SERVICE_PAYMENT_TYPES.vehicle]).order("payment_date", { ascending: false });
     if (error) { toast.error("Failed to load vehicle payments"); } else {
       const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
         if (payment.bookings?.id) {
@@ -47,9 +49,9 @@ export default function VehiclePayments() {
       const paymentDate = new Date(payment.payment_date);
       matchesDate = paymentDate >= new Date(fromYear, months.indexOf(fromMonth), fromDay) && paymentDate <= new Date(toYear, months.indexOf(toMonth), toDay);
     }
-    const matchesTransporter = !transporterFilter || payment.vehicle_booking?.transporters?.name?.toLowerCase().includes(transporterFilter.toLowerCase());
-    const matchesPaymentMode = !paymentModeFilter || payment.payment_mode === paymentModeFilter;
-    return matchesDate && matchesTransporter && matchesPaymentMode;
+    const transporterName = payment.transporter?.name || payment.vehicle_booking?.transporters?.name;
+    const matchesTransporter = !transporterFilter || transporterName?.toLowerCase().includes(transporterFilter.toLowerCase());
+    return matchesDate && matchesTransporter && matchesPaymentMode(payment.payment_mode, paymentModeFilter);
   });
 
   const totalPayments = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -79,7 +81,7 @@ export default function VehiclePayments() {
         <span style={{ marginLeft: 16, ...legacyLabel }}>Payment Mode :</span>
         <select value={paymentModeFilter} onChange={e => setPaymentModeFilter(e.target.value)} style={sty}>
           <option value="">---Select Mode---</option>
-          <option value="Cash">Cash in Hand</option><option value="Net Banking">Net Banking</option><option value="UPI">UPI</option><option value="Card">Card</option><option value="Cheque">Cheque</option>
+          <option value="cash">Cash in Hand</option><option value="cash in bank">Cash in Bank</option><option value="net banking">Net Banking</option><option value="bank_transfer">Bank Transfer</option><option value="upi">UPI</option><option value="card">Card</option><option value="credit card">Credit Card</option><option value="cheque">Cheque</option>
         </select>
         <button onClick={fetchPayments} style={legacyButton}>Search</button>
         <span style={{ flex: 1 }} />
@@ -96,11 +98,11 @@ export default function VehiclePayments() {
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No vehicle payments found" /> : paginatedItems.map((payment, index) => (
             <ThemedTR key={payment.id} index={index}>
               <ThemedTD>{startIndex + index}</ThemedTD>
-              <ThemedTD>{payment.vehicle_booking?.transporters?.name || "-"}</ThemedTD>
+              <ThemedTD>{payment.transporter?.name || payment.vehicle_booking?.transporters?.name || "-"}</ThemedTD>
               <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
               <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
               <ThemedTD>
-                <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
+                <div><strong>Payment Mode :</strong> {paymentModeLabel(payment.payment_mode)}</div>
                 <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
               </ThemedTD>
             </ThemedTR>

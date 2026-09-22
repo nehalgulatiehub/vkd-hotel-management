@@ -15,6 +15,7 @@ import {
   legacyFilterInputClass,
   legacySearchButtonStyle,
 } from "@/components/legacy/legacyFilterStyles";
+import { matchesPaymentMode } from "@/utils/paymentMode";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -84,11 +85,11 @@ export default function CancellingPayments() {
       matchesDate = refundDate >= fromDate && refundDate <= toDate;
     }
 
-    const matchesPaymentMode = !paymentModeFilter || refund.refund_mode === paymentModeFilter;
+    const paymentModeMatches = matchesPaymentMode(refund.refund_mode, paymentModeFilter);
     const matchesCustomer = !customerFilter || 
       refund.bookings?.customer_name?.toLowerCase().includes(customerFilter.toLowerCase());
 
-    return matchesDate && matchesPaymentMode && matchesCustomer;
+    return matchesDate && paymentModeMatches && matchesCustomer;
   });
 
   const totalRefunds = filteredRefunds.reduce((sum, refund) => sum + (refund.refund_amount || 0), 0);
@@ -156,11 +157,14 @@ export default function CancellingPayments() {
               <span className={legacyFilterLabelClass}>Payment Mode :</span>
               <select value={paymentModeFilter} onChange={(e) => setPaymentModeFilter(e.target.value)} className={`${legacyFilterInputClass} min-w-[150px]`}>
                 <option value="">---Select Mode---</option>
-                <option value="Cash">Cash in Hand</option>
-                <option value="Net Banking">Net Banking</option>
-                <option value="UPI">UPI</option>
-                <option value="Card">Card</option>
-                <option value="Cheque">Cheque</option>
+                <option value="cash">Cash in Hand</option>
+                <option value="cash in bank">Cash in Bank</option>
+                <option value="net banking">Net Banking</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="upi">UPI</option>
+                <option value="card">Card</option>
+                <option value="credit card">Credit Card</option>
+                <option value="cheque">Cheque</option>
               </select>
             </div>
 

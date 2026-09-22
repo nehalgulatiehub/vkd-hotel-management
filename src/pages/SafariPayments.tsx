@@ -6,6 +6,8 @@ import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterInputStyle, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
+import { matchesPaymentMode, paymentModeLabel } from "@/utils/paymentMode";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -34,8 +36,7 @@ export default function SafariPayments() {
   };
 
   const fetchPayments = async () => {
-    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no), transporter:transporters(id, name)`).eq("payment_type", "safari").order("payment_date", { ascending: false });
-    const { data: directPayments } = await supabase.from("payments").select(`*, transporter:transporters(id, name)`).eq("payment_type", "safari_direct").order("payment_date", { ascending: false });
+    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no), transporter:transporters(id, name)`).in("payment_type", [...SERVICE_PAYMENT_TYPES.safari]).order("payment_date", { ascending: false });
     if (error) { toast.error("Failed to load safari payments"); } else {
       const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
         if (payment.bookings?.id) {
@@ -44,7 +45,7 @@ export default function SafariPayments() {
         }
         return payment;
       }));
-      setPayments([...paymentsWithDetails, ...(directPayments || [])]);
+      setPayments(paymentsWithDetails);
     }
   };
 
@@ -57,8 +58,7 @@ export default function SafariPayments() {
       matchesDate = paymentDate >= fromDate && paymentDate <= toDate;
     }
     const matchesTransporter = !transporterFilter || payment.safari_booking?.safari_name?.toLowerCase().includes(transporterFilter.toLowerCase());
-    const matchesPaymentMode = !paymentModeFilter || payment.payment_mode === paymentModeFilter;
-    return matchesDate && matchesTransporter && matchesPaymentMode;
+    return matchesDate && matchesTransporter && matchesPaymentMode(payment.payment_mode, paymentModeFilter);
   });
 
   const totalPayments = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -89,11 +89,14 @@ export default function SafariPayments() {
         <span style={{ marginLeft: 16, ...legacyLabel }}>Payment Mode :</span>
         <select value={paymentModeFilter} onChange={e => setPaymentModeFilter(e.target.value)} style={sty}>
           <option value="">---Select Mode---</option>
-          <option value="Cash">Cash in Hand</option>
-          <option value="Net Banking">Net Banking</option>
-          <option value="UPI">UPI</option>
-          <option value="Card">Card</option>
-          <option value="Cheque">Cheque</option>
+          <option value="cash">Cash in Hand</option>
+          <option value="cash in bank">Cash in Bank</option>
+          <option value="net banking">Net Banking</option>
+          <option value="bank_transfer">Bank Transfer</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+          <option value="credit card">Credit Card</option>
+          <option value="cheque">Cheque</option>
         </select>
         <button onClick={fetchPayments} style={legacyButton}>Search</button>
         <span style={{ flex: 1 }} />
@@ -114,7 +117,7 @@ export default function SafariPayments() {
               <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
               <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
               <ThemedTD>
-                <div><strong>Payment Mode :</strong> {payment.payment_mode || "-"}</div>
+                <div><strong>Payment Mode :</strong> {paymentModeLabel(payment.payment_mode)}</div>
                 <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
               </ThemedTD>
             </ThemedTR>

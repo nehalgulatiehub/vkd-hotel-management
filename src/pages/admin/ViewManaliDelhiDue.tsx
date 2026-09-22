@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle } from "@/components/admin/AdminPageShell";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 
 interface TransporterSummary {
   transporter_id: string;
@@ -36,7 +37,7 @@ export default function ViewManaliDelhiDue() {
     setLoading(true);
     try {
       const { data: volvoData } = await supabase.from("volvo_bookings").select("id, booking_id, total_amount, paid_amount, due_amount, notes").eq("route", "manali_delhi");
-      const { data: payments } = await supabase.from("payments").select("transporter_id, amount, approval_status").eq("payment_type", "manali_delhi").not("transporter_id", "is", null);
+      const { data: payments } = await supabase.from("payments").select("transporter_id, amount, approval_status").in("payment_type", [...SERVICE_PAYMENT_TYPES.manaliDelhi]).not("transporter_id", "is", null);
       const totalVolvoAmount = (volvoData || []).reduce((sum, v) => sum + (v.total_amount || 0), 0);
       const transporterMap: Record<string, { paid: number }> = {};
       (payments || []).forEach(p => {

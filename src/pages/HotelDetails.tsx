@@ -16,6 +16,7 @@ import { useRoomNames } from "@/hooks/useRoomNames";
 import { ZoomableTable } from "@/components/ui/ZoomableTable";
 import { LegacyPanelHeader } from "@/components/legacy/LegacyPanelHeader";
 import { Button } from "@/components/ui/button";
+import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 
 const MAROON_LIGHT = "#D6A7A1";
 const thStyle: React.CSSProperties = { padding: "2px 6px", textAlign: "left", fontWeight: "normal", fontSize: 13, color: "#000", backgroundColor: MAROON_LIGHT };
@@ -67,7 +68,7 @@ export default function HotelDetails() {
         .from("payments")
         .select("booking_id, amount, payment_type")
         .in("booking_id", bookingIds as string[])
-        .in("payment_type", ["another_hotel", "hotel"]);
+        .in("payment_type", [...SERVICE_PAYMENT_TYPES.anotherHotel]);
       paidMap = (pays || []).reduce((acc: Record<string, number>, p: any) => {
         acc[p.booking_id] = (acc[p.booking_id] || 0) + (Number(p.amount) || 0);
         return acc;
