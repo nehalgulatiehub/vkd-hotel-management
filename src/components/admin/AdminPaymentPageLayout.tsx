@@ -197,9 +197,12 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
   }, [authLoading]);
 
   const fetchFilters = async () => {
+    const hotelQuery = serviceLabel === "Another Hotel"
+      ? supabase.from("another_hotels").select("id, name").order("name")
+      : supabase.from("own_hotels").select("id, name").order("name");
     const [agentsRes, hotelsRes, profilesRes, citiesRes, roomsRes] = await Promise.all([
       supabase.from("agents").select("id, name").order("name"),
-      supabase.from("own_hotels").select("id, name").order("name"),
+      hotelQuery,
       supabase.from("profiles").select("id, username, first_name").order("username"),
       supabase.from("cities").select("id, name").order("name"),
       supabase.from("rooms").select("id, room_type, room_number").order("room_type"),
@@ -216,7 +219,7 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
     try {
       let query = supabase
         .from("payments")
-        .select(`id, amount, payment_mode, payment_date, reference_number, approval_status, approved_at, created_at, created_by, city_id, booking:bookings(id, booking_number, created_at, check_in_date, check_out_date, customer_name, contact_no, total_amount, adults, children, address, agent:agents(name, company_name))`);
+        .select(`id, amount, payment_mode, payment_date, reference_number, approval_status, approved_at, created_at, created_by, city_id, hotel_id, direct_hotel:another_hotels!payments_hotel_id_fkey(name, city_id, cities(name)), booking:bookings(id, booking_number, created_at, check_in_date, check_out_date, customer_name, contact_no, total_amount, adults, children, address, agent:agents(name, company_name))`);
       
       if (paymentType) {
         query = Array.isArray(paymentType)
@@ -275,9 +278,9 @@ export default function AdminPaymentPageLayout({ title, paymentType, excludePaym
 
       const paymentsWithDetails = (data || []).map((p: any) => ({
         ...p,
-        hotel_info: hotelBookingsMap[p.booking?.id] || null,
+        hotel_info: hotelBookingsMap[p.booking?.id] || (p.direct_hotel ? { hotel_name: p.direct_hotel.name, room_type: null, number_of_rooms: null } : null),
         created_by_profile: p.created_by ? profilesMap[p.created_by] : null,
-        city_info: p.city_id ? citiesMap[p.city_id] : null,
+        city_info: p.city_id ? citiesMap[p.city_id] : (p.direct_hotel?.cities || null),
       }));
 
       setPayments(paymentsWithDetails as PaymentWithDetails[]);
