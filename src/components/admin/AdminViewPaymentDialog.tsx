@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDisplayDate } from "@/utils/dateFormat";
 import { paymentModeLabel } from "@/utils/paymentMode";
+import { isOwnHotelPayment, SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 
 interface ServiceSummary {
   type: string;
@@ -97,17 +98,14 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       const hasOwnHotel = ownHotelData.length > 0;
       const anotherHotelData = (hotelRes.data || []).filter((h: any) => h.another_hotels && !h.own_hotel_id && !h.own_hotels);
       const hasAnotherHotel = anotherHotelData.length > 0;
-      const anotherHotelPayments = (payments || []).filter(p => p.payment_type === "another_hotel");
+      const hasPaymentType = (payment: any, types: readonly string[]) =>
+        types.includes((payment.payment_type || "").toLowerCase());
+      const anotherHotelPayments = (payments || []).filter(p => hasPaymentType(p, SERVICE_PAYMENT_TYPES.anotherHotel));
       // When the booking is on an another_hotel (not our own), skip the generic "Booking" row
       // and show only the "Another Hotel" section. Otherwise show the Booking row as usual.
       const showBookingRow = !(hasAnotherHotel && !hasOwnHotel);
 
       // Payments tagged to a specific service module never belong to the Booking (own hotel) row
-      const MODULE_PAYMENT_TYPES = new Set([
-        "safari", "hotel", "another_hotel", "vehicle",
-        "volvo_dm", "volvo_md", "delhi_manali", "manali_delhi", "visa", "cruise",
-      ]);
-
       // Module totals (used to derive the own-hotel share of the booking amount)
       const safariTotalAmount = (safariRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
       const dmTotalAmount = (volvoDMRes.data || []).reduce((s, r: any) => s + toAmount(r.total_amount), 0);
@@ -133,7 +131,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       }));
 
       const nonModulePayments = (payments || []).filter(
-        p => !MODULE_PAYMENT_TYPES.has((p.payment_type || "").toLowerCase())
+        p => isOwnHotelPayment(p.payment_type)
       );
 
       if (showBookingRow) {
@@ -154,7 +152,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       }
 
       // Process Delhi-Manali Volvo payments - show if bookings exist OR payments exist
-      const dmPayments = (payments || []).filter(p => p.payment_type === "delhi_manali");
+      const dmPayments = (payments || []).filter(p => hasPaymentType(p, SERVICE_PAYMENT_TYPES.delhiManali));
       const dmBookingTotal = volvoDMRes.data?.reduce((sum, v) => sum + toAmount(v.total_amount), 0) || 0;
       const dmReceived = dmPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (volvoDMRes.data?.length > 0 || dmPayments.length > 0) {
@@ -170,7 +168,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       }
 
       // Process Manali-Delhi Volvo payments - show if bookings exist OR payments exist
-      const mdPayments = (payments || []).filter(p => p.payment_type === "manali_delhi");
+      const mdPayments = (payments || []).filter(p => hasPaymentType(p, SERVICE_PAYMENT_TYPES.manaliDelhi));
       const mdBookingTotal = volvomDRes.data?.reduce((sum, v) => sum + toAmount(v.total_amount), 0) || 0;
       const mdReceived = mdPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (volvomDRes.data?.length > 0 || mdPayments.length > 0) {
@@ -186,7 +184,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       }
 
       // Process Safari payments - show if bookings exist OR payments exist
-      const safariPayments = (payments || []).filter(p => p.payment_type === "safari");
+      const safariPayments = (payments || []).filter(p => hasPaymentType(p, SERVICE_PAYMENT_TYPES.safari));
       const safariBookingTotal = safariRes.data?.reduce((sum, s) => sum + toAmount(s.total_amount), 0) || 0;
       const safariReceived = safariPayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (safariRes.data?.length > 0 || safariPayments.length > 0) {
@@ -204,7 +202,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
       // Another hotel section - if the booking is on another_hotel we show all payments here,
       // otherwise only the payments explicitly tagged as another_hotel.
       const anotherHotelDisplayPayments = (hasAnotherHotel && !hasOwnHotel)
-        ? nonModulePayments
+        ? [...nonModulePayments, ...anotherHotelPayments]
         : anotherHotelPayments;
       const anotherHotelTotal = hasAnotherHotel && !hasOwnHotel
         ? (anotherHotelTotalAmount > 0 ? anotherHotelTotalAmount : bookingGrandTotal)
@@ -224,7 +222,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
 
 
       // Process Vehicle payments - show if bookings exist OR payments exist
-      const vehiclePayments = (payments || []).filter(p => p.payment_type === "vehicle");
+      const vehiclePayments = (payments || []).filter(p => hasPaymentType(p, SERVICE_PAYMENT_TYPES.vehicle));
       const vehicleBookingTotal = vehicleRes.data?.reduce((sum, v) => sum + toAmount(v.total_amount), 0) || 0;
       const vehicleReceived = vehiclePayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
       if (vehicleRes.data?.length > 0 || vehiclePayments.length > 0) {
