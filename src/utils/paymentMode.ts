@@ -1,7 +1,7 @@
 export const CASH_IN_BANK_MODE = "Cash in Bank";
 
 export function isCashPaymentMode(mode: string | null | undefined) {
-  return ["cash", "cash in hand", "cash in bank"].includes((mode || "").trim().toLowerCase());
+  return ["cash", "cash in hand"].includes((mode || "").trim().toLowerCase());
 }
 
 export function paymentModeLabel(mode: string | null | undefined) {
