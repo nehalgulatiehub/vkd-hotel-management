@@ -1,0 +1,205 @@
+.hotel-payments-page {
+  --hotel-payment-maroon: #bb6772;
+  --hotel-payment-ink: #303943;
+  padding: 6px;
+  width: 100%;
+  color: var(--hotel-payment-ink);
+  font: 12px/1.25 Arial, Helvetica, sans-serif;
+}
+
+.hotel-payments-search {
+  border: 1px solid #c5c5c5;
+  margin-bottom: 18px;
+}
+
+.hotel-payments-search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--hotel-payment-maroon);
+  color: #fff;
+  min-height: 25px;
+  padding-left: 12px;
+  font-size: 12px;
+}
+
+.hotel-payments-search-header button {
+  align-self: stretch;
+  border: 0;
+  border-left: 2px solid #fff;
+  padding: 0 12px;
+  background: var(--hotel-payment-maroon);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.hotel-payments-search-body {
+  padding: 5px 4px 3px;
+  background: #fff;
+}
+
+.hotel-payments-date-row,
+.hotel-payments-filter-row {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+}
+
+.hotel-payments-date-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 3px;
+}
+
+.hotel-payments-filter-row {
+  grid-template-columns: minmax(270px, 1.7fr) minmax(180px, 1.25fr) minmax(190px, 1.25fr) 80px;
+}
+
+.hotel-payments-field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  white-space: nowrap;
+  color: #111;
+}
+
+.hotel-payments-filter-row .hotel-payments-field {
+  justify-content: space-between;
+}
+
+.hotel-payments-field select,
+.hotel-payments-field > input:not([type="radio"]) {
+  height: 22px;
+  min-width: 0;
+  border: 1px solid #999;
+  background: #fff;
+  padding: 0 4px;
+  font: inherit;
+}
+
+.hotel-payments-filter-row .hotel-payments-field select,
+.hotel-payments-filter-row .hotel-payments-field > input {
+  flex: 1;
+  max-width: 205px;
+}
+
+.hotel-payments-date-choice {
+  justify-content: flex-start;
+}
+
+.hotel-payments-date-choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.hotel-payments-date-choice input,
+.hotel-payments-table input[type="checkbox"] {
+  accent-color: #6c7790;
+  cursor: pointer;
+}
+
+.hotel-payments-search-button {
+  justify-self: center;
+  border: 1px solid #777;
+  background: #fff;
+  padding: 1px 10px;
+  color: #111;
+  cursor: pointer;
+}
+
+.hotel-payments-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.hotel-payments-table {
+  width: 100%;
+  min-width: 900px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: var(--hotel-payment-ink);
+  font: 12px/1.12 Arial, Helvetica, sans-serif;
+}
+
+.hotel-payments-col-number { width: 4%; }
+.hotel-payments-col-date { width: 14%; }
+.hotel-payments-col-hotel { width: 15%; }
+.hotel-payments-col-payment { width: 14%; }
+.hotel-payments-col-mode { width: 14%; }
+.hotel-payments-col-cheque { width: 14%; }
+.hotel-payments-col-detail { width: 15%; }
+.hotel-payments-col-action { width: 5%; }
+.hotel-payments-col-select { width: 3%; }
+
+.hotel-payments-table th {
+  height: 28px;
+  padding: 3px 5px;
+  border-right: 2px solid #fff;
+  background: var(--hotel-payment-maroon);
+  color: #fff;
+  text-align: left;
+  font-weight: bold;
+}
+
+.hotel-payments-table th:last-child,
+.hotel-payments-table td:last-child {
+  text-align: center;
+}
+
+.hotel-payments-table td {
+  padding: 4px 5px;
+  vertical-align: middle;
+  border-right: 2px solid #fff;
+  overflow-wrap: anywhere;
+}
+
+.hotel-payments-table tbody tr:nth-child(even) { background: #f5f5f6; }
+.hotel-payments-table tbody tr:hover { background: #f5ecee; }
+.hotel-payments-table .hotel-payments-empty { padding: 18px; text-align: center; }
+
+.hotel-payments-edit {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #b24e5b;
+  cursor: pointer;
+}
+
+.hotel-payments-edit:hover { text-decoration: underline; }
+
+.hotel-payments-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.hotel-payments-footer button {
+  border: 1px solid var(--hotel-payment-maroon);
+  background: var(--hotel-payment-maroon);
+  padding: 4px 10px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.hotel-payments-footer button:disabled { opacity: .5; cursor: not-allowed; }
+
+.hotel-payments-page button:focus-visible,
+.hotel-payments-page input:focus-visible,
+.hotel-payments-page select:focus-visible {
+  outline: 2px solid #164e93;
+  outline-offset: 2px;
+}
+
+@media (max-width: 950px) {
+  .hotel-payments-date-row,
+  .hotel-payments-filter-row { display: flex; flex-wrap: wrap; justify-content: flex-start; }
+  .hotel-payments-field { justify-content: flex-start; }
+  .hotel-payments-filter-row .hotel-payments-field { min-width: 235px; }
+  .hotel-payments-search-button { margin-left: auto; }
+}
