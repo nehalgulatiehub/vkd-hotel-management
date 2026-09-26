@@ -3181,6 +3181,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_agent_usage: {
+        Args: { p_agent_id: string }
+        Returns: { booking_count: number; enquiry_count: number }[]
+      }
+      delete_or_merge_agent: {
+        Args: { p_agent_id: string; p_replacement_id?: string }
+        Returns: undefined
+      }
       can_approve_payment:
         | {
             Args: { _payment_mode: string; _user_id: string }

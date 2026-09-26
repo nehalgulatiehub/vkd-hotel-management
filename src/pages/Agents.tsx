@@ -16,14 +16,21 @@ import {
   legacySearchButtonStyle,
 } from "@/components/legacy/legacyFilterStyles";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { AgentDeleteDialog } from "@/components/agents/AgentDeleteDialog";
+import { getDisplayName } from "@/hooks/useProfilesMap";
+import type { Database } from "@/integrations/supabase/types";
+
+type Agent = Database["public"]["Tables"]["agents"]["Row"] & { cities: { name: string } | null };
+type AgentUser = Pick<Database["public"]["Tables"]["profiles"]["Row"], "id" | "username" | "first_name" | "last_name">;
 
 export default function Agents() {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuthContext();
-  const [agents, setAgents] = useState<any[]>([]);
-  const [cities, setCities] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const canManageAgent = (agent: any) => isAdmin() || (!!user?.id && agent.created_by === user.id);
+  const { user, isAdmin, isAccount } = useAuthContext();
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [cities, setCities] = useState<Database["public"]["Tables"]["cities"]["Row"][]>([]);
+  const [users, setUsers] = useState<AgentUser[]>([]);
+  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+  const canManageAgent = (agent: Agent) => isAdmin() || isAccount() || (!!user?.id && agent.created_by === user.id);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -61,7 +68,7 @@ export default function Agents() {
     setUsers(data || []);
   };
 
-  const handleEdit = (agent: any) => {
+  const handleEdit = (agent: Agent) => {
     if (!canManageAgent(agent)) {
       toast.error("You can only edit agents you created");
       return;
@@ -69,22 +76,13 @@ export default function Agents() {
     navigate(`/agents/add?edit=${agent.id}`);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const agent = agents.find((a) => a.id === id);
     if (!agent || !canManageAgent(agent)) {
       toast.error("You can only delete agents you created");
       return;
     }
-    if (!confirm("Are you sure you want to delete this agent?")) return;
-    
-    
-    const { error } = await supabase.from("agents").delete().eq("id", id);
-    if (error) {
-      toast.error("Error deleting agent");
-    } else {
-      toast.success("Agent deleted successfully");
-      fetchAgents();
-    }
+    setAgentToDelete(agent);
   };
 
   const clearFilters = () => {
@@ -216,6 +214,7 @@ export default function Agents() {
                 <thead>
                   <tr style={{ backgroundColor: "#D4A59A" }}>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Agent Name</th>
+                    <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">User</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Email</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Commission %</th>
                     <th className="border border-[#c99] px-3 py-2 text-left text-xs font-semibold">Address</th>
@@ -227,7 +226,7 @@ export default function Agents() {
                 <tbody>
                   {paginatedItems.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="border border-[#c99] px-4 py-8 text-center text-muted-foreground">
                         No agents found
                       </td>
                     </tr>
@@ -241,8 +240,9 @@ export default function Agents() {
                           )}
                         </td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
-                          {agent.email || "-"}
+                          {agent.created_by ? getDisplayName(users.find(profile => profile.id === agent.created_by)) : "Not recorded"}
                         </td>
+                        <td className="border border-[#c99] px-3 py-2 text-xs align-top">{agent.email || "-"}</td>
                         <td className="border border-[#c99] px-3 py-2 text-xs align-top">
                           {agent.commission_rate ? `${agent.commission_rate}%` : "%"}
                         </td>
@@ -290,6 +290,7 @@ export default function Agents() {
           </CardContent>
         </Card>
       </main>
+      <AgentDeleteDialog agent={agentToDelete} alternatives={agents.filter(canManageAgent)} onClose={() => setAgentToDelete(null)} onDeleted={fetchAgents} />
     </div>
   );
 }

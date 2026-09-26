@@ -11,17 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { LegacyFormPanel } from "@/components/legacy/LegacyFormPanel";
+import type { Database } from "@/integrations/supabase/types";
 
 export default function AddAgent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEditMode = !!editId;
-  const { isAdmin, isAccount } = useAuthContext();
+  const { user, isAdmin, isAccount } = useAuthContext();
   const canReassign = isAdmin() || isAccount();
   const { profiles, profilesMap } = useProfilesMap();
 
-  const [cities, setCities] = useState<any[]>([]);
+  const [cities, setCities] = useState<Database["public"]["Tables"]["cities"]["Row"][]>([]);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -65,9 +67,12 @@ export default function AddAgent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+    if (!user?.id) { toast.error("Please sign in again"); return; }
+    setSaving(true);
     
     // Prepare data, converting empty strings to null for UUID fields
-    const submitData: any = {
+    const submitData: Database["public"]["Tables"]["agents"]["Insert"] = {
       ...formData,
       city_id: formData.city_id || null,
     };
@@ -77,7 +82,7 @@ export default function AddAgent() {
     
     
     if (isEditMode && editId) {
-      const { error } = await supabase.from("agents").update(submitData).eq("id", editId);
+      const { error } = await supabase.from("agents").update(submitData).eq("id", editId).select("id").single();
       if (error) {
         console.error("Update error:", error);
         toast.error("Error updating agent");
@@ -86,6 +91,7 @@ export default function AddAgent() {
         navigate("/agents");
       }
     } else {
+      submitData.created_by = (canReassign && formData.created_by) || user?.id;
       const { error } = await supabase.from("agents").insert([submitData]);
       if (error) {
         console.error("Insert error:", error);
@@ -95,6 +101,7 @@ export default function AddAgent() {
         navigate("/agents");
       }
     }
+    setSaving(false);
   };
 
   const handleReset = () => {
@@ -236,8 +243,8 @@ export default function AddAgent() {
 
               {/* Buttons */}
               <div className="flex justify-center gap-2 pt-4">
-                <Button type="submit" variant="outline" className="px-6 bg-gray-100 border-gray-400 text-black hover:bg-gray-200">
-                  {isEditMode ? "Update" : "Add"}
+                <Button type="submit" disabled={saving} variant="outline" className="px-6 bg-gray-100 border-gray-400 text-black hover:bg-gray-200">
+                  {saving ? "Saving…" : isEditMode ? "Update" : "Add"}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleReset} className="px-6 bg-gray-100 border-gray-400 text-black hover:bg-gray-200">
                   Reset

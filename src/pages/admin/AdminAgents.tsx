@@ -7,6 +7,7 @@ import { useProfilesMap } from "@/hooks/useProfilesMap";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterInputStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import * as XLSX from "xlsx";
+import { AgentDeleteDialog } from "@/components/agents/AgentDeleteDialog";
 
 interface Agent {
   id: string;
@@ -29,6 +30,7 @@ export default function AdminAgents() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [userFilter, setUserFilter] = useState("");
+  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
   const { profiles, getUserName } = useProfilesMap();
 
   const canManage = isAdmin() || isAccount();
@@ -51,18 +53,7 @@ export default function AdminAgents() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this agent?")) return;
-    try {
-      const { error } = await supabase.from("agents").delete().eq("id", id);
-      if (error) throw error;
-      toast.success("Agent deleted successfully");
-      fetchAgents();
-    } catch (error) {
-      console.error("Error deleting agent:", error);
-      toast.error("Failed to delete agent");
-    }
-  };
+  const handleDelete = (id: string) => setAgentToDelete(agents.find(agent => agent.id === id) || null);
 
   const handleExport = () => {
     const exportData = agents.map(agent => ({
@@ -162,7 +153,7 @@ export default function AdminAgents() {
               <ThemedTD>{agent.phone || "-"}</ThemedTD>
               <ThemedTD>{agent.email || "-"}</ThemedTD>
               <ThemedTD>{agent.city?.name || "-"}</ThemedTD>
-              <ThemedTD>{agent.created_by ? getUserName(agent.created_by) : "-"}</ThemedTD>
+              <ThemedTD>{agent.created_by ? getUserName(agent.created_by) : "Not recorded"}</ThemedTD>
               <ThemedTD>{agent.commission_rate ?? "-"}</ThemedTD>
               <ThemedTD>
                 <span onClick={() => navigate(`/admin/agents/add?edit=${agent.id}`)} style={{ color: "#0066cc", cursor: "pointer", fontSize: 10 }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>Edit</span>
@@ -174,6 +165,7 @@ export default function AdminAgents() {
           {filteredAgents.length === 0 && <ThemedEmptyRow colSpan={9} message="No agents found" />}
         </tbody>
       </ThemedTable>
+      <AgentDeleteDialog agent={agentToDelete} alternatives={agents} onClose={() => setAgentToDelete(null)} onDeleted={fetchAgents} />
     </AdminPageShell>
   );
 }
