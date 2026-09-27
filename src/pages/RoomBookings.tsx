@@ -147,7 +147,7 @@ export default function RoomBookings() {
         const checkOutDate = booking.check_out_date || booking.check_in_date;
         const hotelName = booking.own_hotels.name;
         const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
-        const roomCount = booking.number_of_rooms || 1;
+        const roomCount = booking.number_of_rooms ?? 1;
 
         // Occupied nights = [check_in, check_out)
         try {

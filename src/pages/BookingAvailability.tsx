@@ -172,7 +172,7 @@ export default function BookingAvailability() {
   const getStats = (room: Room, date: Date) => {
     const bookings = getBookingsForDate(room.id, date);
     const blocks = getBlocksForDate(room.id, date);
-    const booked = bookings.reduce((sum, b) => sum + (b.number_of_rooms || 1), 0);
+    const booked = bookings.reduce((sum, b) => sum + (b.number_of_rooms ?? 1), 0);
     const blocked = blocks.reduce((sum, b) => sum + (b.blocked_quantity || 0), 0);
     const total = room.total_quantity || 1;
     const available = Math.max(0, total - booked - blocked);

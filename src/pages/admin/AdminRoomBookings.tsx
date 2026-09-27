@@ -203,7 +203,7 @@ export default function AdminRoomBookings() {
         const userName = createdBy ? (profilesMap[createdBy] || "Unknown User") : "Unknown User";
         const hotelName = booking.own_hotels.name;
         const roomName = roomMap[booking.room_type] || booking.room_type || "Unknown Room";
-        const roomCount = booking.number_of_rooms || 1;
+        const roomCount = booking.number_of_rooms ?? 1;
 
         // Count this booking on every occupied night that falls inside the requested range
         // Occupied nights = [check_in, check_out) — checkout day is not counted

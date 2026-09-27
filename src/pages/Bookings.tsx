@@ -106,7 +106,7 @@ const getInitialBookingFilters = () => {
 
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/TablePagination";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -143,6 +143,8 @@ export default function Bookings() {
 
   const [showForm, setShowForm] = useState(isAddRoute);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+  const bookingSaveInProgress = useRef(false);
+  const [isSavingBooking, setIsSavingBooking] = useState(false);
   const [rebookSourceId, setRebookSourceId] = useState<string | null>(null);
   
   // Auto-show form when navigating to /bookings/add, hide when on /bookings
@@ -627,6 +629,7 @@ export default function Bookings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (bookingSaveInProgress.current) return;
 
     // Use the most specific dates available (priority order):
     // 1. If "Booking" section is enabled, use formData.booking_from and booking_to
@@ -678,6 +681,8 @@ export default function Bookings() {
     }
 
 
+    bookingSaveInProgress.current = true;
+    setIsSavingBooking(true);
     try {
       const isEditing = !!editingBookingId;
 
@@ -735,7 +740,7 @@ export default function Bookings() {
         bookingId = editingBookingId;
 
         // Delete existing related records before inserting new ones
-        await Promise.all([
+        const deletionResults = await Promise.all([
           supabase.from("hotel_bookings").delete().eq("booking_id", bookingId),
           supabase.from("volvo_bookings").delete().eq("booking_id", bookingId),
           supabase.from("safari_bookings").delete().eq("booking_id", bookingId),
@@ -744,6 +749,8 @@ export default function Bookings() {
           (supabase as any).from("visa_bookings").delete().eq("booking_id", bookingId),
           (supabase as any).from("cruise_bookings").delete().eq("booking_id", bookingId)
         ]);
+        const deletionError = deletionResults.find(result => result.error)?.error;
+        if (deletionError) throw deletionError;
       } else {
         // Insert new booking
         const { data: bookingResult, error: bookingError } = await supabase
@@ -788,7 +795,7 @@ export default function Bookings() {
           .from("hotel_bookings")
           .insert([hotelBookingData]);
         
-        if (hotelError) console.error("Hotel booking error:", hotelError);
+        if (hotelError) throw hotelError;
       }
 
       // Insert Delhi-Manali Volvo Booking if included
@@ -1157,6 +1164,9 @@ export default function Bookings() {
 
       console.error("Error creating booking:", error);
       toast.error("Failed to create booking. Please try again.");
+    } finally {
+      bookingSaveInProgress.current = false;
+      setIsSavingBooking(false);
     }
   };
 
@@ -3026,8 +3036,8 @@ export default function Bookings() {
                 </CompactFormRow>
 
                 <div className="flex justify-center gap-4 pt-4">
-                  <Button type="submit" variant="outline" size="sm" className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6">
-                    {editingBookingId ? "Update" : "Create"}
+                  <Button type="submit" disabled={isSavingBooking} variant="outline" size="sm" className="bg-gray-100 border-gray-400 hover:bg-gray-200 text-gray-700 px-6">
+                    {isSavingBooking ? "Saving…" : editingBookingId ? "Update" : "Create"}
                   </Button>
                   <Button 
                     type="button" 
