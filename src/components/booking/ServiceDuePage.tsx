@@ -1,3 +1,4 @@
+import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ export function ServiceDuePage({ config }: { config: ServiceDuePageConfig }) {
 
   const filtered = rows.filter((r) => {
     const b = r.bookings;
+    if (!b || b.status === "cancelled") return false;
     if (filters.type && (b?.booking_type || "direct") !== filters.type) return false;
     if (filters.agentName && b?.agent_id !== filters.agentName) return false;
     if (filters.user && b?.created_by !== filters.user) return false;
@@ -234,6 +236,7 @@ export function ServiceDuePage({ config }: { config: ServiceDuePageConfig }) {
                               )}
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => b && navigate(`/refunds?id=${b.id}`)}>Refund Payment</Button>
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => b && paymentDialog.handleViewPayment(b)}>View Refund Payment</Button>
+                              <CancelBookingButton booking={b} onCancelled={fetchRows} style={{ textAlign: "left", fontSize: 11 }} />
                             </div>
                           </td>
                         </tr>

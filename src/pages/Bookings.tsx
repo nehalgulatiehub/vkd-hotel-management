@@ -251,6 +251,8 @@ export default function Bookings() {
 
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
+  const cancellationInProgress = useRef(false);
+  const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [cancellationCharge, setCancellationCharge] = useState("");
   const [cancellationPaymentMode, setCancellationPaymentMode] = useState("");
   const [cancellationChequeNo, setCancellationChequeNo] = useState("");
@@ -1828,36 +1830,23 @@ export default function Bookings() {
   };
 
   const submitCancellation = async () => {
-
-
+    if (!selectedBooking || cancellationInProgress.current) return;
+    const charges = Number(cancellationCharge || "0");
+    const editedPrice = Number(cancellationBookingPrice);
+    if (!Number.isFinite(charges) || charges < 0 || !Number.isFinite(editedPrice) || editedPrice < 0) {
+      toast.error("Enter valid non-negative booking price and cancellation charge");
+      return;
+    }
+    cancellationInProgress.current = true;
+    setIsCancellingBooking(true);
     try {
-      const charges = parseFloat(cancellationCharge) || 0;
-      const editedPrice = parseFloat(cancellationBookingPrice);
-      const bookingTotal = isNaN(editedPrice) ? (selectedBooking?.total_amount || 0) : editedPrice;
-      const refundAmount = Math.max(0, (selectedBooking?.paid_amount || 0) - charges);
-
-      // Create cancellation record
-      const { error: cancellationError } = await supabase
-        .from("cancellations")
-        .insert({
-          booking_id: selectedBooking.id,
-          cancellation_reason: cancellationReason || `Payment Mode: ${cancellationPaymentMode}${cancellationChequeNo ? `, Cheque No: ${cancellationChequeNo}` : ''}`,
-          refund_amount: refundAmount,
-          cancellation_charges: charges
-        });
-
-      if (cancellationError) throw cancellationError;
-
-      // Update booking status and (possibly edited) total amount
-      const { error: updateError } = await supabase
-        .from("bookings")
-        .update({
-          status: "cancelled",
-          total_amount: bookingTotal,
-        })
-        .eq("id", selectedBooking.id);
-
-      if (updateError) throw updateError;
+      const { error } = await supabase.rpc("cancel_booking", {
+        p_booking_id: selectedBooking.id,
+        p_charges: charges,
+        p_booking_total: editedPrice,
+        p_reason: cancellationReason || `Payment Mode: ${cancellationPaymentMode}${cancellationChequeNo ? `, Cheque No: ${cancellationChequeNo}` : ''}`,
+      });
+      if (error) throw error;
 
       toast.success("Booking cancelled successfully");
       setShowCancelDialog(false);
@@ -1865,6 +1854,9 @@ export default function Bookings() {
     } catch (error) {
       console.error("Cancellation error:", error);
       toast.error("Failed to cancel booking");
+    } finally {
+      cancellationInProgress.current = false;
+      setIsCancellingBooking(false);
     }
   };
 
@@ -3984,11 +3976,12 @@ export default function Bookings() {
         </Dialog>
 
         {/* Cancel Booking Dialog */}
-        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialog open={showCancelDialog} onOpenChange={open => { if (!isCancellingBooking) setShowCancelDialog(open); }}>
           <AlertDialogContent className="max-w-md">
             <AlertDialogHeader className="bg-primary text-primary-foreground px-4 py-2 -m-6 mb-4 rounded-t-lg">
               <AlertDialogTitle className="text-base font-semibold">Cancel Booking</AlertDialogTitle>
             </AlertDialogHeader>
+            <p className="text-sm mb-3">This cancels the entire booking and all attached services. Refunds are processed separately.</p>
             <div className="bg-destructive/10 border border-destructive/30 rounded p-4">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -4048,13 +4041,14 @@ export default function Bookings() {
               <Button 
                 variant="outline" 
                 onClick={() => setShowCancelDialog(false)}
+                disabled={isCancellingBooking}
                 className="border-2"
               >
                 Reset
               </Button>
-              <AlertDialogAction onClick={submitCancellation} className="bg-primary hover:bg-primary/90">
-                Submit
-              </AlertDialogAction>
+              <Button onClick={submitCancellation} disabled={isCancellingBooking} className="bg-primary hover:bg-primary/90">
+                {isCancellingBooking ? "Cancelling…" : "Confirm cancellation"}
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

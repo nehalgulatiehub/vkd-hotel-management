@@ -1,3 +1,4 @@
+import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,6 +87,7 @@ export default function HotelDetails() {
   const handleViewDetails = (booking: any) => { setSelectedBookingData(booking.bookings); setSelectedServiceData(booking); setShowDetailsDialog(true); };
 
   const filteredBookings = hotelBookings.filter(booking => {
+    if (!booking.bookings || booking.bookings.status === "cancelled") return false;
     if (filters.searchWithDate) {
       const now = new Date();
       const defY = String(now.getFullYear());
@@ -186,6 +188,7 @@ export default function HotelDetails() {
                         <button key={i} style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={a.fn}>{a.label}</button>
                       ));
                     })()}
+                    <CancelBookingButton booking={booking.bookings} onCancelled={fetchHotelBookings} style={actionStyle} />
                   </td>
                 </tr>
               ))}

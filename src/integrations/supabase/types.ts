@@ -3181,6 +3181,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_booking: {
+        Args: { p_booking_id: string; p_charges?: number; p_reason?: string; p_booking_total?: number }
+        Returns: string
+      }
       get_agent_usage: {
         Args: { p_agent_id: string }
         Returns: { booking_count: number; enquiry_count: number }[]

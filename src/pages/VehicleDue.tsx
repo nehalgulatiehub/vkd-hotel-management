@@ -1,3 +1,4 @@
+import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,7 @@ export default function VehicleDue() {
   };
 
   const filteredBookings = vehicleBookings.filter(booking => {
+    if (!booking.bookings || booking.bookings.status === "cancelled") return false;
     const matchesType = !filters.type || booking.bookings?.booking_type === filters.type;
     const matchesCustomer = !filters.customer || 
       booking.bookings?.customer_name?.toLowerCase().includes(filters.customer.toLowerCase());
@@ -365,6 +367,7 @@ export default function VehicleDue() {
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>Refund Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}&view=true`)}>View Refund Payment</Button>
+                            <CancelBookingButton booking={booking.bookings} onCancelled={fetchVehicleBookings} style={{ textAlign: "left", fontSize: 11 }} />
                           </div>
                         </td>
                       </tr>

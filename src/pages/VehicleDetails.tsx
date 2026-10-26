@@ -1,3 +1,4 @@
+import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,7 @@ export default function VehicleDetails() {
 
 
   const filteredBookings = vehicleBookings.filter(booking => {
+    if (!booking.bookings || booking.bookings.status === "cancelled") return false;
     if (filters.searchWithDate) {
       const now = new Date();
       const defY = String(now.getFullYear());
@@ -163,6 +165,7 @@ export default function VehicleDetails() {
                         <button key={i} style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={a.fn}>{a.label}</button>
                       ));
                     })()}
+                    <CancelBookingButton booking={booking.bookings} onCancelled={fetchVehicleBookings} style={actionStyle} />
                   </td>
                 </tr>
               ))}

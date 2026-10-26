@@ -1,3 +1,4 @@
+import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,7 @@ const fetchHotels = async () => {
   };
 
   const filteredBookings = hotelBookings.filter(booking => {
+    if (!booking.bookings || booking.bookings.status === "cancelled") return false;
     const matchesType = !filters.type || booking.bookings?.booking_type === filters.type;
     const matchesAgent = !filters.agentName || booking.bookings?.agent_id === filters.agentName;
     const matchesCustomer = !filters.customer || 
@@ -393,6 +395,7 @@ const fetchHotels = async () => {
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => handleViewPayment(booking)}>View Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}`)}>Refund Payment</Button>
                             <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => getBookingId(booking) && navigate(`/refunds?booking_id=${getBookingId(booking)}&view=true`)}>View Refund Payment</Button>
+                            <CancelBookingButton booking={booking.bookings} onCancelled={fetchHotelBookings} style={{ textAlign: "left", fontSize: 11 }} />
                           </div>
                         </td>
                       </tr>

@@ -1,3 +1,4 @@
+import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,6 +80,7 @@ export function ServiceModuleDetails({ config }: { config: ServiceModuleConfig }
   const handleViewDetails = (row: any) => { setSelectedBookingData(row.bookings); setSelectedServiceData(row); setShowDetailsDialog(true); };
 
   const filteredRows = rows.filter(row => {
+    if (!row.bookings || row.bookings.status === "cancelled") return false;
     if (filters.searchWithDate) {
       const now = new Date();
       const defY = String(now.getFullYear());
@@ -179,6 +181,7 @@ export function ServiceModuleDetails({ config }: { config: ServiceModuleConfig }
                         <button key={i} style={actionStyle} onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"} onMouseLeave={e => e.currentTarget.style.textDecoration = "none"} onClick={a.fn}>{a.label}</button>
                       ));
                     })()}
+                    <CancelBookingButton booking={row.bookings} onCancelled={fetchRows} style={actionStyle} />
                   </td>
                 </tr>
               ))}
