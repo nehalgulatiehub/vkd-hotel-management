@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useRoomNames } from "@/hooks/useRoomNames";
+import { createExcelSafeSheet } from "@/utils/excelExport";
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -144,11 +145,11 @@ export default function ExportBookings() {
         };
       });
 
-      const ws = XLSX.utils.json_to_sheet(rows);
+      const { worksheet: ws, splitFields } = createExcelSafeSheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Bookings");
       XLSX.writeFile(wb, `booking_${new Date().toISOString().split("T")[0]}.xlsx`);
-      toast.success(`Exported ${rows.length} bookings`);
+      toast.success(`Exported ${rows.length} bookings${splitFields ? ". Long text continues in extra columns." : ""}`);
     } catch (e: any) {
       toast.error(e.message || "Failed to export bookings");
     } finally {
