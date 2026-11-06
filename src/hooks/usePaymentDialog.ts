@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/utils/paymentBalance";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -73,7 +74,7 @@ export function usePaymentDialog(onPaymentSuccess?: () => void) {
       label: SERVICE_LABELS[serviceInfo.type] || "",
       total: Number(data.total_amount) || 0,
       paid: Number(data.paid_amount) || 0,
-      due: Number(data.due_amount) || 0,
+      due: paymentBalance(data.total_amount, data.paid_amount),
     });
   };
 

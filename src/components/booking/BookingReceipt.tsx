@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/utils/paymentBalance";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomNames } from "@/hooks/useRoomNames";
@@ -238,10 +239,10 @@ export function BookingReceipt({ bookingId }: BookingReceiptProps) {
             <p className="text-sm font-semibold">₹ {booking.paid_amount?.toFixed(2) || "0.00"}</p>
           </div>
 
-          {booking.due_amount > 0 && (
+          {paymentBalance(booking.total_amount, booking.paid_amount) !== 0 && (
             <div className="grid grid-cols-2">
               <p className="text-sm text-gray-600">Balance due</p>
-              <p className="text-sm font-semibold text-red-600">₹ {booking.due_amount?.toFixed(2) || "0.00"}</p>
+              <p className="text-sm font-semibold text-red-600">₹ {paymentBalance(booking.total_amount, booking.paid_amount).toFixed(2)}</p>
             </div>
           )}
 

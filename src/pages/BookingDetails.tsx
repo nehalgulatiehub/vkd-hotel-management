@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/utils/paymentBalance";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -251,7 +252,7 @@ export default function BookingDetails() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Due Amount</p>
-                <p className="font-semibold text-lg text-red-600">Rs. {booking.due_amount || 0}/-</p>
+                <p className="font-semibold text-lg text-red-600">Rs. {paymentBalance(booking.total_amount, booking.paid_amount)}/-</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Payment Status</p>

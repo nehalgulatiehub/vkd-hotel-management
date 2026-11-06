@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/utils/paymentBalance";
 import { DateInput } from "@/components/ui/DateInput";
 import { LegacyDatePicker } from "@/components/ui/LegacyDatePicker";
 import { Header } from "@/components/layout/Header";
@@ -612,7 +613,7 @@ export default function Bookings() {
             hotel_info: info,
             own_total_amount: ownTotal,
             own_paid_amount: ownPaid,
-            own_due_amount: Math.max(ownTotal - ownPaid, 0),
+            own_due_amount: paymentBalance(ownTotal, ownPaid),
             created_by_name: b.created_by ? (profilesMap[b.created_by] || "Unknown User") : "-"
           };
         });
@@ -1752,7 +1753,7 @@ export default function Bookings() {
       const sum = (rows: any[] | null | undefined) => ({
         total: (rows || []).reduce((s, r) => s + (Number(r.total_amount) || 0), 0),
         paid: (rows || []).reduce((s, r) => s + (Number(r.paid_amount) || 0), 0),
-        due: (rows || []).reduce((s, r) => s + (Number(r.due_amount) || 0), 0),
+        due: (rows || []).reduce((s, r) => s + paymentBalance(r.total_amount, r.paid_amount), 0),
       });
 
       const volvoRows = (volvo.data as any[]) || [];
@@ -1761,7 +1762,7 @@ export default function Bookings() {
         booking: {
           total: Number(booking.own_total_amount ?? booking.total_amount ?? 0),
           paid: Number(booking.own_paid_amount ?? booking.paid_amount ?? 0),
-          due: Number(booking.own_due_amount ?? booking.due_amount ?? 0),
+          due: paymentBalance(booking.own_total_amount ?? booking.total_amount, booking.own_paid_amount ?? booking.paid_amount),
         },
         safari: sum(safari.data as any[]),
         another_hotel: sum(hotelRows.filter(h => !h.own_hotel_id)),
@@ -3315,7 +3316,7 @@ export default function Bookings() {
                 <div style={{ padding: "6px 10px", fontSize: 11, fontFamily: "Arial, Helvetica, sans-serif", color: "#c00", fontStyle: "italic" }}>
                   <strong>Total Booking Price :</strong> Rs. {summaryTotals.total.toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
                   <strong>Total Received Payment :</strong> Rs. {summaryTotals.paid.toLocaleString('en-IN')} /-&nbsp;&nbsp;&nbsp;&nbsp;
-                  <strong>Total Due Payment :</strong> Rs. {summaryTotals.due.toLocaleString('en-IN')} /-
+                  <strong>Net Balance :</strong> Rs. {summaryTotals.due.toLocaleString('en-IN')} /-
                 </div>
                 <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
               </div>
@@ -3502,7 +3503,7 @@ export default function Bookings() {
                   <div className="font-semibold text-sm">Total Booking Price : Rs. {summaryTotals.total.toLocaleString('en-IN')} /-</div>
                   <div className="flex gap-8 text-sm">
                     <span className="font-semibold">Total Received Payment : Rs. {summaryTotals.paid.toLocaleString('en-IN')} /-</span>
-                    <span className="font-semibold">Total Due Payment : Rs. {summaryTotals.due.toLocaleString('en-IN')} /-</span>
+                    <span className="font-semibold">Net Balance : Rs. {summaryTotals.due.toLocaleString('en-IN')} /-</span>
                   </div>
                 </div>
                 <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalItems={pagination.totalItems} startIndex={pagination.startIndex} endIndex={pagination.endIndex} />
@@ -3686,7 +3687,7 @@ export default function Bookings() {
                     <td className="border border-border px-3 py-1.5 font-medium">Booking</td>
                     <td className="border border-border px-3 py-1.5 text-center">Rs. {selectedBooking?.total_amount?.toLocaleString('en-IN') || 0}/-</td>
                     <td className="border border-border px-3 py-1.5 text-center">Rs. {selectedBooking?.paid_amount?.toLocaleString('en-IN') || 0}/-</td>
-                    <td className="border border-border px-3 py-1.5 text-center">Rs. {selectedBooking?.due_amount?.toLocaleString('en-IN') || 0}/-</td>
+                    <td className="border border-border px-3 py-1.5 text-center">Rs. {paymentBalance(selectedBooking?.total_amount, selectedBooking?.paid_amount).toLocaleString('en-IN')}/-</td>
                     <td className="border border-border px-3 py-1.5 text-center">
                       <Button
                         variant="link"
@@ -3818,7 +3819,7 @@ export default function Bookings() {
                 const mt = paymentModuleTotals[key] || {
                   total: Number(selectedBooking?.own_total_amount ?? selectedBooking?.total_amount ?? 0),
                   paid: Number(selectedBooking?.own_paid_amount ?? selectedBooking?.paid_amount ?? 0),
-                  due: Number(selectedBooking?.own_due_amount ?? selectedBooking?.due_amount ?? 0),
+                  due: paymentBalance(selectedBooking?.own_total_amount ?? selectedBooking?.total_amount, selectedBooking?.own_paid_amount ?? selectedBooking?.paid_amount),
                 };
                 const suffix = moduleLabels[key] ? ` (${moduleLabels[key]})` : "";
                 return (

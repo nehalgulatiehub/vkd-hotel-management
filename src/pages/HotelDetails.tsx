@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/utils/paymentBalance";
 import { CancelBookingButton } from "@/components/booking/CancelBookingButton";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -77,8 +78,7 @@ export default function HotelDetails() {
     }
     setHotelBookings(rows.map((r: any) => {
       const paid = paidMap[r.booking_id] ?? (Number(r.paid_amount) || 0);
-      const total = Number(r.total_amount) || 0;
-      return { ...r, paid_amount: paid, due_amount: Math.max(0, total - paid) };
+      return { ...r, paid_amount: paid };
     }));
     setLoading(false);
   };
@@ -114,7 +114,7 @@ export default function HotelDetails() {
   const totalSellingPrice = filteredBookings.reduce((s, b) => s + (b.total_amount || 0), 0);
   const netProfit = totalSellingPrice - totalBookingPrice;
   const totalReceivedPayment = filteredBookings.reduce((s, b) => s + (b.paid_amount || 0), 0);
-  const totalDuePayment = filteredBookings.reduce((s, b) => s + (b.due_amount || 0), 0);
+  const totalDuePayment = filteredBookings.reduce((s, b) => s + paymentBalance(b.total_amount, b.paid_amount), 0);
 
   return (
     <div style={{ padding: 12, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 11 }}>
@@ -157,7 +157,7 @@ export default function HotelDetails() {
                     <div><strong>Booking Price :</strong> Rs. {(booking.room_rate || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Selling Price :</strong> Rs. {(booking.total_amount || 0).toLocaleString('en-IN')} /-</div>
                     <div><strong>Total Received Payment :</strong> Rs. {(booking.paid_amount || 0).toLocaleString('en-IN')} /-</div>
-                    <div><strong>Due Payment :</strong> Rs. {(booking.due_amount || 0).toLocaleString('en-IN')} /-</div>
+                    <div><strong>Due Payment :</strong> Rs. {paymentBalance(booking.total_amount, booking.paid_amount).toLocaleString('en-IN')} /-</div>
                   </td>
                   <td style={tdStyle}>
                     <div><strong>Date :</strong>{booking.check_in_date ? format(new Date(booking.check_in_date), "dd/MM/yyyy") : "-"}</div>
@@ -206,7 +206,7 @@ export default function HotelDetails() {
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 32px", marginTop: 2 }}>
           <span><strong>Total Received Payment :</strong> Rs. {totalReceivedPayment.toLocaleString("en-IN")} /-</span>
-          <span><strong>Total Due Payment :</strong> Rs. {totalDuePayment.toLocaleString("en-IN")} /-</span>
+          <span><strong>Net Balance :</strong> Rs. {totalDuePayment.toLocaleString("en-IN")} /-</span>
         </div>
       </div>
 

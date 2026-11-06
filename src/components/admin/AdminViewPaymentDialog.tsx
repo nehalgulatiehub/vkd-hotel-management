@@ -1,3 +1,4 @@
+import { paymentBalance } from "@/utils/paymentBalance";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -146,7 +147,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: bookingTotal,
           totalReceived: bookingReceived,
           date: bookingData.check_in_date,
-          totalDue: Math.max(0, bookingTotal - bookingReceived)
+          totalDue: paymentBalance(bookingTotal, bookingReceived)
         });
         groupedPayments["Booking"] = mapPaymentsToRecords(bookingPayments);
       }
@@ -162,7 +163,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: dmBookingTotal,
           totalReceived: dmReceived,
           date: volvoDMRes.data?.[0]?.travel_date || bookingData.check_in_date,
-          totalDue: Math.max(0, dmBookingTotal - dmReceived)
+          totalDue: paymentBalance(dmBookingTotal, dmReceived)
         });
         groupedPayments["Delhi - Manali"] = mapPaymentsToRecords(dmPayments);
       }
@@ -178,7 +179,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: mdBookingTotal,
           totalReceived: mdReceived,
           date: volvomDRes.data?.[0]?.travel_date || bookingData.check_in_date,
-          totalDue: Math.max(0, mdBookingTotal - mdReceived)
+          totalDue: paymentBalance(mdBookingTotal, mdReceived)
         });
         groupedPayments["Manali - Delhi"] = mapPaymentsToRecords(mdPayments);
       }
@@ -194,7 +195,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: safariBookingTotal,
           totalReceived: safariReceived,
           date: safariRes.data?.[0]?.safari_date || bookingData.check_in_date,
-          totalDue: Math.max(0, safariBookingTotal - safariReceived)
+          totalDue: paymentBalance(safariBookingTotal, safariReceived)
         });
         groupedPayments["Safari"] = mapPaymentsToRecords(safariPayments);
       }
@@ -215,7 +216,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: anotherHotelTotal,
           totalReceived: anotherHotelReceived,
           date: anotherHotelData[0]?.check_in_date || bookingData.check_in_date,
-          totalDue: Math.max(0, anotherHotelTotal - anotherHotelReceived)
+          totalDue: paymentBalance(anotherHotelTotal, anotherHotelReceived)
         });
         groupedPayments["Another Hotel"] = mapPaymentsToRecords(anotherHotelDisplayPayments);
       }
@@ -232,7 +233,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: vehicleBookingTotal,
           totalReceived: vehicleReceived,
           date: vehicleRes.data?.[0]?.pickup_date || bookingData.check_in_date,
-          totalDue: Math.max(0, vehicleBookingTotal - vehicleReceived)
+          totalDue: paymentBalance(vehicleBookingTotal, vehicleReceived)
         });
         groupedPayments["Additional Vehicle"] = mapPaymentsToRecords(vehiclePayments);
       }
@@ -247,7 +248,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: visaTotalAmount,
           totalReceived: visaReceived,
           date: (visaRes.data?.[0] as any)?.visa_date || bookingData.check_in_date,
-          totalDue: Math.max(0, visaTotalAmount - visaReceived)
+          totalDue: paymentBalance(visaTotalAmount, visaReceived)
         });
         groupedPayments["Visa"] = mapPaymentsToRecords(visaPayments);
       }
@@ -262,7 +263,7 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
           totalPayment: cruiseTotalAmount,
           totalReceived: cruiseReceived,
           date: (cruiseRes.data?.[0] as any)?.cruise_date || bookingData.check_in_date,
-          totalDue: Math.max(0, cruiseTotalAmount - cruiseReceived)
+          totalDue: paymentBalance(cruiseTotalAmount, cruiseReceived)
         });
         groupedPayments["Cruise"] = mapPaymentsToRecords(cruisePayments);
       }
@@ -281,11 +282,12 @@ export function AdminViewPaymentDialog({ open, onOpenChange, bookingId }: AdminV
             if (need <= 0) continue;
             const take = Math.min(need, extra);
             s.totalReceived += take;
-            s.totalDue = Math.max(0, s.totalPayment - s.totalReceived);
+            s.totalDue = paymentBalance(s.totalPayment, s.totalReceived);
             extra -= take;
           }
           if (extra > 0) {
             bookingRow.totalReceived += extra;
+            bookingRow.totalDue = paymentBalance(bookingRow.totalPayment, bookingRow.totalReceived);
           }
         }
       }
