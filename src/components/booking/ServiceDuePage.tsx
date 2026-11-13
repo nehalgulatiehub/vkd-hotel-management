@@ -231,9 +231,9 @@ export function ServiceDuePage({ config }: { config: ServiceDuePageConfig }) {
                                   <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/bookings/${b.id}`)}>Print Booking</Button>
                                   <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => navigate(`/bookings?edit=${b.id}`)}>Edit Booking</Button>
                                   <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => paymentDialog.handleAddPayment(b, { type: config.serviceType, id: r.id })}>Add Payment</Button>
-                                  <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => paymentDialog.handleViewPayment(b, { type: config.serviceType, id: r.id })}>View Payment</Button>
                                 </>
                               )}
+                              {b?.id && <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => paymentDialog.handleViewPayment(b, { type: config.serviceType, id: r.id })}>View Payment</Button>}
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => b && navigate(`/refunds?id=${b.id}`)}>Refund Payment</Button>
                               <Button size="sm" variant="link" className="h-auto p-0 text-[11px] text-primary justify-start" onClick={() => b && paymentDialog.handleViewPayment(b)}>View Refund Payment</Button>
                               <CancelBookingButton booking={b} onCancelled={fetchRows} style={{ textAlign: "left", fontSize: 11 }} />

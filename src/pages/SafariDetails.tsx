@@ -191,9 +191,9 @@ export default function SafariDetails() {
                           { label: "Print Booking", fn: () => handlePrintBooking(b.id) },
                           { label: "Edit Booking", fn: () => navigate(`/bookings?edit=${b.id}`) },
                           { label: "Add Payment", fn: () => paymentDialog.handleAddPayment(b, { type: "safari", id: booking.id }) },
-                          { label: "View Payment", fn: () => paymentDialog.handleViewPayment(b, { type: "safari", id: booking.id }) },
                         );
                       }
+                      if (b?.id) actions.push({ label: "View Payment", fn: () => paymentDialog.handleViewPayment(b, { type: "safari", id: booking.id }) });
                       actions.push(
                         { label: "Refund Payment", fn: () => b && navigate(`/refunds?id=${b.id}`) },
                         { label: "View Refund Payment", fn: () => b && paymentDialog.handleViewPayment(b) },

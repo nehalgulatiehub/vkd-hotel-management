@@ -1,4 +1,5 @@
 import { paymentBalance } from "@/utils/paymentBalance";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -47,8 +48,11 @@ interface UserViewPaymentDialogProps {
 }
 
 export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPaymentUpdated }: UserViewPaymentDialogProps) {
+  const { user, isAdmin, loading: authLoading } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [booking, setBooking] = useState<any>(null);
+  const canManagePayments = !authLoading && !!user && !!bookingId && booking?.id === bookingId &&
+    (isAdmin() || booking.created_by === user.id);
   const [serviceSummaries, setServiceSummaries] = useState<ServiceSummary[]>([]);
   const [paymentsByType, setPaymentsByType] = useState<Record<string, PaymentRecord[]>>({});
   const [cities, setCities] = useState<any[]>([]);
@@ -66,6 +70,10 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
 
   useEffect(() => {
+    setEditDialogOpen(false);
+    setEditingPayment(null);
+    setDeleteDialogOpen(false);
+    setDeletingPaymentId(null);
     if (open && bookingId) {
       fetchPaymentData();
       fetchCities();
@@ -86,7 +94,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       const { data: bookingData } = await supabase
         .from("bookings")
         .select(`
-          id, booking_number, customer_name, check_in_date, total_amount, paid_amount, due_amount,
+          id, booking_number, customer_name, check_in_date, total_amount, paid_amount, due_amount, created_by,
           agents(name)
         `)
         .eq("id", bookingId)
@@ -340,6 +348,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
   };
 
   const handleEditPayment = (payment: PaymentRecord) => {
+    if (!canManagePayments) return;
     setEditingPayment(payment);
     setEditPaymentAmount(String(payment.payment));
     setEditPaymentMode(payment.mode);
@@ -349,7 +358,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
   };
 
   const handleEditPaymentSave = async () => {
-    if (!editingPayment) return;
+    if (!canManagePayments || !editingPayment) return;
     
     try {
       const { error } = await supabase
@@ -360,7 +369,8 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
           reference_number: editPaymentReference,
           city_id: editPaymentCityId || null,
         })
-        .eq("id", editingPayment.id);
+        .eq("id", editingPayment.id)
+        .eq("booking_id", bookingId);
 
       if (error) throw error;
 
@@ -377,13 +387,14 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
   };
 
   const handleDeletePayment = async () => {
-    if (!deletingPaymentId) return;
+    if (!canManagePayments || !deletingPaymentId) return;
     
     try {
       const { error } = await supabase
         .from("payments")
         .delete()
-        .eq("id", deletingPaymentId);
+        .eq("id", deletingPaymentId)
+        .eq("booking_id", bookingId);
 
       if (error) throw error;
 
@@ -499,7 +510,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                                 <TableHead className="font-semibold border-r text-center">Payment Detail</TableHead>
                                 <TableHead className="font-semibold border-r text-center">Place</TableHead>
                                 <TableHead className="font-semibold border-r text-center">Status</TableHead>
-                                <TableHead className="font-semibold text-center">Action</TableHead>
+                                {canManagePayments && <TableHead className="font-semibold text-center">Action</TableHead>}
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -519,7 +530,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                                       {payment.status === "approved" ? "Approved" : "Pending"}
                                     </span>
                                   </TableCell>
-                                  <TableCell className="text-center">
+                                  {canManagePayments && <TableCell className="text-center">
                                     <div className="flex items-center justify-center gap-1">
                                       <button
                                         onClick={() => handleEditPayment(payment)}
@@ -538,7 +549,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
                                         Delete
                                       </button>
                                     </div>
-                                  </TableCell>
+                                  </TableCell>}
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -555,7 +566,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       </Dialog>
 
       {/* Edit Payment Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen && canManagePayments} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Payment</DialogTitle>
@@ -615,7 +626,7 @@ export function UserViewPaymentDialog({ open, onOpenChange, bookingId, onPayment
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={deleteDialogOpen && canManagePayments} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Payment</AlertDialogTitle>
