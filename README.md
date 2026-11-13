@@ -73,7 +73,10 @@ npm install
 ```
 
 ### Environment
-Create a `.env` file in the project root:
+Use [`.env.example`](.env.example) as a template for local tooling. Keep your
+real `.env` file local; Git ignores it and environment-specific variants.
+The app's shared Supabase client supplies the existing site's public browser
+configuration, so a clean checkout does not need the local file to build.
 
 ```env
 VITE_SUPABASE_URL=https://<your-project>.supabase.co
@@ -131,7 +134,11 @@ The app is a standard Vite SPA and ships with:
 - `public/_redirects` — SPA fallback for Netlify
 - `public/.htaccess` — SPA fallback for Apache
 
-Deploy to any static host (Vercel / Netlify / Cloudflare Pages / your own server) and point the `VITE_SUPABASE_*` env vars at your Supabase project. Edge functions in `supabase/functions/` deploy via the Supabase CLI:
+Deploy to any static host (Vercel / Netlify / Cloudflare Pages / your own server).
+For a different Supabase project, update the shared client with that project's
+public URL and publishable key. Keep private keys in server-side secret settings,
+never in client code or `VITE_*` variables. Edge functions in
+`supabase/functions/` deploy via the Supabase CLI:
 
 ```bash
 supabase functions deploy create-user

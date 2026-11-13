@@ -28,4 +28,8 @@ dev-dist
 .claude/
 supabase/.temp/
 .vercel/
-.env.local
+
+# Environment files can contain credentials. Only track the blank template.
+.env
+.env.*
+!.env.example

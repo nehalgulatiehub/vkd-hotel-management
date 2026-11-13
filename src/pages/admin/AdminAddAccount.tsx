@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -43,25 +44,23 @@ export default function AdminAddAccount() {
         throw new Error("Session expired. Please sign in again.");
       }
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
-        method: "POST",
+      const { data: result, error: createError } = await supabase.functions.invoke("create-user", {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${currentSession.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({
+        body: {
           username: sanitized,
           password,
           firstName: firstName || sanitized,
           lastName: lastName || "",
-        }),
+        },
       });
 
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result?.error || result?.message || "Failed to create user");
+      if (createError instanceof FunctionsHttpError) {
+        const body = await createError.context.json().catch(() => null);
+        throw new Error(body?.error || body?.message || "Failed to create user");
       }
+      if (createError) throw createError;
 
       const userId = result?.user?.id;
       if (!userId) throw new Error("User created but no ID returned");
