@@ -1,16 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { formatDisplayDate } from "@/utils/dateFormat";
 import { usePagination } from "@/hooks/usePagination";
 import { AdminPageShell, ThemedTable, ThemedTHead, ThemedTH, ThemedTD, ThemedTR, ThemedEmptyRow, filterSelectStyle, filterButtonStyle } from "@/components/admin/AdminPageShell";
 import { PartsDatePicker } from "@/components/ui/PartsDatePicker";
-import { SERVICE_PAYMENT_TYPES } from "@/utils/paymentCategories";
 import { matchesPaymentMode, paymentModeLabel } from "@/utils/paymentMode";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const days = Array.from({ length: 31 }, (_, i) => i + 1);
-const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
 export default function VehiclePayments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -30,28 +27,26 @@ export default function VehiclePayments() {
   const fetchTransporters = async () => { const { data } = await supabase.from("transporters").select("id, name").order("name"); setTransporters(data || []); };
 
   const fetchPayments = async () => {
-    const { data, error } = await supabase.from("payments").select(`*, bookings(id, booking_number, customer_name, contact_no), transporter:transporters(id, name)`).in("payment_type", [...SERVICE_PAYMENT_TYPES.vehicle]).order("payment_date", { ascending: false });
-    if (error) { toast.error("Failed to load vehicle payments"); } else {
-      const paymentsWithDetails = await Promise.all((data || []).map(async (payment) => {
-        if (payment.bookings?.id) {
-          const { data: vehicleData } = await supabase.from("vehicle_bookings").select("*, transporters(name)").eq("booking_id", payment.bookings.id).limit(1);
-          return { ...payment, vehicle_booking: vehicleData?.[0] || null };
-        }
-        return payment;
-      }));
-      setPayments(paymentsWithDetails);
-    }
+    const { data, error } = await supabase
+      .from("payments")
+      .select("id, amount, payment_date, payment_mode, notes, transporter_id, transporter:transporters(id, name)")
+      .eq("payment_type", "vehicle_direct")
+      .is("booking_id", null)
+      .not("transporter_id", "is", null)
+      .order("payment_date", { ascending: false })
+      .order("id", { ascending: false });
+    if (error) toast.error("Failed to load transporter payments");
+    else setPayments(data || []);
   };
 
   const filteredPayments = payments.filter(payment => {
-    let matchesDate = true;
-    if (searchWithDate && payment.payment_date) {
-      const paymentDate = new Date(payment.payment_date);
-      matchesDate = paymentDate >= new Date(fromYear, months.indexOf(fromMonth), fromDay) && paymentDate <= new Date(toYear, months.indexOf(toMonth), toDay);
+    if (searchWithDate) {
+      const from = `${fromYear}-${String(months.indexOf(fromMonth) + 1).padStart(2, "0")}-${String(fromDay).padStart(2, "0")}`;
+      const to = `${toYear}-${String(months.indexOf(toMonth) + 1).padStart(2, "0")}-${String(toDay).padStart(2, "0")}`;
+      if (!payment.payment_date || payment.payment_date < from || payment.payment_date > to) return false;
     }
-    const transporterName = payment.transporter?.name || payment.vehicle_booking?.transporters?.name;
-    const matchesTransporter = !transporterFilter || transporterName?.toLowerCase().includes(transporterFilter.toLowerCase());
-    return matchesDate && matchesTransporter && matchesPaymentMode(payment.payment_mode, paymentModeFilter);
+    const matchesTransporter = !transporterFilter || payment.transporter_id === transporterFilter;
+    return matchesTransporter && matchesPaymentMode(payment.payment_mode, paymentModeFilter);
   });
 
   const totalPayments = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -76,7 +71,7 @@ export default function VehiclePayments() {
         <span style={legacyLabel}>Transporter :</span>
         <select value={transporterFilter} onChange={e => setTransporterFilter(e.target.value)} style={{ ...sty, minWidth: 200 }}>
           <option value="">-- Select Transporter --</option>
-          {transporters.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+          {transporters.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <span style={{ marginLeft: 16, ...legacyLabel }}>Payment Mode :</span>
         <select value={paymentModeFilter} onChange={e => setPaymentModeFilter(e.target.value)} style={sty}>
@@ -85,22 +80,22 @@ export default function VehiclePayments() {
         </select>
         <button onClick={fetchPayments} style={legacyButton}>Search</button>
         <span style={{ flex: 1 }} />
-        <span style={{ fontWeight: "bold" }}>Total: Rs. {totalPayments.toLocaleString("en-IN")}/-</span>
+        <span style={{ fontWeight: "bold" }}>Total paid to transporters: Rs. {totalPayments.toLocaleString("en-IN")}/-</span>
       </div>
     </div>
   );
 
   return (
-    <AdminPageShell legacyHeader title="View Vehicle Payment" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setTransporterFilter(""); setPaymentModeFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
+    <AdminPageShell legacyHeader title="View Vehicle Transporter Payments" filterSection={filterSection} actions={[{ label: "View All Records", onClick: () => { setTransporterFilter(""); setPaymentModeFilter(""); setSearchWithDate(false); } }]} pagination={{ currentPage, totalPages, onPageChange: goToPage, totalItems, startIndex, endIndex }}>
       <ThemedTable>
         <ThemedTHead><ThemedTH>S.No</ThemedTH><ThemedTH>Transporter</ThemedTH><ThemedTH>Payment</ThemedTH><ThemedTH>Date</ThemedTH><ThemedTH>Payment Mode</ThemedTH></ThemedTHead>
         <tbody>
           {paginatedItems.length === 0 ? <ThemedEmptyRow colSpan={5} message="No vehicle payments found" /> : paginatedItems.map((payment, index) => (
             <ThemedTR key={payment.id} index={index}>
               <ThemedTD>{startIndex + index}</ThemedTD>
-              <ThemedTD>{payment.transporter?.name || payment.vehicle_booking?.transporters?.name || "-"}</ThemedTD>
+              <ThemedTD>{payment.transporter?.name || "-"}</ThemedTD>
               <ThemedTD>Rs. {payment.amount?.toLocaleString("en-IN")}/-</ThemedTD>
-              <ThemedTD>{payment.payment_date ? format(new Date(payment.payment_date), "dd/MM/yyyy") : "-"}</ThemedTD>
+              <ThemedTD>{formatDisplayDate(payment.payment_date)}</ThemedTD>
               <ThemedTD>
                 <div><strong>Payment Mode :</strong> {paymentModeLabel(payment.payment_mode)}</div>
                 <div><strong>Payment Detail :</strong> {payment.notes || `Rs ${payment.amount?.toLocaleString("en-IN")} paid`}</div>
